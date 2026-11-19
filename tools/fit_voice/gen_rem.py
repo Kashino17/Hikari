@@ -68,7 +68,7 @@ def main():
             secs = len(audio) / rate
             # Ausreißer (Modell redet weiter oder bricht ab) nicht übernehmen.
             words = len(x["spoken"].split())
-            if secs < 0.35 or secs > 2.5 + words * 0.9:
+            if secs < (0.2 if words == 1 else 0.35) or secs > 2.5 + words * 0.9:
                 print(f"  ! {secs:.1f}s unplausibel für {words} Wörter: {x['spoken']}", flush=True)
                 continue
             pcm = (np.clip(audio, -1.0, 1.0) * 32767.0).astype("<i2").tobytes()
@@ -139,7 +139,7 @@ def candidates(list_file, out_dir, n):
     model = load_model(MODEL)
     for x in items:
         cid = clip_id(x["spoken"])
-        text = x["spoken"] if x["spoken"].rstrip()[-1:] in ".!?…" else x["spoken"].rstrip() + "."
+        text = x["spoken"] if x["spoken"].rstrip()[-1:] in ".!?…," else x["spoken"].rstrip() + "."
         for k in range(n):
             try:
                 synth(model, ref_text, text, os.path.join(out_dir, f"{cid}_{k}.ogg"))

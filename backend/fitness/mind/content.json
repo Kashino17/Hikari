@@ -40,7 +40,11 @@
     "Wenn das Halten anstrengt, verkürze alle Phasen auf drei Sekunden."
    ],
    "warum": "Der gleichmäßige, verlangsamte Rhythmus senkt die Atemfrequenz auf etwa vier Züge pro Minute und gibt dem Kopf eine einfache Zählaufgabe, die Grübeln unterbricht. Gut belegt ist vor allem der Effekt langsamen Atmens allgemein; spezifische Studien zur Box-Atmung sind klein. Sie ist eher ein Werkzeug zum Sammeln als zum Einschlafen.",
-   "vorsicht": "Die Pausen nie pressen. Bei Schwindel, in der Schwangerschaft oder bei Herz-Kreislauf-Erkrankungen die Haltephasen weglassen oder kürzen."
+   "vorsicht": "Die Pausen nie pressen. Bei Schwindel, in der Schwangerschaft oder bei Herz-Kreislauf-Erkrankungen die Haltephasen weglassen oder kürzen.",
+   "einleitung": [
+    "Wir atmen gemeinsam in einem Quadrat, vier Sekunden ein, vier halten, vier aus, und vier Sekunden leer",
+    "Ich zähle am Anfang für dich mit, atme jetzt zuerst einmal ganz aus"
+   ]
   },
   {
    "id": "478",
@@ -65,7 +69,8 @@
     {
      "typ": "aus",
      "sekunden": 8,
-     "sage": "Langsam ausatmen"
+     "sage": "Langsam ausatmen",
+     "zuerst": "und jetzt ganz langsam durch den Mund aus"
     }
    ],
    "runden_standard": 4,
@@ -77,7 +82,11 @@
     "Beginne mit vier Runden; das Verhältnis ist wichtiger als die genaue Geschwindigkeit."
    ],
    "warum": "Das lange Ausatmen betont die Phase, in der der Herzschlag sich leicht verlangsamt, und die feste Zählung lenkt von kreisenden Gedanken ab. Die Methode stammt aus der Praxis, nicht aus großen Studien; kleinere Untersuchungen zeigen kurzfristig niedrigeren Puls und Blutdruck. Viele erleben sie als hilfreiches Einschlafritual – eine Garantie für Schlaf ist sie nicht.",
-   "vorsicht": "Anfangs kann leichter Schwindel auftreten; dann kürzer halten oder einfach normal weiteratmen. Nicht mehr als acht Runden am Stück."
+   "vorsicht": "Anfangs kann leichter Schwindel auftreten; dann kürzer halten oder einfach normal weiteratmen. Nicht mehr als acht Runden am Stück.",
+   "einleitung": [
+    "Diese Atmung beruhigt dich ganz tief, du atmest vier Sekunden ein, hältst sieben, und atmest acht Sekunden lang aus",
+    "Lass die Zungenspitze hinter den oberen Schneidezähnen ruhen, und atme jetzt zuerst einmal ganz aus"
+   ]
   },
   {
    "id": "kohaerent",
@@ -110,7 +119,11 @@
     "Übe fünf bis zehn Minuten, gern zweimal am Tag."
    ],
    "warum": "Bei etwa sechs Atemzügen pro Minute schwingen Atmung, Herzschlag und Blutdruckregulation bei vielen Menschen im Gleichtakt, die Herzratenvariabilität steigt deutlich. Dieser Effekt ist gut gemessen und wird im HRV-Biofeedback genutzt; Studien zeigen moderate Verbesserungen bei Stress und Angst. Der genaue Idealrhythmus ist individuell und liegt meist zwischen viereinhalb und sieben Zügen pro Minute.",
-   "vorsicht": "Nicht tiefer atmen als nötig, sonst kann Kribbeln oder Schwindel durch zu viel Ausatmen von Kohlendioxid entstehen."
+   "vorsicht": "Nicht tiefer atmen als nötig, sonst kann Kribbeln oder Schwindel durch zu viel Ausatmen von Kohlendioxid entstehen.",
+   "einleitung": [
+    "Wir atmen gleichmäßig, gut fünf Sekunden ein, und gut fünf Sekunden aus, ganz weich und ohne Pause",
+    "Ich atme den ersten Atemzug mit dir, und zähle danach eine Weile mit"
+   ]
   },
   {
    "id": "langes-aus",
@@ -130,7 +143,8 @@
     {
      "typ": "aus",
      "sekunden": 7,
-     "sage": "Lang ausatmen"
+     "sage": "Lang ausatmen",
+     "zuerst": "und jetzt lang und langsam wieder aus"
     }
    ],
    "runden_standard": 15,
@@ -142,7 +156,11 @@
     "Nach einigen Runden darf der Atem wieder ganz von allein fließen."
    ],
    "warum": "Beim Ausatmen wird der Herzschlag über den Vagusnerv leicht gebremst, beim Einatmen etwas beschleunigt. Ein längerer Ausatem verschiebt dieses Verhältnis in Richtung Ruhe. Eine Studie aus Stanford fand, dass schon fünf Minuten ausatmungsbetontes Atmen täglich die Stimmung verbesserte – die Stichprobe war klein, aber das Prinzip ist physiologisch plausibel und risikoarm.",
-   "vorsicht": "Nicht bis zur Atemnot auspressen. Wenn dich der Fokus auf den Atem unruhig macht, richte die Aufmerksamkeit stattdessen auf die Füße."
+   "vorsicht": "Nicht bis zur Atemnot auspressen. Wenn dich der Fokus auf den Atem unruhig macht, richte die Aufmerksamkeit stattdessen auf die Füße.",
+   "einleitung": [
+    "Bei dieser Atmung wird das Ausatmen länger als das Einatmen, vier Sekunden ein, und sieben Sekunden lang aus",
+    "Das beruhigt dein Nervensystem, atme jetzt zuerst einmal ganz aus"
+   ]
   },
   {
    "id": "wechselatmung",
@@ -157,22 +175,26 @@
     {
      "typ": "ein",
      "sekunden": 4,
-     "sage": "Links ein"
+     "sage": "Links ein",
+     "zuerst": "Verschließ das rechte Nasenloch, und atme links ein"
     },
     {
      "typ": "aus",
      "sekunden": 6,
-     "sage": "Rechts aus"
+     "sage": "Rechts aus",
+     "zuerst": "Wechsle, und atme rechts langsam aus"
     },
     {
      "typ": "ein",
      "sekunden": 4,
-     "sage": "Rechts ein"
+     "sage": "Rechts ein",
+     "zuerst": "Bleib rechts, und atme ein"
     },
     {
      "typ": "aus",
      "sekunden": 6,
-     "sage": "Links aus"
+     "sage": "Links aus",
+     "zuerst": "Wechsle wieder, und atme links aus"
     }
    ],
    "runden_standard": 8,
@@ -184,7 +206,12 @@
     "Der Atem bleibt leise und weich; der Arm darf zwischendurch sinken, wenn er müde wird."
    ],
    "warum": "Das abwechselnde Atmen verlangsamt den Atem fast automatisch und verlangt so viel Aufmerksamkeit, dass der Kopf zur Ruhe kommt. Kleinere Studien zeigen nach regelmäßiger Übung etwas niedrigeren Puls und Blutdruck sowie weniger empfundene Anspannung. Die traditionelle Vorstellung, damit Energiekanäle zu reinigen, ist ein spirituelles Bild, kein messbarer Mechanismus.",
-   "vorsicht": "Nur bei freier Nase üben. Bei Erkältung oder verstopfter Nase lieber kohärentes Atmen wählen."
+   "vorsicht": "Nur bei freier Nase üben. Bei Erkältung oder verstopfter Nase lieber kohärentes Atmen wählen.",
+   "einleitung": [
+    "Wir atmen abwechselnd durch ein Nasenloch, leg den rechten Daumen an das rechte Nasenloch, und den Ringfinger an das linke",
+    "Du atmest links ein, rechts aus, rechts ein, und links aus, ich sage dir jeden Wechsel an"
+   ],
+   "immer_ansagen": true
   },
   {
    "id": "feueratem-sanft",
@@ -198,27 +225,32 @@
     {
      "typ": "ein",
      "sekunden": 3,
-     "sage": "Tief einatmen"
+     "sage": "Tief einatmen",
+     "zuerst": "Atme tief ein"
     },
     {
      "typ": "aus",
      "sekunden": 20,
-     "sage": "Kurze Stöße"
+     "sage": "Kurze Stöße",
+     "zuerst": "und jetzt kurze Stöße durch die Nase, ganz locker"
     },
     {
      "typ": "ein",
      "sekunden": 4,
-     "sage": "Tief einatmen"
+     "sage": "Tief einatmen",
+     "zuerst": "Und noch einmal tief einatmen"
     },
     {
      "typ": "aus",
      "sekunden": 8,
-     "sage": "Ruhig ausatmen"
+     "sage": "Ruhig ausatmen",
+     "zuerst": "und ganz ruhig wieder aus"
     },
     {
      "typ": "ein",
      "sekunden": 5,
-     "sage": "Normal atmen"
+     "sage": "Normal atmen",
+     "zuerst": "Atme jetzt ganz normal, und spür nach"
     }
    ],
    "runden_standard": 3,
@@ -230,7 +262,12 @@
     "Nach jeder Runde tief einatmen, lang ausatmen und einige ruhige Atemzüge nachspüren."
    ],
    "warum": "Schnelles, aktives Atmen erhöht kurzfristig die Aktivität des sympathischen Nervensystems – Puls und Wachheit steigen, ähnlich wie bei kurzer Bewegung. Gleichzeitig wird mehr Kohlendioxid abgeatmet, was das Kribbeln oder leichte Schwindelgefühl erklärt. Studien dazu sind klein; der Effekt ist eher ein spürbarer Frischekick als ein langfristiges Training.",
-   "vorsicht": "Nicht üben bei Schwangerschaft, Bluthochdruck, Herzerkrankungen, Epilepsie, Panikattacken, nach Bauch-OPs, bei akuten Rückenschmerzen oder mit vollem Magen. Immer im Sitzen, nie im Wasser oder beim Autofahren. Bei Schwindel sofort aufhören und normal atmen."
+   "vorsicht": "Nicht üben bei Schwangerschaft, Bluthochdruck, Herzerkrankungen, Epilepsie, Panikattacken, nach Bauch-OPs, bei akuten Rückenschmerzen oder mit vollem Magen. Immer im Sitzen, nie im Wasser oder beim Autofahren. Bei Schwindel sofort aufhören und normal atmen.",
+   "einleitung": [
+    "Wir machen einen sanften Feueratem, kurze, kräftige Stöße durch die Nase, der Bauch zieht sich dabei leicht nach innen",
+    "Bleib ganz locker, und wenn dir schwindelig wird, atme einfach normal weiter"
+   ],
+   "immer_ansagen": true
   }
  ],
  "affirmationen": [
@@ -1110,71 +1147,83 @@
    ],
    "schritte": [
     {
-     "sage": "Willkommen. Nimm dir die nächsten fünf Minuten nur für dich.",
-     "pause": 5
+     "sage": "Willkommen, schön, dass du dir diesen Moment nimmst, die nächsten fünf Minuten gehören ganz dir",
+     "pause": 4
     },
     {
-     "sage": "Setz dich bequem hin. Der Rücken ist aufrecht, aber nicht steif. Die Hände ruhen locker.",
-     "pause": 8
-    },
-    {
-     "sage": "Wenn es sich gut anfühlt, schließe die Augen. Oder lass den Blick weich zu Boden sinken.",
-     "pause": 8
-    },
-    {
-     "sage": "Spüre, wo dein Körper Kontakt hat. Die Füße am Boden. Das Gewicht auf der Sitzfläche.",
-     "pause": 10
-    },
-    {
-     "sage": "Atme einmal tief ein. Und lang wieder aus.",
-     "pause": 8
-    },
-    {
-     "sage": "Noch einmal. Tief ein. Und mit einem Seufzer aus.",
-     "pause": 8
-    },
-    {
-     "sage": "Jetzt lass den Atem wieder von allein fließen. Du musst nichts verändern.",
-     "pause": 10
-    },
-    {
-     "sage": "Finde die Stelle, an der du den Atem am deutlichsten spürst. Vielleicht an der Nase. Vielleicht im Bauch.",
-     "pause": 15
-    },
-    {
-     "sage": "Bleib mit deiner Aufmerksamkeit dort. Ein Atemzug nach dem anderen.",
-     "pause": 20
-    },
-    {
-     "sage": "Wahrscheinlich wandern deine Gedanken. Das ist ganz normal. Bemerke es einfach und kehre freundlich zum Atem zurück.",
-     "pause": 25
-    },
-    {
-     "sage": "Wenn es hilft, zähle leise mit. Einatmen, eins. Ausatmen, zwei. Bis zehn, und dann wieder von vorn.",
-     "pause": 30
-    },
-    {
-     "sage": "Wenn du dich verzählst, beginne einfach neu. Es gibt hier nichts falsch zu machen.",
-     "pause": 22
-    },
-    {
-     "sage": "Lass den Ausatem ganz von selbst ein wenig länger werden.",
-     "pause": 15
-    },
-    {
-     "sage": "Nimm wahr, wie es dir in diesem Moment geht. Ohne etwas zu bewerten.",
-     "pause": 12
-    },
-    {
-     "sage": "Langsam kommst du zurück. Spüre wieder deine Füße und deine Hände.",
-     "pause": 8
-    },
-    {
-     "sage": "Bewege sanft die Finger. Vielleicht möchtest du dich strecken.",
+     "sage": "Setz dich bequem hin, der Rücken ist aufrecht, aber nicht steif, und deine Hände dürfen locker im Schoß ruhen",
      "pause": 6
     },
     {
-     "sage": "Wenn du bereit bist, öffne die Augen. Nimm diese Ruhe mit in deinen Tag.",
+     "sage": "Wenn es sich gut anfühlt, schließe sanft deine Augen, oder lass den Blick ganz weich zu Boden sinken",
+     "pause": 6
+    },
+    {
+     "sage": "Spür einmal, wo dein Körper Kontakt hat, die Füße am Boden, das Gewicht auf der Sitzfläche",
+     "pause": 7
+    },
+    {
+     "sage": "Sehr schön, und jetzt atme einmal tief durch die Nase ein",
+     "pause": 4
+    },
+    {
+     "sage": "und ganz langsam wieder aus, lass dabei die Schultern ein wenig sinken",
+     "pause": 5
+    },
+    {
+     "sage": "Noch einmal, tief einatmen, ganz bis in den Bauch",
+     "pause": 4
+    },
+    {
+     "sage": "und mit einem leisen Seufzer wieder aus",
+     "pause": 6
+    },
+    {
+     "sage": "Gut so, lass den Atem jetzt wieder ganz von allein fließen, du musst nichts daran verändern",
+     "pause": 10
+    },
+    {
+     "sage": "Schau einmal, wo du deinen Atem am deutlichsten spürst, vielleicht an der Nase, vielleicht im Bauch",
+     "pause": 12
+    },
+    {
+     "sage": "Bleib mit deiner Aufmerksamkeit genau dort, ein Atemzug nach dem anderen",
+     "pause": 15
+    },
+    {
+     "sage": "Schön weiter atmen, ganz ruhig",
+     "pause": 20
+    },
+    {
+     "sage": "Wahrscheinlich wandern deine Gedanken irgendwann ab, das ist völlig normal, bemerke es einfach und kehre freundlich zum Atem zurück",
+     "pause": 25
+    },
+    {
+     "sage": "Wenn es dir hilft, zähl leise mit, einatmen eins, ausatmen zwei, bis zehn, und dann beginnst du wieder von vorn",
+     "pause": 30
+    },
+    {
+     "sage": "Und wenn du dich verzählst, fängst du einfach neu an, hier gibt es nichts falsch zu machen",
+     "pause": 30
+    },
+    {
+     "sage": "Lass das Ausatmen ganz von selbst ein kleines bisschen länger werden",
+     "pause": 20
+    },
+    {
+     "sage": "Spür einmal nach, wie es dir in diesem Moment geht, ohne etwas zu bewerten",
+     "pause": 12
+    },
+    {
+     "sage": "Sehr schön, ganz langsam kommst du jetzt zurück, spür wieder deine Füße am Boden und deine Hände",
+     "pause": 7
+    },
+    {
+     "sage": "Bewege sanft die Finger, und wenn du magst, streck dich ein wenig",
+     "pause": 6
+    },
+    {
+     "sage": "Wenn du so weit bist, öffne langsam die Augen, und nimm diese Ruhe mit in deinen Tag",
      "pause": 3
     }
    ]
@@ -1192,128 +1241,140 @@
    ],
    "schritte": [
     {
-     "sage": "Willkommen zum Body-Scan. Leg dich bequem auf den Rücken oder setz dich in eine stabile Haltung.",
+     "sage": "Willkommen, schön, dass du da bist, in den nächsten Minuten reisen wir gemeinsam ganz in Ruhe durch deinen Körper",
+     "pause": 4
+    },
+    {
+     "sage": "Leg dich bequem auf den Rücken, oder setz dich in eine stabile Haltung, ganz so, wie es für dich gerade passt",
      "pause": 6
     },
     {
-     "sage": "Die Arme liegen locker neben dem Körper. Wenn du magst, schließe die Augen.",
+     "sage": "Die Arme liegen locker neben dem Körper, und wenn du magst, schließe sanft deine Augen",
+     "pause": 6
+    },
+    {
+     "sage": "Spür, wie dein Körper von der Unterlage getragen wird, du musst dich jetzt nicht selbst halten",
      "pause": 8
     },
     {
-     "sage": "Spüre, wie dein Körper von der Unterlage getragen wird. Du musst dich nicht selbst halten.",
+     "sage": "Atme ein paar Mal etwas tiefer ein, und lang wieder aus",
+     "pause": 8
+    },
+    {
+     "sage": "Sehr schön, mit jedem Ausatmen darfst du ein kleines bisschen schwerer werden",
      "pause": 10
     },
     {
-     "sage": "Atme ein paar Mal etwas tiefer ein und lang aus. Mit jedem Ausatmen darfst du ein wenig schwerer werden.",
-     "pause": 12
+     "sage": "Du musst bei dieser Übung nichts verändern, du nimmst einfach nur wahr, was gerade da ist",
+     "pause": 6
     },
     {
-     "sage": "In dieser Übung wanderst du mit der Aufmerksamkeit durch den Körper. Du musst nichts verändern. Nur wahrnehmen, was da ist.",
+     "sage": "Vielleicht spürst du Wärme, ein Kribbeln oder Druck, vielleicht auch gar nichts, alles ist in Ordnung",
      "pause": 8
     },
     {
-     "sage": "Vielleicht spürst du Wärme, Kribbeln oder Druck. Vielleicht auch gar nichts. Alles ist in Ordnung.",
-     "pause": 8
-    },
-    {
-     "sage": "Richte deine Aufmerksamkeit jetzt auf die Zehen des linken Fußes. Spüre die einzelnen Zehen. Die Zwischenräume.",
-     "pause": 17
-    },
-    {
-     "sage": "Dann die Fußsohle, die Ferse, den Fußrücken. Den ganzen linken Fuß.",
-     "pause": 17
-    },
-    {
-     "sage": "Wandere weiter zum linken Unterschenkel. Zum Knie. Zum Oberschenkel.",
-     "pause": 22
-    },
-    {
-     "sage": "Lass das linke Bein los und wechsle zum rechten Fuß. Die Zehen. Die Sohle. Die Ferse.",
-     "pause": 17
-    },
-    {
-     "sage": "Dann der rechte Unterschenkel. Das Knie. Der Oberschenkel. Spüre das ganze rechte Bein.",
-     "pause": 22
-    },
-    {
-     "sage": "Nimm jetzt beide Beine gleichzeitig wahr. Schwer und ruhig.",
+     "sage": "Lenk deine Aufmerksamkeit jetzt ganz sanft zu den Zehen deines linken Fußes, spür die einzelnen Zehen und die kleinen Zwischenräume",
      "pause": 15
     },
     {
-     "sage": "Wandere zum Becken. Spüre die Hüften, das Gesäß, die Auflagefläche.",
-     "pause": 22
-    },
-    {
-     "sage": "Wenn deine Gedanken abschweifen, ist das kein Problem. Kehre einfach zu der Stelle zurück, an der du warst.",
-     "pause": 17
-    },
-    {
-     "sage": "Komm zum Bauch. Spüre, wie er sich mit dem Atem hebt und senkt.",
-     "pause": 26
-    },
-    {
-     "sage": "Weiter zum unteren Rücken. Dann zum mittleren und oberen Rücken. Die Schulterblätter.",
-     "pause": 26
-    },
-    {
-     "sage": "Wenn du irgendwo Spannung bemerkst, atme sanft dorthin. Du musst sie nicht wegmachen. Lass sie einfach da sein.",
-     "pause": 22
-    },
-    {
-     "sage": "Spüre deinen Brustkorb. Das Heben und Senken. Vielleicht den Herzschlag.",
-     "pause": 26
-    },
-    {
-     "sage": "Wandere zu den Händen. Zu den Fingerspitzen beider Hände. Zu den Handflächen.",
-     "pause": 22
-    },
-    {
-     "sage": "Dann die Unterarme. Die Ellbogen. Die Oberarme. Bis hinauf zu den Schultern.",
-     "pause": 22
-    },
-    {
-     "sage": "Viele Menschen tragen in den Schultern viel Last. Lass sie mit dem nächsten Ausatmen ein wenig sinken.",
-     "pause": 22
-    },
-    {
-     "sage": "Spüre den Nacken. Den Hals. Die Stelle, an der dein Kopf aufliegt.",
-     "pause": 22
-    },
-    {
-     "sage": "Komm zum Gesicht. Das Kinn. Der Kiefer. Lass die Zähne sich leicht voneinander lösen.",
-     "pause": 20
-    },
-    {
-     "sage": "Die Lippen. Die Wangen. Die Nase, durch die der Atem strömt.",
-     "pause": 17
-    },
-    {
-     "sage": "Die Augen. Die Augenlider. Die Stirn. Lass die Stirn ganz weit und glatt werden.",
-     "pause": 20
-    },
-    {
-     "sage": "Und schließlich der ganze Kopf. Der Hinterkopf. Der Scheitel.",
+     "sage": "Dann die Fußsohle, die Ferse und den Fußrücken, den ganzen linken Fuß",
      "pause": 15
     },
     {
-     "sage": "Weite deine Aufmerksamkeit jetzt aus. Spüre den ganzen Körper auf einmal. Von den Füßen bis zum Kopf.",
+     "sage": "Wandere langsam weiter nach oben, zum linken Unterschenkel, zum Knie, und weiter zum Oberschenkel",
+     "pause": 20
+    },
+    {
+     "sage": "Gut so, lass das linke Bein jetzt los, und wechsle hinüber zum rechten Fuß, zu den Zehen, der Sohle und der Ferse",
+     "pause": 15
+    },
+    {
+     "sage": "Dann der rechte Unterschenkel, das Knie, der Oberschenkel, spür das ganze rechte Bein",
+     "pause": 20
+    },
+    {
+     "sage": "Und jetzt beide Beine gleichzeitig, schwer und ruhig",
+     "pause": 15
+    },
+    {
+     "sage": "Wandere weiter zum Becken, spür die Hüften, das Gesäß und die Stelle, an der du aufliegst",
+     "pause": 20
+    },
+    {
+     "sage": "Und wenn deine Gedanken zwischendurch abschweifen, ist das gar kein Problem, kehre einfach zu der Stelle zurück, an der du gerade warst",
+     "pause": 15
+    },
+    {
+     "sage": "Komm jetzt zum Bauch, spür, wie er sich mit jedem Atemzug ganz von selbst hebt und wieder senkt",
+     "pause": 25
+    },
+    {
+     "sage": "Weiter zum unteren Rücken, dann zum mittleren und oberen Rücken, bis zu den Schulterblättern",
+     "pause": 25
+    },
+    {
+     "sage": "Wenn du irgendwo Spannung bemerkst, atme ganz sanft dorthin, du musst sie nicht wegmachen, lass sie einfach da sein",
+     "pause": 22
+    },
+    {
+     "sage": "Schön weiter atmen",
+     "pause": 15
+    },
+    {
+     "sage": "Spür jetzt deinen Brustkorb, das sanfte Heben und Senken, vielleicht sogar deinen Herzschlag",
+     "pause": 25
+    },
+    {
+     "sage": "Wandere zu deinen Händen, zu den Fingerspitzen, zu den Handflächen",
+     "pause": 20
+    },
+    {
+     "sage": "Dann die Unterarme, die Ellbogen, die Oberarme, bis hinauf zu den Schultern",
+     "pause": 20
+    },
+    {
+     "sage": "In den Schultern tragen wir oft viel Last mit uns herum, lass sie mit dem nächsten Ausatmen ein wenig sinken",
+     "pause": 20
+    },
+    {
+     "sage": "Sehr schön, spür jetzt deinen Nacken, deinen Hals und die Stelle, an der dein Kopf aufliegt",
+     "pause": 20
+    },
+    {
+     "sage": "Komm zum Gesicht, zum Kinn und zum Kiefer, lass die Zähne sich ganz leicht voneinander lösen",
+     "pause": 18
+    },
+    {
+     "sage": "Die Lippen, die Wangen, die Nase, durch die dein Atem ganz ruhig strömt",
+     "pause": 17
+    },
+    {
+     "sage": "Die Augen, die Augenlider und die Stirn, lass deine Stirn ganz weit und glatt werden",
+     "pause": 18
+    },
+    {
+     "sage": "Und schließlich dein ganzer Kopf, der Hinterkopf, bis hinauf zum Scheitel",
+     "pause": 15
+    },
+    {
+     "sage": "Weite deine Aufmerksamkeit jetzt aus, und spür deinen ganzen Körper auf einmal, von den Füßen bis zum Kopf",
      "pause": 30
     },
     {
-     "sage": "Ein Körper, der atmet. Der hier liegt. Der genau so sein darf, wie er gerade ist.",
-     "pause": 30
+     "sage": "Ein Körper, der atmet, der hier liegt, und der genau so sein darf, wie er gerade ist",
+     "pause": 40
     },
     {
-     "sage": "Langsam kehrst du zurück. Vertiefe den Atem ein wenig.",
-     "pause": 8
+     "sage": "Wunderbar, ganz langsam kommst du jetzt zurück, vertiefe deinen Atem ein wenig",
+     "pause": 7
     },
     {
-     "sage": "Bewege sanft die Finger und die Zehen. Vielleicht möchtest du dich strecken.",
-     "pause": 8
+     "sage": "Bewege sanft deine Finger und deine Zehen, und wenn du magst, streck dich einmal genüsslich",
+     "pause": 7
     },
     {
-     "sage": "Wenn du bereit bist, öffne die Augen. Nimm dir einen Moment, bevor du aufstehst.",
-     "pause": 4
+     "sage": "Wenn du so weit bist, öffne langsam die Augen, und nimm dir noch einen Moment, bevor du aufstehst, fühl dich wohl",
+     "pause": 3
     }
    ]
   },
@@ -1328,91 +1389,103 @@
    ],
    "schritte": [
     {
-     "sage": "Willkommen. Leg dich bequem in dein Bett. Das Licht ist aus oder ganz gedämpft.",
+     "sage": "Willkommen, schön, dass du dir vor dem Schlafen diesen Moment nimmst",
+     "pause": 4
+    },
+    {
+     "sage": "Leg dich ganz bequem in dein Bett, das Licht ist aus, oder ganz gedämpft",
+     "pause": 6
+    },
+    {
+     "sage": "Schließe sanft deine Augen, du musst jetzt nichts mehr tun, nur zuhören, wenn du magst",
      "pause": 8
     },
     {
-     "sage": "Schließe die Augen. Du musst jetzt nichts mehr tun. Nur zuhören, wenn du magst.",
-     "pause": 10
+     "sage": "Atme einmal tief ein",
+     "pause": 4
     },
     {
-     "sage": "Atme einmal tief ein. Und ganz langsam wieder aus.",
+     "sage": "und ganz langsam wieder aus",
+     "pause": 6
+    },
+    {
+     "sage": "Noch einmal, tief einatmen",
+     "pause": 4
+    },
+    {
+     "sage": "und lang ausatmen, so als würdest du den ganzen Tag ausatmen",
      "pause": 8
     },
     {
-     "sage": "Noch einmal. Ein. Und lang aus. Als würdest du den Tag ausatmen.",
-     "pause": 10
+     "sage": "Sehr schön, spür, wie die Matratze dich trägt, deinen Kopf auf dem Kissen, die Decke auf deiner Haut",
+     "pause": 14
     },
     {
-     "sage": "Spüre, wie die Matratze dich trägt. Den Kopf auf dem Kissen. Die Decke auf deiner Haut.",
-     "pause": 15
-    },
-    {
-     "sage": "Lass deinen Atem jetzt ganz von allein fließen. Ruhig und langsam.",
+     "sage": "Lass deinen Atem jetzt ganz von allein fließen, ruhig und langsam",
      "pause": 18
     },
     {
-     "sage": "Der Tag ist vorbei. Alles, was noch offen ist, darf bis morgen warten.",
+     "sage": "Der Tag ist vorbei, alles, was noch offen ist, darf bis morgen warten",
      "pause": 20
     },
     {
-     "sage": "Wenn Gedanken kommen, lass sie wie Wolken vorbeiziehen. Du musst keinem folgen.",
+     "sage": "Wenn Gedanken kommen, lass sie einfach wie Wolken vorbeiziehen, du musst keinem von ihnen folgen",
      "pause": 25
     },
     {
-     "sage": "Spüre deine Füße. Lass sie schwer werden. Ganz schwer.",
+     "sage": "Spür jetzt deine Füße, und lass sie schwer werden, ganz schwer",
      "pause": 20
     },
     {
-     "sage": "Die Schwere breitet sich aus. In die Beine. Die Knie. Die Oberschenkel.",
+     "sage": "Die Schwere breitet sich langsam aus, in die Beine, die Knie und die Oberschenkel",
      "pause": 22
     },
     {
-     "sage": "Das Becken sinkt in die Matratze. Der Bauch wird weich.",
+     "sage": "Dein Becken sinkt tiefer in die Matratze, und dein Bauch wird ganz weich",
      "pause": 22
     },
     {
-     "sage": "Der Rücken darf loslassen. Wirbel für Wirbel.",
+     "sage": "Auch dein Rücken darf jetzt loslassen, Wirbel für Wirbel",
      "pause": 22
     },
     {
-     "sage": "Die Schultern sinken. Die Arme liegen schwer. Die Hände sind ganz ruhig.",
+     "sage": "Deine Schultern sinken, die Arme liegen schwer, und deine Hände sind ganz ruhig",
      "pause": 25
     },
     {
-     "sage": "Dein Gesicht entspannt sich. Der Kiefer ist locker. Die Augen ruhen.",
+     "sage": "Dein Gesicht entspannt sich, der Kiefer ist locker, und deine Augen ruhen",
      "pause": 25
     },
     {
-     "sage": "Dein ganzer Körper ist jetzt schwer und warm.",
+     "sage": "Dein ganzer Körper ist jetzt schwer, warm und ruhig",
      "pause": 30
     },
     {
-     "sage": "Stell dir einen ruhigen Ort vor. Einen Strand am Abend. Eine Wiese. Oder ein warmes Zimmer.",
+     "sage": "Stell dir einen ruhigen Ort vor, vielleicht einen Strand am Abend, eine Wiese, oder ein warmes, gemütliches Zimmer",
      "pause": 20
     },
     {
-     "sage": "Hör die leisen Geräusche dort. Spüre die angenehme Temperatur. Du bist sicher.",
+     "sage": "Hör die leisen Geräusche dort, spür die angenehme Wärme, du bist ganz sicher",
      "pause": 35
     },
     {
-     "sage": "Mit jedem Ausatmen sinkst du ein wenig tiefer.",
+     "sage": "Mit jedem Ausatmen sinkst du ein kleines bisschen tiefer",
      "pause": 35
     },
     {
-     "sage": "Du kannst jetzt langsam rückwärts zählen. Bei jedem Ausatmen eine Zahl. Zehn. Neun. Acht.",
+     "sage": "Wenn du magst, zähl jetzt ganz langsam rückwärts, bei jedem Ausatmen eine Zahl, zehn, neun, acht",
      "pause": 30
     },
     {
-     "sage": "Wenn du dich verzählst, ist das gut. Dann ist der Schlaf schon nah.",
+     "sage": "Und wenn du dich verzählst, ist das gut so, dann ist der Schlaf schon ganz nah",
      "pause": 40
     },
     {
-     "sage": "Es gibt nichts mehr zu tun. Nur ruhen.",
+     "sage": "Es gibt nichts mehr zu tun, nur noch ruhen",
      "pause": 40
     },
     {
-     "sage": "Du darfst jetzt einschlafen.",
+     "sage": "Du darfst jetzt einschlafen, gute Nacht",
      "pause": 40
     }
    ]
@@ -1428,59 +1501,71 @@
    ],
    "schritte": [
     {
-     "sage": "Halt kurz an. Du musst jetzt nichts lösen. Nur die nächsten drei Minuten atmen.",
-     "pause": 3
+     "sage": "Halt kurz an, du musst jetzt nichts lösen, wir atmen nur gemeinsam die nächsten drei Minuten",
+     "pause": 2
     },
     {
-     "sage": "Stell beide Füße fest auf den Boden. Drück sie leicht hinein.",
+     "sage": "Stell beide Füße fest auf den Boden, und drück sie ganz leicht hinein",
+     "pause": 4
+    },
+    {
+     "sage": "Atme zweimal kurz durch die Nase ein",
+     "pause": 2
+    },
+    {
+     "sage": "und dann ganz lang durch den Mund wieder aus",
      "pause": 5
     },
     {
-     "sage": "Atme zweimal kurz durch die Nase ein. Und dann lang durch den Mund aus.",
+     "sage": "Noch einmal, zweimal ein",
+     "pause": 2
+    },
+    {
+     "sage": "und lang aus",
+     "pause": 5
+    },
+    {
+     "sage": "Und ein drittes Mal, zweimal ein",
+     "pause": 2
+    },
+    {
+     "sage": "und mit einem langen Seufzer aus",
      "pause": 6
     },
     {
-     "sage": "Noch einmal. Zweimal ein. Und lang aus.",
-     "pause": 6
+     "sage": "Sehr gut, atme jetzt ruhig weiter, das Ausatmen darf ruhig länger sein als das Einatmen",
+     "pause": 10
     },
     {
-     "sage": "Ein drittes Mal. Zweimal ein. Langer Seufzer aus.",
+     "sage": "Schau dich einmal um, und finde drei Dinge, die du sehen kannst, benenne sie ganz leise",
+     "pause": 12
+    },
+    {
+     "sage": "Und jetzt lausche, welche zwei Geräusche kannst du gerade hören",
+     "pause": 10
+    },
+    {
+     "sage": "Spür eine Sache, die du berührst, den Stuhl, deine Kleidung oder deine Hände",
+     "pause": 10
+    },
+    {
+     "sage": "Was du gerade fühlst, ist eine Stressreaktion, sie ist unangenehm, aber sie geht vorbei",
      "pause": 8
     },
     {
-     "sage": "Jetzt atme ruhig weiter. Das Ausatmen darf länger sein als das Einatmen.",
+     "sage": "Gib dem Gefühl einen Namen, vielleicht Angst, vielleicht Ärger, vielleicht Überforderung",
+     "pause": 10
+    },
+    {
+     "sage": "Leg eine Hand auf deine Brust oder auf deinen Bauch, und spür die Wärme deiner Hand",
      "pause": 12
     },
     {
-     "sage": "Schau dich um. Finde drei Dinge, die du sehen kannst. Benenne sie leise.",
-     "pause": 12
-    },
-    {
-     "sage": "Lausche. Welche zwei Geräusche kannst du hören?",
-     "pause": 10
-    },
-    {
-     "sage": "Spüre eine Sache, die du berührst. Den Stuhl. Deine Kleidung. Deine Hände.",
-     "pause": 10
-    },
-    {
-     "sage": "Was du fühlst, ist eine Stressreaktion. Sie ist unangenehm. Aber sie geht vorbei.",
-     "pause": 10
-    },
-    {
-     "sage": "Gib dem Gefühl einen Namen. Vielleicht Angst. Vielleicht Ärger. Vielleicht Überforderung.",
-     "pause": 10
-    },
-    {
-     "sage": "Leg eine Hand auf deine Brust oder deinen Bauch. Spüre die Wärme.",
-     "pause": 12
-    },
-    {
-     "sage": "Du hast schon viele schwierige Momente überstanden. Auch dieser wird vorübergehen.",
+     "sage": "Du hast schon so viele schwierige Momente überstanden, auch dieser geht vorüber",
      "pause": 8
     },
     {
-     "sage": "Frag dich jetzt: Was ist der nächste kleine Schritt? Nur einer.",
+     "sage": "Sehr gut gemacht, frag dich jetzt, was ist der nächste kleine Schritt, nur einer",
      "pause": 6
     }
    ]
@@ -1496,70 +1581,104 @@
    ],
    "schritte": [
     {
-     "sage": "Willkommen. Bevor du mit der Arbeit beginnst, nimmst du dir sechs Minuten, um klar zu werden.",
+     "sage": "Willkommen, bevor du mit der Arbeit beginnst, nimmst du dir sechs Minuten, um ganz klar zu werden",
+     "pause": 4
+    },
+    {
+     "sage": "Setz dich aufrecht hin, beide Füße am Boden, und leg dein Handy außer Reichweite, oder schalte es stumm",
+     "pause": 6
+    },
+    {
+     "sage": "Schließe die Augen, oder richte deinen Blick auf einen ruhigen Punkt vor dir",
      "pause": 5
     },
     {
-     "sage": "Setz dich aufrecht hin. Beide Füße am Boden. Leg das Handy außer Reichweite oder schalte es stumm.",
-     "pause": 8
+     "sage": "Atme einmal bewusst tief ein",
+     "pause": 3
     },
     {
-     "sage": "Schließe die Augen oder richte den Blick auf einen ruhigen Punkt vor dir.",
+     "sage": "und langsam wieder aus, und lass mit dem Ausatmen ein wenig von der Hektik los",
      "pause": 6
     },
     {
-     "sage": "Atme dreimal bewusst ein und aus. Mit jedem Ausatmen lässt du ein wenig von der Hektik los.",
-     "pause": 15
-    },
-    {
-     "sage": "Jetzt lass den Atem natürlich fließen. Spüre ihn an der Nasenspitze. Kühl beim Einatmen. Etwas wärmer beim Ausatmen.",
-     "pause": 22
-    },
-    {
-     "sage": "Bleib dort. Zähle zehn Atemzüge. Wenn du abschweifst, beginne einfach wieder bei eins.",
-     "pause": 40
-    },
-    {
-     "sage": "Bemerke, was dir gerade durch den Kopf geht. E-Mails. Termine. Offene Dinge.",
+     "sage": "Noch zweimal, ein, und aus, ganz in deinem Tempo",
      "pause": 10
     },
     {
-     "sage": "Stell dir vor, du legst jeden dieser Gedanken in eine Kiste neben dir. Sie sind nicht weg. Sie warten nur.",
-     "pause": 22
+     "sage": "Sehr schön, lass den Atem jetzt natürlich fließen, und spür ihn an der Nasenspitze, kühl beim Einatmen, etwas wärmer beim Ausatmen",
+     "pause": 15
     },
     {
-     "sage": "Frag dich jetzt: Was ist die eine Aufgabe, die heute am wichtigsten ist?",
+     "sage": "Bleib genau dort, und zähl zehn Atemzüge, wenn du abschweifst, beginnst du einfach wieder bei eins",
+     "pause": 35
+    },
+    {
+     "sage": "Gut so, bemerke jetzt einmal, was dir gerade alles durch den Kopf geht, Nachrichten, Termine, offene Dinge",
+     "pause": 10
+    },
+    {
+     "sage": "Stell dir vor, du legst jeden dieser Gedanken in eine Kiste neben dir, sie sind nicht weg, sie warten nur auf dich",
      "pause": 20
     },
     {
-     "sage": "Nimm dir Zeit für die Antwort. Wenn mehrere kommen, wähle die, die den größten Unterschied macht.",
+     "sage": "Und jetzt frag dich, welche eine Aufgabe ist heute am wichtigsten",
      "pause": 20
     },
     {
-     "sage": "Stell dir vor, wie du mit dieser Aufgabe beginnst. Der erste konkrete Schritt. Ganz klein und klar.",
-     "pause": 22
-    },
-    {
-     "sage": "Stell dir vor, wie du konzentriert arbeitest. Ruhig und wach. Eine Sache nach der anderen.",
-     "pause": 22
-    },
-    {
-     "sage": "Wenn später Ablenkungen kommen, kannst du jederzeit zu einem Atemzug zurückkehren. So wie jetzt.",
+     "sage": "Nimm dir Zeit für die Antwort, und wenn mehrere kommen, wähle die, die den größten Unterschied macht",
      "pause": 20
     },
     {
-     "sage": "Kehre noch einmal für einige Atemzüge zum Atem zurück. Einfach da sein.",
+     "sage": "Stell dir vor, wie du mit dieser Aufgabe beginnst, der erste konkrete Schritt, ganz klein und klar",
+     "pause": 20
+    },
+    {
+     "sage": "Und stell dir vor, wie du konzentriert arbeitest, ruhig und wach, eine Sache nach der anderen",
+     "pause": 20
+    },
+    {
+     "sage": "Wenn später Ablenkungen kommen, kannst du jederzeit zu einem Atemzug zurückkehren, so wie jetzt",
+     "pause": 15
+    },
+    {
+     "sage": "Kehre noch einmal für ein paar Atemzüge ganz zum Atem zurück, einfach nur da sein",
      "pause": 30
     },
     {
-     "sage": "Vertiefe jetzt den Atem. Spüre deine Füße und die Hände.",
+     "sage": "Sehr schön, vertiefe jetzt deinen Atem, und spür deine Füße und deine Hände",
      "pause": 6
     },
     {
-     "sage": "Öffne die Augen. Beginne mit dem ersten kleinen Schritt.",
+     "sage": "Öffne langsam die Augen, und beginne mit dem ersten kleinen Schritt, du schaffst das",
      "pause": 3
     }
    ]
   }
- ]
+ ],
+ "atem_fuehrung": {
+  "zuerst": {
+   "ein": "Atme mit mir ein",
+   "halten": "und halte den Atem ganz sanft",
+   "aus": "und ganz langsam wieder aus",
+   "halten_leer": "und bleib einen Moment leer"
+  },
+  "zahlen": [
+   "zwei",
+   "drei",
+   "vier",
+   "fünf",
+   "sechs",
+   "sieben",
+   "acht"
+  ],
+  "lob": [
+   "Sehr schön, bleib ganz in deinem Rhythmus",
+   "Gut so, ganz ruhig weiter",
+   "Wunderbar, du machst das richtig gut",
+   "Schön weiter atmen, ganz entspannt",
+   "Genau so, ganz weich und gleichmäßig"
+  ],
+  "letzte": "Und ein letztes Mal, atme tief ein",
+  "ende": "Sehr schön, lass den Atem jetzt wieder ganz frei fließen, und spür einen Moment nach"
+ }
 }

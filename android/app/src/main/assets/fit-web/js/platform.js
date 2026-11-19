@@ -226,6 +226,8 @@ export const voice = {
     current?.__done?.();
     current = null;
   },
+  /** Spricht Rem gerade? (Zählen darf nie in einen laufenden Satz fallen.) */
+  get busy() { return current != null; },
   /** Gibt es diesen Satz in Rems Stimme? (Achtsamkeit: Schlüssel »t:<Satz>«) */
   has(text) { return !!voiceIndex?.[`t:${text}`]; },
   ready: () => voiceIndexReady,
@@ -310,6 +312,35 @@ function synthBell(strength) {
       o.start(now); o.stop(now + d + 0.1);
     }
   } catch { /* stumm */ }
+}
+
+/**
+ * Rem atmet hörbar mit (erster Atemzug einer Atemübung): echte Atemaufnahme (FiftySounds, frei),
+ * »ein« ~2,2 s, »aus« ~2,8 s. maxSec: spätestens dann ausgeblendet (Phase zu Ende).
+ */
+const breathCache = new Map();
+function loadBreath(kind) {
+  if (!breathCache.has(kind)) breathCache.set(kind, fetch(`/sounds/atem-${kind}.ogg`).then((r) => r.arrayBuffer()).then((b) => audioCtx().decodeAudioData(b)).catch((e) => { breathCache.delete(kind); throw e; }));
+  return breathCache.get(kind);
+}
+/** Vorab laden (Atemübung geöffnet), damit der erste Atemzug ohne Verzögerung kommt. */
+export function preloadBreath() { loadBreath('ein').catch(() => {}); loadBreath('aus').catch(() => {}); }
+export function breathSound(kind, maxSec = 10) {
+  loadBreath(kind).then((buf) => {
+    const ctx = audioCtx();
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    const len = Math.min(buf.duration, Math.max(0.4, maxSec));
+    const t = ctx.currentTime;
+    g.gain.setValueAtTime(0.85, t);
+    if (len < buf.duration) { g.gain.setValueAtTime(0.85, t + Math.max(0, len - 0.35)); g.gain.linearRampToValueAtTime(0.0001, t + len); }
+    src.connect(g).connect(ctx.destination);
+    duckOn();
+    src.onended = () => duckOff(300);
+    src.start(t);
+    src.stop(t + len + 0.05);
+  }).catch(() => {});
 }
 
 /**

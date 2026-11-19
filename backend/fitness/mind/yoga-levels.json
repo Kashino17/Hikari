@@ -17,112 +17,250 @@
     "asana": null,
     "sekunden": 45,
     "seite": null,
-    "sage": "Willkommen. Setz dich bequem hin und lass die Hände ruhen."
+    "sage": "Willkommen, schön, dass du da bist, setz dich ganz bequem hin, gern auf ein Kissen, und lass die Hände locker auf den Oberschenkeln ruhen",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Richte dich sanft auf, als würde dich ein Faden am Scheitel ein kleines Stück nach oben ziehen"
+     },
+     {
+      "nach": 27,
+      "sage": "Lass die Schultern weich nach unten sinken, und auch das Gesicht darf jetzt ganz entspannt werden"
+     },
+     {
+      "nach": 37,
+      "sage": "Nichts muss jetzt passieren, du bist einfach hier"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 40,
     "seite": null,
-    "sage": "Schließe sanft die Augen. Spüre, wie dein Atem kommt und geht."
+    "sage": "Wenn du magst, schließ jetzt sanft die Augen und spür einfach, wie dein Atem ganz von selbst kommt und geht",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Du musst nichts verändern, nur beobachten, wie sich der Bauch beim Einatmen hebt und beim Ausatmen wieder sinkt"
+     },
+     {
+      "nach": 26,
+      "sage": "Schön, ganz ruhig, mit jedem Atemzug kommst du ein bisschen mehr bei dir an"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 35,
     "seite": null,
-    "sage": "Lass das Ausatmen ein wenig länger werden als das Einatmen."
+    "sage": "Und jetzt lass das Ausatmen ein wenig länger werden als das Einatmen, ganz sanft, ohne Anstrengung",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Einatmen, und lang und weich wieder ausatmen, genau so"
+     },
+     {
+      "nach": 20,
+      "sage": "Spür, wie mit jedem langen Ausatmen etwas Ruhe in deinen Körper kommt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "schmetterling",
     "sekunden": 45,
     "seite": null,
-    "sage": "Bring die Fußsohlen zusammen. Lass die Knie ganz von selbst sinken."
+    "sage": "Bring jetzt die Fußsohlen vor dir zusammen, umfasse locker deine Füße und lass die Knie ganz von selbst zur Seite sinken",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Richte den Rücken sanft auf, und mit jedem Ausatmen dürfen die Hüften ein kleines bisschen weicher werden"
+     },
+     {
+      "nach": 23,
+      "sage": "Du musst die Knie nicht nach unten drücken, die Schwerkraft macht das ganz von allein"
+     },
+     {
+      "nach": 33,
+      "sage": "Wenn du magst, neig dich mit langem Rücken ein klein wenig nach vorn, wunderbar"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 25,
     "seite": null,
-    "sage": "Komm in den Vierfüßlerstand. Ausatmen, mach den Rücken rund."
+    "sage": "Sehr schön, löse die Beine und komm in den Vierfüßlerstand, Hände unter den Schultern, Knie unter den Hüften",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Ausatmen, und mach den Rücken ganz rund, das Kinn sinkt sanft Richtung Brust"
+     },
+     {
+      "nach": 19,
+      "sage": "Schieb den Boden mit den Händen weg"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 25,
     "seite": null,
-    "sage": "Einatmen, lass den Bauch sinken und öffne die Brust."
+    "sage": "Einatmen, lass den Bauch sanft Richtung Boden sinken, die Brust wird weit und der Blick hebt sich ein wenig",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Schultern ziehen weg von den Ohren, der Nacken bleibt lang, schön"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 20,
     "seite": null,
-    "sage": "Ausatmen, rund. Bewege dich im Rhythmus deines Atems."
+    "sage": "Ausatmen, und wieder rund werden, ganz in deinem Tempo, Wirbel für Wirbel"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 20,
     "seite": null,
-    "sage": "Einatmen, weit. Der Atem führt, der Körper folgt."
+    "sage": "Einatmen, und öffnen, der Atem führt und dein Körper folgt ihm einfach, genau so"
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 35,
     "seite": null,
-    "sage": "Setz dich auf die Fersen und lege die Stirn ab. Ruhe hier."
+    "sage": "Und jetzt setz dich langsam zurück auf die Fersen, leg den Oberkörper ab und die Stirn sanft auf den Boden",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Arme dürfen nach vorn gestreckt sein oder locker neben dir liegen, wie es sich gut anfühlt"
+     },
+     {
+      "nach": 22,
+      "sage": "Atme ruhig in deinen Rücken und spür, wie sich die Rippen hinten bei jedem Einatmen weiten"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 40,
     "seite": null,
-    "sage": "Komm langsam zum Stehen. Falte dich mit weichen Knien nach vorn."
+    "sage": "Komm langsam aus der Stellung des Kindes hoch zum Stehen, Füße hüftbreit, und falte dich mit weichen Knien nach vorn",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Lass Kopf und Arme einfach schwer nach unten hängen, du kannst auch die Ellbogen umfassen"
+     },
+     {
+      "nach": 25,
+      "sage": "Mit jedem Ausatmen wird dein Oberkörper ein kleines bisschen schwerer, die Knie bleiben weich"
+     },
+     {
+      "nach": 34,
+      "sage": "Schön weiter atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "sitzende_vorbeuge",
     "sekunden": 45,
     "seite": null,
-    "sage": "Rolle dich auf und setz dich. Neige dich mit langem Rücken nach vorn."
+    "sage": "Beug die Knie, roll dich langsam Wirbel für Wirbel auf, der Kopf kommt zuletzt, und dann setz dich mit langen Beinen hin",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Einatmen, werde lang und heb die Arme, ausatmen, und neig dich aus der Hüfte sanft nach vorn"
+     },
+     {
+      "nach": 25,
+      "sage": "Leg die Hände dort ab, wo sie ankommen, an den Schienbeinen, den Füßen oder auf dem Boden"
+     },
+     {
+      "nach": 36,
+      "sage": "Wunderbar, einatmen lang werden, ausatmen ein kleines Stück tiefer sinken"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "sphinx",
     "sekunden": 40,
     "seite": null,
-    "sage": "Leg dich auf den Bauch. Stütz dich auf die Unterarme, Schultern weit."
+    "sage": "Komm jetzt langsam auf den Bauch, stell die Ellbogen unter die Schultern und leg die Unterarme parallel vor dir ab",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Drück die Unterarme sanft in den Boden und zieh die Brust nach vorn und oben, die Schultern weg von den Ohren"
+     },
+     {
+      "nach": 26,
+      "sage": "Lass das Becken schwer werden und das Gesäß ganz weich"
+     },
+     {
+      "nach": 33,
+      "sage": "Das machst du richtig gut, noch ein paar ruhige Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 30,
     "seite": null,
-    "sage": "Schieb dich zurück in die Stellung des Kindes. Atme in den Rücken."
+    "sage": "Sehr schön, leg die Unterarme ab, schieb dich mit den Händen zurück und sink wieder in die Stellung des Kindes",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Atme in deinen Rücken und lass ihn nach der Sphinx ganz weich werden"
+     },
+     {
+      "nach": 21,
+      "sage": "Genieß diesen Moment"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": null,
     "sekunden": 45,
     "seite": null,
-    "sage": "Setz dich aufrecht hin. Beobachte einfach, was jetzt in dir da ist."
+    "sage": "Komm in deinem Tempo hoch in einen bequemen Sitz, richte dich auf und beobachte einfach, was jetzt in dir da ist",
+    "zwischen": [
+     {
+      "nach": 25,
+      "sage": "Alles darf da sein"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 100,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Lass den Boden dein ganzes Gewicht tragen."
+    "sage": "Und jetzt leg dich auf den Rücken, lass die Füße locker nach außen fallen, die Handflächen zeigen nach oben",
+    "zwischen": [
+     {
+      "nach": 16,
+      "sage": "Schließ die Augen und lass den Boden dein ganzes Gewicht tragen, du musst jetzt nichts mehr tun"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 20,
     "seite": null,
-    "sage": "Bewege sanft Finger und Zehen. Komm in deinem Tempo zurück."
+    "sage": "Komm ganz langsam zurück, beweg sanft Finger und Zehen, streck dich genüsslich, und wenn du magst, öffne die Augen, fühl dich wohl"
    }
   ]
  },
@@ -144,189 +282,389 @@
     "asana": null,
     "sekunden": 45,
     "seite": null,
-    "sage": "Setz dich bequem hin. Komm hier an, nichts muss jetzt passieren."
+    "sage": "Willkommen zurück, setz dich bequem hin und komm hier an, es muss jetzt nichts passieren, du hast diese Zeit nur für dich",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Richte den Rücken sanft auf und lass die Schultern weich nach unten sinken"
+     },
+     {
+      "nach": 28,
+      "sage": "Spür, wo dein Körper den Boden berührt, und gib ein bisschen Gewicht dorthin ab"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 35,
     "seite": null,
-    "sage": "Spüre deinen Atem im Bauch. Er hebt und senkt sich."
+    "sage": "Leg, wenn du magst, eine Hand auf deinen Bauch und spür, wie er sich mit jedem Atemzug sanft hebt und senkt",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Ganz ruhig, du musst nichts machen, lass den Atem einfach geschehen"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 35,
     "seite": null,
-    "sage": "Zähle beim Einatmen bis vier und beim Ausatmen bis vier."
+    "sage": "Und jetzt zähl beim Einatmen langsam bis vier und beim Ausatmen wieder bis vier, ganz gleichmäßig",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Ein, zwei, drei, vier, und aus, zwei, drei, vier"
+     },
+     {
+      "nach": 22,
+      "sage": "Sehr schön, bleib in diesem ruhigen Rhythmus"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm in den Vierfüßlerstand. Ausatmen, mach den Rücken rund."
+    "sage": "Komm in den Vierfüßlerstand, Hände unter den Schultern, Knie unter den Hüften, und ausatmend mach den Rücken rund"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 20,
     "seite": null,
-    "sage": "Einatmen, lass den Bauch sinken und öffne die Brust."
+    "sage": "Einatmen, lass den Bauch sinken, öffne die Brust und heb den Blick ein wenig, schön"
    },
    {
     "phase": "asana",
     "asana": "tiefer_ausfallschritt",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Stell den linken Fuß zwischen die Hände. Leg das rechte Knie ab."
+    "sage": "Stell jetzt den linken Fuß zwischen die Hände, leg das rechte Knie ab und richte den Oberkörper sanft auf",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Lass das Becken nach vorn und unten sinken und atme in die Vorderseite der rechten Hüfte"
+     },
+     {
+      "nach": 22,
+      "sage": "Mit jedem Ausatmen darf sie ein wenig nachgeben"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "tiefer_ausfallschritt",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Wechsle. Rechter Fuß nach vorn, linkes Knie am Boden."
+    "sage": "Hände zum Boden, zurück in den Vierfüßlerstand, und jetzt kommt der rechte Fuß nach vorn, das linke Knie bleibt am Boden",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Richte dich auf, das Becken sinkt sanft nach vorn, das vordere Knie bleibt über dem Fußgelenk"
+     },
+     {
+      "nach": 24,
+      "sage": "Genau so, ganz weich atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 25,
     "seite": null,
-    "sage": "Komm nach vorn in die stehende Vorbeuge. Lass den Kopf hängen."
+    "sage": "Hände zum Boden, hol den linken Fuß nach vorn zum rechten und falte dich in die stehende Vorbeuge, der Kopf hängt locker",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die Knie dürfen weich sein, lass den Oberkörper einfach schwer werden"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 25,
     "seite": null,
-    "sage": "Rolle dich langsam auf. Steh fest und spüre den Boden unter dir."
+    "sage": "Beug die Knie und roll dich langsam Wirbel für Wirbel auf, der Kopf kommt zuletzt, und steh ganz fest",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Spür den Boden unter deinen Füßen, atme ruhig ein und aus"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "mondsichel",
     "sekunden": 20,
     "seite": "links",
-    "sage": "Hände über dem Kopf verschränken. Ausatmen, neige dich nach links."
+    "sage": "Heb einatmend die Arme, verschränk die Finger über dem Kopf, und ausatmend neig dich sanft zur linken Seite"
    },
    {
     "phase": "asana",
     "asana": "mondsichel",
     "sekunden": 20,
     "seite": "rechts",
-    "sage": "Einatmen zur Mitte. Ausatmen, neige dich nach rechts."
+    "sage": "Einatmen, zurück zur Mitte, ganz lang werden, und ausatmend neig dich jetzt zur rechten Seite, atme in die Flanke"
    },
    {
     "phase": "asana",
     "asana": "stuhl",
     "sekunden": 25,
     "seite": null,
-    "sage": "Beuge die Knie wie auf einem Stuhl. Arme lang nach oben."
+    "sage": "Komm zur Mitte, beug die Knie und schieb das Gesäß nach hinten wie auf einen Stuhl, die Arme gehen lang nach oben",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das Gewicht liegt in den Fersen, und atme gleichmäßig weiter, gerade jetzt"
+     },
+     {
+      "nach": 21,
+      "sage": "Sehr gut"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_1",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Rechter Fuß weit zurück. Linkes Knie beugen, Arme hoch."
+    "sage": "Und aus dem Stuhl mach mit dem rechten Fuß einen großen Schritt zurück, die Ferse am Boden, das linke Knie beugt sich",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Dreh den hinteren Fuß leicht nach außen, richte das Becken nach vorn aus und heb einatmend die Arme"
+     },
+     {
+      "nach": 23,
+      "sage": "Einatmend wachsen, ausatmend ein bisschen tiefer in die Beine sinken, die Schultern bleiben weich"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_1",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Wechsle die Seite. Rechtes Knie über dem Fußgelenk, Arme hoch."
+    "sage": "Sehr schön, Hände nach unten, hol den rechten Fuß nach vorn, und jetzt geht der linke Fuß weit zurück",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Beug das rechte Knie über das Fußgelenk, die hintere Ferse bleibt am Boden, und heb die Arme"
+     },
+     {
+      "nach": 22,
+      "sage": "Wunderbar, kraftvoll und ruhig atmen"
+     },
+     {
+      "nach": 28,
+      "sage": "Noch zwei Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Weiter Stand, linker Fuß zeigt nach vorn. Linkes Knie beugen, Arme weit."
+    "sage": "Komm zurück in den Stand, und dann stell die Füße weit auseinander, der linke Fuß zeigt nach vorn, der rechte leicht nach innen",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Beug das linke Knie über das Fußgelenk und streck die Arme weit zur Seite aus, auf Schulterhöhe"
+     },
+     {
+      "nach": 23,
+      "sage": "Schau über die linke Hand, und mit jedem Ausatmen sinken die Schultern ein wenig"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "umgekehrter_krieger",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Hintere Hand gleitet am Bein hinab. Der vordere Arm hebt sich."
+    "sage": "Lass die rechte Hand am hinteren Bein hinabgleiten, der linke Arm hebt sich nach oben, das vordere Knie bleibt gebeugt",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Atme in die geöffnete Flanke und spür, wie sie weit wird"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Strecke das linke Bein. Reiche weit nach vorn und öffne die Brust."
+    "sage": "Komm zurück in den Krieger, streck das linke Bein, schieb die Hüfte nach hinten und reiche mit dem Oberkörper weit nach vorn",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Leg die linke Hand ans Schienbein, der rechte Arm zeigt nach oben, und öffne die Brust zur Seite"
+     },
+     {
+      "nach": 24,
+      "sage": "Als stündest du zwischen zwei Glasscheiben, schön lang und gleichmäßig atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Dreh dich zur anderen Seite. Rechtes Knie beugen, Arme weit."
+    "sage": "Komm einatmend hoch, dreh die Füße zur anderen Seite, der rechte Fuß zeigt nach vorn, und beug das rechte Knie",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Arme weit zur Seite, der Blick geht über die rechte Hand, der Oberkörper bleibt mittig"
+     },
+     {
+      "nach": 22,
+      "sage": "Genau so, ruhig und tief atmen, du stehst stark und weich zugleich"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "umgekehrter_krieger",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Neige dich zurück. Atme in die geöffnete Flanke."
+    "sage": "Und jetzt neig dich zurück, die linke Hand gleitet am linken Bein hinab, der rechte Arm hebt sich weit nach oben",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Atme in die geöffnete Flanke, das rechte Knie bleibt gebeugt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Strecke das rechte Bein. Reiche nach vorn und öffne dich zur Seite."
+    "sage": "Streck jetzt das rechte Bein, reiche weit nach vorn und leg die rechte Hand ans Schienbein, der linke Arm zeigt nach oben",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Öffne die Brust zur Seite, und einatmend werden beide Seiten deines Körpers lang"
+     },
+     {
+      "nach": 24,
+      "sage": "Das machst du richtig gut, noch ein paar Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "baum",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Steh auf dem rechten Bein. Linker Fuß an Wade oder Oberschenkel."
+    "sage": "Komm langsam hoch, steh aufrecht und verlagere dein Gewicht auf das rechte Bein, der linke Fuß findet Wade oder Oberschenkel",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Nie direkt ans Knie, öffne das linke Knie zur Seite und bring die Hände vor die Brust"
+     },
+     {
+      "nach": 22,
+      "sage": "Ein ruhiger Atem ist ein ruhiger Stand"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "baum",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Wechsle. Steh auf dem linken Bein, der rechte Fuß findet seinen Platz."
+    "sage": "Setz den Fuß ab und wechsle, jetzt stehst du auf dem linken Bein, der rechte Fuß findet seinen Platz",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Fuß und Bein drücken sanft gegeneinander, und wenn es wackelt, ist das völlig in Ordnung"
+     },
+     {
+      "nach": 20,
+      "sage": "Such dir einen festen Punkt vor dir und atme ruhig"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "bruecke",
     "sekunden": 35,
     "seite": null,
-    "sage": "Leg dich auf den Rücken, Füße aufgestellt. Einatmen, Becken heben."
+    "sage": "Komm jetzt zum Boden und leg dich auf den Rücken, stell die Füße hüftbreit nah am Gesäß auf, die Arme neben dir",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Einatmen, drück die Füße in den Boden und heb das Becken an"
+     },
+     {
+      "nach": 20,
+      "sage": "Atme ruhig in die Brust weiter, schön"
+     },
+     {
+      "nach": 27,
+      "sage": "Und ausatmend sinkst du Wirbel für Wirbel wieder ab"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "sitzende_vorbeuge",
     "sekunden": 35,
     "seite": null,
-    "sage": "Setz dich mit langen Beinen hin. Ausatmend sanft nach vorn neigen."
+    "sage": "Roll dich zur Seite und setz dich mit langen Beinen hin, einatmend wirst du lang und hebst die Arme",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Ausatmend neig dich sanft aus der Hüfte nach vorn, die Hände legen sich ab, wo sie ankommen"
+     },
+     {
+      "nach": 22,
+      "sage": "Mit jedem Ausatmen ein kleines Stück tiefer, ganz ohne Druck"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Sitz aufrecht. Spüre deine Wurzeln, dort wo du den Boden berührst."
+    "sage": "Komm langsam hoch in einen aufrechten Sitz und spür deine Wurzeln, dort wo dein Körper den Boden berührt",
+    "zwischen": [
+     {
+      "nach": 30,
+      "sage": "Einfach da sein"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 110,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Lass alles los, der Boden trägt dich."
+    "sage": "Leg dich jetzt auf den Rücken, lass Füße und Hände locker fallen, und lass einfach alles los, der Boden trägt dich",
+    "zwischen": [
+     {
+      "nach": 20,
+      "sage": "Mit jedem Ausatmen wirst du ein wenig schwerer"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 20,
     "seite": null,
-    "sage": "Vertiefe deinen Atem. Bewege dich sanft und komm zurück."
+    "sage": "Vertiefe sanft deinen Atem, beweg Finger und Zehen, streck dich, und wenn du magst, öffne langsam die Augen, fühl dich wohl"
    }
   ]
  },
@@ -348,301 +686,515 @@
     "asana": null,
     "sekunden": 45,
     "seite": null,
-    "sage": "Komm in einen bequemen Sitz. Spüre, wie du heute hier ankommst."
+    "sage": "Willkommen, komm in einen bequemen Sitz, richte dich sanft auf und spür einfach, wie du heute hier ankommst",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Nimm einfach wahr, wie es deinem Körper gerade geht, ohne etwas zu bewerten"
+     },
+     {
+      "nach": 30,
+      "sage": "Lass die Schultern sinken und den Kiefer weich werden"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 40,
     "seite": null,
-    "sage": "Atme durch die Nase. Lass Ein und Aus gleich lang werden."
+    "sage": "Atme jetzt sanft durch die Nase ein und aus und lass das Einatmen und das Ausatmen gleich lang werden",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Ein, zwei, drei, vier, und aus, zwei, drei, vier"
+     },
+     {
+      "nach": 25,
+      "sage": "Schön gleichmäßig, wie eine ruhige Welle, die kommt und geht"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 40,
     "seite": null,
-    "sage": "Ab jetzt führt der Atem. Jede Bewegung beginnt mit einem Atemzug."
+    "sage": "Ab jetzt führt dein Atem, jede Bewegung beginnt mit einem Atemzug, und dein Körper folgt ihm einfach",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Einatmen heißt öffnen und wachsen, ausatmen heißt beugen und loslassen"
+     },
+     {
+      "nach": 26,
+      "sage": "Noch ein paar ruhige Atemzüge, dann geht es los"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm in den Vierfüßlerstand. Ausatmen, mach den Rücken rund."
+    "sage": "Komm in den Vierfüßlerstand, Hände unter den Schultern, Knie unter den Hüften, und ausatmend mach den Rücken rund"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 20,
     "seite": null,
-    "sage": "Einatmen, lass den Bauch sinken und öffne die Brust."
+    "sage": "Einatmen, lass den Bauch sinken, die Brust wird weit und der Blick hebt sich sanft"
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 15,
     "seite": null,
-    "sage": "Ausatmen, rund. Bewege dich im Rhythmus deines Atems."
+    "sage": "Ausatmen, rund werden, schieb den Boden weg"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 15,
     "seite": null,
-    "sage": "Einatmen, weit. Der Atem führt, der Körper folgt."
+    "sage": "Einatmen, weit werden, der Atem führt, der Körper folgt"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 30,
     "seite": null,
-    "sage": "Zehen auf, Becken nach hinten oben. Die Knie dürfen weich bleiben."
+    "sage": "Stell die Zehen auf und schieb das Becken nach hinten oben in den herabschauenden Hund, die Knie dürfen weich bleiben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Drück die Hände fest in den Boden und mach den Rücken lang"
+     },
+     {
+      "nach": 20,
+      "sage": "Die Fersen sinken Richtung Boden, ganz ohne Zwang"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 25,
     "seite": null,
-    "sage": "Laufe mit den Füßen zu den Händen. Hänge weich in der Vorbeuge."
+    "sage": "Lauf jetzt mit kleinen Schritten zu den Händen und häng ganz weich in der Vorbeuge, die Knie leicht gebeugt",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Lass den Kopf schwer werden, einfach ausatmen und loslassen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Rechtes Bein weit zurück. Einatmen, aufrichten, Arme nach oben."
+    "sage": "Hände zum Boden, setz das rechte Bein weit zurück und leg das Knie ab, einatmend richte dich auf, Arme nach oben",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das linke Knie bleibt über dem Fußgelenk, ausatmend sinkt das Becken ein wenig tiefer"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Hände neben den linken Fuß. Linkes Bein zurück ins Brett."
+    "sage": "Ausatmen, Hände neben den linken Fuß, heb das hintere Knie und stell das linke Bein zurück ins Brett"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Senke dich langsam ab, gern über die Knie. Einatmen, Brust nach vorn."
+    "sage": "Senk dich langsam ab, gern über die Knie, und einatmend schiebst du die Brust nach vorn und oben"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen, Becken nach hinten oben. Atme hier ruhig weiter."
+    "sage": "Ausatmen, Zehen auf, und das Becken geht nach hinten oben in den Hund, atme hier ruhig weiter",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Sehr schön, lass den Kopf locker hängen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Rechten Fuß zwischen die Hände. Einatmen, aufrichten, Arme hoch."
+    "sage": "Und jetzt der rechte Fuß zwischen die Hände, das linke Knie sinkt ab, einatmend richte dich auf, Arme hoch",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Wachse aus der Taille nach oben, und das Becken sinkt sanft"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Hände zum Boden. Rechtes Bein zurück ins Brett."
+    "sage": "Hände zum Boden, das hintere Knie hebt sich, und der rechte Fuß geht zurück ins Brett"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, die Brust hebt sich."
+    "sage": "Langsam absenken, gern über die Knie, und einatmen, die Brust hebt sich"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Spüre, wie der Atem dich trägt."
+    "sage": "Ausatmen in den Hund, und spür, wie dein Atem dich trägt",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Gut so, die Fersen dürfen schwer werden, die Schultern bleiben weit"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Linker Fuß nach vorn. Einatmen, aufrichten, Arme hoch."
+    "sage": "Der linke Fuß kommt nach vorn, das rechte Knie legt sich ab, einatmend richte dich auf, Arme hoch",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Wunderbar, du findest deinen Rhythmus"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Hände zum Boden, zurück ins Brett."
+    "sage": "Hände zum Boden, Knie heben, und zurück ins Brett, der Körper bildet eine Linie"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, Brust nach vorn."
+    "sage": "Langsam absenken, und einatmen, Brust nach vorn, Schultern weg von den Ohren"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen, zurück in den Hund."
+    "sage": "Ausatmen, zurück in den Hund, und lass dir hier einen Moment Zeit",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Ruhig und tief atmen, einatmend das Becken heben, ausatmend die Fersen sinken lassen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Rechter Fuß nach vorn. Einatmen, wachse nach oben."
+    "sage": "Rechter Fuß nach vorn, linkes Knie ab, und einatmen, wachse aus deiner Mitte nach oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die letzte Runde, du machst das richtig schön"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Zurück ins Brett. Körper wie eine Linie."
+    "sage": "Hände zum Boden, Knie heben, zurück ins Brett, und halte den Körper wie eine Linie"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Absenken. Einatmen, das Herz nach vorn."
+    "sage": "Absenken, und einatmen, das Herz schiebt sich nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Lass die Fersen schwer werden."
+    "sage": "Ausatmen in den Hund, und lass die Fersen schwer werden, ganz in deinem Tempo",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Atme ein paar Mal tief durch, das hast du dir verdient"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Linker Fuß nach vorn. Richte dich auf in den Krieger zwei."
+    "sage": "Bring den linken Fuß nach vorn zwischen die Hände, setz den rechten Fuß flach ab und richte dich auf in den Krieger zwei",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Linkes Knie über dem Fußgelenk, Arme weit auf Schulterhöhe, der Blick geht über die linke Hand"
+     },
+     {
+      "nach": 23,
+      "sage": "Schultern sinken lassen, schön"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "gestreckter_seitwinkel",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Linker Unterarm auf den Oberschenkel. Rechter Arm lang über das Ohr."
+    "sage": "Leg jetzt den linken Unterarm auf den Oberschenkel, und der rechte Arm streckt sich lang über das Ohr nach vorn",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Dreh die Brust zur Decke auf und drück die Außenkante des rechten Fußes in den Boden"
+     },
+     {
+      "nach": 22,
+      "sage": "Atme in die lange, gedehnte Seite"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "umgekehrter_krieger",
     "sekunden": 20,
     "seite": "links",
-    "sage": "Richte dich auf und neige dich zurück. Atme in die Flanke."
+    "sage": "Einatmend richte dich auf und neig dich zurück, die rechte Hand gleitet am Bein hinab, der linke Arm hebt sich"
    },
    {
     "phase": "asana",
     "asana": "pyramide",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Strecke das linke Bein, Hüften nach vorn. Neige dich über das Bein."
+    "sage": "Streck das linke Bein, verkürz den Stand ein wenig, beide Hüften zeigen nach vorn, und neig dich mit langem Rücken über das Bein",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Einatmend lang werden, ausatmend ein wenig tiefer sinken, die Hände ruhen auf der Hüfte oder am Boden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände zum Boden, zurück in den Hund."
+    "sage": "Hände zum Boden, und der linke Fuß geht zurück in den Hund, atme hier durch"
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechter Fuß nach vorn. Krieger zwei, Arme weit."
+    "sage": "Rechter Fuß nach vorn zwischen die Hände, setz den linken Fuß flach ab und richte dich auf, Krieger zwei, Arme weit",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das rechte Knie bleibt über dem Fußgelenk, der Oberkörper mittig über dem Becken"
+     },
+     {
+      "nach": 22,
+      "sage": "Kraftvoll und ruhig"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "gestreckter_seitwinkel",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechter Unterarm auf den Oberschenkel. Linker Arm lang über das Ohr."
+    "sage": "Rechter Unterarm auf den Oberschenkel, und der linke Arm streckt sich lang über das Ohr nach vorn",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Öffne die Brust zur Decke, und die linke Fußkante drückt sanft in den Boden"
+     },
+     {
+      "nach": 21,
+      "sage": "Das machst du richtig gut, atme in die obere Seite"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "umgekehrter_krieger",
     "sekunden": 20,
     "seite": "rechts",
-    "sage": "Neige dich zurück. Kraft in den Beinen, Weite im Oberkörper."
+    "sage": "Richte dich auf und neig dich zurück, Kraft in den Beinen, Weite im Oberkörper, atme in die Flanke"
    },
    {
     "phase": "asana",
     "asana": "pyramide",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Strecke das rechte Bein. Mit langem Rücken nach vorn neigen."
+    "sage": "Streck das rechte Bein, verkürz den Stand etwas, beide Hüften nach vorn, und neig dich mit langem Rücken nach vorn",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Mit jedem Ausatmen sinkst du ein kleines Stück tiefer, ganz ohne Druck"
+     },
+     {
+      "nach": 21,
+      "sage": "Wunderbar, noch ein paar Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "girlande",
     "sekunden": 30,
     "seite": null,
-    "sage": "Komm nach vorn in die tiefe Hocke. Hände vor der Brust."
+    "sage": "Hol den hinteren Fuß nach vorn, stell die Füße etwas breiter als hüftbreit und sink in die tiefe Hocke, Hände vor der Brust",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die Ellbogen drücken sanft gegen die Knie, und richte den Rücken auf, so gut es geht"
+     },
+     {
+      "nach": 23,
+      "sage": "Atme tief in den unteren Rücken"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halbes_boot",
     "sekunden": 20,
     "seite": null,
-    "sage": "Setz dich hin. Füße heben, Schienbeine parallel zum Boden."
+    "sage": "Setz dich nach hinten auf den Boden, fass hinter die Oberschenkel, lehn dich leicht zurück und heb die Füße an"
    },
    {
     "phase": "asana",
     "asana": "halbes_boot",
     "sekunden": 20,
     "seite": null,
-    "sage": "Kurz ablegen und noch einmal. Brust offen, Atem ruhig."
+    "sage": "Setz die Füße kurz ab, atme einmal durch, und noch einmal hoch, die Brust bleibt offen, der Atem ruhig"
    },
    {
     "phase": "asana",
     "asana": "bruecke",
     "sekunden": 35,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Einatmen, Becken heben."
+    "sage": "Sehr schön, leg dich auf den Rücken, stell die Füße nah am Gesäß auf, und einatmend heb das Becken",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Füße drücken in den Boden, und atme ruhig in die Brust weiter"
+     },
+     {
+      "nach": 22,
+      "sage": "Wenn du magst, verschränk die Hände unter dem Rücken"
+     },
+     {
+      "nach": 29,
+      "sage": "Und ausatmend Wirbel für Wirbel wieder ab"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 45,
     "seite": "links",
-    "sage": "Dreh dich in den Vierfüßler. Linkes Knie nach vorn, rechtes Bein lang zurück."
+    "sage": "Dreh dich in den Vierfüßlerstand, bring das linke Knie nach vorn hinter das linke Handgelenk und streck das rechte Bein lang zurück",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Der linke Fuß liegt Richtung rechte Hand, richte das Becken gerade aus und stütz dich auf die Hände"
+     },
+     {
+      "nach": 25,
+      "sage": "Wenn es sich gut anfühlt, lass den Oberkörper langsam über das vordere Bein sinken"
+     },
+     {
+      "nach": 35,
+      "sage": "Lang ausatmen in die äußere Hüfte, mit jedem Atemzug ein wenig mehr loslassen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 45,
     "seite": "rechts",
-    "sage": "Über den Vierfüßler wechseln. Rechtes Knie nach vorn. Lang ausatmen."
+    "sage": "Komm langsam hoch, zurück in den Vierfüßlerstand, und jetzt das rechte Knie nach vorn, das linke Bein lang nach hinten",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Becken gerade, der rechte Fuß liegt Richtung linke Hand, stütz dich ruhig ab"
+     },
+     {
+      "nach": 24,
+      "sage": "Sink nach vorn, so weit es angenehm ist, und atme lang aus"
+     },
+     {
+      "nach": 35,
+      "sage": "Wunderbar, lass die Hüfte einfach weich werden"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": null,
     "sekunden": 75,
     "seite": null,
-    "sage": "Setz dich ruhig hin. Spüre den Atem, der jetzt von selbst fließt."
+    "sage": "Komm in deinem Tempo hoch in einen ruhigen Sitz und spür den Atem, der jetzt ganz von selbst fließt",
+    "zwischen": [
+     {
+      "nach": 40,
+      "sage": "Einfach da sein"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 130,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Lass jede Bewegung in dir nachklingen."
+    "sage": "Leg dich jetzt auf den Rücken, Arme und Beine liegen locker, und lass jede Bewegung in dir nachklingen",
+    "zwischen": [
+     {
+      "nach": 25,
+      "sage": "Lass den Atem kommen und gehen, ganz von allein"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 20,
     "seite": null,
-    "sage": "Vertiefe den Atem. Roll dich zur Seite und komm langsam hoch."
+    "sage": "Vertiefe sanft den Atem, beweg Finger und Zehen, roll dich zur Seite und komm langsam hoch, öffne die Augen, fühl dich wohl"
    }
   ]
  },
@@ -664,392 +1216,764 @@
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Setz dich aufrecht hin. Lass den Tag für eine Weile draußen."
+    "sage": "Willkommen, setz dich aufrecht hin, schließ die Augen, wenn du magst, und lass den Tag für eine Weile draußen",
+    "zwischen": [
+     {
+      "nach": 18,
+      "sage": "Spür, wie dein Körper heute ist, ohne etwas daran ändern zu wollen"
+     },
+     {
+      "nach": 32,
+      "sage": "Lass die Schultern sinken, das Gesicht weich werden, die Hände ruhen"
+     },
+     {
+      "nach": 46,
+      "sage": "Du hast jetzt Zeit, nur für dich"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 50,
     "seite": null,
-    "sage": "Atme tief in den Bauch, dann in die Flanken, dann in die Brust."
+    "sage": "Atme jetzt tief in den Bauch, dann weiter in die Flanken und zuletzt bis hoch in die Brust",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Und beim Ausatmen leerst du dich von oben nach unten, Brust, Flanken, Bauch"
+     },
+     {
+      "nach": 28,
+      "sage": "Schön, wie eine Welle, die sich von unten nach oben füllt"
+     },
+     {
+      "nach": 40,
+      "sage": "Ganz in deinem Tempo"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 50,
     "seite": null,
-    "sage": "Lass das Ausatmen etwas länger werden. Spüre, wie Ruhe entsteht."
+    "sage": "Und jetzt lass das Ausatmen etwas länger werden als das Einatmen, und spür, wie dabei Ruhe entsteht",
+    "zwischen": [
+     {
+      "nach": 16,
+      "sage": "Ein, zwei, drei, vier, und aus, zwei, drei, vier, fünf, sechs"
+     },
+     {
+      "nach": 30,
+      "sage": "Sehr schön, mit jedem langen Ausatmen wird es in dir ein wenig stiller"
+     },
+     {
+      "nach": 42,
+      "sage": "Noch ein paar Atemzüge so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm in den Vierfüßlerstand. Ausatmen, mach den Rücken rund."
+    "sage": "Komm in den Vierfüßlerstand, Hände unter den Schultern, Knie unter den Hüften, und ausatmend mach den Rücken rund"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 20,
     "seite": null,
-    "sage": "Einatmen, lass den Bauch sinken und öffne die Brust."
+    "sage": "Einatmen, lass den Bauch sinken und öffne die Brust, die Schultern ziehen weg von den Ohren"
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 15,
     "seite": null,
-    "sage": "Ausatmen, rund. Bewege dich im Rhythmus deines Atems."
+    "sage": "Ausatmen, rund, schieb den Boden sanft weg"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 15,
     "seite": null,
-    "sage": "Einatmen, weit. Der Atem führt, der Körper folgt."
+    "sage": "Einatmen, weit, der Atem führt, der Körper folgt"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 40,
     "seite": null,
-    "sage": "Hebe das Becken in den Hund. Tritt locker abwechselnd mit den Fersen."
+    "sage": "Stell die Zehen auf und heb das Becken nach hinten oben in den Hund, die Hände drücken fest in den Boden",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Tritt jetzt locker abwechselnd mit den Fersen, beug mal das eine Knie und mal das andere"
+     },
+     {
+      "nach": 25,
+      "sage": "Und komm wieder zur Ruhe, beide Fersen sinken Richtung Boden, der Rücken wird lang"
+     },
+     {
+      "nach": 34,
+      "sage": "Schön tief atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "delfin",
     "sekunden": 35,
     "seite": null,
-    "sage": "Leg die Unterarme parallel ab. Becken hoch in den Delfin."
+    "sage": "Leg die Knie kurz ab und setz die Unterarme parallel auf, die Ellbogen unter den Schultern, und heb das Becken in den Delfin",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Drück die Unterarme fest in den Boden, der Kopf hängt frei, der Nacken bleibt lang"
+     },
+     {
+      "nach": 23,
+      "sage": "Gleichmäßig weiter atmen, auch wenn die Schultern arbeiten, das machst du gut"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ruhe kurz in der Stellung des Kindes."
+    "sage": "Sehr schön, leg die Knie ab, setz dich auf die Fersen und ruh dich kurz in der Stellung des Kindes aus",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Atme in den Rücken, und lass die Schultern nach der Arbeit ganz weich werden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Zurück in den Hund. Atme tief."
+    "sage": "Komm über den Vierfüßlerstand zurück in den Hund, Zehen auf, Becken hoch, und atme tief",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Lass den Kopf locker, die Fersen sinken"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Rechtes Bein weit zurück. Einatmen, aufrichten, Arme nach oben."
+    "sage": "Bring den linken Fuß zwischen die Hände, leg das rechte Knie ab, und einatmend richte dich auf, Arme nach oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Das Becken sinkt sanft nach vorn und unten, das linke Knie bleibt über dem Fußgelenk"
+     },
+     {
+      "nach": 22,
+      "sage": "Einatmend wachsen, ausatmend sinken"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände neben den linken Fuß. Linkes Bein zurück ins Brett."
+    "sage": "Ausatmen, Hände neben den linken Fuß, heb das hintere Knie und stell das linke Bein zurück ins Brett"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Senke dich langsam ab, gern über die Knie. Einatmen, Brust nach vorn."
+    "sage": "Senk dich langsam ab, gern über die Knie, und einatmend Brust nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ausatmen, Becken nach hinten oben. Atme hier ruhig weiter."
+    "sage": "Ausatmen, Becken nach hinten oben in den Hund, und atme hier ruhig weiter",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Schön, lass den Atem tief und gleichmäßig fließen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechten Fuß zwischen die Hände. Einatmen, aufrichten, Arme hoch."
+    "sage": "Rechten Fuß zwischen die Hände, das linke Knie sinkt ab, einatmend richte dich auf und heb die Arme",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Wachse aus der Taille nach oben, die Schultern bleiben weit weg von den Ohren"
+     },
+     {
+      "nach": 22,
+      "sage": "Genau so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände zum Boden. Rechtes Bein zurück ins Brett."
+    "sage": "Hände zum Boden, Knie heben, und der rechte Fuß geht zurück ins Brett, der Bauch ist sanft fest"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, die Brust hebt sich."
+    "sage": "Langsam absenken, und einatmen, die Brust hebt sich"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Spüre, wie der Atem dich trägt."
+    "sage": "Ausatmen in den Hund, und spür, wie dein Atem dich trägt",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Sehr gut, noch ein paar ruhige Atemzüge hier"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 20,
     "seite": null,
-    "sage": "Laufe nach vorn zu den Händen. Ausatmen, falte dich nach vorn."
+    "sage": "Lauf mit kleinen Schritten nach vorn zu den Händen, und ausatmend falte dich ganz weich in die Vorbeuge"
    },
    {
     "phase": "asana",
     "asana": "stuhl",
     "sekunden": 30,
     "seite": null,
-    "sage": "Einatmen, Knie beugen, Arme hoch in den Stuhl."
+    "sage": "Einatmen, beug die Knie, schieb das Gesäß nach hinten und heb die Arme lang nach oben in den Stuhl",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Das Gewicht liegt in den Fersen, der Bauch ist sanft fest, und atme weiter"
+     },
+     {
+      "nach": 22,
+      "sage": "Halt noch kurz, du schaffst das"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_1",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Rechter Fuß weit zurück, Ferse am Boden. Linkes Knie beugen, Arme hoch."
+    "sage": "Und jetzt geht der rechte Fuß weit zurück, die Ferse am Boden, das linke Knie beugt sich, die Arme bleiben oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Richte das Becken nach vorn aus, und lass die Schultern weich nach unten sinken"
+     },
+     {
+      "nach": 22,
+      "sage": "Einatmend wachsen, ausatmend tiefer in die Beine sinken, schön"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_3",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Neige dich nach vorn. Hebe das rechte Bein, bis du eine Linie bildest."
+    "sage": "Neig den Oberkörper nach vorn, verlagere das Gewicht auf das linke Bein und heb das rechte Bein, bis du eine Linie bildest",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Beide Hüftknochen zeigen zum Boden, die Arme strecken sich nach vorn oder ruhen vor der Brust"
+     },
+     {
+      "nach": 23,
+      "sage": "Ein langes Ausatmen hilft gegen das Wackeln"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 15,
     "seite": null,
-    "sage": "Setz den Fuß ab. Hänge kurz in der Vorbeuge."
+    "sage": "Setz den rechten Fuß neben den linken und häng kurz ganz weich in der Vorbeuge"
    },
    {
     "phase": "asana",
     "asana": "krieger_1",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Linker Fuß weit zurück. Rechtes Knie beugen, Arme hoch."
+    "sage": "Richte dich mit weichen Knien auf, und jetzt geht der linke Fuß weit zurück, das rechte Knie beugt sich, Arme hoch",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die hintere Ferse bleibt am Boden, das Becken zeigt nach vorn, und atme kräftig und ruhig"
+     },
+     {
+      "nach": 23,
+      "sage": "Wunderbar, ganz stabil"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_3",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Gewicht nach vorn. Hebe das linke Bein in die Waagrechte."
+    "sage": "Gewicht nach vorn auf das rechte Bein, und heb das linke Bein, bis es mit dem Oberkörper eine Linie bildet",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Such dir einen festen Punkt am Boden, und wenn du wackelst, ist das völlig in Ordnung"
+     },
+     {
+      "nach": 22,
+      "sage": "Lang ausatmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 15,
     "seite": null,
-    "sage": "Setz den Fuß ab und atme in der Vorbeuge."
+    "sage": "Setz den linken Fuß ab, und atme ganz entspannt in der Vorbeuge"
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Weiter Stand, linker Fuß nach vorn. Komm ins Dreieck."
+    "sage": "Komm hoch, stell die Füße weit auseinander, der linke Fuß zeigt nach vorn, und reiche weit über das linke Bein ins Dreieck",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Linke Hand ans Schienbein oder zum Boden, der rechte Arm zeigt nach oben, die Brust öffnet sich"
+     },
+     {
+      "nach": 24,
+      "sage": "Lang und gleichmäßig atmen, sehr schön"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halbmond",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Beuge das linke Knie, Hand nach vorn. Hebe das rechte Bein."
+    "sage": "Beug das linke Knie, setz die linke Hand eine Fußlänge vor den Fuß, und heb das rechte Bein auf Hüfthöhe",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Streck das Standbein, öffne Hüfte und Brust zur Seite, der rechte Arm zeigt nach oben"
+     },
+     {
+      "nach": 22,
+      "sage": "Ruhig atmen, du bist ganz stabil"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Wechsle die Seite. Rechter Fuß nach vorn, Dreieck."
+    "sage": "Setz das Bein langsam ab, dreh dich zur anderen Seite, der rechte Fuß zeigt nach vorn, und komm ins Dreieck",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Rechte Hand ans Schienbein, der linke Arm zeigt nach oben, und die Brust dreht sich auf"
+     },
+     {
+      "nach": 23,
+      "sage": "Einatmend lang werden, ausatmend weiter öffnen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halbmond",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechtes Knie beugen, Hand nach vorn. Hebe das linke Bein."
+    "sage": "Rechtes Knie beugen, die rechte Hand eine Fußlänge nach vorn, und heb das linke Bein auf Hüfthöhe",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Streck das Standbein, der linke Arm zeigt nach oben, und öffne dich zur Seite"
+     },
+     {
+      "nach": 21,
+      "sage": "Das machst du richtig gut"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "baum",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Komm zum Stehen. Baum auf dem rechten Bein, linker Fuß hoch."
+    "sage": "Setz das Bein ab und komm zum Stehen, das Gewicht auf dem rechten Bein, der linke Fuß findet Wade oder Oberschenkel",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Nie direkt ans Knie, Hände vor die Brust oder nach oben, ruhig atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "baum",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Wechsle. Baum auf dem linken Bein. Blick auf einen festen Punkt."
+    "sage": "Wechsle die Seite, jetzt stehst du auf dem linken Bein, und such dir mit dem Blick einen festen Punkt",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Der rechte Fuß drückt sanft gegen das Bein, das Knie öffnet sich zur Seite"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "adler",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Linkes Bein über das rechte kreuzen. Arme verschränken, tief sinken."
+    "sage": "Beug die Knie leicht, steh auf dem rechten Bein und kreuz das linke Bein darüber, die Arme verschränken sich vor der Brust",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Ellbogen auf Schulterhöhe, und sink noch ein wenig tiefer in das Standbein"
+     },
+     {
+      "nach": 21,
+      "sage": "Atme in den Rücken"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "adler",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Wechsle. Rechtes Bein über das linke, Arme andersherum."
+    "sage": "Lös dich langsam und wechsle, jetzt kreuzt das rechte Bein über das linke, und die Arme verschränken sich andersherum",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Richte den Oberkörper auf und atme zwischen die Schulterblätter, dort wird es weit"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "hand_zum_zeh",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Steh auf dem rechten Bein. Greif den linken großen Zeh, Bein strecken."
+    "sage": "Steh auf dem rechten Bein, zieh das linke Knie zur Brust und fass mit zwei Fingern den großen Zeh, dann streck das Bein",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Nur so weit, wie dein Rücken aufrecht bleibt, die andere Hand ruht an der Hüfte"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "hand_zum_zeh",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Steh auf dem linken Bein. Greif den rechten großen Zeh."
+    "sage": "Setz ab und wechsle, steh auf dem linken Bein, greif den rechten großen Zeh und streck ausatmend das Bein",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Ein gebeugtes Knie ist völlig in Ordnung, Hauptsache du stehst stabil und atmest ruhig"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 30,
     "seite": null,
-    "sage": "Komm ins Brett. Spüre die Linie vom Kopf bis zur Ferse."
+    "sage": "Komm nach unten, Hände schulterbreit unter die Schultern, und stell die Beine nacheinander zurück ins Brett",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Spür die Linie vom Kopf bis zur Ferse, das Becken hängt nicht durch"
+     },
+     {
+      "nach": 19,
+      "sage": "Drück den Boden weg und atme weiter, wunderbar"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "seitstuetz",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Dreh dich auf die linke Hand. Hüfte hoch, rechter Arm nach oben."
+    "sage": "Dreh dich auf die linke Hand und die Außenkante des linken Fußes, Füße übereinander, Hüfte hoch, der rechte Arm nach oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die linke Hand steht leicht vor der Schulter, und der Atem bleibt lang"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Zurück ins Brett."
+    "sage": "Und zurück ins Brett, beide Hände am Boden"
    },
    {
     "phase": "asana",
     "asana": "seitstuetz",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Dreh dich auf die rechte Hand. Hüfte heben, Brust öffnen."
+    "sage": "Jetzt dreh dich auf die rechte Hand, Füße übereinander, Hüfte heben und die Brust öffnen, der linke Arm geht nach oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Kraft im Arm, Weite in der Brust, du machst das großartig"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ruhe in der Stellung des Kindes. Lass die Arme schwer werden."
+    "sage": "Leg die Knie ab, sink zurück in die Stellung des Kindes und lass die Arme ganz schwer werden",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Ruh dich aus, atme in den Rücken"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "girlande",
     "sekunden": 35,
     "seite": null,
-    "sage": "Komm in die tiefe Hocke. Hände vor der Brust."
+    "sage": "Komm langsam hoch, stell die Füße etwas breiter als hüftbreit und sink in die tiefe Hocke, Hände vor der Brust",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Ellbogen drücken sanft gegen die Knie, der Rücken richtet sich auf"
+     },
+     {
+      "nach": 22,
+      "sage": "Atme tief in den unteren Rücken und in den Beckenboden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kraehe",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände auf den Boden, Knie an die Oberarme. Gewicht nach vorn."
+    "sage": "Setz die Hände schulterbreit vor dir auf, Knie hoch an die Oberarme, und verlagere das Gewicht langsam nach vorn"
    },
    {
     "phase": "asana",
     "asana": "girlande",
     "sekunden": 20,
     "seite": null,
-    "sage": "Zurück in die Hocke. Atme durch."
+    "sage": "Komm zurück in die Hocke und atme einmal tief durch, sehr schön"
    },
    {
     "phase": "asana",
     "asana": "kraehe",
     "sekunden": 20,
     "seite": null,
-    "sage": "Noch ein Versuch. Blick nach vorn, ein Fuß nach dem anderen."
+    "sage": "Noch ein Versuch, Hände auf, Blick nach vorn, und heb erst einen Fuß und dann den anderen, die Luft nicht anhalten"
    },
    {
     "phase": "asana",
     "asana": "halbes_boot",
     "sekunden": 25,
     "seite": null,
-    "sage": "Setz dich hin. Komm ins halbe Boot."
+    "sage": "Setz dich nach hinten auf den Boden, fass hinter die Oberschenkel und heb die Füße, Schienbeine parallel zum Boden",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Brust aufrichten, der Bauch ist sanft aktiv, und ruhig weiter atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "boot",
     "sekunden": 30,
     "seite": null,
-    "sage": "Strecke die Beine, wenn du magst. Arme nach vorn, Brust offen."
+    "sage": "Wenn du magst, streck jetzt die Beine schräg nach oben und die Arme nach vorn, die Brust bleibt offen",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Der Rücken bleibt lang, und atme gleichmäßig in die Brust"
+     },
+     {
+      "nach": 20,
+      "sage": "Fest, aber nicht hart, noch ein paar Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "boot",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ablegen, kurz atmen, und noch einmal ins Boot."
+    "sage": "Setz die Füße langsam ab, atme kurz durch, und dann noch einmal hinauf ins Boot",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Genau so, Brust offen, Arme lang nach vorn"
+     },
+     {
+      "nach": 20,
+      "sage": "Und halten, ruhig atmen, du bist stärker, als du denkst"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "bruecke",
     "sekunden": 40,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Einatmen, Becken heben."
+    "sage": "Leg dich langsam auf den Rücken, stell die Füße nah am Gesäß auf, und einatmend heb das Becken",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Füße drücken in den Boden, die Arme liegen neben dir oder verschränken sich unter dem Rücken"
+     },
+     {
+      "nach": 24,
+      "sage": "Atme ruhig in die Brust"
+     },
+     {
+      "nach": 31,
+      "sage": "Und ausatmend roll dich Wirbel für Wirbel wieder ab"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 45,
     "seite": "links",
-    "sage": "Dreh dich in den Vierfüßler. Linkes Knie nach vorn, rechtes Bein lang zurück."
+    "sage": "Dreh dich in den Vierfüßlerstand, bring das linke Knie hinter das linke Handgelenk und streck das rechte Bein lang zurück",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Richte das Becken gerade aus, stütz dich auf die Hände, und wenn du magst, sink nach vorn"
+     },
+     {
+      "nach": 26,
+      "sage": "Lang ausatmen in die äußere Hüfte, und mit jedem Atemzug ein wenig mehr loslassen"
+     },
+     {
+      "nach": 37,
+      "sage": "Schön so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 45,
     "seite": "rechts",
-    "sage": "Über den Vierfüßler wechseln. Rechtes Knie nach vorn. Atme in die Hüfte."
+    "sage": "Komm hoch, über den Vierfüßlerstand wechseln, jetzt das rechte Knie nach vorn, das linke Bein lang nach hinten",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Becken gerade, und atme in die rechte Hüfte"
+     },
+     {
+      "nach": 24,
+      "sage": "Lass den Oberkörper sinken, so weit es angenehm ist, ganz ohne Druck"
+     },
+     {
+      "nach": 36,
+      "sage": "Wunderbar, noch ein paar lange Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "sitzende_vorbeuge",
     "sekunden": 45,
     "seite": null,
-    "sage": "Setz dich mit langen Beinen hin. Lass dich nach vorn sinken."
+    "sage": "Komm hoch, setz dich mit langen Beinen hin, und einatmend wirst du lang und hebst die Arme",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Ausatmend lass dich aus der Hüfte nach vorn sinken, die Hände liegen dort, wo sie ankommen"
+     },
+     {
+      "nach": 25,
+      "sage": "Einatmend verlängern, ausatmend ein kleines Stück tiefer"
+     },
+     {
+      "nach": 34,
+      "sage": "Lass auch den Nacken ganz weich werden"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": null,
     "sekunden": 120,
     "seite": null,
-    "sage": "Setz dich aufrecht. Richte den inneren Blick auf einen ruhigen Punkt."
+    "sage": "Komm langsam hoch in einen aufrechten Sitz, schließ die Augen und richte den inneren Blick auf einen ruhigen Punkt",
+    "zwischen": [
+     {
+      "nach": 60,
+      "sage": "Wenn Gedanken kommen, lass sie einfach weiterziehen"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 180,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Kraft und Gleichgewicht dürfen sich jetzt setzen."
+    "sage": "Leg dich jetzt auf den Rücken, lass Arme und Beine locker fallen, Kraft und Gleichgewicht dürfen sich jetzt setzen",
+    "zwischen": [
+     {
+      "nach": 30,
+      "sage": "Mit jedem Ausatmen gibst du ein wenig mehr Gewicht an den Boden ab"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 20,
     "seite": null,
-    "sage": "Bewege dich langsam. Komm über die Seite hoch."
+    "sage": "Komm ganz langsam zurück, beweg Finger und Zehen, streck dich, komm über die Seite hoch, und öffne die Augen, fühl dich wohl"
    }
   ]
  },
@@ -1071,483 +1995,951 @@
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Komm in einen bequemen Sitz. Hier darfst du einfach sein."
+    "sage": "Schön, dass du da bist, komm in einen bequemen Sitz, gern auf eine gefaltete Decke, und lass die Hände locker auf den Knien ruhen",
+    "zwischen": [
+     {
+      "nach": 16,
+      "sage": "Richte dich sanft auf, als würde dich ein feiner Faden am Scheitel nach oben ziehen, und lass die Schultern sinken"
+     },
+     {
+      "nach": 30,
+      "sage": "Heute geht es ums Öffnen, um Hüften, Herz und Rücken, ganz in deinem Tempo, ohne etwas zu erzwingen"
+     },
+     {
+      "nach": 42,
+      "sage": "Schließ die Augen, wenn du magst, und spür einfach nach, wie du heute hier ankommst"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 50,
     "seite": null,
-    "sage": "Atme ruhig ein. Atme langsam aus. Spüre die Pause dazwischen."
+    "sage": "Lenk deine Aufmerksamkeit jetzt zum Atem, atme ruhig durch die Nase ein und ganz langsam wieder aus",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Spür die kleine Pause, nachdem du ausgeatmet hast, einen Moment Stille, bevor der nächste Atemzug von selbst kommt"
+     },
+     {
+      "nach": 30,
+      "sage": "Sehr schön, lass den Atem kommen und gehen wie Wellen am Strand"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Lass das Ausatmen doppelt so lang werden wie das Einatmen."
+    "sage": "Und jetzt lass das Ausatmen ein wenig länger werden, atme ein auf vier und lass es auf acht ganz langsam ausströmen",
+    "zwischen": [
+     {
+      "nach": 16,
+      "sage": "Wenn acht zu lang ist, nimm einfach sechs, es soll sich weich anfühlen, nicht anstrengend"
+     },
+     {
+      "nach": 30,
+      "sage": "Mit jedem langen Ausatmen wird dein Körper ein bisschen schwerer und dein Kopf ein bisschen ruhiger"
+     },
+     {
+      "nach": 44,
+      "sage": "Wunderbar, noch ein paar Atemzüge in diesem Rhythmus"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "schmetterling",
     "sekunden": 60,
     "seite": null,
-    "sage": "Fußsohlen zusammen. Lass die Hüften im Ausatmen weich werden."
+    "sage": "Sehr schön, bring jetzt die Fußsohlen zusammen und lass die Knie ganz von selbst zur Seite sinken, die Hände umfassen die Füße",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Richte den Rücken lang auf, und mit jedem Ausatmen dürfen die Hüften ein wenig weicher werden"
+     },
+     {
+      "nach": 28,
+      "sage": "Drück die Knie nicht nach unten, lass einfach die Schwerkraft für dich arbeiten"
+     },
+     {
+      "nach": 40,
+      "sage": "Wenn du magst, neig dich mit langem Rücken ein Stück nach vorn, nur so weit, wie es angenehm bleibt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm in den Vierfüßlerstand. Ausatmen, mach den Rücken rund."
+    "sage": "Gut so, löse die Beine und komm in den Vierfüßlerstand, ausatmen, und mach den Rücken ganz rund, das Kinn sinkt zur Brust"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 20,
     "seite": null,
-    "sage": "Einatmen, lass den Bauch sinken und öffne die Brust."
+    "sage": "Einatmen, lass den Bauch sinken, heb das Brustbein nach vorn und den Blick sanft ein wenig nach oben"
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 15,
     "seite": null,
-    "sage": "Ausatmen, rund. Bewege dich im Rhythmus deines Atems."
+    "sage": "Ausatmen, schieb den Boden weg und runde den Rücken, Wirbel für Wirbel"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 15,
     "seite": null,
-    "sage": "Einatmen, weit. Der Atem führt, der Körper folgt."
+    "sage": "Einatmen, öffne die Brust, und lass die Bewegung ganz deinem Atem folgen"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 40,
     "seite": null,
-    "sage": "Becken nach hinten oben in den Hund. Tritt locker auf der Stelle."
+    "sage": "Schön, stell die Zehen auf und schieb das Becken nach hinten oben in den herabschauenden Hund, die Knie dürfen gebeugt bleiben",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Tritt locker auf der Stelle, mal die eine Ferse, mal die andere, und spür die Rückseite der Beine"
+     },
+     {
+      "nach": 26,
+      "sage": "Drück die Hände fest in den Boden und lass den Kopf ganz entspannt hängen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 20,
     "seite": null,
-    "sage": "Laufe nach vorn zu den Händen. Hänge weich."
+    "sage": "Lauf jetzt in kleinen Schritten nach vorn zu deinen Händen und lass den Oberkörper weich nach unten hängen, die Knie locker"
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Rechtes Bein weit zurück. Einatmen, aufrichten, Arme nach oben."
+    "sage": "Stell das rechte Bein weit nach hinten, das linke Knie ist gebeugt, einatmen, richte dich auf und streck die Arme nach oben",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Das vordere Knie bleibt über der Ferse, und das hintere Bein ist lang und kraftvoll"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände neben den linken Fuß. Linkes Bein zurück ins Brett."
+    "sage": "Ausatmen, Hände neben den linken Fuß, und dann steigt das linke Bein zurück ins Brett, dein Körper wie eine lange Linie"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Senke dich langsam ab, gern über die Knie. Einatmen, Brust nach vorn."
+    "sage": "Senk dich langsam ab, gern über die Knie, einatmen, und schieb die Brust nach vorn und oben"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ausatmen, Becken nach hinten oben. Atme hier ruhig weiter."
+    "sage": "Ausatmen, Becken nach hinten oben in den Hund, und hier atmest du ein paar Mal ruhig ein und aus",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Sehr schön, die Schultern weg von den Ohren, der Nacken ist ganz weich"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechten Fuß zwischen die Hände. Einatmen, aufrichten, Arme hoch."
+    "sage": "Bring den rechten Fuß nach vorn zwischen die Hände, einatmen, richte dich auf und heb die Arme hoch",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das Becken sinkt sanft nach unten, und der Oberkörper wächst nach oben, wunderbar"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände zum Boden. Rechtes Bein zurück ins Brett."
+    "sage": "Hände zum Boden, und das rechte Bein steigt zurück ins Brett, der Bauch ist fest, die Schultern über den Handgelenken"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, die Brust hebt sich."
+    "sage": "Langsam absenken, die Ellbogen nah am Körper, einatmen, und die Brust hebt sich"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Spüre, wie der Atem dich trägt."
+    "sage": "Ausatmen, zurück in den Hund, und spür, wie dein Atem dich durch diese Bewegung trägt",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Lass die Fersen Richtung Boden sinken, sie müssen ihn nicht berühren, gut so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Linker Fuß nach vorn. Einatmen, aufrichten, Arme hoch."
+    "sage": "Jetzt kommt der linke Fuß nach vorn, einatmen, richte dich auf und heb die Arme, ganz in deinem Tempo",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Spür die Länge in der rechten Leiste"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Hände zum Boden, zurück ins Brett."
+    "sage": "Hände zum Boden, und zurück ins Brett, ganz stabil"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, Brust nach vorn."
+    "sage": "Senk dich ab, einatmen, und öffne das Herz nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen, zurück in den Hund."
+    "sage": "Ausatmen, zurück in den Hund, und nimm dir einen Moment, um einfach zu atmen",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Das machst du richtig gut"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Rechter Fuß nach vorn. Einatmen, wachse nach oben."
+    "sage": "Und der rechte Fuß kommt nach vorn, einatmen, und wachse lang nach oben, die Fingerspitzen ziehen zum Himmel",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Schultern bleiben weich und weit weg von den Ohren"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Zurück ins Brett. Körper wie eine Linie."
+    "sage": "Zurück ins Brett, und dein Körper bildet eine Linie vom Kopf bis zu den Fersen"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Absenken. Einatmen, das Herz nach vorn."
+    "sage": "Langsam ablegen, einatmen, und das Herz strebt nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Lass die Fersen schwer werden."
+    "sage": "Ausatmen in den Hund, lass die Fersen schwer werden, und atme noch einmal tief in den Rücken",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Sehr schön, das war der letzte Durchgang"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "vorbeuge_schulteroeffnung",
     "sekunden": 40,
     "seite": null,
-    "sage": "Komm zum Stehen. Hände hinter dem Rücken verschränken, nach vorn falten."
+    "sage": "Lauf nach vorn zu deinen Händen und roll dich langsam auf zum Stehen, verschränk die Hände hinter dem Rücken und öffne die Brust",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Ausatmen, und falte dich mit weichen Knien aus der Hüfte nach vorn, die Arme sinken über den Kopf"
+     },
+     {
+      "nach": 25,
+      "sage": "Lass den Kopf ganz schwer hängen und spür, wie sich die Schultern öffnen"
+     },
+     {
+      "nach": 33,
+      "sage": "Und jetzt roll dich langsam auf, die Hände löst du zuletzt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Weiter Stand, linker Fuß nach vorn. Krieger zwei."
+    "sage": "Komm in einen weiten Stand, dreh den linken Fuß nach vorn, beug das linke Knie und streck die Arme lang zur Seite",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Das Knie bleibt genau über der Ferse, und der Blick ruht über der linken Hand"
+     },
+     {
+      "nach": 24,
+      "sage": "Spür, wie kraftvoll und gleichzeitig ruhig du hier stehst"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "gestreckter_seitwinkel",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Linker Unterarm auf den Oberschenkel. Rechter Arm lang nach vorn."
+    "sage": "Leg den linken Unterarm auf den Oberschenkel, und der rechte Arm streckt sich lang über das Ohr nach vorn",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Eine lange Linie vom rechten Fuß bis in die Fingerspitzen, und die Brust dreht sich ein wenig zur Decke"
+     },
+     {
+      "nach": 25,
+      "sage": "Sehr schön, atme in die lange Seite"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "umgekehrter_krieger",
     "sekunden": 20,
     "seite": "links",
-    "sage": "Richte dich auf und neige dich zurück."
+    "sage": "Richte dich auf, die rechte Hand gleitet sanft am hinteren Bein hinab, und der linke Arm zieht nach oben und zurück"
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Strecke das linke Bein. Komm ins Dreieck, Brust offen."
+    "sage": "Strecke jetzt das linke Bein, schieb dich lang nach vorn und kipp in das Dreieck, die linke Hand am Schienbein, die Brust offen",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Beide Seiten deiner Taille bleiben lang, der rechte Arm zeigt zur Decke"
+     },
+     {
+      "nach": 23,
+      "sage": "Wenn dein Nacken es mag, schau zur oberen Hand, sonst einfach geradeaus"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halbmond",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Linkes Knie beugen, Hand nach vorn. Rechtes Bein heben."
+    "sage": "Beug das linke Knie, setz die linke Hand etwa eine Fußlänge nach vorn, gern auf einen Block, und heb das rechte Bein",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Streck das Standbein und öffne Hüfte und Brust zur Seite, schwanken ist ganz normal"
+     },
+     {
+      "nach": 22,
+      "sage": "Wenn du wackelst, schau einfach zum Boden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Dreh dich um. Rechter Fuß nach vorn, Krieger zwei."
+    "sage": "Setz das Bein langsam ab, komm hoch und dreh dich zur anderen Seite, rechter Fuß nach vorn, Knie beugen, Arme weit",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Sinke ein wenig tiefer in das rechte Knie, und die Arme ziehen in beide Richtungen auseinander"
+     },
+     {
+      "nach": 24,
+      "sage": "Gut so, ruhig und gleichmäßig weiteratmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "gestreckter_seitwinkel",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Rechter Unterarm auf den Oberschenkel. Linker Arm lang nach vorn."
+    "sage": "Der rechte Unterarm kommt auf den Oberschenkel, und der linke Arm streckt sich lang über das Ohr",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Drück die Außenkante des linken Fußes in den Boden und spür die ganze Länge deiner Flanke"
+     },
+     {
+      "nach": 24,
+      "sage": "Wunderbar, noch zwei Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "umgekehrter_krieger",
     "sekunden": 20,
     "seite": "rechts",
-    "sage": "Neige dich zurück. Atme in die lange Seite."
+    "sage": "Richte dich auf und neig dich zurück, die linke Hand liegt leicht am hinteren Bein, atme in die lange Seite"
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Strecke das rechte Bein. Dreieck, Blick nach oben oder vorn."
+    "sage": "Streck das rechte Bein, werde lang nach vorn und senk dich ins Dreieck, die rechte Hand am Schienbein oder auf einem Block",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Öffne die Brust zur Seite, als würdest du zwischen zwei Glasscheiben stehen"
+     },
+     {
+      "nach": 23,
+      "sage": "Der Blick geht nach oben oder geradeaus, ganz wie es sich für deinen Nacken gut anfühlt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halbmond",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechtes Knie beugen, Hand nach vorn. Linkes Bein heben."
+    "sage": "Beug das rechte Knie, die rechte Hand wandert nach vorn, und das linke Bein hebt sich bis auf Hüfthöhe",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Der linke Arm zeigt nach oben, die Hüfte öffnet sich, und du atmest ganz ruhig weiter"
+     },
+     {
+      "nach": 22,
+      "sage": "Sehr schön, genau so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Hände zum Boden, zurück in den Hund."
+    "sage": "Setz das Bein ab, die Hände kommen zum Boden, und steig zurück in den herabschauenden Hund",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Schüttel kurz die Beine aus, wenn du magst"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "seitstuetz",
     "sekunden": 20,
     "seite": "links",
-    "sage": "Dreh dich auf die linke Hand in den Seitstütz."
+    "sage": "Komm nach vorn ins Brett und dreh dich auf die linke Hand in den Seitstütz, die Füße übereinander, rechter Arm nach oben"
    },
    {
     "phase": "asana",
     "asana": "wild_thing",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Setz den rechten Fuß hinter dir auf. Hüfte hoch, Brust zum Himmel."
+    "sage": "Setz den rechten Fuß hinter dir auf, heb die Hüfte, öffne die Brust zum Himmel und streck den rechten Arm weit über den Kopf",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Drück dich kräftig aus der linken Hand hoch, damit die Schulter stabil bleibt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm zurück in den Hund. Atme durch."
+    "sage": "Und ganz kontrolliert zurück in den Hund, atme hier ein paarmal tief durch"
    },
    {
     "phase": "asana",
     "asana": "seitstuetz",
     "sekunden": 20,
     "seite": "rechts",
-    "sage": "Dreh dich auf die rechte Hand in den Seitstütz."
+    "sage": "Komm nach vorn ins Brett und dreh dich auf die rechte Hand, die Hüfte hebt sich, der linke Arm streckt sich nach oben"
    },
    {
     "phase": "asana",
     "asana": "wild_thing",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Setz den linken Fuß hinter dir auf. Öffne das Herz nach oben."
+    "sage": "Setz den linken Fuß hinter dir auf, heb die Hüfte hoch und lass dein Herz sich weit nach oben öffnen",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Stützhand drückt fest in den Boden, und der Atem fließt weiter"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 30,
     "seite": null,
-    "sage": "Komm über den Hund in die Stellung des Kindes."
+    "sage": "Komm zurück in den Hund, leg die Knie ab und sinke mit dem Becken zu den Fersen in die Stellung des Kindes",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Die Stirn ruht am Boden, und dein Atem darf sich wieder beruhigen"
+     },
+     {
+      "nach": 22,
+      "sage": "Sehr gut, gönn dir diesen Moment"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "tiefer_ausfallschritt",
     "sekunden": 50,
     "seite": "links",
-    "sage": "Linker Fuß nach vorn, rechtes Knie ab. Becken sinkt sanft."
+    "sage": "Komm in den Vierfüßlerstand, stell den linken Fuß nach vorn zwischen die Hände und leg das rechte Knie sanft ab, gern auf einer Decke",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Heb den Oberkörper auf, die Hände ruhen auf dem linken Knie, und das Becken sinkt langsam nach vorn unten"
+     },
+     {
+      "nach": 26,
+      "sage": "Das vordere Knie bleibt über dem Fußgelenk, so schützt du dein Knie"
+     },
+     {
+      "nach": 36,
+      "sage": "Wenn du magst, heb die Arme nach oben, und atme tief in die rechte Leiste"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "tiefer_ausfallschritt",
     "sekunden": 50,
     "seite": "rechts",
-    "sage": "Rechter Fuß nach vorn, linkes Knie ab. Atme in die Hüfte."
+    "sage": "Hände zum Boden, und über den Vierfüßlerstand wechselst du die Seite, rechter Fuß nach vorn, das linke Knie ruht am Boden",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Richte dich auf und lass das Becken schwer werden, kein Drücken, nur Nachgeben"
+     },
+     {
+      "nach": 26,
+      "sage": "Atme in die Hüfte, als könntest du den Atem genau dorthin schicken"
+     },
+     {
+      "nach": 38,
+      "sage": "Wunderbar, bleib noch einen Moment und genieß die Weite"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "girlande",
     "sekunden": 45,
     "seite": null,
-    "sage": "Komm in die tiefe Hocke. Lass das Becken schwer werden."
+    "sage": "Komm nach vorn, stell die Füße etwas weiter als hüftbreit auf und sinke in die tiefe Hocke, die Hände vor der Brust",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Die Ellbogen schieben die Knie sanft nach außen, und der Rücken wird lang"
+     },
+     {
+      "nach": 26,
+      "sage": "Wenn die Fersen nicht zum Boden kommen, leg einfach eine gerollte Decke darunter"
+     },
+     {
+      "nach": 36,
+      "sage": "Lass das Becken ganz schwer werden, und atme ruhig weiter"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "sphinx",
     "sekunden": 40,
     "seite": null,
-    "sage": "Leg dich auf den Bauch. Komm in die Sphinx und wärme den Rücken."
+    "sage": "Setz dich ab und leg dich langsam auf den Bauch, die Ellbogen unter den Schultern, und komm in die Sphinx",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die Unterarme drücken sanft in den Boden, die Brust zieht nach vorn, und der Nacken bleibt lang"
+     },
+     {
+      "nach": 25,
+      "sage": "Lass den Bauch und das Gesäß ganz weich, spür, wie sich dein Rücken langsam erwärmt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "bogen",
     "sekunden": 25,
     "seite": null,
-    "sage": "Greif die Fußgelenke. Einatmen, Brust und Beine heben."
+    "sage": "Leg dich ganz ab, beug die Knie und greif die Fußgelenke, einatmen, drück die Füße in die Hände und heb Brust und Beine",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die Knie bleiben etwa hüftbreit, der Blick geht nach vorn"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 20,
     "seite": null,
-    "sage": "Lösen. Leg die Stirn ab und spüre nach."
+    "sage": "Und lösen, leg die Stirn ab, schieb dich zurück in die Stellung des Kindes und spür nach"
    },
    {
     "phase": "asana",
     "asana": "bogen",
     "sekunden": 25,
     "seite": null,
-    "sage": "Noch einmal in den Bogen. Kraft kommt aus den Beinen."
+    "sage": "Komm noch einmal auf den Bauch und in den Bogen, die Kraft kommt aus den Beinen, nicht aus dem Rücken",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Wenn der Rücken sich meldet, greif nur ein Bein, das ist völlig in Ordnung"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ruhe in der Stellung des Kindes."
+    "sage": "Sehr schön, lös dich und sinke zurück in die Stellung des Kindes, lass den Rücken ganz rund und weich werden",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Atme in den Rücken, und spür, wie er sich mit jedem Atemzug weitet"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kamel",
     "sekunden": 30,
     "seite": null,
-    "sage": "Knie dich auf. Hände an den unteren Rücken, Brustbein heben."
+    "sage": "Komm hoch auf die Knie, hüftbreit, die Hände am unteren Rücken, einatmen, heb das Brustbein und schieb die Hüften leicht nach vorn",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Der Nacken bleibt lang, und wenn es irgendwo drückt, geh einfach ein Stück zurück"
+     },
+     {
+      "nach": 23,
+      "sage": "Gut so, ruhig atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm mit dem Brustbein voran hoch. Ruhe kurz."
+    "sage": "Hände an den Rücken, mit dem Brustbein voran richtest du dich auf, und dann ruhst du kurz im Kind"
    },
    {
     "phase": "asana",
     "asana": "kamel",
     "sekunden": 30,
     "seite": null,
-    "sage": "Noch einmal ins Kamel. Wenn es passt, Hände zu den Fersen."
+    "sage": "Noch einmal ins Kamel, heb das Brustbein, und wenn es sich gut anfühlt, wandern die Hände zu den Fersen",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Du kannst auch die Zehen aufstellen, dann sind die Fersen näher"
+     },
+     {
+      "nach": 21,
+      "sage": "Wunderbar, das Herz ist weit offen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 40,
     "seite": null,
-    "sage": "Komm langsam hoch und sinke in die Stellung des Kindes."
+    "sage": "Hände zurück an den Rücken, komm langsam hoch, und sinke in die Stellung des Kindes",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Nach Rückbeugen kann viel in Bewegung kommen, lass einfach da sein, was sich zeigt"
+     },
+     {
+      "nach": 26,
+      "sage": "Atme ruhig, und lass den Rücken wieder ganz lang und weich werden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halber_drehsitz",
     "sekunden": 40,
     "seite": "links",
-    "sage": "Setz dich. Linker Fuß außen neben das rechte Knie. Dreh dich nach links."
+    "sage": "Setz dich mit langen Beinen hin, stell den linken Fuß außen neben das rechte Knie, die linke Hand stützt dich hinter dem Becken",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Einatmen, wachse lang, und ausatmen, dreh dich nach links, der rechte Arm umarmt das Knie"
+     },
+     {
+      "nach": 25,
+      "sage": "Mit jedem Einatmen ein wenig mehr Länge, und mit jedem Ausatmen eine kleine Drehung"
+     },
+     {
+      "nach": 34,
+      "sage": "Ganz sanft, ohne zu ziehen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halber_drehsitz",
     "sekunden": 40,
     "seite": "rechts",
-    "sage": "Wechsle. Rechter Fuß über das linke Bein. Dreh dich nach rechts."
+    "sage": "Komm zurück zur Mitte, wechsle die Beine, der rechte Fuß steht außen neben dem linken Knie, die rechte Hand stützt hinten",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Einatmen, richte dich auf, und ausatmen, dreh dich nach rechts, ganz aus der Mitte heraus"
+     },
+     {
+      "nach": 25,
+      "sage": "Der Nacken folgt der Drehung erst ganz zum Schluss, die Schultern bleiben weich"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "sitzende_vorbeuge",
     "sekunden": 60,
     "seite": null,
-    "sage": "Beine lang. Lass dich mit jedem Ausatmen tiefer sinken."
+    "sage": "Löse die Drehung, streck beide Beine lang aus, einatmen, die Arme nach oben, und ausatmen, falte dich mit langem Rücken nach vorn",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Die Knie dürfen gebeugt bleiben, es geht nicht darum, mit dem Kopf die Beine zu erreichen"
+     },
+     {
+      "nach": 28,
+      "sage": "Lass dich mit jedem Ausatmen ein kleines bisschen tiefer sinken"
+     },
+     {
+      "nach": 40,
+      "sage": "Sehr schön, spür die ganze Rückseite deines Körpers, wie sie langsam nachgibt"
+     },
+     {
+      "nach": 50,
+      "sage": "Und noch zwei, drei ruhige Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "schulterstand",
     "sekunden": 45,
     "seite": null,
-    "sage": "Schultern auf die Decken. Rolle das Becken hoch und stütz den Rücken."
+    "sage": "Roll dich auf den Rücken, die Schultern liegen auf gefalteten Decken, der Kopf am Boden, und zieh die Knie zur Brust",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Roll das Becken hoch, stütz den Rücken mit beiden Händen, und streck die Beine langsam nach oben"
+     },
+     {
+      "nach": 25,
+      "sage": "Das Gewicht liegt auf den Schultern, nie auf dem Nacken, und der Kopf bleibt ganz still"
+     },
+     {
+      "nach": 36,
+      "sage": "Die Ellbogen bleiben schulterbreit, gut so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "schulterstand",
     "sekunden": 45,
     "seite": null,
-    "sage": "Kopf nicht drehen. Atme ruhig in der Umkehr."
+    "sage": "Bleib in der Umkehr, dreh den Kopf nicht zur Seite, und atme ganz ruhig in den Bauch",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Wenn es im Nacken unangenehm wird, komm einfach heraus und leg die Beine an die Wand"
+     },
+     {
+      "nach": 26,
+      "sage": "Spür die Ruhe, die in dieser Haltung entsteht"
+     },
+     {
+      "nach": 36,
+      "sage": "Sehr gut, noch ein paar Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "bruecke",
     "sekunden": 30,
     "seite": null,
-    "sage": "Rolle langsam ab. Stell die Füße auf und hebe sanft das Becken."
+    "sage": "Roll jetzt langsam Wirbel für Wirbel ab, die Hände bremsen, stell die Füße auf und heb sanft das Becken in die Brücke",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Die Knie zeigen nach vorn, und die Arme drücken sanft in den Boden"
+     },
+     {
+      "nach": 22,
+      "sage": "Und jetzt leg das Becken langsam wieder ab"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 55,
     "seite": "links",
-    "sage": "Dreh dich in den Vierfüßler. Linkes Knie nach vorn, rechtes Bein lang zurück."
+    "sage": "Komm über die Seite in den Vierfüßlerstand, das linke Knie nach vorn hinter die linke Hand, das rechte Bein lang zurück",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Richte das Becken gerade nach vorn aus, und wenn die Hüfte schwebt, schieb ein Kissen darunter"
+     },
+     {
+      "nach": 27,
+      "sage": "Zwickt es im Knie, nimm den Fuß näher zu dir, dein Knie geht immer vor"
+     },
+     {
+      "nach": 38,
+      "sage": "Wenn du magst, lass den Oberkörper langsam über das vordere Bein sinken"
+     },
+     {
+      "nach": 47,
+      "sage": "Atme hierher und lass los"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 55,
     "seite": "rechts",
-    "sage": "Über den Vierfüßler wechseln. Rechtes Knie nach vorn. Lass die Hüfte nachgeben."
+    "sage": "Stütz dich auf die Hände, komm zurück in den Vierfüßlerstand und bring jetzt das rechte Knie nach vorn, das linke Bein streckt sich lang",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Das Becken bleibt gerade, und der Oberkörper darf aufrecht bleiben oder sanft nach vorn sinken"
+     },
+     {
+      "nach": 28,
+      "sage": "Lass die Hüfte nachgeben, ganz langsam, mit jedem Ausatmen ein bisschen mehr"
+     },
+     {
+      "nach": 42,
+      "sage": "Sehr schön, du musst hier nichts leisten"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": "lotus",
     "sekunden": 75,
     "seite": "links",
-    "sage": "Komm in den Lotus oder einen bequemen Schneidersitz. Hände ruhen."
+    "sage": "Komm hoch in einen ruhigen Sitz, im Lotus, wenn deine Knie es frei erlauben, sonst ganz einfach im Schneidersitz, der linke Fuß liegt oben",
+    "zwischen": [
+     {
+      "nach": 25,
+      "sage": "Die Hände ruhen auf den Knien, und du sitzt einfach da"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": "lotus",
     "sekunden": 75,
     "seite": "rechts",
-    "sage": "Wechsle die Beine. Bemerke, was sich heute geöffnet hat."
+    "sage": "Löse die Beine ganz langsam und kreuze sie andersherum, jetzt liegt der rechte Fuß oben",
+    "zwischen": [
+     {
+      "nach": 30,
+      "sage": "Bemerke, was sich heute geöffnet hat"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": null,
     "sekunden": 45,
     "seite": null,
-    "sage": "Bleib ganz still. Lass Gedanken kommen und wieder ziehen."
+    "sage": "Bleib ganz still, und lass Gedanken kommen und wieder weiterziehen, wie Wolken"
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 180,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Lass alles Geöffnete einfach offen sein."
+    "sage": "Leg dich langsam auf den Rücken, lass die Beine und Arme locker fallen, und lass alles, was sich geöffnet hat, einfach offen sein",
+    "zwischen": [
+     {
+      "nach": 70,
+      "sage": "Du darfst jetzt ganz loslassen"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 25,
     "seite": null,
-    "sage": "Vertiefe deinen Atem. Komm über die Seite langsam hoch."
+    "sage": "Vertiefe langsam deinen Atem, beweg ganz sanft die Finger und Zehen, und streck dich lang, so wie es dir guttut",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Roll dich auf die rechte Seite und komm langsam hoch, wenn du magst, öffne die Augen, fühl dich wohl"
+     }
+    ]
    }
   ]
  },
@@ -1569,665 +2961,1289 @@
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Komm in einen aufrechten Sitz. Nimm dir Zeit, ganz anzukommen."
+    "sage": "Willkommen zu deiner langen Praxis, komm in einen aufrechten Sitz und nimm dir alle Zeit, die du brauchst, um ganz anzukommen",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Spür, wo dein Körper den Boden berührt, das Gesäß, die Beine, vielleicht die Hände auf den Knien"
+     },
+     {
+      "nach": 30,
+      "sage": "Heute gibt es keine Eile, du gibst dein Bestes und darfst das Ergebnis loslassen"
+     },
+     {
+      "nach": 44,
+      "sage": "Lass die Schultern sinken und das Gesicht ganz weich werden"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Atme tief und gleichmäßig. Lass den Atem weich und hörbar werden."
+    "sage": "Atme jetzt tief und gleichmäßig durch die Nase, lass den Atem weich und ein wenig hörbar werden, wie ein leises Meeresrauschen",
+    "zwischen": [
+     {
+      "nach": 16,
+      "sage": "Verenge dazu ganz leicht deinen Hals, als würdest du einen Spiegel anhauchen, nur mit geschlossenem Mund"
+     },
+     {
+      "nach": 30,
+      "sage": "Einatmen und Ausatmen dürfen gleich lang werden, ruhig und fließend"
+     },
+     {
+      "nach": 44,
+      "sage": "Sehr schön, dieser Atem begleitet dich durch die ganze Praxis"
+     }
+    ]
    },
    {
     "phase": "atem",
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Lenke die Aufmerksamkeit nach innen. Die Geräusche draußen dürfen leiser werden."
+    "sage": "Lenk deine Aufmerksamkeit jetzt nach innen, die Geräusche um dich herum dürfen leiser werden, sie müssen dich nicht stören",
+    "zwischen": [
+     {
+      "nach": 18,
+      "sage": "Mit jedem Ausatmen ziehst du dich ein Stück mehr in dich zurück"
+     },
+     {
+      "nach": 34,
+      "sage": "Und wenn Gedanken kommen, lächle ihnen kurz zu und kehr zum Atem zurück"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "schmetterling",
     "sekunden": 60,
     "seite": null,
-    "sage": "Fußsohlen zusammen. Atme lang in die Hüften."
+    "sage": "Sehr schön, bring die Fußsohlen zusammen und lass die Knie sinken, die Hände umfassen locker die Füße",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Richte dich auf und atme lang in die Hüften, die Innenseiten der Beine werden ganz allmählich weich"
+     },
+     {
+      "nach": 28,
+      "sage": "Wenn es im Knie zieht, rück die Füße einfach ein Stück weiter weg"
+     },
+     {
+      "nach": 40,
+      "sage": "Neig dich mit langem Rücken leicht nach vorn, wenn du magst, und bleib hier ein paar Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm in den Vierfüßlerstand. Ausatmen, mach den Rücken rund."
+    "sage": "Komm jetzt in den Vierfüßlerstand, Hände unter den Schultern, ausatmen, und mach den Rücken ganz rund"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 20,
     "seite": null,
-    "sage": "Einatmen, lass den Bauch sinken und öffne die Brust."
+    "sage": "Einatmen, lass den Bauch sinken, die Brust öffnet sich nach vorn, und das Steißbein zeigt nach oben"
    },
    {
     "phase": "asana",
     "asana": "katze",
     "sekunden": 15,
     "seite": null,
-    "sage": "Ausatmen, rund. Bewege dich im Rhythmus deines Atems."
+    "sage": "Ausatmen, wieder rund, der Bauchnabel zieht sanft nach innen"
    },
    {
     "phase": "asana",
     "asana": "kuh",
     "sekunden": 15,
     "seite": null,
-    "sage": "Einatmen, weit. Der Atem führt, der Körper folgt."
+    "sage": "Einatmen, weit und offen, dein Atem führt, und der Körper folgt"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 45,
     "seite": null,
-    "sage": "Becken hoch in den Hund. Lass dir Zeit, dich hier einzurichten."
+    "sage": "Stell die Zehen auf und schieb das Becken nach hinten oben in den Hund, lass dir Zeit, dich hier einzurichten",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Beug die Knie ruhig zuerst, mach den Rücken lang, und streck dann langsam die Beine"
+     },
+     {
+      "nach": 27,
+      "sage": "Die Finger sind weit gespreizt, der Druck verteilt sich auf die ganze Hand"
+     },
+     {
+      "nach": 37,
+      "sage": "Gut so, lass den Kopf hängen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "delfin",
     "sekunden": 35,
     "seite": null,
-    "sage": "Unterarme parallel ab. Komm in den Delfin, Schultern wach."
+    "sage": "Leg die Knie kurz ab, setz die Unterarme parallel auf, die Ellbogen unter den Schultern, und heb das Becken in den Delfin",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Drück die Unterarme fest in den Boden, und schieb die Brust sanft Richtung Beine"
+     },
+     {
+      "nach": 24,
+      "sage": "Die Schultern bleiben wach, der Nacken ganz lang, noch ein paar Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ruhe kurz in der Stellung des Kindes."
+    "sage": "Leg die Knie ab und ruh dich kurz in der Stellung des Kindes aus, die Arme dürfen lang nach vorn",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Lass die Schultern los, die haben gerade viel getragen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Zurück in den Hund."
+    "sage": "Stell die Zehen auf, heb die Knie und komm zurück in den herabschauenden Hund",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Tritt locker auf der Stelle und wecke die Beine auf"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 20,
     "seite": null,
-    "sage": "Laufe nach vorn. Falte dich weich nach vorn."
+    "sage": "Lauf jetzt langsam nach vorn zu den Händen und falte dich weich nach vorn, der Kopf hängt ganz schwer"
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Rechtes Bein weit zurück. Einatmen, aufrichten, Arme nach oben."
+    "sage": "Stell das rechte Bein weit zurück, das linke Knie gebeugt, einatmen, richte dich auf und heb die Arme nach oben",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das Becken sinkt, der Brustkorb hebt sich, schön lang und kraftvoll"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände neben den linken Fuß. Linkes Bein zurück ins Brett."
+    "sage": "Ausatmen, Hände neben den linken Fuß, das linke Bein steigt zurück ins Brett, die Schultern genau über den Handgelenken"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Senke dich langsam ab, gern über die Knie. Einatmen, Brust nach vorn."
+    "sage": "Senk dich langsam ab, gern über die Knie, einatmen, und die Brust strebt nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ausatmen, Becken nach hinten oben. Atme hier ruhig weiter."
+    "sage": "Ausatmen, das Becken wandert nach hinten oben, und hier atmest du ein paarmal ganz ruhig weiter",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Sehr schön, lass die Fersen schwer werden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechten Fuß zwischen die Hände. Einatmen, aufrichten, Arme hoch."
+    "sage": "Bring den rechten Fuß nach vorn zwischen die Hände, einatmen, richte dich auf und heb die Arme",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das hintere Bein ist lang, und das vordere Knie bleibt über der Ferse"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände zum Boden. Rechtes Bein zurück ins Brett."
+    "sage": "Hände zum Boden, das rechte Bein steigt zurück, und du hältst dich im Brett, Bauch fest"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, die Brust hebt sich."
+    "sage": "Langsam absenken, einatmen, und die Brust hebt sich weit"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 30,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Spüre, wie der Atem dich trägt."
+    "sage": "Ausatmen in den Hund, und spür, wie der Atem dich durch die Bewegung trägt",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Wunderbar, du findest deinen Rhythmus"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Linker Fuß nach vorn. Einatmen, aufrichten, Arme hoch."
+    "sage": "Der linke Fuß kommt nach vorn, einatmen, aufrichten, und die Arme wachsen nach oben",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Spür die Dehnung vorn in der rechten Hüfte"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Hände zum Boden, zurück ins Brett."
+    "sage": "Hände zum Boden, und zurück ins Brett, eine lange Linie"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, Brust nach vorn."
+    "sage": "Ablegen, einatmen, und öffne die Brust nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen, zurück in den Hund."
+    "sage": "Ausatmen, zurück in den Hund, und lass den Atem ganz gleichmäßig fließen",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Das machst du richtig gut"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Rechter Fuß nach vorn. Einatmen, wachse nach oben."
+    "sage": "Rechter Fuß nach vorn, einatmen, und wachse lang nach oben, die Schultern bleiben weich",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Das Becken sinkt noch ein kleines Stück tiefer"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Zurück ins Brett. Körper wie eine Linie."
+    "sage": "Zurück ins Brett, der Körper ganz gerade vom Kopf bis zu den Fersen"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Absenken. Einatmen, das Herz nach vorn."
+    "sage": "Langsam ablegen, einatmen, und das Herz zieht nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Lass die Fersen schwer werden."
+    "sage": "Ausatmen in den Hund, die Fersen sinken, und der Rücken wird lang",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Atme hier ganz bewusst, Atemzug für Atemzug"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "links",
-    "sage": "Linker Fuß nach vorn. Einatmen, aufrichten, Arme hoch."
+    "sage": "Noch einmal der linke Fuß nach vorn, einatmen, aufrichten, die Arme hoch",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Bleib ganz wach dabei, auch wenn sich die Bewegung schon vertraut anfühlt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Hände zum Boden, zurück ins Brett."
+    "sage": "Hände zum Boden, und ins Brett, der Bauch hält dich"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Langsam absenken. Einatmen, Brust nach vorn."
+    "sage": "Absenken, einatmen, und die Brust öffnet sich"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen, zurück in den Hund."
+    "sage": "Ausatmen, zurück in den Hund, lass den Nacken ganz weich",
+    "zwischen": [
+     {
+      "nach": 10,
+      "sage": "Sehr schön, gleich kommt der letzte Durchgang"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "aufrechter_ausfallschritt",
     "sekunden": 25,
     "seite": "rechts",
-    "sage": "Rechter Fuß nach vorn. Einatmen, wachse nach oben."
+    "sage": "Und ein letztes Mal der rechte Fuß nach vorn, einatmen, und wachse ganz nach oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Genieß die Kraft in deinen Beinen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "brett",
     "sekunden": 15,
     "seite": null,
-    "sage": "Zurück ins Brett. Körper wie eine Linie."
+    "sage": "Zurück ins Brett, ganz stabil, ganz ruhig"
    },
    {
     "phase": "asana",
     "asana": "heraufschauender_hund",
     "sekunden": 15,
     "seite": null,
-    "sage": "Absenken. Einatmen, das Herz nach vorn."
+    "sage": "Absenken, einatmen, und das Herz strahlt nach vorn"
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Ausatmen in den Hund. Lass die Fersen schwer werden."
+    "sage": "Ausatmen in den Hund, lass die Fersen schwer werden, und atme einmal tief durch",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Wunderbar, das waren alle Runden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "vorbeuge_schulteroeffnung",
     "sekunden": 40,
     "seite": null,
-    "sage": "Komm zum Stehen. Hände hinten verschränken, nach vorn falten."
+    "sage": "Lauf nach vorn und roll dich langsam auf zum Stehen, verschränk die Hände hinter dem Rücken und zieh die Schulterblätter zueinander",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Ausatmen, falte dich mit weichen Knien nach vorn, und die Arme sinken über den Kopf"
+     },
+     {
+      "nach": 24,
+      "sage": "Lass den Kopf hängen und die Schultern sich öffnen"
+     },
+     {
+      "nach": 32,
+      "sage": "Und jetzt roll dich ganz langsam auf, die Hände löst du zuletzt"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stuhl",
     "sekunden": 30,
     "seite": null,
-    "sage": "Einatmen, Knie beugen, Arme hoch in den Stuhl."
+    "sage": "Einatmen, beug die Knie, als würdest du dich auf einen Stuhl setzen, und heb die Arme nach oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Das Gewicht liegt in den Fersen, die Knie bleiben hinter den Zehen"
+     },
+     {
+      "nach": 21,
+      "sage": "Gut so, halte noch ein wenig, ganz ruhig atmen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_1",
     "sekunden": 35,
     "seite": "links",
-    "sage": "Rechter Fuß weit zurück. Linkes Knie beugen, Arme hoch."
+    "sage": "Steig mit dem rechten Fuß weit zurück, die Ferse am Boden, beug das linke Knie und heb die Arme nach oben",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Beide Hüften zeigen nach vorn, und der Brustkorb hebt sich aus dem Becken heraus"
+     },
+     {
+      "nach": 23,
+      "sage": "Spür deine Kraft und bleib dabei weich im Gesicht"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_3",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Neige dich nach vorn und hebe das rechte Bein."
+    "sage": "Neige den Oberkörper nach vorn, verlagere das Gewicht auf das linke Bein und heb das rechte Bein, bis eine Linie entsteht",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Beide Hüftknochen zeigen zum Boden, die Arme lang nach vorn oder die Hände vor der Brust"
+     },
+     {
+      "nach": 23,
+      "sage": "Wackeln gehört dazu, gut so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halbmond",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Linke Hand zum Boden. Öffne Hüfte und Brust zur Seite."
+    "sage": "Setz die linke Hand zum Boden oder auf einen Block, und öffne Hüfte und Brust zur Seite, der rechte Arm zeigt nach oben",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das Standbein bleibt lang, und das obere Bein ist kraftvoll auf Hüfthöhe"
+     },
+     {
+      "nach": 21,
+      "sage": "Bei Schwindel schau einfach zum Boden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 15,
     "seite": null,
-    "sage": "Setz den Fuß ab. Atme in der Vorbeuge."
+    "sage": "Setz den rechten Fuß ab, neben den linken, und atme in der Vorbeuge durch"
    },
    {
     "phase": "asana",
     "asana": "krieger_1",
     "sekunden": 35,
     "seite": "rechts",
-    "sage": "Linker Fuß weit zurück. Rechtes Knie beugen, Arme hoch."
+    "sage": "Jetzt steigt der linke Fuß weit zurück, das rechte Knie beugt sich, einatmen, und die Arme heben sich",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Richte das Becken nach vorn aus und lass die Schultern weich"
+     },
+     {
+      "nach": 23,
+      "sage": "Sehr schön, stark und ruhig zugleich"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_3",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Neige dich nach vorn und hebe das linke Bein."
+    "sage": "Neig dich nach vorn, das Gewicht auf das rechte Bein, und heb das linke Bein, Kopf und Ferse ziehen auseinander",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Der Blick ruht auf einem Punkt am Boden, das hilft dir, still zu stehen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halbmond",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechte Hand zum Boden. Öffne Hüfte und Brust zur Seite."
+    "sage": "Die rechte Hand kommt zum Boden, und du öffnest Hüfte und Brust zur Seite, der linke Arm streckt sich zur Decke",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Atme ruhig weiter, auch wenn es wackelt, das ist ganz normal"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "stehende_vorbeuge",
     "sekunden": 15,
     "seite": null,
-    "sage": "Setz den Fuß ab und atme durch."
+    "sage": "Setz den linken Fuß sanft ab und atme in der Vorbeuge durch"
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Weiter Stand, linker Fuß nach vorn. Krieger zwei."
+    "sage": "Komm hoch in einen weiten Stand, der linke Fuß zeigt nach vorn, beug das linke Knie und streck die Arme zur Seite",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Das Knie über der Ferse, der Blick über die linke Hand hinaus"
+     },
+     {
+      "nach": 21,
+      "sage": "Lass die Schultern sinken, gut so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "gestreckter_seitwinkel",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Linker Unterarm aufs Bein, rechter Arm lang über das Ohr."
+    "sage": "Der linke Unterarm kommt auf das Bein, und der rechte Arm streckt sich lang über das Ohr",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Spür die lange Linie vom rechten Fuß bis in die Fingerspitzen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Strecke das linke Bein. Dreieck."
+    "sage": "Komm hoch, streck das linke Bein, schieb dich lang nach vorn und senk dich ins Dreieck, der rechte Arm zeigt nach oben",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die Brust bleibt offen, beide Seiten der Taille sind lang"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "krieger_2",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechter Fuß nach vorn. Krieger zwei."
+    "sage": "Richte dich auf, dreh die Füße zur anderen Seite, rechter Fuß nach vorn, beug das rechte Knie, Krieger zwei",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Die Arme ziehen weit in beide Richtungen, und du atmest tief in den Bauch"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "gestreckter_seitwinkel",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Rechter Unterarm aufs Bein, linker Arm lang über das Ohr."
+    "sage": "Der rechte Unterarm aufs Bein, und der linke Arm streckt sich lang über das Ohr, die Brust dreht sich auf",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Wunderbar, die äußere Kante des linken Fußes bleibt am Boden"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "dreieck",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Strecke das rechte Bein. Dreieck."
+    "sage": "Komm hoch, streck das rechte Bein und senk dich ins Dreieck, die rechte Hand am Schienbein, der linke Arm nach oben",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Der Nacken bleibt lang, schau nach oben oder geradeaus"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "adler",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Komm zum Stehen. Linkes Bein über das rechte, Arme verschränkt."
+    "sage": "Komm zum Stehen und beug die Knie leicht, schlag das linke Bein über das rechte und verschränk die Arme vor der Brust",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die Ellbogen heben sich auf Schulterhöhe, und du sinkst noch ein wenig tiefer ins Standbein"
+     },
+     {
+      "nach": 22,
+      "sage": "Wenn das Knie zwickt, stell die Zehen einfach am Boden ab"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "adler",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Wechsle. Rechtes Bein über das linke."
+    "sage": "Löse dich langsam und wechsle, jetzt liegt das rechte Bein über dem linken, und die Arme kreuzen andersherum",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Schieb die Hände sanft vom Gesicht weg und spür die Weite zwischen den Schulterblättern"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "hand_zum_zeh",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Steh auf dem rechten Bein. Linken großen Zeh greifen, Bein zur Seite."
+    "sage": "Steh auf dem rechten Bein, zieh das linke Knie zur Brust und greif den großen Zeh, die rechte Hand liegt an der Hüfte",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Streck das Bein nach vorn, und wenn du stabil bist, öffne es zur Seite, das Knie darf gebeugt bleiben"
+     },
+     {
+      "nach": 23,
+      "sage": "Der Rücken bleibt aufrecht"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "hand_zum_zeh",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Steh auf dem linken Bein. Rechten großen Zeh greifen."
+    "sage": "Setz den Fuß ab und wechsle, steh auf dem linken Bein und greif den rechten großen Zeh, die linke Hand an der Hüfte",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Bein nach vorn, dann zur Seite, nur so weit, wie dein Rücken aufrecht bleibt"
+     },
+     {
+      "nach": 21,
+      "sage": "Sehr schön, wunderbar ausbalanciert"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "girlande",
     "sekunden": 30,
     "seite": null,
-    "sage": "Komm in die tiefe Hocke. Hände vor der Brust."
+    "sage": "Setz den Fuß ab, stell die Füße etwas weiter auseinander und sinke in die tiefe Hocke, die Hände vor der Brust",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Die Ellbogen schieben die Knie sanft auseinander, und der Rücken wird lang"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kraehe",
     "sekunden": 25,
     "seite": null,
-    "sage": "Hände auf den Boden, Knie an die Oberarme. Hebe dich in die Krähe."
+    "sage": "Hände schulterbreit auf den Boden, die Knie hoch an die Oberarme, verlagere das Gewicht nach vorn und heb erst einen Fuß",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Der Blick bleibt vor den Händen, und wenn du magst, hebt sich auch der zweite Fuß"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "girlande",
     "sekunden": 15,
     "seite": null,
-    "sage": "Zurück in die Hocke."
+    "sage": "Und ganz sanft zurück in die Hocke, atme einmal durch"
    },
    {
     "phase": "asana",
     "asana": "kraehe",
     "sekunden": 25,
     "seite": null,
-    "sage": "Noch einmal. Blick nach vorn, Atem ruhig."
+    "sage": "Noch einmal in die Krähe, der Blick nach vorn, der Atem ruhig, ein Kissen vor dem Gesicht gibt dir Sicherheit",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Ganz egal, ob du heute fliegst, das Üben selbst ist das Ziel"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "delfin",
     "sekunden": 30,
     "seite": null,
-    "sage": "Geh zur Wand. Komm in den Delfin, die Hände nah an der Wand."
+    "sage": "Komm aus der Krähe heraus, geh zur Wand, setz die Unterarme parallel eine Handbreit davor und komm in den Delfin",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Lauf mit den Füßen ein Stück näher, die Schultern bleiben wach und stark"
+     },
+     {
+      "nach": 21,
+      "sage": "Wenn deine Schultern müde sind, bleib einfach hier"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "unterarmstand",
     "sekunden": 25,
     "seite": null,
-    "sage": "Nur an der Wand. Hebe ein Bein und komm kontrolliert hoch."
+    "sage": "Nur an der Wand und nur mit Erfahrung, heb ein Bein gestreckt nach oben und komm mit einem kleinen Abdruck kontrolliert hoch",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Unterarme fest in den Boden, Bauch fest, oder bleib im Delfin mit gehobenem Bein"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 30,
     "seite": null,
-    "sage": "Komm langsam herunter. Bleib einen Moment in der Stellung des Kindes."
+    "sage": "Komm langsam ein Bein nach dem anderen herunter, und bleib einen Moment in der Stellung des Kindes",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Lass das Blut in Ruhe zurückfließen, und atme ganz ruhig"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "herabschauender_hund",
     "sekunden": 25,
     "seite": null,
-    "sage": "Hände eine Handbreit vor der Wand. Komm in den Hund."
+    "sage": "Setz die Hände schulterbreit eine Handbreit vor der Wand auf und komm in den herabschauenden Hund",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Lauf mit den Füßen etwas näher zur Wand"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "handstand",
     "sekunden": 25,
     "seite": null,
-    "sage": "Nur an der Wand. Hebe ein Bein, Arme gerade, Bauch fest."
+    "sage": "Auch hier nur an der Wand, heb ein Bein, die Arme gerade, der Bauch fest, und mit einem kleinen Abdruck nach oben",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Wenn es heute nicht passt, bleib im Hund und heb nur ein Bein, das ist genauso wertvoll"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 35,
     "seite": null,
-    "sage": "Komm herunter und ruhe im Kind, bis der Atem ruhig ist."
+    "sage": "Komm kontrolliert herunter und ruh im Kind, so lange, bis dein Atem wieder ganz ruhig ist",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Spür nach, was diese Umkehrhaltungen in dir bewegt haben, Mut, Freude oder vielleicht ein wenig Aufregung"
+     },
+     {
+      "nach": 24,
+      "sage": "Alles darf da sein"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "tiefer_ausfallschritt",
     "sekunden": 40,
     "seite": "links",
-    "sage": "Linker Fuß nach vorn, rechtes Knie ab. Becken sinkt."
+    "sage": "Komm in den Vierfüßlerstand, stell den linken Fuß nach vorn zwischen die Hände und leg das rechte Knie ab, gern auf eine Decke",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Richte dich auf und lass das Becken sanft nach vorn unten sinken"
+     },
+     {
+      "nach": 24,
+      "sage": "Das vordere Knie bleibt über dem Fußgelenk, und du atmest in die rechte Leiste"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "pyramide",
     "sekunden": 30,
     "seite": "links",
-    "sage": "Becken nach hinten, linkes Bein strecken. Mit langem Rücken nach vorn."
+    "sage": "Schieb das Becken nach hinten, streck das linke Bein, die Hände auf Blöcken, und neig dich mit langem Rücken nach vorn",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Zieh die linke Hüfte sanft zurück, damit das Becken gerade bleibt"
+     },
+     {
+      "nach": 21,
+      "sage": "Das Knie bleibt weich, nicht überstrecken"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "spagat",
     "sekunden": 50,
     "seite": "links",
-    "sage": "Lass das linke Bein nach vorn gleiten. Blöcke unter die Hände."
+    "sage": "Stell die Blöcke unter die Hände, und lass das linke Bein langsam nach vorn gleiten, das rechte nach hinten, ganz ohne Eile",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Leg gern ein Kissen unter den vorderen Oberschenkel, es fängt dich auf"
+     },
+     {
+      "nach": 24,
+      "sage": "Die Hüften zeigen nach vorn, und du trägst dein Gewicht mit den Händen"
+     },
+     {
+      "nach": 34,
+      "sage": "Atme, ohne zu federn, die Tiefe kommt mit der Zeit von ganz allein"
+     },
+     {
+      "nach": 43,
+      "sage": "Sehr schön, genau so"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "tiefer_ausfallschritt",
     "sekunden": 40,
     "seite": "rechts",
-    "sage": "Wechsle. Rechter Fuß nach vorn, linkes Knie ab."
+    "sage": "Komm ganz langsam zurück, über den Vierfüßlerstand wechselst du, rechter Fuß nach vorn, linkes Knie am Boden",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Heb den Oberkörper auf, und lass die Hüfte nach vorn sinken, in deinem Tempo"
+     },
+     {
+      "nach": 24,
+      "sage": "Spür, wie sich die linke Leiste mit jedem Ausatmen ein wenig mehr öffnet"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "pyramide",
     "sekunden": 30,
     "seite": "rechts",
-    "sage": "Becken nach hinten, rechtes Bein strecken. Lang nach vorn."
+    "sage": "Becken nach hinten, streck das rechte Bein, und falte dich mit langem Rücken über das vordere Bein",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Atme in die Rückseite des rechten Beins, ganz sanft"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "spagat",
     "sekunden": 50,
     "seite": "rechts",
-    "sage": "Lass das rechte Bein nach vorn gleiten. Atme, ohne zu federn."
+    "sage": "Und jetzt lass das rechte Bein nach vorn gleiten, Blöcke unter die Hände, Kissen unter den Oberschenkel, wenn du magst",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Atme, ohne zu federn, und bleib genau dort, wo du noch ruhig atmen kannst"
+     },
+     {
+      "nach": 26,
+      "sage": "Jeder Körper hat seinen eigenen Spagat, und deiner ist heute genau richtig"
+     },
+     {
+      "nach": 38,
+      "sage": "Wunderbar, noch ein paar Atemzüge"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "seitlicher_spagat",
     "sekunden": 50,
     "seite": null,
-    "sage": "Komm in einen weiten Stand. Hände auf Blöcke, Füße gleiten auseinander."
+    "sage": "Komm langsam heraus und stell dich in einen sehr weiten Stand, die Füße parallel, die Hände vor dir auf Blöcken",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Lass die Füße ganz langsam weiter nach außen gleiten, die Kniescheiben zeigen nach vorn"
+     },
+     {
+      "nach": 24,
+      "sage": "Dein Gewicht tragen die Hände, nicht die Knie, so bleibst du sicher"
+     },
+     {
+      "nach": 34,
+      "sage": "Atme in die Innenseiten der Beine, und bleib geduldig"
+     },
+     {
+      "nach": 42,
+      "sage": "Zum Lösen geh mit den Händen nach vorn und schieb die Füße langsam zusammen"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "koenigstaube",
     "sekunden": 40,
     "seite": "links",
-    "sage": "Linkes Bein vorn angewinkelt, rechtes lang. Greif den hinteren Fuß."
+    "sage": "Komm in die Taube, das linke Bein vorn angewinkelt, das rechte lang nach hinten, und richte das Becken gerade aus",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Beug das hintere Knie und greif den rechten Fuß mit der Hand oder einem Gurt"
+     },
+     {
+      "nach": 23,
+      "sage": "Öffne die Brust nach oben, der Nacken bleibt lang, bei Knie oder Rückenschmerzen bleib einfach in der Taube"
+     },
+     {
+      "nach": 33,
+      "sage": "Sehr schön, atme weit"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "koenigstaube",
     "sekunden": 40,
     "seite": "rechts",
-    "sage": "Wechsle. Rechtes Bein vorn, greif den linken Fuß. Brust weit."
+    "sage": "Lös dich behutsam, wechsle die Seite, das rechte Bein vorn, und greif den linken Fuß, die Brust wird weit",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Hak den Fuß in die Armbeuge, oder nimm den Gurt, genau so, wie es für dich passt"
+     },
+     {
+      "nach": 25,
+      "sage": "Lass den Atem in die Brust fließen, ganz ohne Druck"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "kind",
     "sekunden": 30,
     "seite": null,
-    "sage": "Löse dich und ruhe in der Stellung des Kindes."
+    "sage": "Lass den Fuß ganz langsam los, und ruh dich in der Stellung des Kindes aus",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Spür, wie dein Rücken nach den Öffnungen wieder rund und weich werden darf"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "bruecke",
     "sekunden": 30,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Einatmen, Becken heben."
+    "sage": "Komm hoch und leg dich auf den Rücken, die Füße hüftbreit nah am Gesäß, einatmen, und heb das Becken in die Brücke",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Die Knie bleiben parallel, und die Brust strebt Richtung Kinn"
+     },
+     {
+      "nach": 21,
+      "sage": "Leg das Becken ab, gleich kommt das Rad, oder du bleibst einfach in der Brücke"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "rad",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hände neben die Ohren. Drück dich hoch ins Rad."
+    "sage": "Hände neben die Ohren, Finger zu den Schultern, heb das Becken und drück dich mit geraden Armen hoch ins Rad"
    },
    {
     "phase": "asana",
     "asana": "bruecke",
     "sekunden": 20,
     "seite": null,
-    "sage": "Komm langsam herunter. Ruhe kurz mit aufgestellten Füßen."
+    "sage": "Kinn sanft zur Brust, und komm ganz langsam herunter, ruh dich kurz mit aufgestellten Füßen aus"
    },
    {
     "phase": "asana",
     "asana": "rad",
     "sekunden": 20,
     "seite": null,
-    "sage": "Noch einmal ins Rad, oder bleib in der Brücke."
+    "sage": "Noch einmal ins Rad, wenn es sich gut anfühlt, oder bleib in der Brücke, beides ist wunderbar"
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 45,
     "seite": "links",
-    "sage": "Komm in den Vierfüßler. Linkes Knie nach vorn, rechtes Bein lang zurück."
+    "sage": "Roll dich behutsam ab, komm in den Vierfüßlerstand, das linke Knie nach vorn hinter die linke Hand, das rechte Bein lang zurück",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Leg ein Kissen unter die Hüfte, wenn sie schwebt, und lass den Oberkörper langsam sinken"
+     },
+     {
+      "nach": 27,
+      "sage": "Nach dem Rad tut diese Ruhe besonders gut, lass einfach los"
+     },
+     {
+      "nach": 36,
+      "sage": "Atme tief in die linke Hüfte"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "taube",
     "sekunden": 45,
     "seite": "rechts",
-    "sage": "Über den Vierfüßler wechseln. Rechtes Knie nach vorn. Lass los."
+    "sage": "Komm über die Hände hoch, wechsle über den Vierfüßlerstand, das rechte Knie nach vorn und das linke Bein lang zurück",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Zwickt es im Knie, nimm den Fuß näher zu dir oder leg dich auf den Rücken"
+     },
+     {
+      "nach": 27,
+      "sage": "Lass los, mit jedem Ausatmen ein bisschen mehr"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halber_drehsitz",
     "sekunden": 40,
     "seite": "links",
-    "sage": "Setz dich. Linker Fuß außen neben das rechte Knie. Dreh dich nach links."
+    "sage": "Setz dich hin, die Beine lang, der linke Fuß steht außen neben dem rechten Knie, die linke Hand stützt hinter dir",
+    "zwischen": [
+     {
+      "nach": 13,
+      "sage": "Einatmend wirst du lang, und ausatmend drehst du dich sanft nach links, der rechte Ellbogen außen am Knie"
+     },
+     {
+      "nach": 26,
+      "sage": "Dreh dich aus der Mitte, nicht aus dem Nacken, und atme ruhig weiter"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "halber_drehsitz",
     "sekunden": 40,
     "seite": "rechts",
-    "sage": "Wechsle und dreh dich nach rechts."
+    "sage": "Komm langsam zurück zur Mitte und wechsle, der rechte Fuß steht außen neben dem linken Knie",
+    "zwischen": [
+     {
+      "nach": 12,
+      "sage": "Einatmen, richte dich auf, ausatmen, dreh dich nach rechts, die rechte Hand stützt hinter dir"
+     },
+     {
+      "nach": 25,
+      "sage": "Mit jedem Einatmen Länge, mit jedem Ausatmen ein wenig mehr Drehung"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "sitzende_vorbeuge",
     "sekunden": 60,
     "seite": null,
-    "sage": "Beine lang. Sinke ohne Eile nach vorn."
+    "sage": "Löse die Drehung, streck beide Beine aus, einatmen, die Arme hoch, und ausatmen, sinke ohne Eile nach vorn",
+    "zwischen": [
+     {
+      "nach": 15,
+      "sage": "Die Knie dürfen weich sein, der Rücken bleibt lang, und der Bauch sinkt zu den Oberschenkeln"
+     },
+     {
+      "nach": 30,
+      "sage": "Hier gibt es nichts zu erreichen, nur nachzugeben"
+     },
+     {
+      "nach": 42,
+      "sage": "Lass mit jedem Ausatmen ein wenig mehr los"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "schulterstand",
     "sekunden": 60,
     "seite": null,
-    "sage": "Schultern auf die Decken. Rolle hoch in den Schulterstand."
+    "sage": "Leg dich auf den Rücken, die Schultern auf den gefalteten Decken, zieh die Knie zur Brust und roll das Becken hoch",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Stütz den Rücken mit den Händen, die Ellbogen schulterbreit, und streck die Beine nach oben"
+     },
+     {
+      "nach": 26,
+      "sage": "Das Gewicht ruht auf den Schultern, nie auf dem Nacken, und der Kopf bleibt ganz gerade"
+     },
+     {
+      "nach": 40,
+      "sage": "Wenn es im Nacken drückt, leg die Beine einfach an die Wand"
+     },
+     {
+      "nach": 50,
+      "sage": "Atme ganz ruhig, sehr schön"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "pflug",
     "sekunden": 40,
     "seite": null,
-    "sage": "Senke die Beine langsam über den Kopf. Kopf nicht drehen."
+    "sage": "Ausatmen, senk die gestreckten Beine langsam über den Kopf, die Zehen zum Boden oder auf einen Stuhl, und dreh den Kopf nicht",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Die Hände stützen weiter den Rücken, oder verschränke sie am Boden"
+     },
+     {
+      "nach": 24,
+      "sage": "Atme ruhig in den Rücken, und spür, wie er lang wird"
+     }
+    ]
    },
    {
     "phase": "asana",
     "asana": "schulterstand",
     "sekunden": 20,
     "seite": null,
-    "sage": "Hebe die Beine wieder nach oben."
+    "sage": "Einatmen, und heb die Beine wieder langsam nach oben, die Hände stützen den Rücken"
    },
    {
     "phase": "asana",
     "asana": "bruecke",
     "sekunden": 30,
     "seite": null,
-    "sage": "Rolle Wirbel für Wirbel ab. Füße aufstellen, Becken sanft heben."
+    "sage": "Roll jetzt Wirbel für Wirbel ab, die Hände bremsen, stell die Füße auf und heb das Becken sanft in die Brücke",
+    "zwischen": [
+     {
+      "nach": 14,
+      "sage": "Ganz sanft, nur so hoch, wie es angenehm ist"
+     },
+     {
+      "nach": 21,
+      "sage": "Und leg das Becken langsam ab, Wirbel für Wirbel"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": "lotus",
     "sekunden": 105,
     "seite": "links",
-    "sage": "Komm in den Lotus oder einen ruhigen Sitz. Lass alles Tun los."
+    "sage": "Komm hoch in einen ruhigen Sitz, im Lotus, wenn deine Knie es frei erlauben, sonst im Schneidersitz, der linke Fuß liegt oben",
+    "zwischen": [
+     {
+      "nach": 30,
+      "sage": "Lass jetzt alles Tun los"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": "lotus",
     "sekunden": 105,
     "seite": "rechts",
-    "sage": "Wechsle die Beine. Beobachte deinen Atem, ohne ihn zu lenken."
+    "sage": "Wechsle ganz langsam die Beine, jetzt liegt der rechte Fuß oben, und beobachte deinen Atem, ohne ihn zu lenken",
+    "zwischen": [
+     {
+      "nach": 50,
+      "sage": "Einfach da sein"
+     }
+    ]
    },
    {
     "phase": "stille",
     "asana": null,
     "sekunden": 60,
     "seite": null,
-    "sage": "Lass auch den Atem los. Bleib einfach da."
+    "sage": "Lass jetzt auch den Atem los, bleib einfach da"
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 180,
     "seite": null,
-    "sage": "Leg dich auf den Rücken. Gib dich ganz dem Boden hin."
+    "sage": "Leg dich langsam auf den Rücken, die Arme neben dem Körper, die Handflächen nach oben, und gib dich ganz dem Boden hin",
+    "zwischen": [
+     {
+      "nach": 80,
+      "sage": "Du wirst getragen"
+     }
+    ]
    },
    {
     "phase": "savasana",
     "asana": "entspannungslage",
     "sekunden": 30,
     "seite": null,
-    "sage": "Kehre langsam zurück. Nimm die Stille mit in deinen Tag."
+    "sage": "Kehre langsam zurück, vertiefe deinen Atem, beweg sanft die Finger und die Zehen, und streck dich lang",
+    "zwischen": [
+     {
+      "nach": 11,
+      "sage": "Roll dich auf die Seite, bleib dort noch einen Atemzug, und komm dann langsam hoch in den Sitz"
+     },
+     {
+      "nach": 22,
+      "sage": "Wenn du magst, öffne die Augen, nimm die Stille mit in deinen Tag"
+     }
+    ]
    }
   ]
  }

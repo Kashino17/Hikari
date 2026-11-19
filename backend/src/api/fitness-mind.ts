@@ -93,9 +93,13 @@ export function registerMindRoutes(app: FastifyInstance, db: FitDb, dir: string,
   app.get<{ Params: { id: string } }>("/fitness/mind/guided/:id", async (req, reply) =>
     fresh().content.gefuehrt.find((g) => g.id === req.params.id) ?? reply.code(404).send({ error: "not_found" }),
   );
-  app.get<{ Params: { id: string } }>("/fitness/mind/atem/:id", async (req, reply) =>
-    fresh().content.atem.find((g) => g.id === req.params.id) ?? reply.code(404).send({ error: "not_found" }),
-  );
+  app.get<{ Params: { id: string } }>("/fitness/mind/atem/:id", async (req, reply) => {
+    const m = fresh();
+    const a = m.content.atem.find((g) => g.id === req.params.id);
+    if (!a) return reply.code(404).send({ error: "not_found" });
+    // Führung (Zahlen, Lob, erste Runde, Abschluss) gilt für alle Atemübungen.
+    return { ...a, fuehrung: (m.content as { atem_fuehrung?: unknown }).atem_fuehrung ?? null };
+  });
   app.get<{ Params: { id: string } }>("/fitness/mind/deep/:id", async (req, reply) =>
     fresh().content.deepdives.find((g) => g.id === req.params.id) ?? reply.code(404).send({ error: "not_found" }),
   );

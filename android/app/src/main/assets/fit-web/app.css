@@ -1093,3 +1093,9 @@ html.area-mind .orb::before{border:1.5px solid rgba(var(--mind),.38)}
 .klSheet .sec{margin-top:0}
 .klang{margin-top:22px}
 .klSheet .klang>.sec h2{display:none}
+/* Atemkugel in der laufenden Übung: goldene Scheibe mit Ring, wie im übrigen Bereich */
+html.area-mind .brOrb i{background:rgb(var(--mind));box-shadow:none}
+html.area-mind .brOrb i::after{content:"";position:absolute;inset:30%;border-radius:50%;background:#0A0F26;opacity:.16}
+html.area-mind .brOrb::before{border:1.5px solid rgba(var(--mind),.38);box-shadow:none;background:none}
+html.area-mind .brOrb::after{display:none}
+html.area-mind .brLabel b{font-family:var(--serif);font-weight:560;font-size:30px}

@@ -1,7 +1,7 @@
 // Achtsamkeit: Meditation (geführt in Rems Stimme + Videos), Atem, Yoga-Pfad mit Stufen,
 // Affirmationen, Impulse und Wissen. Jede Übung endet mit einer kurzen Einkehr (Stimmung vorher/nachher).
 import { html, useEffect, useMemo, useRef, useState } from '../../vendor/preact-htm.js';
-import { api, local, voice, bell, haptic, keepAwake, openVideo, ambient } from '../platform.js';
+import { api, local, voice, bell, haptic, keepAwake, openVideo, ambient, breathSound, preloadBreath } from '../platform.js';
 import { nav, back, useData, setData, refresh, toast, img, fmtNum } from '../app.js';
 import { Icon, Top, Sheet, cls, Spinner, Empty, Ring, Bar } from '../ui.js';
 
@@ -402,50 +402,125 @@ export function Breath({ id }) {
 }
 
 function BreathRun({ a, rounds, bed, onEnd, onQuit }) {
+  const f = a.fuehrung ?? {};
   const cycle = a.phasen.reduce((s, p) => s + p.sekunden, 0);
   const total = cycle * rounds;
   const [t, setT] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [intro, setIntro] = useState(true);
+  const [ending, setEnding] = useState(false);
   const base = useRef({ start: performance.now(), acc: 0 });
   const last = useRef(-1);
+  const lastSec = useRef(-1);
+  const keyRef = useRef(-1);
+  const alive = useRef(true);
+  const now = () => base.current.acc + (performance.now() - base.current.start) / 1000;
+  const wait = (sec) => new Promise((r) => setTimeout(r, sec * 1000));
   useBed(bed, paused);
-  useEffect(() => { keepAwake(true); bell(0.6); return () => { keepAwake(false); voice.stop(); }; }, []);
+  // Einleitung: Schale, dann erklärt Rem kurz die Übung — antippen überspringt.
   useEffect(() => {
+    alive.current = true;
+    keepAwake(true);
+    preloadBreath();
+    (async () => {
+      bell(0.6);
+      await wait(2.2);
+      for (const line of a.einleitung ?? []) {
+        if (!alive.current) return;
+        await voice.speak(line);
+        await wait(0.7);
+      }
+      await wait(0.8);
+      if (alive.current) setIntro(false);
+    })();
+    return () => { alive.current = false; keepAwake(false); voice.stop(); };
+  }, []);
+  useEffect(() => {
+    if (intro || ending) return undefined;
     if (paused) { base.current.acc = t; return undefined; }
     base.current.start = performance.now();
     let raf;
     const tick = () => {
-      const now = base.current.acc + (performance.now() - base.current.start) / 1000;
-      setT(now);
-      if (now >= total) { bell(0.7); onEnd(Math.round(total)); return; }
+      const n = now();
+      setT(Math.min(n, total));
+      if (n >= total) {
+        setEnding(true);
+        (async () => {
+          bell(0.7);
+          await wait(1.6);
+          if (alive.current && f.ende) await voice.speak(f.ende);
+          if (alive.current) onEnd(Math.round(total));
+        })();
+        return;
+      }
       raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [paused]);
+  }, [paused, intro]);
   const inCycle = t % cycle;
   const round = Math.min(rounds, Math.floor(t / cycle) + 1);
   let acc = 0;
   let pi = 0;
   for (; pi < a.phasen.length; pi++) { if (inCycle < acc + a.phasen[pi].sekunden) break; acc += a.phasen[pi].sekunden; }
-  const ph = a.phasen[Math.min(pi, a.phasen.length - 1)];
+  pi = Math.min(pi, a.phasen.length - 1);
+  const ph = a.phasen[pi];
   const pt = (inCycle - acc) / ph.sekunden;
   // »Kurze Stöße« (Feueratem): pulsieren statt einem langen Ausatmen.
   const bursts = /stö(ß|ss)e/i.test(ph.sage);
   const scale = bursts ? 0.8 + 0.07 * Math.abs(Math.sin((inCycle - acc) * Math.PI))
     : ph.typ === 'ein' ? 0.55 + 0.45 * pt : ph.typ === 'aus' ? 1 - 0.45 * pt : ph.typ === 'halten' ? 1 : 0.55;
   const key = Math.floor(t / cycle) * 10 + pi;
+  const secIn = Math.floor(inCycle - acc);
+  // Wie viel Rem in dieser Runde führt: erst mitatmen, dann mitzählen, dann Stichwort, dann Stille.
+  const mode = (r) => (r === 1 ? 'mit' : r <= 3 ? 'zaehlen' : (r <= 5 || a.immer_ansagen) ? 'wort' : 'still');
   useEffect(() => {
-    if (key === last.current || paused) return;
+    if (intro || ending || paused || key === last.current) return;
     last.current = key;
+    keyRef.current = key;
+    lastSec.current = 0;
     haptic();
-    voice.speak(ph.sage);
-  }, [key]);
+    const m = mode(round);
+    const firstAus = a.phasen.findIndex((x) => x.typ === 'aus');
+    if (round === rounds && rounds >= 3 && pi === 0 && ph.typ === 'ein' && !a.immer_ansagen) { voice.speak(f.letzte ?? ph.sage); return; }
+    if (m === 'mit') {
+      const cue = ph.zuerst ?? f.zuerst?.[ph.typ] ?? ph.sage;
+      const k = key;
+      const phaseEnd = (Math.floor(t / cycle) * cycle) + acc + ph.sekunden;
+      voice.speak(cue).then(() => {
+        // Rem atmet hörbar mit — nur bei Ein/Aus, nicht bei Stößen, und nur, wenn noch Zeit ist.
+        const left = phaseEnd - now();
+        if (alive.current && keyRef.current === k && !bursts && (ph.typ === 'ein' || ph.typ === 'aus') && left > 1.2) breathSound(ph.typ, left - 0.2);
+      });
+    } else if (m === 'zaehlen' || m === 'wort') {
+      voice.speak(ph.sage);
+    } else if (pi === firstAus && (round - 6) % 4 === 0 && f.lob?.length) {
+      voice.speak(f.lob[Math.floor(round / 4) % f.lob.length]);
+    }
+  }, [key, intro, paused]);
+  // Mitzählen im Takt der echten Sekunden: Stichwort ist »eins«, dann »zwei, drei, …«.
+  useEffect(() => {
+    if (intro || ending || paused || bursts || mode(round) !== 'zaehlen') return;
+    if (secIn < 1 || secIn === lastSec.current) return;
+    lastSec.current = secIn;
+    const n = secIn + 1;
+    if (n > Math.floor(ph.sekunden + 0.001)) return;
+    const word = f.zahlen?.[n - 2];
+    if (word && !voice.busy) voice.speak(word);
+  }, [secIn, key]);
+  const toggle = () => {
+    if (intro) { voice.stop(); alive.current && setIntro(false); return; }
+    if (ending) return;
+    if (!paused) voice.stop();
+    setPaused(!paused);
+  };
   return html`<div class="screen breathRun c-mind">
-    <div class="brTop"><button class="ib" onClick=${() => { voice.stop(); onQuit(); }} aria-label="Beenden"><${Icon} n="close" /></button><span>Runde ${round} von ${rounds} · ${mmss(Math.max(0, total - t))}</span><${BedButton} c=${bed} /></div>
-    <div class="brStage" onClick=${() => setPaused(!paused)}>
-      <div class="brOrb" style=${{ transform: `scale(${scale})` }}><i /></div>
-      <div class="brLabel"><b>${paused ? 'Pause' : ph.sage}</b><span>${paused ? 'Tippen zum Weitermachen' : Math.ceil(ph.sekunden - (inCycle - acc))}</span></div>
+    <div class="brTop"><button class="ib" onClick=${() => { alive.current = false; voice.stop(); onQuit(); }} aria-label="Beenden"><${Icon} n="close" /></button><span>${intro ? a.name : `Runde ${round} von ${rounds} · ${mmss(Math.max(0, total - t))}`}</span><${BedButton} c=${bed} /></div>
+    <div class="brStage" onClick=${toggle}>
+      <div class="brOrb" style=${{ transform: `scale(${intro || ending ? 0.7 : scale})` }}><i /></div>
+      <div class="brLabel">${intro ? html`<b>Gleich geht's los</b><span>Tippen zum Überspringen</span>`
+        : ending ? html`<b>Sehr schön</b><span />`
+        : html`<b>${paused ? 'Pause' : ph.sage}</b><span>${paused ? 'Tippen zum Weitermachen' : bursts ? '' : Math.min(Math.floor(ph.sekunden + 0.001), secIn + 1)}</span>`}</div>
     </div>
     <div class="brBottom"><div class="bar"><i style=${{ width: `${(t / total) * 100}%` }} /></div></div>
   </div>`;
@@ -785,6 +860,13 @@ function FlowRun({ l, asanas, bed, onEnd, onQuit }) {
     return () => clearInterval(iv);
   }, [i, paused]);
   const s = steps[i];
+  // Zwischenansagen in längeren Haltungen (»schön weiter atmen«) — genau in der vorgesehenen Sekunde.
+  const inStep = s.sekunden - left;
+  useEffect(() => {
+    if (paused) return;
+    const z = s.zwischen?.find((x) => x.nach === inStep);
+    if (z && !voice.busy) voice.speak(z.sage);
+  }, [inStep, i]);
   const a = s.asana && asanas.find((x) => x.id === s.asana);
   const next = steps[i + 1];
   const na = next?.asana && asanas.find((x) => x.id === next.asana);

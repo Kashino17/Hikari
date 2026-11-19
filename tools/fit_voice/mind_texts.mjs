@@ -10,11 +10,14 @@ const levels = read('yoga-levels.json', []);
 const content = read('content.json', {});
 
 const out = new Map();
+// Gesprochen wird nur mit Kommas und einem Komma am Ende (Kadir, 20.11.; gemessen: Punkte lassen
+// Rem in 4 von 6 Fällen abrupt enden, ein Komma am Ende nur in 1 von 6). Angezeigt wird der Text, wie er ist.
+const spokenForm = (s) => `${String(s).replace(/\s*[.!?;:…]+(\s+|$)/g, ', ').replace(/,\s*,/g, ',').replace(/[,\s]+$/, '')},`;
 const add = (t, spoken = t) => {
   const text = String(t ?? '').trim();
   const say = String(spoken ?? '').trim();
   if (!text) return;
-  out.set(`t:${text}`, /[.!?…]$/.test(say) ? say : `${say}.`);
+  out.set(`t:${text}`, spokenForm(say));
 };
 // Haltungsnamen: kurze Einzelwörter spricht das Modell unzuverlässig → mit Artikel; Ziffern aus.
 const SAY = {
@@ -25,8 +28,13 @@ const SAY = {
   'Spagat': 'Der Spagat', 'Girlande': 'Die Girlande', 'Halbmond': 'Der Halbmond', 'Pyramide': 'Die Pyramide',
 };
 for (const a of asanas) add(a.de, SAY[a.de] ?? a.de);
-for (const l of levels) for (const f of l.flow ?? []) add(f.sage);
-for (const a of content.atem ?? []) for (const p of a.phasen ?? []) add(p.sage);
+for (const l of levels) for (const f of l.flow ?? []) { add(f.sage); for (const z of f.zwischen ?? []) add(z.sage); }
+for (const a of content.atem ?? []) {
+  for (const p of a.phasen ?? []) { add(p.sage); add(p.zuerst); }
+  for (const e of a.einleitung ?? []) add(e);
+}
+const af = content.atem_fuehrung ?? {};
+for (const t of [...Object.values(af.zuerst ?? {}), ...(af.zahlen ?? []), ...(af.lob ?? []), af.letzte, af.ende]) add(t);
 for (const a of content.affirmationen ?? []) add(a.text);
 for (const g of content.gefuehrt ?? []) for (const s of g.schritte ?? []) add(s.sage);
 
