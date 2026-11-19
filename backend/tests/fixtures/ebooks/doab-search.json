@@ -1,0 +1,13 @@
+[{"uuid":"aaa","name":"Demokratie in Europa","handle":"20.500.12854/1",
+  "metadata":[{"key":"dc.title","value":"Demokratie in Europa"},{"key":"dc.contributor.author","value":"Muster, Erika"},
+    {"key":"dc.language","value":"German"},{"key":"dc.subject.other","value":"Politik"},{"key":"dc.date.issued","value":"2021"},
+    {"key":"dc.description.abstract","value":"Ein Überblick."}],
+  "bitstreams":[{"name":"9783000000001.pdf","mimeType":"application/pdf","bundleName":"ORIGINAL","retrieveLink":"/bitstreams/b1/retrieve"},
+    {"name":"9783000000001.epub","mimeType":"application/epub+zip","bundleName":"ORIGINAL","retrieveLink":"/bitstreams/b2/retrieve"}]},
+ {"uuid":"bbb","name":"Nur PDF","handle":"20.500.12854/2",
+  "metadata":[{"key":"dc.title","value":"Nur PDF"},{"key":"dc.language","value":"German"}],
+  "bitstreams":[{"name":"x.pdf","mimeType":"application/pdf","bundleName":"ORIGINAL","retrieveLink":"/bitstreams/b3/retrieve"},
+    {"name":"cover.jpg","mimeType":"image/jpeg","bundleName":"THUMBNAIL","retrieveLink":"/bitstreams/b4/retrieve"}]},
+ {"uuid":"ccc","name":"Englisch","handle":"20.500.12854/3",
+  "metadata":[{"key":"dc.title","value":"English Book"},{"key":"dc.language","value":"English"}],
+  "bitstreams":[{"name":"y.pdf","mimeType":"application/pdf","bundleName":"ORIGINAL","retrieveLink":"/bitstreams/b5/retrieve"}]}]

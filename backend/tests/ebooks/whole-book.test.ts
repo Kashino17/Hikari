@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RawBook } from "../../src/ebooks/persist.js";
-import { isWholeBook, MIN_WORDS } from "../../src/ebooks/whole-book.js";
+import { MIN_WORDS, isWholeBook } from "../../src/ebooks/whole-book.js";
 
 const base: RawBook = {
   source: "gutenberg",
@@ -23,7 +23,9 @@ describe("isWholeBook", () => {
     expect(isWholeBook({ ...base, title: "Auszug aus dem Zauberberg" }).ok).toBe(false);
   });
   it("verwirft Wikisource-Unterseiten", () => {
-    expect(isWholeBook({ ...base, source: "wikisource", title: "Die Gartenlaube (1853)/Heft 1" }).ok).toBe(false);
+    expect(
+      isWholeBook({ ...base, source: "wikisource", title: "Die Gartenlaube (1853)/Heft 1" }).ok,
+    ).toBe(false);
   });
   it("verwirft Zeitschriften", () => {
     expect(isWholeBook({ ...base, subjects: ["Periodicals"] }).ok).toBe(false);

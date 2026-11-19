@@ -3,13 +3,17 @@ import { CATEGORIES, categorize, kindOf } from "../../src/ebooks/categories.js";
 
 describe("categorize", () => {
   it("bildet Gutenberg-Regale und Schlagwörter ab", () => {
-    expect(categorize("gutenberg", ["DE Prosa", "Detective and mystery stories"])).toContain("krimi");
+    expect(categorize("gutenberg", ["DE Prosa", "Detective and mystery stories"])).toContain(
+      "krimi",
+    );
     expect(categorize("gutenberg", ["DE Sachbuch", "Philosophy, German"])).toContain("philosophie");
     expect(categorize("gutenberg", ["DE Kinderbuch"])).toContain("kinder");
     expect(categorize("gutenberg", ["Fairy tales -- Germany"])).toContain("maerchen");
     expect(categorize("gutenberg", ["DE Drama"])).toContain("drama");
     expect(categorize("gutenberg", ["DE Lyrik"])).toContain("lyrik");
-    expect(categorize("gutenberg", ["Comedy plays"])).toEqual(expect.arrayContaining(["drama", "humor"]));
+    expect(categorize("gutenberg", ["Comedy plays"])).toEqual(
+      expect.arrayContaining(["drama", "humor"]),
+    );
     expect(categorize("gutenberg", ["Love stories"])).toContain("liebe");
     expect(categorize("gutenberg", ["Category: Adventure"])).toContain("abenteuer");
     expect(categorize("gutenberg", ["Psychoanalysis"])).toContain("psychologie");
@@ -29,7 +33,13 @@ describe("categorize", () => {
 
   it("jede vergebene ID steht in CATEGORIES", () => {
     const ids = new Set(CATEGORIES.map((c) => c.id));
-    for (const id of categorize("gutenberg", ["DE Prosa", "Detective", "Philosophy", "Travel", "Comedy plays"]))
+    for (const id of categorize("gutenberg", [
+      "DE Prosa",
+      "Detective",
+      "Philosophy",
+      "Travel",
+      "Comedy plays",
+    ]))
       expect(ids.has(id), id).toBe(true);
     expect(CATEGORIES).toHaveLength(22);
   });

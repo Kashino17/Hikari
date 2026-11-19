@@ -8,16 +8,16 @@ export interface RawBook {
   sourceId: string;
   title: string;
   authors: string[];
-  year?: number;
+  year?: number | undefined;
   language: "de";
-  description?: string;
+  description?: string | undefined;
   subjects: string[];
   format: BookFormat;
   fileUrl: string;
-  coverUrl?: string;
+  coverUrl?: string | undefined;
   sourceUrl: string;
-  wordCount?: number;
-  popularity?: number;
+  wordCount?: number | undefined;
+  popularity?: number | undefined;
 }
 
 /** Für Index UND Suchanfrage gleich: klein, ä→a, ö→o, ü→u, ß→ss. */
@@ -77,10 +77,14 @@ export function upsertBook(
       ).run(vals);
     }
     db.prepare("DELETE FROM ebook_categories WHERE book_id = ?").run(id);
-    const addCat = db.prepare("INSERT OR IGNORE INTO ebook_categories (book_id, category) VALUES (?, ?)");
+    const addCat = db.prepare(
+      "INSERT OR IGNORE INTO ebook_categories (book_id, category) VALUES (?, ?)",
+    );
     for (const c of categories) addCat.run(id, c);
     db.prepare("DELETE FROM ebooks_fts WHERE book_id = ?").run(id);
-    db.prepare("INSERT INTO ebooks_fts (book_id, title, authors, description) VALUES (?, ?, ?, ?)").run(
+    db.prepare(
+      "INSERT INTO ebooks_fts (book_id, title, authors, description) VALUES (?, ?, ?, ?)",
+    ).run(
       id,
       normalizeForSearch(raw.title),
       normalizeForSearch(raw.authors.join(" ")),
@@ -92,7 +96,12 @@ export function upsertBook(
 }
 
 /** Was die Quelle diesmal nicht mehr gemeldet hat, bekommt missing_since — gelöscht wird nie. */
-export function markSourceSeen(db: Database.Database, source: string, seenIds: string[], now: number): void {
+export function markSourceSeen(
+  db: Database.Database,
+  source: string,
+  seenIds: string[],
+  now: number,
+): void {
   const seen = new Set(seenIds);
   const rows = db.prepare("SELECT id, missing_since FROM ebooks WHERE source = ?").all(source) as {
     id: string;
