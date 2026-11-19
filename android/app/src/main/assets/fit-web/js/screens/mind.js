@@ -198,7 +198,7 @@ export function MindHome() {
           <div class="mr-chips">${SITUATIONS.map(([k, l, icon]) => html`<button onClick=${() => nav(`achtsam/fuer/${k}`)}><${Icon} n=${icon} />${l}</button>`)}</div></div>
 
         <div class="twoUp mt20">
-          ${level && html`<button class="tu path" onClick=${() => nav(`achtsam/yoga/${level.stufe}`)}>
+          ${level && html`<button class="tu pathTile" onClick=${() => nav(`achtsam/yoga/${level.stufe}`)}>
             <${Ring} size=${54} stroke=${5} value=${Math.min(prog?.sessions ?? 0, prog?.need.einheiten ?? 1)} max=${prog?.need.einheiten ?? 1} color="rgb(var(--mind))" track="rgba(255,255,255,.1)"><b class="num">${level.stufe}</b><//>
             <b>${level.name}</b><span>${prog?.met ? 'Nächste Stufe frei' : `${prog?.sessions ?? 0} von ${prog?.need.einheiten ?? 0} Einheiten`}</span></button>`}
           ${quick && html`<button class="tu breath" onClick=${() => nav(`achtsam/atem/${quick.id}`)}>

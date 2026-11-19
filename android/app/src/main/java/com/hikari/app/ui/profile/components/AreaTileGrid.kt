@@ -196,11 +196,28 @@ private fun BoxScope.BottomScrim(strength: Float = 0.92f) {
     Box(
         Modifier.matchParentSize().background(
             Brush.verticalGradient(
-                0f to Color.Transparent,
-                0.45f to Color.Black.copy(alpha = strength * 0.35f),
+                // Oben ein Hauch Dunkel für die Bereichs-Beschriftung, unten kräftig für Titel und Text.
+                0f to Color.Black.copy(alpha = 0.55f),
+                0.22f to Color.Transparent,
+                0.5f to Color.Black.copy(alpha = strength * 0.3f),
                 1f to Color.Black.copy(alpha = strength),
             ),
         ),
+    )
+}
+
+/** Bereichsname auf einem Bild: kleines schwarzes Etikett — auf jedem Cover lesbar. */
+@Composable
+private fun ImageLabel(text: String) {
+    Text(
+        text,
+        color = Color.White,
+        fontSize = 12.5.sp,
+        fontWeight = FontWeight.SemiBold,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.Black.copy(alpha = 0.78f))
+            .padding(horizontal = 9.dp, vertical = 3.dp),
     )
 }
 
@@ -380,7 +397,7 @@ private fun MusicAreaTile(tile: MusicTile?, modifier: Modifier, onClick: () -> U
         }
         val fg = if (hasCover) Color.White else AreaColors.Ink
         Column(Modifier.fillMaxSize().padding(Pad)) {
-            Text("Musik", color = fg.copy(alpha = 0.75f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            if (hasCover) ImageLabel("Musik") else Text("Musik", color = fg.copy(alpha = 0.75f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             Text(
                 tile?.title ?: "Noch nichts gehört",
@@ -476,7 +493,7 @@ private fun ReadAreaTile(tile: MangaTile?, onClick: () -> Unit) {
         }
         val fg = if (covers.isNotEmpty()) Color.White else AreaColors.Ink
         Column(Modifier.fillMaxSize().padding(Pad)) {
-            Text("Lesen", color = fg.copy(alpha = 0.75f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            if (covers.isNotEmpty()) ImageLabel("Lesen") else Text("Lesen", color = fg.copy(alpha = 0.75f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             Text(
                 tile?.title ?: "Bücher und Manga",
