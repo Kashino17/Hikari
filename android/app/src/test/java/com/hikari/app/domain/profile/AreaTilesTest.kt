@@ -177,4 +177,12 @@ class AreaTilesTest {
         assertEquals("Kapitel 763", t.detail)
         assertEquals(listOf(ReadKind.MANGA), t.kinds)
     }
+
+    @Test
+    fun `browserTitle schneidet den Mediathek-Anhang ab`() {
+        assertEquals("Artemis II - Zurück zum Mond", AreaTiles.browserTitle("Artemis II - Zurück zum Mond jetzt kostenlos streamen"))
+        assertEquals("Das Einhorn", AreaTiles.browserTitle("Das Einhorn | ZDF"))
+        assertEquals("Plastik streamen", AreaTiles.browserTitle("Plastik streamen"))
+        assertEquals("streamen", AreaTiles.browserTitle("streamen"))
+    }
 }

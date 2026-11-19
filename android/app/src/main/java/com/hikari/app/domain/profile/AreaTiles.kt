@@ -198,5 +198,16 @@ object AreaTiles {
         else -> null
     }
 
+    /**
+     * Titel eines im Browser gefundenen Videos ohne den Werbe-Anhang der Mediatheken
+     * (»… jetzt kostenlos streamen«, »… | ZDF«), damit auf der kleinen Kachel der Name bleibt.
+     */
+    fun browserTitle(raw: String): String {
+        var t = raw.trim()
+        t = t.replace(Regex("""\s+(jetzt\s+kostenlos|jetzt|kostenlos)\s+(online\s+)?(streamen|ansehen|anschauen)\s*$""", RegexOption.IGNORE_CASE), "")
+        t = t.replace(Regex("""\s*[|–-]\s*(ZDF|ARD|arte|ARTE|ZDFmediathek|ARD Mediathek|3sat|YouTube)\s*$"""), "")
+        return t.trim().ifEmpty { raw.trim() }
+    }
+
     const val GAME_COUNT = 9
 }

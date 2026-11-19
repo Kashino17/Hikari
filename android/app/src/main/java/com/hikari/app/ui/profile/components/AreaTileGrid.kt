@@ -92,9 +92,9 @@ internal object AreaColors {
     val Ink = Color(0xFF0B0B0D)
 }
 
-private val TileShape = RoundedCornerShape(22.dp)
-private val Gap = 10.dp
-private val Pad = 16.dp
+internal val TileShape = RoundedCornerShape(22.dp)
+internal val Gap = 10.dp
+internal val Pad = 16.dp
 
 /**
  * Die Bereiche als Bild-Mosaik: jede Kachel zeigt ein echtes Bild aus ihrem Bereich (Übung,
@@ -113,6 +113,12 @@ fun AreaTileGrid(
     val lastGame by vm.lastGame.collectAsState()
     val fitness by vm.fitness.collectAsState()
     val mind by vm.mind.collectAsState()
+    val previewV2 by vm.previewV2.collectAsState()
+
+    if (previewV2) {
+        AreaTileGridV2(vm, onOpenSection)
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -156,7 +162,64 @@ fun AreaTileGrid(
             ) { onOpenSection("whatsapp") }
         }
 
+        PreviewSwitch(on = false, onChange = vm::setPreviewV2)
+
         // Platz für die Musik-Blase unten rechts und die Navigationsleiste.
+        Spacer(Modifier.height(84.dp))
+    }
+}
+
+/**
+ * Neue Gestaltung (Vorschau): Achtsamkeit oben, Russisch + Musik, Fitness —
+ * darunter Tagesbericht + Lesen als Bild/Plakat-Paar und ein Spiele/WhatsApp/Browser-Block.
+ * Rhythmus: breit · Paar · breit · Paar · Block, Bild und Plakat im Schachbrett.
+ */
+@Composable
+private fun AreaTileGridV2(
+    vm: AreaTilesViewModel,
+    onOpenSection: (route: String) -> Unit,
+) {
+    val russian by vm.russian.collectAsState()
+    val music by vm.music.collectAsState()
+    val manga by vm.manga.collectAsState()
+    val news by vm.news.collectAsState()
+    val fitness by vm.fitness.collectAsState()
+    val mind by vm.mind.collectAsState()
+    val games by vm.games.collectAsState()
+    val whatsApp by vm.whatsApp.collectAsState()
+    val browser by vm.browser.collectAsState()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(Gap),
+    ) {
+        MindAreaTile(mind) { onOpenSection("mind") }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
+            RussianAreaTile(russian, Modifier.weight(1f)) { onOpenSection("russian") }
+            MusicAreaTile(music, Modifier.weight(1f)) { onOpenSection("music") }
+        }
+
+        FitnessAreaTile(fitness) { onOpenSection("fitness") }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
+            NewsPhotoTile(news, Modifier.weight(1f)) { onOpenSection("news") }
+            ReadPosterTile(manga, Modifier.weight(1f)) { onOpenSection("manga") }
+        }
+
+        Row(Modifier.height(LowerRowHeight), horizontalArrangement = Arrangement.spacedBy(Gap)) {
+            GamesPosterTile(games, Modifier.weight(1f).fillMaxHeight()) { onOpenSection("games") }
+            Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Gap)) {
+                WhatsAppChatTile(whatsApp, Modifier.fillMaxWidth().weight(1f)) { onOpenSection("whatsapp") }
+                BrowserPhotoTile(browser, Modifier.fillMaxWidth().weight(1f)) { onOpenSection("browser") }
+            }
+        }
+
+        PreviewSwitch(on = true, onChange = vm::setPreviewV2)
+
         Spacer(Modifier.height(84.dp))
     }
 }
@@ -165,7 +228,7 @@ fun AreaTileGrid(
 
 /** Kachel mit voller Fläche; drückt sich beim Antippen leicht ein. */
 @Composable
-private fun Tile(
+internal fun Tile(
     background: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -192,7 +255,7 @@ private fun Tile(
 
 /** Dunkler Verlauf am unteren Rand — Text bleibt auf jedem Bild lesbar. */
 @Composable
-private fun BoxScope.BottomScrim(strength: Float = 0.92f) {
+internal fun BoxScope.BottomScrim(strength: Float = 0.92f) {
     Box(
         Modifier.matchParentSize().background(
             Brush.verticalGradient(
@@ -208,7 +271,7 @@ private fun BoxScope.BottomScrim(strength: Float = 0.92f) {
 
 /** Bereichsname auf einem Bild: kleines schwarzes Etikett — auf jedem Cover lesbar. */
 @Composable
-private fun ImageLabel(text: String) {
+internal fun ImageLabel(text: String) {
     Text(
         text,
         color = Color.White,
@@ -222,7 +285,7 @@ private fun ImageLabel(text: String) {
 }
 
 @Composable
-private fun PlayDot(done: Boolean, fill: Color, ink: Color, modifier: Modifier = Modifier) {
+internal fun PlayDot(done: Boolean, fill: Color, ink: Color, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.size(46.dp).clip(CircleShape).background(fill),
         contentAlignment = Alignment.Center,

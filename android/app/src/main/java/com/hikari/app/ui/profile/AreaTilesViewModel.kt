@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,11 +62,51 @@ data class MindTile(
     val done: Boolean,
 )
 
+/** Eine Meldung im Tagesbericht-Wechselbild. */
+data class NewsSlide(
+    val headline: String,
+    val imageUrl: String?,
+    val source: String,
+)
+
 /** Tagesbericht-Kachel: die erste Schlagzeile, die Zahl der Meldungen und von wann der Bericht ist. */
 data class NewsTile(
     val headline: String,
     val count: Int,
     val day: String?,
+    /** Die ersten Meldungen mit Foto — die Kachel blendet sie nacheinander ein. */
+    val slides: List<NewsSlide> = emptyList(),
+)
+
+/** Spiele-Kachel: das zuletzt gespielte Spiel mit seinem Stand. */
+data class GamesTile(
+    val id: String,
+    val title: String,
+    /** Erspielter Stand (»Rekord 26.348«, »Level 12«) oder worum es geht. */
+    val stat: String,
+    val earned: Boolean,
+    /** Zwei weitere Spiele für den Symbol-Fächer hinter dem Hauptsymbol. */
+    val others: List<String>,
+)
+
+/** Eine vom Wächter gerettete WhatsApp-Nachricht. */
+data class WaRescue(
+    val sender: String,
+    val text: String,
+    val deleted: Boolean,
+)
+
+/** WhatsApp-Kachel: die zuletzt geretteten Nachrichten und wie viele es insgesamt sind. */
+data class WhatsAppTile(
+    val count: Int,
+    val latest: List<WaRescue>,
+)
+
+/** Browser-Kachel: das zuletzt über den Browser gefundene Video. */
+data class BrowserTile(
+    val title: String,
+    val thumbnailUrl: String?,
+    val count: Int,
 )
 
 /**
@@ -86,9 +127,23 @@ class AreaTilesViewModel @Inject constructor(
     player: MusicPlayerController,
     whatsApp: WhatsAppRepository,
     private val okHttp: okhttp3.OkHttpClient,
+    private val channelsRepo: com.hikari.app.domain.repo.ChannelsRepository,
 ) : ViewModel() {
 
     private val gamePrefs = context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE)
+    private val profilePrefs = context.getSharedPreferences("hikari_profile", Context.MODE_PRIVATE)
+
+    /**
+     * Vorschau der neuen Bereichs-Gestaltung (Kadir 20.11.2026: erst ansehen, dann live schalten).
+     * An = neue Reihenfolge + neue untere Kacheln; aus = die Seite wie in v0.89.142.
+     */
+    private val _previewV2 = MutableStateFlow(profilePrefs.getBoolean(KEY_PREVIEW_V2, true))
+    val previewV2: StateFlow<Boolean> = _previewV2.asStateFlow()
+
+    fun setPreviewV2(on: Boolean) {
+        _previewV2.value = on
+        profilePrefs.edit().putBoolean(KEY_PREVIEW_V2, on).apply()
+    }
 
     /** Zählt bei jedem Zurückkehren hoch, damit »heute« und die Serie neu berechnet werden. */
     private val resumed = MutableStateFlow(0)
@@ -125,6 +180,23 @@ class AreaTilesViewModel @Inject constructor(
     val whatsAppDeleted: StateFlow<Int> =
         whatsApp.deletedCount.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
+    val whatsApp: StateFlow<WhatsAppTile?> = whatsApp.allMessages.map { msgs ->
+        WhatsAppTile(
+            count = msgs.size,
+            latest = msgs.asSequence()
+                .filter { it.text.isNotBlank() }
+                .take(3)
+                .map { m -> WaRescue(m.senderName.ifBlank { m.chatTitle }, (m.originalText ?: m.text).trim(), m.isDeleted) }
+                .toList(),
+        )
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private val _games = MutableStateFlow<GamesTile?>(null)
+    val games: StateFlow<GamesTile?> = _games.asStateFlow()
+
+    private val _browser = MutableStateFlow<BrowserTile?>(null)
+    val browser: StateFlow<BrowserTile?> = _browser.asStateFlow()
+
     private val _fitness = MutableStateFlow<FitnessTile?>(null)
     val fitness: StateFlow<FitnessTile?> = _fitness.asStateFlow()
     private val _mind = MutableStateFlow<MindTile?>(null)
@@ -141,6 +213,29 @@ class AreaTilesViewModel @Inject constructor(
     fun refresh() {
         resumed.value += 1
         _lastGame.value = AreaTiles.gameTitle(gamePrefs.getString("last_played_game", null))
+        _games.value = run {
+            val catalog = com.hikari.app.ui.games.GameCatalog
+            val last = gamePrefs.getString("last_played_game", null)?.let { id -> catalog.firstOrNull { it.id == id } }
+            val main = last ?: catalog.first()
+            val stat = main.stat { key -> gamePrefs.getInt(key, 0) }
+            GamesTile(
+                id = main.id,
+                title = main.title,
+                stat = stat.spelledOut,
+                earned = last != null && stat.earned,
+                others = catalog.filter { it.id != main.id }.take(2).map { it.id },
+            )
+        }
+        viewModelScope.launch {
+            runCatching { channelsRepo.listVideos("manual") }.onSuccess { vids ->
+                val base = settings.backendUrl.first().trimEnd('/')
+                val latest = vids.maxByOrNull { it.discoveredAt ?: it.addedToFeedAt ?: 0L }
+                _browser.value = latest?.let { v ->
+                    val thumb = v.thumbnailUrl?.takeIf { it.isNotBlank() }?.let { if (it.startsWith("http")) it else "$base$it" }
+                    BrowserTile(AreaTiles.browserTitle(v.title), thumb, vids.size)
+                }
+            }
+        }
 
         viewModelScope.launch {
             _studySeconds.value = withContext(Dispatchers.IO) { studyTime.todaySeconds() }
@@ -177,7 +272,12 @@ class AreaTilesViewModel @Inject constructor(
         viewModelScope.launch {
             runCatching { newsRepo.getBriefing(force = false) }.onSuccess { items ->
                 _news.value = items.firstOrNull()?.let {
-                    NewsTile(it.title, items.size, AreaTiles.newsDay(it.publishedAt, LocalDate.now()))
+                    NewsTile(
+                        headline = it.title,
+                        count = items.size,
+                        day = AreaTiles.newsDay(it.publishedAt, LocalDate.now()),
+                        slides = items.take(6).map { n -> NewsSlide(n.title, n.imageUrls.firstOrNull(), n.source) },
+                    )
                 }
             }
         }
@@ -207,5 +307,9 @@ class AreaTilesViewModel @Inject constructor(
                 books = books,
             )
         }
+    }
+
+    private companion object {
+        const val KEY_PREVIEW_V2 = "areas_preview_v2"
     }
 }
