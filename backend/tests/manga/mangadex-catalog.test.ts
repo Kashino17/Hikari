@@ -467,3 +467,25 @@ describe("Genre-Kacheln mit Covern", () => {
     expect(b).not.toEqual(a);
   });
 });
+
+describe("Suche findet auch nicht lesbare Reihen", () => {
+  it("lizenzierte Reihen ohne lesbare Kapitel erscheinen bei der Suche, als nicht lesbar und hinten", () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const [m1, m2] = LIST.data.slice(0, 2);
+    upsertCatalog(db, { ...catalogFromManga(m1!, 1), title: "Solo Leveling", popularity: 100 });
+    upsertCatalog(db, { ...catalogFromManga(m2!, 1), title: "Solo Camping", popularity: 1 });
+    db.exec("UPDATE manga_catalog SET search_text = lower(title)");
+    db.prepare(
+      "UPDATE manga_catalog SET readable_at = 1, readable_de = 0, readable_en = 0 WHERE title = 'Solo Leveling'",
+    ).run();
+    db.prepare(
+      "UPDATE manga_catalog SET readable_at = 1, readable_de = 0, readable_en = 9 WHERE title = 'Solo Camping'",
+    ).run();
+    const hits = listCatalog(db, { q: "solo" }).items;
+    expect(hits.map((c) => c.title)).toEqual(["Solo Camping", "Solo Leveling"]);
+    expect(hits.map((c) => c.readable)).toEqual([true, false]);
+    // Ohne Suche (Regale, Listen) bleiben sie draußen.
+    expect(listCatalog(db, {}).items.map((c) => c.title)).toEqual(["Solo Camping"]);
+  });
+});

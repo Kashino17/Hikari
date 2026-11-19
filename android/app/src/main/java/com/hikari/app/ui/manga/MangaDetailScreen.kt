@@ -159,6 +159,10 @@ fun MangaDetailScreen(
                     mutableStateOf(fromContinue?.takeIf { it in langs } ?: pref?.takeIf { it in langs } ?: langs.firstOrNull() ?: "de")
                 }
                 val chapters = s.detail.chapters.filter { (it.lang ?: "de") == lang }
+                // Kapitel, mit dem es weitergeht, schon vorab auf den Mac holen.
+                val nextUp = s.continueItem?.chapterId?.takeIf { c -> chapters.any { it.id == c } }
+                    ?: chapters.filter { it.isAvailable == 1 }.minByOrNull { it.number }?.id
+                LaunchedEffect(nextUp) { vm.prefetch(nextUp) }
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
                         DetailHero(

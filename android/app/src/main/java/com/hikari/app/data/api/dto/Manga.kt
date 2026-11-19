@@ -107,6 +107,8 @@ data class MangaCatalogCardDto(
     val source: String = "mangadex",
     /** Lesbare Kapitel je Sprache (vom Mac gezählt). */
     val chapters: MangaChapterCountsDto = MangaChapterCountsDto(),
+    /** false = bei MangaDex keine lesbaren Kapitel (lizenziert, nur beim Verlag). */
+    val readable: Boolean = true,
 ) {
     /** Deutscher Titel, wenn es einen gibt — ohne langen Zusatz nach „ - “. */
     val displayTitle: String get() = titleDe?.substringBefore(" - ")?.trim()?.takeIf { it.isNotBlank() } ?: title

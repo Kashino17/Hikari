@@ -72,6 +72,12 @@ internal fun CatalogCover(card: MangaCatalogCardDto, coverUrl: String?, modifier
         Row(Modifier.padding(5.dp).align(Alignment.TopStart), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
             for (l in card.langs.sorted()) LangBadge(l)
         }
+        if (!card.readable) {
+            Box(Modifier.fillMaxSize().background(Color(0x99000000)))
+            Text("NICHT LESBAR", color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.6.sp,
+                modifier = Modifier.align(Alignment.Center).clip(RoundedCornerShape(4.dp)).background(Color(0xE6B91C1C))
+                    .padding(horizontal = 6.dp, vertical = 3.dp))
+        }
         if (card.kind != "Manga") {
             Text(card.kind.uppercase(), color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.6.sp,
                 modifier = Modifier.padding(5.dp).align(Alignment.BottomStart).clip(RoundedCornerShape(4.dp)).background(Color(0xD0101010))
@@ -93,6 +99,7 @@ internal fun CatalogCard(card: MangaCatalogCardDto, coverUrl: String?, width: Dp
             card.chapters.en.takeIf { it > 0 }?.let { "EN $it" },
         )
         if (counts.isNotEmpty()) Text(counts.joinToString(" · ") + " Kap.", color = HikariTextMuted.copy(alpha = 0.8f), fontSize = 11.sp, maxLines = 1)
+        else if (!card.readable) Text("Nur beim Verlag", color = Color(0xFFF87171), fontSize = 11.sp, maxLines = 1)
     }
 }
 

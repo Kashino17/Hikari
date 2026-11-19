@@ -255,6 +255,8 @@ export interface CatalogCard {
   source: string;
   /** Lesbare Kapitel je Sprache. */
   chapters: { de: number; en: number };
+  /** false = bei MangaDex keine lesbaren Kapitel (nur beim Verlag). */
+  readable: boolean;
 }
 
 export function toCard(r: CatalogDbRow): CatalogCard {
@@ -275,6 +277,7 @@ export function toCard(r: CatalogDbRow): CatalogCard {
     coverUrl: r.cover_url ? `/api/manga/catalog/${encodeURIComponent(r.id)}/cover` : undefined,
     source: r.source,
     chapters: { de: r.readable_de ?? 0, en: r.readable_en ?? 0 },
+    readable: (r.readable_de ?? 0) + (r.readable_en ?? 0) > 0,
   };
 }
 
@@ -322,7 +325,9 @@ export function listCatalog(
   db: Database.Database,
   f: ListFilter,
 ): { total: number; items: CatalogCard[] } {
-  const w: Where = { sql: [READABLE], params: [] };
+  // Bei einer Suche auch geprüfte Reihen ohne lesbare Kapitel finden (lizenziert) — markiert und hinten.
+  const searching = !!f.q?.trim() && (f.lang ?? "all") === "all";
+  const w: Where = { sql: [searching ? "c.readable_at IS NOT NULL" : READABLE], params: [] };
   langWhere(w, f.lang ?? "all");
   if (f.minDe) {
     w.sql.push("COALESCE(c.readable_de, 0) >= ?");
@@ -358,7 +363,7 @@ export function listCatalog(
   const total = (db.prepare(`SELECT COUNT(*) AS n ${from}`).get(...w.params) as { n: number }).n;
   const rows = db
     .prepare(
-      `SELECT ${COLS} ${from} ORDER BY ${SORT[f.sort ?? "pop"] ?? SORT.pop} LIMIT ? OFFSET ?`,
+      `SELECT ${COLS} ${from} ORDER BY ${searching ? "(COALESCE(c.readable_de, 0) + COALESCE(c.readable_en, 0)) = 0, " : ""}${SORT[f.sort ?? "pop"] ?? SORT.pop} LIMIT ? OFFSET ?`,
     )
     .all(...w.params, limit, offset) as CatalogDbRow[];
   return { total, items: rows.map(toCard) };

@@ -126,6 +126,14 @@ class MangaDetailViewModel @Inject constructor(
         }
     }
 
+    private val prefetched = HashSet<String>()
+
+    /** MangaDex: das Kapitel, mit dem es weitergeht, schon im Hintergrund holen lassen — dann öffnet es sofort. */
+    fun prefetch(chapterId: String?) {
+        if (chapterId == null || !chapterId.startsWith("mangadex:") || !prefetched.add(chapterId)) return
+        viewModelScope.launch { runCatching { repo.startChapterSync(chapterId) } }
+    }
+
     fun downloadArc(arcId: String) {
         viewModelScope.launch {
             downloads.download(arcId).onFailure { e ->

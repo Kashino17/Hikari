@@ -1,5 +1,7 @@
 package com.hikari.app.ui.manga
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.ExperimentalFoundationApi
 import android.content.Context
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -77,9 +79,22 @@ fun MangaReaderScreen(
         when (val s = state) {
             is ReaderUiState.Loading -> CenterMessage("Lade…")
             is ReaderUiState.Error -> CenterMessage(s.message, color = Color(0xFFFBBF24))
-            is ReaderUiState.Syncing -> CenterMessage(
-                "Wird gerade synchronisiert…\n\nHikari lädt das Kapitel von der Quelle.\nWenn die Bilder da sind, springt der Reader automatisch los.",
-            )
+            is ReaderUiState.Syncing -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(32.dp)) {
+                    Text("Der Mac holt das Kapitel …", color = Color.White, fontSize = 16.sp)
+                    Text(
+                        if (s.total > 0) "${s.ready} von ${s.total} Seiten" else "Gleich geht es los",
+                        color = Color.White.copy(alpha = 0.6f), fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp),
+                    )
+                    androidx.compose.material3.LinearProgressIndicator(
+                        progress = { if (s.total > 0) s.ready.toFloat() / s.total else 0f },
+                        color = MangaAccent, trackColor = Color.White.copy(alpha = 0.12f),
+                        modifier = Modifier.padding(top = 14.dp).width(220.dp).height(4.dp),
+                    )
+                    Text("Bleib kurz hier — sobald alle Seiten da sind, öffnet sich das Kapitel von selbst.",
+                        color = Color.White.copy(alpha = 0.45f), fontSize = 12.sp, modifier = Modifier.padding(top = 14.dp))
+                }
+            }
             is ReaderUiState.Success -> {
                 if (s.pages.isEmpty()) {
                     CenterMessage("Keine Seiten")

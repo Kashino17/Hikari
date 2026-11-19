@@ -21,7 +21,8 @@ import kotlinx.coroutines.sync.withLock
 
 sealed interface ReaderUiState {
     object Loading : ReaderUiState
-    data class Syncing(val chapterId: String) : ReaderUiState
+    /** Der Mac holt das Kapitel gerade; ready/total = schon geladene Seiten (0/0 = noch unbekannt). */
+    data class Syncing(val chapterId: String, val ready: Int = 0, val total: Int = 0) : ReaderUiState
     data class Success(
         val pages: List<MangaPageDto>,
         val nextChapterId: String?,
@@ -100,7 +101,7 @@ class MangaReaderViewModel @Inject constructor(
             }.onSuccess { (pages, detail) ->
                 val local = resolveLocalPaths(pages)
                 if (!allReady(pages, local)) {
-                    _uiState.value = ReaderUiState.Syncing(chapterId)
+                    _uiState.value = ReaderUiState.Syncing(chapterId, pages.count { it.ready || local.containsKey(it.id) }, pages.size)
                     syncStarted = runCatching { repo.startChapterSync(chapterId) }.isSuccess || pages.isNotEmpty()
                     startPollingForPages()
                 } else {
@@ -122,7 +123,11 @@ class MangaReaderViewModel @Inject constructor(
                 // Läuft gerade ein anderer Abgleich (409), später noch einmal anstoßen.
                 if (!syncStarted) syncStarted = runCatching { repo.startChapterSync(chapterId) }.isSuccess
                 runCatching { repo.getChapterPages(chapterId) }.onSuccess { pages ->
-                    if (allReady(pages, resolveLocalPaths(pages))) {
+                    val local = resolveLocalPaths(pages)
+                    if (!allReady(pages, local)) {
+                        _uiState.value = ReaderUiState.Syncing(chapterId, pages.count { it.ready || local.containsKey(it.id) }, pages.size)
+                    }
+                    if (allReady(pages, local)) {
                         val detail = runCatching { repo.getSeries(seriesId) }.getOrNull()
                         val next = nextChapterId(detail?.chapters.orEmpty(), chapterId)
                         _localPagePaths.value = resolveLocalPaths(pages)
