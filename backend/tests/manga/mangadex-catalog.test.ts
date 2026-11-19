@@ -326,7 +326,7 @@ describe("/api/manga/catalog", () => {
         .items.map((c) => c.kind)
         .sort(),
     ).toEqual(["Manhwa", "Manhwa"]);
-    expect(home.genres[0]).toEqual({ name: "Action", count: 7 });
+    expect(home.genres[0]).toMatchObject({ name: "Action", count: 7 });
 
     const de = (await app.inject("/api/manga/catalog/home?lang=de")).json() as {
       shelves: { key: string; items: Card[] }[];
@@ -427,5 +427,43 @@ describe("Regal „Auf Deutsch“", () => {
     const shelf = catalogHome(db, "all").shelves.find((s) => s.key === "de");
     expect(shelf?.items.map((c) => c.id)).toEqual([b]);
     expect(listCatalog(db, { lang: "de" }).total).toBe(2);
+  });
+});
+
+describe("Genre-Kacheln mit Covern", () => {
+  function seeded(n: number) {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const base = LIST.data[0]!;
+    for (let i = 0; i < n; i++) {
+      const row = catalogFromManga(
+        { ...base, id: `00000000-0000-0000-0000-${String(i).padStart(12, "0")}` },
+        1,
+      );
+      upsertCatalog(db, {
+        ...row,
+        tags: i % 2 ? ["Action"] : ["Romantik"],
+        coverUrl: `https://u.test/${i}.jpg`,
+        popularity: 1000 - i,
+      });
+    }
+    db.exec("UPDATE manga_catalog SET readable_at = 1, readable_en = 5, readable_de = 0");
+    return db;
+  }
+
+  it("jedes Genre bekommt bis zu drei Cover, keins doppelt über die Kacheln", () => {
+    const db = seeded(30);
+    const genres = catalogHome(db, "all", 20, 0).genres;
+    const all = genres.flatMap((g) => g.covers);
+    for (const g of genres) expect(g.covers.length).toBe(3);
+    expect(new Set(all).size).toBe(all.length);
+    expect(all[0]).toMatch(/^\/api\/manga\/catalog\/.+\/cover$/);
+  });
+
+  it("die Auswahl wechselt mit der Zeit (alle sechs Stunden)", () => {
+    const db = seeded(30);
+    const a = catalogHome(db, "all", 20, 0).genres[0]!.covers;
+    const b = catalogHome(db, "all", 20, 6 * 3600 * 1000).genres[0]!.covers;
+    expect(b).not.toEqual(a);
   });
 });

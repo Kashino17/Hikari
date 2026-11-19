@@ -116,7 +116,7 @@ data class MangaCatalogCardDto(
 data class MangaCatalogShelfDto(val key: String, val title: String, val subtitle: String = "", val items: List<MangaCatalogCardDto> = emptyList())
 
 @Serializable
-data class MangaGenreDto(val name: String, val count: Int = 0)
+data class MangaGenreDto(val name: String, val count: Int = 0, val covers: List<String> = emptyList())
 
 @Serializable
 data class MangaCatalogHomeDto(

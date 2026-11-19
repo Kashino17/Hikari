@@ -1,5 +1,7 @@
 package com.hikari.app.ui.manga.catalog
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.graphics.graphicsLayer
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -184,7 +186,7 @@ fun MangaHomeScreen(
             Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x14FFFFFF)))
             when (tab) {
                 "meine" -> Box(Modifier.weight(1f)) { mine() }
-                "genres" -> GenresTab(s, onList)
+                "genres" -> GenresTab(s, { vm.cover(base, it) }, onList)
                 else -> DiscoverTab(s, base, vm, onContinue, onList, onOfficial, openCard)
             }
         }
@@ -350,7 +352,7 @@ private fun OfficialBanner(onClick: () -> Unit) {
 }
 
 @Composable
-private fun GenresTab(s: MangaHomeState, onList: (MangaCatalogFilter, Boolean) -> Unit) {
+private fun GenresTab(s: MangaHomeState, cover: (String) -> String?, onList: (MangaCatalogFilter, Boolean) -> Unit) {
     val genres = s.home?.genres.orEmpty()
     LazyVerticalGrid(
         columns = GridCells.Adaptive(160.dp),
@@ -361,14 +363,28 @@ private fun GenresTab(s: MangaHomeState, onList: (MangaCatalogFilter, Boolean) -
     ) {
         items(genres, key = { it.name }) { g ->
             val c = genreColor(g.name)
-            Column(
-                Modifier.height(96.dp).clip(RoundedCornerShape(14.dp))
+            Box(
+                Modifier.height(112.dp).clip(RoundedCornerShape(14.dp))
                     .background(Brush.linearGradient(listOf(c, Color(c.red * 0.45f, c.green * 0.45f, c.blue * 0.45f))))
-                    .clickable { onList(MangaCatalogFilter(lang = s.lang, genre = g.name, title = g.name), false) }.padding(12.dp),
+                    .clickable { onList(MangaCatalogFilter(lang = s.lang, genre = g.name, title = g.name), false) },
             ) {
-                Text(g.name, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
-                Text("${g.count} Reihen", color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp)
+                // Collage: drei echte Cover aus dem Genre, leicht gefächert (wechseln alle sechs Stunden).
+                val covers = g.covers.take(3)
+                covers.forEachIndexed { i, path ->
+                    val rot = listOf(-9f, 4f, 15f)[i + (3 - covers.size)]
+                    val end = listOf(58.dp, 30.dp, 4.dp)[i + (3 - covers.size)]
+                    AsyncImage(
+                        model = cover(path), contentDescription = null, contentScale = ContentScale.Crop,
+                        modifier = Modifier.align(Alignment.BottomEnd).padding(end = end)
+                            .graphicsLayer { rotationZ = rot; translationY = 26f * density; shadowElevation = 8f * density; shape = RoundedCornerShape(5.dp); clip = true }
+                            .size(width = 48.dp, height = 72.dp).background(HikariSurface),
+                    )
+                }
+                Column(Modifier.padding(12.dp).fillMaxWidth(0.62f).fillMaxHeight()) {
+                    Text(g.name, color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    Text("${g.count} Reihen", color = Color.White.copy(alpha = 0.78f), fontSize = 12.sp)
+                }
             }
         }
         for ((k, label, sub) in listOf(Triple("Manga", "Manga", "Japan"), Triple("Manhwa", "Manhwa", "Korea"), Triple("Webcomic", "Webcomics", "aus dem Netz"))) {

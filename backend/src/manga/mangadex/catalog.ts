@@ -18,6 +18,8 @@ export { normalizeSearch };
  */
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/** Wie oft die Cover auf den Genre-Kacheln wechseln. */
+const COLLAGE_MS = 6 * 60 * 60 * 1000;
 
 export function upsertCatalog(db: Database.Database, row: CatalogRow): void {
   db.prepare(
@@ -413,9 +415,10 @@ export function catalogHome(
   db: Database.Database,
   lang: LangFilter,
   perShelf = 20,
+  now = Date.now(),
 ): {
   shelves: { key: string; title: string; subtitle: string; items: CatalogCard[] }[];
-  genres: { name: string; count: number }[];
+  genres: { name: string; count: number; covers: string[] }[];
 } {
   const shelves = SHELVES
     // Wer »nur Englisch« gewählt hat, bekommt kein Regal »Auf Deutsch«.
@@ -438,7 +441,28 @@ export function catalogHome(
         GROUP BY t.value ORDER BY count DESC, name`,
     )
     .all(...w.params) as { name: string; count: number }[];
-  return { shelves, genres };
+
+  // Collage je Genre: drei Cover aus den beliebtesten 24, alle sechs Stunden andere, keins doppelt.
+  const window = Math.floor(now / COLLAGE_MS);
+  const used = new Set<string>();
+  const pool = db.prepare(
+    `SELECT c.id FROM manga_catalog c, json_each(c.tags_json) t
+      WHERE ${w.sql.join(" AND ")} AND t.value = ? AND c.cover_url IS NOT NULL
+      ORDER BY c.popularity IS NULL, c.popularity DESC LIMIT 24`,
+  );
+  const withCovers = genres.map((g) => {
+    const ids = (pool.all(...w.params, g.name) as { id: string }[]).map((r) => r.id);
+    const covers: string[] = [];
+    const start = ids.length ? (window * 3) % ids.length : 0;
+    for (let k = 0; k < ids.length && covers.length < 3; k++) {
+      const id = ids[(start + k) % ids.length] as string;
+      if (used.has(id)) continue;
+      used.add(id);
+      covers.push(`/api/manga/catalog/${encodeURIComponent(id)}/cover`);
+    }
+    return { ...g, covers };
+  });
+  return { shelves, genres: withCovers };
 }
 
 export function getCatalogRow(db: Database.Database, id: string): CatalogDbRow | undefined {
