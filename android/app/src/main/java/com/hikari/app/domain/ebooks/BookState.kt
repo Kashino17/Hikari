@@ -36,6 +36,19 @@ data class BookState(
     val liveHighlights: List<Mark> get() = highlights.filter { it.deleted != true }
 }
 
+/**
+ * Markiert eine Stelle. Ist sie schon markiert (auch gelöscht), wird dieselbe Markierung umgefärbt
+ * statt eine zweite darüberzulegen — sonst bliebe die alte Farbe sichtbar.
+ */
+fun BookState.withHighlight(cfi: String, text: String, color: String, now: Long, newId: String): BookState {
+    val same = highlights.firstOrNull { it.cfi == cfi && it.deleted != true } ?: highlights.firstOrNull { it.cfi == cfi }
+    return if (same == null) {
+        copy(highlights = highlights + Mark(id = newId, cfi = cfi, text = text, color = color, at = now))
+    } else {
+        copy(highlights = highlights.map { if (it.id == same.id) it.copy(color = color, text = text, at = now, deleted = null) else it })
+    }
+}
+
 /** Bei gleicher Zeit gewinnt b (die Seite, die gerade hereinkommt). */
 private fun <T> newer(a: Stamped<T>?, b: Stamped<T>?): Stamped<T>? = when {
     a == null -> b

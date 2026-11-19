@@ -15,7 +15,12 @@ const FONTS = {
   sans: "system-ui, 'Roboto', sans-serif",
 }
 const MARGINS = { schmal: '3%', mittel: '6%', breit: '10%' }
-const MARK_COLORS = { gelb: 'rgba(250, 204, 21, .45)', gruen: 'rgba(74, 222, 128, .40)', blau: 'rgba(96, 165, 250, .40)', rosa: 'rgba(244, 114, 182, .40)' }
+// Volle Farben — die Deckkraft kommt aus markStyle(). Früher waren die Farben selbst schon durchsichtig
+// und foliate nahm nochmal 30 %: übrig blieben ~12 % Farbe, im Nacht-Design praktisch unsichtbar.
+const MARK_COLORS = { gelb: '#FACC15', gruen: '#4ADE80', blau: '#60A5FA', rosa: '#F472B6' }
+const markStyle = () => settings.theme === 'nacht'
+  ? { opacity: '.45', blend: 'screen' } // hellt auf: leuchtet auf Schwarz, Schrift bleibt lesbar
+  : { opacity: '.42', blend: 'multiply' } // wie ein Textmarker: Schrift bleibt dunkel
 
 const bridge = window.HikariBridge ?? { onReady() {}, onRelocate() {}, onToc() {}, onSelection() {}, onTapCenter() {}, onError(m) { console.error(m) }, onTapMark() {} }
 const send = (fn, v) => { try { bridge[fn](typeof v === 'string' ? v : JSON.stringify(v ?? null)) } catch (e) { console.error(e) } }
@@ -195,7 +200,13 @@ async function open(url, startCfi, settingsJson) {
     })
     view.addEventListener('draw-annotation', (e) => {
       const { draw, annotation } = e.detail
-      draw(Overlayer.highlight, { color: MARK_COLORS[annotation.color] ?? MARK_COLORS.gelb })
+      draw((rects, opts) => {
+        const g = Overlayer.highlight(rects, opts)
+        const st = markStyle()
+        g.style.opacity = st.opacity
+        g.style.mixBlendMode = st.blend
+        return g
+      }, { color: MARK_COLORS[annotation.color] ?? MARK_COLORS.gelb })
     })
     view.addEventListener('show-annotation', (e) => {
       const m = marks.get(e.detail.value)
@@ -234,14 +245,28 @@ window.HikariReader = {
   goTo: (target) => view?.goTo(target).catch((e) => send('onError', String(e))),
   goToFraction: (f) => view?.goToFraction(Number(f)),
   applySettings(json) {
+    const theme = settings.theme
     settings = { ...settings, ...JSON.parse(json) }
     applyLayout()
+    // Anderes Design: Markierungen in der passenden Mischung neu zeichnen.
+    if (theme !== settings.theme) {
+      for (const [cfi, m] of marks) {
+        view?.deleteAnnotation({ value: cfi, ...m })
+        view?.addAnnotation({ value: cfi, ...m }).catch(() => {})
+      }
+    }
   },
   setMarks(json) {
     const list = JSON.parse(json) // [{id, cfi, color}]
     const next = new Map(list.map((m) => [m.cfi, { id: m.id, color: m.color }]))
     for (const [cfi, m] of marks) if (!next.has(cfi)) view?.deleteAnnotation({ value: cfi, ...m })
-    for (const [cfi, m] of next) if (!marks.has(cfi)) view?.addAnnotation({ value: cfi, ...m }).catch(() => {})
+    for (const [cfi, m] of next) {
+      const before = marks.get(cfi)
+      if (before && before.color === m.color) continue
+      // Neue Stelle oder neue Farbe: (neu) zeichnen.
+      if (before) view?.deleteAnnotation({ value: cfi, ...before })
+      view?.addAnnotation({ value: cfi, ...m }).catch(() => {})
+    }
     marks = next
   },
   clearSelection() {

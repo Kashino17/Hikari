@@ -8,6 +8,7 @@ import com.hikari.app.data.db.LocalEbookEntity
 import com.hikari.app.domain.ebooks.BookState
 import com.hikari.app.domain.ebooks.EbookRepository
 import com.hikari.app.domain.ebooks.Mark
+import com.hikari.app.domain.ebooks.withHighlight
 import com.hikari.app.domain.ebooks.ReadingPosition
 import com.hikari.app.domain.ebooks.Stamped
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -177,7 +178,7 @@ class ReaderViewModel @Inject constructor(
         val sel = _state.value.selection ?: return
         val now = System.currentTimeMillis()
         viewModelScope.launch {
-            repo.updateState(id) { s -> s.copy(highlights = s.highlights + Mark(id = UUID.randomUUID().toString(), cfi = sel.cfi, text = sel.text, color = color, at = now)) }
+            repo.updateState(id) { s -> s.withHighlight(sel.cfi, sel.text, color, now, UUID.randomUUID().toString()) }
         }
         _state.update { it.copy(selection = null) }
     }

@@ -52,6 +52,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.statusBarsIgnoringVisibility
+import androidx.compose.foundation.layout.navigationBarsIgnoringVisibility
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -246,6 +251,10 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
         return
     }
 
+    @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+    val steadyInsets = Modifier.windowInsetsPadding(
+        WindowInsets.statusBarsIgnoringVisibility.union(WindowInsets.navigationBarsIgnoringVisibility),
+    )
     BoxWithConstraints(Modifier.fillMaxSize().background(colors.bg)) {
         val columns = if (maxWidth >= 600.dp) 2 else 1
         val settingsJson = vm.settingsJson(columns)
@@ -256,7 +265,9 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
         LaunchedEffect(marksJson, s.ready) { if (s.ready) js("HikariReader.setMarks(${JSONObject.quote(marksJson)})") }
 
         AndroidView(
-            modifier = Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
+            // Feste Textfläche: dieselbe Größe mit und ohne Statusleiste. Sonst bricht foliate beim
+            // Einblenden des Menüs alles neu um und die Zeilen springen.
+            modifier = Modifier.fillMaxSize().then(steadyInsets),
             factory = { c ->
                 WebView(c).apply {
                     layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
@@ -307,27 +318,11 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
             onRelease = { it.destroy() },
         )
 
-        PageTurnLayer(turner, pageAnimOf(settings.pageAnim), colors.bg, Modifier.statusBarsPadding().navigationBarsPadding())
+        PageTurnLayer(turner, pageAnimOf(settings.pageAnim), colors.bg, steadyInsets)
 
-        // Auswahl: markieren, nachschlagen, kopieren
+        // Text ausgewählt: Menüleisten weg, damit die Farbauswahl frei liegt (wie beim Kindle).
         val sel = s.selection
-        if (sel != null) {
-            Row(
-                Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(16.dp)
-                    .clip(RoundedCornerShape(16.dp)).background(Color(0xF0222226)).padding(horizontal = 10.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                for ((name, col) in listOf("gelb" to Color(0xFFFACC15), "gruen" to Color(0xFF4ADE80), "blau" to Color(0xFF60A5FA), "rosa" to Color(0xFFF472B6))) {
-                    Box(Modifier.size(28.dp).clip(CircleShape).background(col).clickable { vm.highlight(name); js("HikariReader.clearSelection()") })
-                }
-                IconButton(onClick = { lookUp(ctx, sel.text) }) { Icon(Icons.Outlined.Search, "Nachschlagen", tint = Color.White) }
-                IconButton(onClick = {
-                    (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Zitat", sel.text))
-                    js("HikariReader.clearSelection()"); vm.onSelection(null)
-                }) { Icon(Icons.Outlined.ContentCopy, "Kopieren", tint = Color.White) }
-            }
-        }
+        LaunchedEffect(sel != null) { if (sel != null) barsVisible = false }
 
         // Obere Leiste
         AnimatedVisibility(barsVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopCenter)) {
@@ -378,6 +373,25 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                 modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 6.dp),
             )
         }
+        // Auswahl: markieren, nachschlagen, kopieren — zuoberst, nie unter einer Leiste.
+        if (sel != null) {
+            Row(
+                Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(16.dp)
+                    .clip(RoundedCornerShape(16.dp)).background(Color(0xF0222226)).padding(horizontal = 10.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                for ((name, col) in listOf("gelb" to Color(0xFFFACC15), "gruen" to Color(0xFF4ADE80), "blau" to Color(0xFF60A5FA), "rosa" to Color(0xFFF472B6))) {
+                    Box(Modifier.size(34.dp).clip(CircleShape).background(col).clickable { vm.highlight(name); js("HikariReader.clearSelection()") })
+                }
+                IconButton(onClick = { lookUp(ctx, sel.text) }) { Icon(Icons.Outlined.Search, "Nachschlagen", tint = Color.White) }
+                IconButton(onClick = {
+                    (ctx.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(ClipData.newPlainText("Zitat", sel.text))
+                    js("HikariReader.clearSelection()"); vm.onSelection(null)
+                }) { Icon(Icons.Outlined.ContentCopy, "Kopieren", tint = Color.White) }
+            }
+        }
+
         // Blaulichtfilter zuoberst: deckt Text und Leisten ab, lässt Berührungen durch.
         com.hikari.app.ui.reader.BlueLightFilter(settings.blueFilter)
     }
