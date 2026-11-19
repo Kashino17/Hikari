@@ -1,3 +1,4 @@
+import { gunzipSync } from "node:zlib";
 import type { RawBook } from "../persist.js";
 import { parseCsv } from "./csv.js";
 import type { EbookSource } from "./types.js";
@@ -32,16 +33,21 @@ export const gutenbergSource: EbookSource = {
   name: "Project Gutenberg",
   async listCatalog(ctx) {
     let csv: Buffer | undefined;
-    for (const base of [MIRROR, MAIN]) {
+    // Gepackt zuerst (5 statt 21 MB — der Spiegel ist langsam), dann ungepackt, dann die Hauptseite.
+    for (const [base, file] of [
+      [MIRROR, "pg_catalog.csv.gz"],
+      [MIRROR, "pg_catalog.csv"],
+      [MAIN, "pg_catalog.csv.gz"],
+    ] as const) {
       try {
-        const r = await ctx.http.get(`${base}/cache/epub/feeds/pg_catalog.csv`);
+        const r = await ctx.http.get(`${base}/cache/epub/feeds/${file}`);
         if (r.status === 200 && r.body.length > 100) {
-          csv = r.body;
+          csv = r.body[0] === 0x1f && r.body[1] === 0x8b ? gunzipSync(r.body) : r.body;
           break;
         }
-        ctx.log(`gutenberg: ${base} antwortet ${r.status}`);
+        ctx.log(`gutenberg: ${base}/${file} antwortet ${r.status}`);
       } catch (err) {
-        ctx.log(`gutenberg: ${base} — ${(err as Error).message}`);
+        ctx.log(`gutenberg: ${base}/${file} — ${(err as Error).message}`);
       }
     }
     if (!csv) throw new Error("gutenberg: Katalog nicht erreichbar");

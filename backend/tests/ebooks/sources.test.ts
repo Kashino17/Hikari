@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { type PoliteHttp, createPoliteHttp } from "../../src/ebooks/http.js";
 import { bpbSource } from "../../src/ebooks/sources/bpb.js";
@@ -56,6 +57,14 @@ describe("Gutenberg", () => {
     });
     expect(books[0].subjects).toContain("DE Drama");
     expect(books.every((b) => b.language === "de")).toBe(true);
+  });
+
+  it("lädt zuerst die gepackte Fassung (5 statt 21 MB)", async () => {
+    const http = fakeHttp([
+      [(u) => u.endsWith("pg_catalog.csv.gz"), 200, gzipSync(fx("pg_catalog.csv"))],
+    ]);
+    expect(await gutenbergSource.listCatalog(ctx(http))).toHaveLength(12);
+    expect(http.calls).toEqual(["https://gutenberg.pglaf.org/cache/epub/feeds/pg_catalog.csv.gz"]);
   });
 
   it("nimmt die Hauptseite, wenn der Spiegel ausfällt", async () => {

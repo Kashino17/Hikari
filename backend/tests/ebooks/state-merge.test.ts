@@ -19,7 +19,10 @@ describe("mergeState (gemeinsame Fälle mit der App)", () => {
 
 describe("Testfälle in der App", () => {
   it("sind dieselben wie hier", () => {
-    const app = readFileSync(join(__dirname, "../../../android/app/src/test/resources/ebooks/merge-cases.json"), "utf8");
+    const app = readFileSync(
+      join(__dirname, "../../../android/app/src/test/resources/ebooks/merge-cases.json"),
+      "utf8",
+    );
     expect(JSON.parse(app)).toEqual(cases);
   });
 });

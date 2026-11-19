@@ -49,7 +49,9 @@ export function createPoliteHttp(
           await res.arrayBuffer().catch(() => undefined);
           if (attempt === TRIES) break;
           const ra = Number(res.headers.get("retry-after"));
-          await sleep(Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : DEFAULT_WAIT_MS, MAX_WAIT_MS));
+          await sleep(
+            Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : DEFAULT_WAIT_MS, MAX_WAIT_MS),
+          );
           continue;
         }
         return { status: res.status, body: Buffer.from(await res.arrayBuffer()) };
