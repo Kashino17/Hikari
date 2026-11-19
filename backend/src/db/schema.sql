@@ -245,3 +245,51 @@ CREATE TABLE IF NOT EXISTS news_briefings (
   created_at INTEGER NOT NULL,
   payload TEXT NOT NULL
 );
+
+-- E-Books (Bauplan 19.11.2026): Katalog aller Quellen, Kategorien, Suche,
+-- geladene Dateien und Lesestand. Einträge werden nie gelöscht, nur versteckt
+-- (hidden_reason) oder als verschwunden markiert (missing_since).
+CREATE TABLE IF NOT EXISTS ebooks (
+  id            TEXT PRIMARY KEY,
+  source        TEXT NOT NULL,
+  source_id     TEXT NOT NULL,
+  title         TEXT NOT NULL,
+  authors_json  TEXT NOT NULL DEFAULT '[]',
+  year          INTEGER,
+  description   TEXT,
+  subjects_json TEXT NOT NULL DEFAULT '[]',
+  format        TEXT NOT NULL,
+  file_url      TEXT NOT NULL,
+  cover_url     TEXT,
+  source_url    TEXT NOT NULL,
+  word_count    INTEGER,
+  popularity    REAL,
+  added_at      INTEGER NOT NULL,
+  updated_at    INTEGER NOT NULL,
+  missing_since INTEGER,
+  hidden_reason TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_ebooks_source ON ebooks(source);
+CREATE INDEX IF NOT EXISTS idx_ebooks_added ON ebooks(added_at);
+CREATE TABLE IF NOT EXISTS ebook_categories (
+  book_id  TEXT NOT NULL,
+  category TEXT NOT NULL,
+  PRIMARY KEY (book_id, category)
+);
+CREATE INDEX IF NOT EXISTS idx_ebook_categories_cat ON ebook_categories(category);
+CREATE VIRTUAL TABLE IF NOT EXISTS ebooks_fts USING fts5(
+  book_id UNINDEXED, title, authors, description,
+  tokenize = "unicode61 remove_diacritics 2"
+);
+CREATE TABLE IF NOT EXISTS ebook_files (
+  book_id        TEXT PRIMARY KEY,
+  local_path     TEXT NOT NULL,
+  bytes          INTEGER NOT NULL,
+  measured_words INTEGER,
+  fetched_at     INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS ebook_state (
+  book_id    TEXT PRIMARY KEY,
+  state_json TEXT NOT NULL,
+  updated_at INTEGER NOT NULL
+);
