@@ -186,6 +186,10 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                         "media type=${pending.mediaType} row=${pending.rowId} notifUri=${pending.dataUri != null} " +
                             "folder=${mediaVault.hasMediaFolderAccess()} saved=${path != null}",
                     )
+                    if (path == null) {
+                        runCatching { mediaVault.describeForProbe(pending.mediaType, pending.seenAt) }
+                            .onSuccess { WhatsAppProbe.note("media-ordner $it") }
+                    }
                     if (path != null) repository.attachMedia(pending.rowId, path)
                 }
             }

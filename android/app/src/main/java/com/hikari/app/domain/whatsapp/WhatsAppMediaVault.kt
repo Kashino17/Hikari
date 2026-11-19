@@ -170,7 +170,32 @@ class WhatsAppMediaVault @Inject constructor(
             .minByOrNull { it.lastModified }
     }
 
-    /** Dateien eines Medienordners; Sprachnachrichten liegen in Wochen-Unterordnern. */
+    /**
+     * Messprotokoll für eine gescheiterte Sicherung: welche Ordner gefunden wurden, wie viele
+     * Dateien sie haben, welche Unterordner es gibt und wann die neuesten Dateien entstanden —
+     * relativ zum Eintreffen der Nachricht. Nur Ordner- und WhatsApp-Dateinamen, keine Inhalte.
+     */
+    suspend fun describeForProbe(mediaType: String, seenAt: Long): String = withContext(Dispatchers.IO) {
+        val treeUri = getSavedTreeUri() ?: return@withContext "kein-ordner"
+        val suffixes = FOLDER_SUFFIXES[mediaType] ?: return@withContext "typ-ohne-ordner"
+        val folders = resolveMediaFolders(treeUri, suffixes)
+        if (folders.isEmpty()) return@withContext "ordner-nicht-gefunden tree=${treeUri.lastPathSegment}"
+        folders.joinToString(" | ") { folderId ->
+            val children = listChildren(treeUri, folderId)
+            val dirs = children.filter { it.isDirectory }.map { it.name }
+            val newest = readFilesIn(treeUri, folderId).sortedByDescending { it.lastModified }.take(3)
+            "dir=${folderId.substringAfterLast('/')} files=${children.count { !it.isDirectory }} " +
+                "sub=$dirs neu=" + newest.joinToString(",") {
+                    "${it.name}@${(it.lastModified - seenAt) / 1000}s/${it.sizeBytes / 1024}k"
+                }
+        }
+    }
+
+    /**
+     * Dateien eines Medienordners. Sprachnachrichten liegen in Wochen-Unterordnern; ist in
+     * WhatsApp „Medien-Sichtbarkeit“ aus, landen empfangene Bilder und Videos in `Private`.
+     * `Sent` (eigene Medien) bleibt außen vor.
+     */
     private fun recentFilesIn(treeUri: Uri, folderDocId: String): List<SafChildEntry> {
         // Kommen mehrere Bilder auf einmal, teilen sich die Suchläufe eine Ordnerabfrage —
         // der Bilderordner kann zehntausende Dateien enthalten.
@@ -186,7 +211,8 @@ class WhatsAppMediaVault @Inject constructor(
             .filter { it.isDirectory && it.name.firstOrNull()?.isDigit() == true }
             .sortedByDescending { it.name }
             .take(2)
-        return files + weekFolders.flatMap { week ->
+        val privateFolders = children.filter { it.isDirectory && it.name.equals("Private", ignoreCase = true) }
+        return files + (weekFolders + privateFolders).flatMap { week ->
             listChildren(treeUri, week.documentId).filter { !it.isDirectory }
         }
     }
