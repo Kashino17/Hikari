@@ -24,7 +24,10 @@ export const local = {
   get(key, fallback = null) {
     try {
       const v = native?.storeGet ? native.storeGet(key) : localStorage.getItem(LS + key);
-      return v == null || v === '' ? fallback : JSON.parse(v);
+      if (v == null || v === '') return fallback;
+      // Gelöschte Werte liegen als "null" — dann zählt der Rückfallwert (sonst stürzt der Leser ab).
+      const parsed = JSON.parse(v);
+      return parsed == null ? fallback : parsed;
     } catch { return fallback; }
   },
   set(key, value) {
