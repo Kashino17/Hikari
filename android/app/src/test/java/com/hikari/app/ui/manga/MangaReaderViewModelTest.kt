@@ -186,4 +186,27 @@ class MangaReaderViewModelTest {
         Thread.sleep(300)
         coVerify(timeout = 2_000) { repo.setProgress("s", "ch-1", 7) }
     }
+
+    @Test(timeout = 5_000) fun saves_arriveInOrder_lastPageWins() = runTest {
+        // Eine langsame ältere Speicherung darf die letzte Seite nicht überholen.
+        val saved = mutableListOf<Int>()
+        coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
+        coEvery { repo.setProgress("s", "ch-1", any()) } coAnswers {
+            val p = thirdArg<Int>()
+            if (p == 4) kotlinx.coroutines.delay(400) // die alte Anfrage hängt im Netz
+            synchronized(saved) { saved += p }
+        }
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        vm.load("s", "ch-1")
+        advanceTimeBy(100)
+        vm.savePosition(4)
+        advanceTimeBy(1_600) // Wartezeit vorbei: Seite 4 wird gespeichert (langsam)
+        vm.savePosition(7)
+        vm.flushProgress()
+        Thread.sleep(300) // die letzte Seite kommt schnell an …
+        advanceTimeBy(1_000) // … dann erst die hängende alte
+        Thread.sleep(300)
+        assertEquals(7, synchronized(saved) { saved.last() })
+    }
 }

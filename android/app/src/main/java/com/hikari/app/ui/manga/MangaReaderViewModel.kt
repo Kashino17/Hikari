@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.withLock
 
 sealed interface ReaderUiState {
     object Loading : ReaderUiState
@@ -136,9 +137,17 @@ class MangaReaderViewModel @Inject constructor(
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             delay(1_500)
-            val p = pendingPage ?: return@launch
-            runCatching { repo.setProgress(seriesId, chapterId, p) }
+            pendingPage?.let(::persist)
         }
+    }
+
+    private val saveLock = kotlinx.coroutines.sync.Mutex()
+
+    /** Speichern immer der Reihe nach (Mutex ist fair): eine ältere Anfrage kann die letzte Seite nicht überholen. */
+    private fun persist(page: Int) {
+        val sId = seriesId
+        val cId = chapterId
+        detached.launch { saveLock.withLock { runCatching { repo.setProgress(sId, cId, page) } } }
     }
 
     /**
@@ -148,9 +157,7 @@ class MangaReaderViewModel @Inject constructor(
     fun flushProgress() {
         val p = pendingPage ?: return
         saveJob?.cancel()
-        val sId = seriesId
-        val cId = chapterId
-        detached.launch { runCatching { repo.setProgress(sId, cId, p) } }
+        persist(p)
     }
 
     fun markChapterRead() {

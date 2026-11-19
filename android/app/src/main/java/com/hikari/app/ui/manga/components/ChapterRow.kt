@@ -32,7 +32,8 @@ fun ChapterRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "CH ${chapter.number.toInt()}",
+            // Zwischenkapitel (79.1, 79.2) mit Nachkommastelle, sonst gäbe es „CH 79“ doppelt.
+            text = "CH ${if (chapter.number % 1.0 == 0.0) chapter.number.toInt().toString() else chapter.number.toString()}",
             color = Color.White.copy(alpha = 0.4f),
             fontSize = 11.sp,
             fontFamily = FontFamily.Monospace,
