@@ -463,6 +463,31 @@ class WhatsAppGuardTest {
     }
 
     @Test
+    fun `the watcher's copy of a picture already taken from the notification goes nowhere else`() = runTest {
+        // Messung 20.11. 07:16: Anhang kopiert, 2 s später dieselbe Datei vom Medien-Wächter.
+        val now = System.currentTimeMillis()
+        post("eva", "Eva", msg("Eva", "📷 Foto", sec(now - 60_000L, 0))) // wartet noch, darf nichts bekommen
+        val fresh = sec(now - 3_000L, 0)
+        post("max", "Max", msg("Max", "📷 Foto", fresh))
+        val withAttachment = RawMessagingItem(
+            sender = "Max", text = "📷 Foto", timestamp = fresh,
+            dataUri = "content://com.whatsapp.provider.media/item/3", dataMimeType = "image/jpeg",
+        )
+        val ready = repository.processNotification(payload("max", "Max", listOf(withAttachment))).readyMedia.single()
+        val direct = File.createTempFile("wa_direct_", ".jpg").apply { writeText("d") }
+        repository.attachExact(ready.rowId, "photo", direct.absolutePath, ready.seenAt)
+
+        val dup = File.createTempFile("wa_in_dup_", ".jpg").apply { writeText("d") }
+        repository.onIncomingMedia("photo", dup.absolutePath, System.currentTimeMillis())
+        repository.settleUnclaimed(System.currentTimeMillis() + 31_000)
+
+        assertEquals(direct.absolutePath, fakeDao.all().single { it.senderName == "Max" }.mediaPreviewPath)
+        assertEquals(null, fakeDao.all().single { it.senderName == "Eva" }.mediaPreviewPath)
+        assertFalse(dup.exists())
+        direct.delete()
+    }
+
+    @Test
     fun `an attachment already present after a restart is no fresh signal`() = runTest {
         val ts = sec(System.currentTimeMillis() - 60_000L, 0)
         val item = RawMessagingItem(

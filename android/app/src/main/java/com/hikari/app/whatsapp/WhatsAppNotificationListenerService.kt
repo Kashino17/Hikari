@@ -141,11 +141,19 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
         WhatsAppProbe.posted(sbn)
         val n = sbn.notification
-        if (n != null &&
+        // Nur echte neue Chat-Nachrichten zählen — nicht WhatsApps eigene Status-Benachrichtigung
+        // (id 11, Vordergrunddienst), die beim Verarbeiten JEDES Ereignisses kurz erscheint,
+        // auch beim Löschen (gemessen 20.11. 07:17: Fotolöschung fälschlich als „umsortiert“).
+        val isChatMessage = n != null &&
             (n.flags and Notification.FLAG_GROUP_SUMMARY) == 0 &&
             (n.flags and Notification.FLAG_ONLY_ALERT_ONCE) == 0 &&
-            (n.flags and Notification.FLAG_ONGOING_EVENT) == 0
-        ) {
+            (n.flags and Notification.FLAG_ONGOING_EVENT) == 0 &&
+            (n.flags and Notification.FLAG_FOREGROUND_SERVICE) == 0 &&
+            runCatching {
+                @Suppress("DEPRECATION")
+                n.extras?.getParcelableArray(Notification.EXTRA_MESSAGES)?.isNotEmpty() == true
+            }.getOrDefault(false)
+        if (isChatMessage) {
             val now = System.currentTimeMillis()
             recentAlertingPosts.addLast(sbn.key.orEmpty() to now)
             while (recentAlertingPosts.peekFirst()?.let { now - it.second > 60_000L } == true) {

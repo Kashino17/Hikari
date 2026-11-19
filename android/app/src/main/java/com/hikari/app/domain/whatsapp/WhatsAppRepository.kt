@@ -447,6 +447,10 @@ class WhatsAppRepository @Inject constructor(
         if (ready != null) {
             readyRows[mediaType]?.remove(ready)
             if (attachIfFree(ready.first, path)) return@withLock ready.first
+            // Die Nachricht hat ihr Bild schon direkt aus der Benachrichtigung: das hier ist
+            // derselbe Download noch einmal und darf an keine andere Nachricht gehen.
+            runCatching { File(path).delete() }
+            return@withLock ready.first
         }
         val list = unclaimedFiles.getOrPut(mediaType) { mutableListOf() }
         list += WhatsAppMediaMatcher.IncomingFile(path, arrivedAt)
