@@ -64,6 +64,9 @@ class MangaReaderViewModel @Inject constructor(
 
     private var syncStarted = false
 
+    /** Überlebt das Schließen des Lesers (nur für das letzte Speichern). */
+    private val detached = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+
     /** Erst lesen, wenn jede Seite auf dem Mac oder auf dem Handy liegt — sonst bleiben Seiten leer. */
     private fun allReady(pages: List<MangaPageDto>, local: Map<String, String>): Boolean =
         pages.isNotEmpty() && pages.all { it.ready || local.containsKey(it.id) }
@@ -138,12 +141,16 @@ class MangaReaderViewModel @Inject constructor(
         }
     }
 
-    /** Synchronous final flush — call from `DisposableEffect.onDispose`. */
+    /**
+     * Letzte Stelle sofort sichern — beim Verlassen des Lesers. Läuft in einem eigenen Ablauf, weil der
+     * des Bildschirms beim Verlassen abgebrochen wird (sonst ging die letzte Seite verloren).
+     */
     fun flushProgress() {
         val p = pendingPage ?: return
-        viewModelScope.launch {
-            runCatching { repo.setProgress(seriesId, chapterId, p) }
-        }
+        saveJob?.cancel()
+        val sId = seriesId
+        val cId = chapterId
+        detached.launch { runCatching { repo.setProgress(sId, cId, p) } }
     }
 
     fun markChapterRead() {

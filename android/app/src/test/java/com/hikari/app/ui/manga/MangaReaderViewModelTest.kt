@@ -13,6 +13,8 @@ import io.mockk.every
 import io.mockk.mockk
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -168,5 +170,20 @@ class MangaReaderViewModelTest {
         } finally {
             vm.stopPolling()
         }
+    }
+
+    @Test(timeout = 5_000) fun flushProgress_survivesLeavingTheReader() = runTest {
+        // Raus aus dem Leser direkt nach dem Blättern: der Bildschirm (und sein Ablauf) ist weg,
+        // die letzte Seite muss trotzdem beim Mac ankommen.
+        coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        vm.load("s", "ch-1")
+        advanceTimeBy(100)
+        vm.savePosition(7)
+        vm.flushProgress()
+        vm.viewModelScope.cancel()
+        Thread.sleep(300)
+        coVerify(timeout = 2_000) { repo.setProgress("s", "ch-1", 7) }
     }
 }

@@ -112,6 +112,20 @@ class MangaDetailViewModel @Inject constructor(
         }
     }
 
+    /** Nach dem Lesen still neu laden (ohne „Lade…“), damit Stelle und gelesene Kapitel stimmen. */
+    fun refresh(seriesId: String) {
+        if (_uiState.value !is MangaDetailUiState.Success) return
+        viewModelScope.launch {
+            runCatching {
+                coroutineScope {
+                    val d = async { repo.getSeries(seriesId) }
+                    val c = async { repo.getContinue() }
+                    d.await() to c.await().firstOrNull { it.seriesId == seriesId }
+                }
+            }.onSuccess { (detail, cont) -> _uiState.value = MangaDetailUiState.Success(detail, cont) }
+        }
+    }
+
     fun downloadArc(arcId: String) {
         viewModelScope.launch {
             downloads.download(arcId).onFailure { e ->

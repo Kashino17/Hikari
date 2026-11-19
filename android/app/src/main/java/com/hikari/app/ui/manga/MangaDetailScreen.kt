@@ -76,6 +76,16 @@ fun MangaDetailScreen(
     vm: MangaDetailViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(seriesId) { vm.load(seriesId) }
+    // Zurück aus dem Leser: Stelle und gelesene Kapitel neu holen.
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle, seriesId) {
+        var first = true
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) { if (first) first = false else vm.refresh(seriesId) }
+        }
+        lifecycle.addObserver(obs)
+        onDispose { lifecycle.removeObserver(obs) }
+    }
     val state by vm.uiState.collectAsState()
     val baseUrl by vm.backendUrl.collectAsState()
     val downloadedArcs by vm.downloadedArcs.collectAsState()
@@ -199,7 +209,10 @@ fun MangaDetailScreen(
                             initialExpandedArcId = s.continueItem?.let { c ->
                                 s.detail.chapters.firstOrNull { it.id == c.chapterId }?.arcId
                             },
-                            onChapterClick = { chapterId -> onChapterClick(chapterId, null) },
+                            // Das Kapitel, in dem du stehst, öffnet an der gemerkten Seite.
+                            onChapterClick = { chapterId ->
+                                onChapterClick(chapterId, s.continueItem?.takeIf { it.chapterId == chapterId }?.pageNumber)
+                            },
                             downloadedArcIds = downloadedArcs,
                             arcProgress = arcProgress,
                             onDownloadArc = { arcId -> vm.downloadArc(arcId) },
