@@ -88,6 +88,8 @@ data class MangaSyncJobDto(
 data class MangaProgressRequest(
     @SerialName("chapterId") val chapterId: String,
     @SerialName("pageNumber") val pageNumber: Int,
+    /** Wann gelesen (ms) — der Mac übernimmt nur Neueres (Offline-Abgleich). */
+    val at: Long? = null,
 )
 
 

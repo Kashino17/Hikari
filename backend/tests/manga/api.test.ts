@@ -576,3 +576,26 @@ test("GET /api/manga/series/:id legt fehlende Download-Blöcke für MangaDex-Rei
   expect(body.arcs.map((a) => a.id)).toEqual(["mangadex:u9:en:arc-1"]);
   expect(body.chapters[0]?.arcId).toBe("mangadex:u9:en:arc-1");
 });
+
+test("PUT /api/manga/progress mit Zeitstempel: der neueste Stand gewinnt (Offline-Abgleich)", async () => {
+  const { app, db } = buildApp();
+  const put = (page: number, at?: number) =>
+    app.inject({
+      method: "PUT",
+      url: "/api/manga/progress/fake%3Ax",
+      payload: { chapterId: "fake:x:1", pageNumber: page, ...(at !== undefined ? { at } : {}) },
+    });
+  await put(6, 2_000);
+  await put(2, 1_000); // älterer Offline-Stand kommt später an → bleibt bei 6
+  let row = db.prepare("SELECT page_number AS p, updated_at AS at FROM manga_progress").get() as {
+    p: number;
+    at: number;
+  };
+  expect(row).toEqual({ p: 6, at: 2_000 });
+  await put(9, 3_000);
+  row = db.prepare("SELECT page_number AS p, updated_at AS at FROM manga_progress").get() as {
+    p: number;
+    at: number;
+  };
+  expect(row).toEqual({ p: 9, at: 3_000 });
+});

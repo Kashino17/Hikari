@@ -41,6 +41,16 @@ interface LocalMangaDao {
     @Query("SELECT COUNT(*) FROM local_manga_pages WHERE arc_id = :arcId")
     suspend fun pageCountForArc(arcId: String): Int
 
+    @Query("SELECT * FROM local_manga_pages WHERE chapter_id = :chapterId ORDER BY page_number")
+    suspend fun pagesForChapter(chapterId: String): List<LocalMangaPageEntity>
+
+    /** Alle heruntergeladenen Seiten einer Reihe — für Offline-Liste und „nächstes Kapitel“. */
+    @Query(
+        "SELECT p.* FROM local_manga_pages p JOIN local_manga_arcs a ON a.arc_id = p.arc_id " +
+            "WHERE a.series_id = :seriesId ORDER BY p.chapter_number, p.page_number",
+    )
+    suspend fun pagesForSeries(seriesId: String): List<LocalMangaPageEntity>
+
     @Query("SELECT COUNT(*) FROM local_manga_pages WHERE arc_id = :arcId")
     fun observePageCountForArc(arcId: String): Flow<Int>
 

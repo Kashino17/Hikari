@@ -1,5 +1,6 @@
 package com.hikari.app.ui.manga
 
+import androidx.compose.foundation.clickable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -84,10 +85,16 @@ fun MangaListScreen(
         }
         when (val s = state) {
             is MangaListUiState.Loading -> MangaLoadingSkeleton()
-            is MangaListUiState.Error -> MangaErrorState(
-                message = s.message,
-                onRetry = { vm.reload() },
-            )
+            is MangaListUiState.Error -> {
+                val offline by vm.offline.collectAsState()
+                if (offline.isEmpty()) {
+                    MangaErrorState(message = s.message, onRetry = { vm.reload() })
+                } else {
+                    OfflineMangaList(offline, onRetry = { vm.reload() }) { seriesId, chapterId ->
+                        onContinueClick(seriesId, chapterId, 1)
+                    }
+                }
+            }
             is MangaListUiState.Success -> {
                 if (s.series.isEmpty()) {
                     Box(
@@ -252,6 +259,46 @@ private fun MangaErrorState(message: String, onRetry: () -> Unit) {
             shape = RoundedCornerShape(50),
         ) {
             Text("Erneut versuchen", fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+
+/** Ohne Netz: was auf dem Handy liegt, nach Reihe und Kapitel — direkt lesbar. */
+@Composable
+private fun OfflineMangaList(
+    series: List<OfflineSeries>,
+    onRetry: () -> Unit,
+    onChapter: (seriesId: String, chapterId: String) -> Unit,
+) {
+    androidx.compose.foundation.lazy.LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 120.dp),
+    ) {
+        item {
+            Column(Modifier.fillMaxWidth().padding(20.dp)) {
+                Text("Ohne Netz", color = HikariText, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("Diese Kapitel liegen auf dem Handy und lassen sich jetzt lesen.", color = HikariTextFaint, fontSize = 13.sp,
+                    modifier = Modifier.padding(top = 4.dp))
+                Text("Erneut verbinden", color = com.hikari.app.ui.manga.MangaAccent, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(top = 10.dp).clickable(onClick = onRetry))
+            }
+        }
+        for (s in series) {
+            item(key = "s-" + s.seriesId) {
+                Text(s.title, color = HikariText, fontSize = 17.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 6.dp))
+            }
+            items(s.chapters.size, key = { "c-" + s.chapters[it].id }) { i ->
+                val c = s.chapters[i]
+                Row(
+                    Modifier.fillMaxWidth().clickable { onChapter(s.seriesId, c.id) }.padding(horizontal = 20.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Kapitel ${c.number}", color = HikariText, fontSize = 15.sp, modifier = Modifier.weight(1f))
+                    c.lang?.let { com.hikari.app.ui.manga.catalog.LangBadge(it) }
+                }
+            }
         }
     }
 }

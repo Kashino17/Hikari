@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -28,12 +29,32 @@ sealed interface MangaListUiState {
     data class Error(val message: String) : MangaListUiState
 }
 
+data class OfflineChapter(val id: String, val number: String, val lang: String?)
+data class OfflineSeries(val seriesId: String, val title: String, val chapters: List<OfflineChapter>)
+
 @HiltViewModel
 class MangaListViewModel @Inject constructor(
     private val repo: MangaRepository,
     private val observer: MangaSyncObserver,
     settings: SettingsStore,
+    private val downloads: com.hikari.app.domain.download.LocalMangaDownloadManager,
 ) : ViewModel() {
+
+    /** Heruntergeladene Reihen mit ihren Kapiteln — das, was ohne Netz lesbar ist. */
+    val offline: StateFlow<List<OfflineSeries>> = downloads.arcs
+        .map { arcs ->
+            arcs.groupBy { it.seriesId }.map { (seriesId, list) ->
+                val chapters = runCatching { downloads.localChapterIds(seriesId) }.getOrDefault(emptyList())
+                OfflineSeries(
+                    seriesId = seriesId,
+                    title = list.first().seriesTitle,
+                    chapters = chapters.map { (id, n) ->
+                        OfflineChapter(id, if (n % 1.0 == 0.0) n.toInt().toString() else n.toString(), id.split(":").getOrNull(2)?.takeIf { it == "de" || it == "en" })
+                    },
+                )
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _uiState = MutableStateFlow<MangaListUiState>(MangaListUiState.Loading)
     val uiState: StateFlow<MangaListUiState> = _uiState.asStateFlow()

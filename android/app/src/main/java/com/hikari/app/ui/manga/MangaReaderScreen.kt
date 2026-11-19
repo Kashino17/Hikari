@@ -104,7 +104,8 @@ fun MangaReaderScreen(
                         nextChapterId = s.nextChapterId,
                         seriesId = seriesId,
                         chapterId = chapterId,
-                        initialPage = initialPage,
+                        // Gemerkte Stelle schlägt die Seitenzahl des Knopfs (die kann veraltet sein).
+                        initialPage = s.startPage ?: initialPage,
                         baseUrl = baseUrl,
                         onBack = onBack,
                         onOpenChapter = onOpenChapter,

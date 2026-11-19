@@ -31,6 +31,14 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MangaReaderViewModelTest {
+    private val memory = object : com.hikari.app.domain.manga.MangaPositionStore.Storage {
+        var raw: String? = null
+        override fun read() = raw
+        override fun write(json: String) { raw = json }
+    }
+    private val store = com.hikari.app.domain.manga.MangaPositionStore(memory)
+    private val positions = mockk<com.hikari.app.domain.manga.MangaPositions>().apply { every { store } returns this@MangaReaderViewModelTest.store }
+
     private val repo = mockk<MangaRepository>(relaxUnitFun = true)
     private val settings = mockk<SettingsStore>().apply {
         every { backendUrl } returns MutableStateFlow("http://x")
@@ -53,7 +61,7 @@ class MangaReaderViewModelTest {
                 MangaChapterDto("ch-2", 2.0),
             ),
         )
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         try {
             vm.uiState.test(timeout = 4.seconds) {
                 assertTrue(awaitItem() is ReaderUiState.Loading)
@@ -73,7 +81,7 @@ class MangaReaderViewModelTest {
     @Test(timeout = 5_000) fun emptyPages_triggersChapterSyncAndShowsSyncing() = runTest {
         coEvery { repo.getChapterPages("ch-1") } returns emptyList()
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         try {
             vm.uiState.test(timeout = 4.seconds) {
                 awaitItem() // Loading
@@ -93,7 +101,7 @@ class MangaReaderViewModelTest {
     @Test(timeout = 5_000) fun savePosition_debouncedToLatestValueWithin1500ms() = runTest {
         coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         vm.saveDispatcher = kotlinx.coroutines.test.UnconfinedTestDispatcher(testScheduler)
         try {
             vm.load("s", "ch-1")
@@ -102,7 +110,7 @@ class MangaReaderViewModelTest {
             vm.savePosition(2)
             vm.savePosition(3)
             advanceTimeBy(1_600)
-            coVerify(exactly = 1) { repo.setProgress("s", "ch-1", 3) }
+            coVerify(exactly = 1) { repo.setProgress("s", "ch-1", 3, any()) }
         } finally {
             vm.stopPolling()
         }
@@ -114,7 +122,7 @@ class MangaReaderViewModelTest {
             retrofit2.Response.error<Any>(404, okhttp3.ResponseBody.create(null, "{}")),
         )
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         try {
             vm.uiState.test(timeout = 4.seconds) {
                 awaitItem() // Loading
@@ -139,7 +147,7 @@ class MangaReaderViewModelTest {
                 MangaChapterDto("m:u:de:5", 5.0, lang = "de"),
             ),
         )
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         try {
             vm.uiState.test(timeout = 4.seconds) {
                 awaitItem()
@@ -160,7 +168,7 @@ class MangaReaderViewModelTest {
         coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true), MangaPageDto("p2", 2, false))
         coEvery { mangaDownloads.localPageFile(any()) } returns null
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         try {
             vm.uiState.test(timeout = 4.seconds) {
                 awaitItem()
@@ -179,7 +187,7 @@ class MangaReaderViewModelTest {
         // die letzte Seite muss trotzdem beim Mac ankommen.
         coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         vm.saveDispatcher = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
         vm.load("s", "ch-1")
         advanceTimeBy(100)
@@ -187,7 +195,7 @@ class MangaReaderViewModelTest {
         vm.flushProgress()
         vm.viewModelScope.cancel()
         advanceUntilIdle()
-        coVerify { repo.setProgress("s", "ch-1", 7) }
+        coVerify { repo.setProgress("s", "ch-1", 7, any()) }
     }
 
     @Test(timeout = 5_000) fun saves_arriveInOrder_lastPageWins() = runTest {
@@ -195,12 +203,12 @@ class MangaReaderViewModelTest {
         val saved = mutableListOf<Int>()
         coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
         coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
-        coEvery { repo.setProgress("s", "ch-1", any()) } coAnswers {
+        coEvery { repo.setProgress("s", "ch-1", any(), any()) } coAnswers {
             val p = thirdArg<Int>()
             if (p == 4) kotlinx.coroutines.delay(400) // die alte Anfrage hängt im Netz
             synchronized(saved) { saved += p }
         }
-        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
         vm.saveDispatcher = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
         vm.load("s", "ch-1")
         advanceTimeBy(100)
@@ -210,5 +218,91 @@ class MangaReaderViewModelTest {
         vm.flushProgress() // Seite 7 sofort hinterher
         advanceUntilIdle()
         assertEquals(listOf(4, 7), synchronized(saved) { saved.toList() })
+    }
+
+    @Test(timeout = 5_000) fun offline_readsDownloadedChapterFromPhone() = runTest {
+        // Kein Netz: das heruntergeladene Kapitel kommt vom Handy, das nächste geladene in derselben Sprache folgt.
+        coEvery { repo.getChapterPages(any()) } throws java.io.IOException("offline")
+        coEvery { repo.getSeries(any()) } throws java.io.IOException("offline")
+        fun page(ch: String, n: Double, p: Int) = com.hikari.app.data.db.LocalMangaPageEntity(
+            pageId = "$ch:0$p", arcId = "a", chapterId = ch, chapterNumber = n, pageNumber = p,
+            localFilePath = "/x/$ch/$p.jpg", byteSize = 1, downloadedAt = 1,
+        )
+        coEvery { mangaDownloads.localChapterPages("m:u:de:1") } returns listOf(page("m:u:de:1", 1.0, 1), page("m:u:de:1", 1.0, 2))
+        coEvery { mangaDownloads.localChapterIds("s") } returns listOf("m:u:de:1" to 1.0, "m:u:en:1" to 1.0, "m:u:de:2" to 2.0)
+        coEvery { mangaDownloads.localPageFile(any()) } answers { java.io.File("/x/${firstArg<String>()}") }
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
+        try {
+            vm.uiState.test(timeout = 4.seconds) {
+                awaitItem()
+                vm.load("s", "m:u:de:1")
+                advanceTimeBy(500)
+                val st = awaitItem()
+                assertTrue(st is ReaderUiState.Success, "war $st")
+                assertEquals(listOf("m:u:de:1:01", "m:u:de:1:02"), st.pages.map { it.id })
+                assertEquals("m:u:de:2", st.nextChapterId)
+                cancelAndIgnoreRemainingEvents()
+            }
+        } finally {
+            vm.stopPolling()
+        }
+    }
+
+    @Test(timeout = 5_000) fun opensAtStoredPage_evenIfButtonSaysPage1() = runTest {
+        // „Weiterlesen“ kannte noch Seite 1, das Handy weiß: Seite 6 in diesem Kapitel.
+        store.put("s", "ch-1", 6, at = 500)
+        coEvery { repo.getChapterPages("ch-1") } returns (1..10).map { MangaPageDto("p$it", it, true) }
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
+        coEvery { repo.getContinue() } returns emptyList()
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
+        try {
+            vm.uiState.test(timeout = 4.seconds) {
+                awaitItem()
+                vm.load("s", "ch-1")
+                advanceTimeBy(500)
+                val st = awaitItem()
+                assertTrue(st is ReaderUiState.Success)
+                assertEquals(6, st.startPage)
+                cancelAndIgnoreRemainingEvents()
+            }
+        } finally {
+            vm.stopPolling()
+        }
+    }
+
+    @Test(timeout = 5_000) fun offlineProgress_isPushedWithItsTimestampWhenOnlineAgain() = runTest {
+        // Offline gelesen: steht nur auf dem Handy. Beim nächsten Öffnen mit Netz geht er an den Mac.
+        store.put("s", "ch-1", 8, at = 1_234)
+        coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true))
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
+        coEvery { repo.getContinue() } returns emptyList()
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
+        vm.saveDispatcher = kotlinx.coroutines.test.StandardTestDispatcher(testScheduler)
+        vm.load("s", "ch-1")
+        advanceUntilIdle()
+        coVerify { repo.setProgress("s", "ch-1", 8, 1_234) }
+        assertEquals(true, store.get("s")?.synced)
+        vm.stopPolling()
+    }
+
+    @Test(timeout = 5_000) fun newerProgressFromMac_winsOverOlderPhoneProgress() = runTest {
+        store.put("s", "ch-1", 2, at = 100)
+        coEvery { repo.getChapterPages("ch-1") } returns (1..10).map { MangaPageDto("p$it", it, true) }
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
+        coEvery { repo.getContinue() } returns listOf(com.hikari.app.data.api.dto.MangaContinueDto("s", "X", null, "ch-1", 9, 900))
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings, positions)
+        try {
+            vm.uiState.test(timeout = 4.seconds) {
+                awaitItem()
+                vm.load("s", "ch-1")
+                advanceTimeBy(500)
+                val st = awaitItem()
+                assertTrue(st is ReaderUiState.Success)
+                assertEquals(9, st.startPage)
+                cancelAndIgnoreRemainingEvents()
+            }
+        } finally {
+            vm.stopPolling()
+        }
     }
 }

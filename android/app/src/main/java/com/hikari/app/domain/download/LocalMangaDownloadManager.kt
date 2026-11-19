@@ -63,6 +63,16 @@ class LocalMangaDownloadManager @Inject constructor(
         return if (file.exists()) file else null
     }
 
+    /** Seiten eines heruntergeladenen Kapitels (leer = nicht auf dem Handy). */
+    suspend fun localChapterPages(chapterId: String): List<LocalMangaPageEntity> = dao.pagesForChapter(chapterId)
+
+    /** Heruntergeladene Kapitel einer Reihe (Kennung, Nummer), aufsteigend. */
+    suspend fun localChapterIds(seriesId: String): List<Pair<String, Double>> =
+        dao.pagesForSeries(seriesId).map { it.chapterId to it.chapterNumber }.distinct()
+
+    /** Alle heruntergeladenen Abschnitte (für „Meine Mangas“ ohne Netz). */
+    val arcs: Flow<List<LocalMangaArcEntity>> get() = dao.observeArcs()
+
     suspend fun delete(arcId: String) = withContext(Dispatchers.IO) {
         val arc = dao.getArc(arcId) ?: return@withContext
         // Löscht ganzen Arc-Ordner — sicherer als per-page-File-Delete, falls

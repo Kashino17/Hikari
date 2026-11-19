@@ -25,6 +25,10 @@ import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MangaListViewModelTest {
+    private val downloads = io.mockk.mockk<com.hikari.app.domain.download.LocalMangaDownloadManager>(relaxed = true).apply {
+        io.mockk.every { arcs } returns kotlinx.coroutines.flow.flowOf(emptyList())
+    }
+
     private val repo = mockk<MangaRepository>()
     private val observer = mockk<MangaSyncObserver>(relaxUnitFun = true)
     private val settings = mockk<SettingsStore>()
@@ -40,7 +44,7 @@ class MangaListViewModelTest {
         every { observer.status } returns MutableStateFlow(com.hikari.app.domain.sync.SyncStatus.Idle)
         every { settings.backendUrl } returns MutableStateFlow("http://x")
 
-        val vm = MangaListViewModel(repo, observer, settings)
+        val vm = MangaListViewModel(repo, observer, settings, downloads)
         vm.uiState.test {
             assertTrue(awaitItem() is MangaListUiState.Loading)
             advanceUntilIdle()
@@ -58,7 +62,7 @@ class MangaListViewModelTest {
         every { observer.status } returns MutableStateFlow(com.hikari.app.domain.sync.SyncStatus.Idle)
         every { settings.backendUrl } returns MutableStateFlow("http://x")
 
-        val vm = MangaListViewModel(repo, observer, settings)
+        val vm = MangaListViewModel(repo, observer, settings, downloads)
         vm.uiState.test {
             awaitItem() // Loading
             advanceUntilIdle()

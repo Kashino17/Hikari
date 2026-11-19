@@ -190,20 +190,23 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
 
   app.put<{
     Params: { seriesId: string };
-    Body: { chapterId: string; pageNumber: number };
+    Body: { chapterId: string; pageNumber: number; at?: number };
   }>("/api/manga/progress/:seriesId", async (req, reply) => {
-    const { chapterId, pageNumber } = req.body ?? {};
+    const { chapterId, pageNumber, at } = req.body ?? {};
     if (!chapterId || typeof pageNumber !== "number") {
       return reply.code(400).send({ error: "chapterId + pageNumber required" });
     }
+    // Mit Zeitstempel (Handy, auch offline gelesen): nur übernehmen, wenn er neuer ist als der gespeicherte.
+    const when = typeof at === "number" && at > 0 ? Math.min(at, Date.now()) : Date.now();
     db.prepare(
       `INSERT INTO manga_progress (series_id, chapter_id, page_number, updated_at)
        VALUES (?, ?, ?, ?)
        ON CONFLICT(series_id) DO UPDATE SET
          chapter_id = excluded.chapter_id,
          page_number = excluded.page_number,
-         updated_at = excluded.updated_at`,
-    ).run(req.params.seriesId, chapterId, pageNumber, Date.now());
+         updated_at = excluded.updated_at
+       WHERE excluded.updated_at >= manga_progress.updated_at`,
+    ).run(req.params.seriesId, chapterId, pageNumber, when);
     // Wer liest, folgt der Reihe: sie steht dann unter „Weiterlesen“ und „Meine Mangas“.
     db.prepare("INSERT OR IGNORE INTO manga_library (series_id, added_at) VALUES (?, ?)").run(
       req.params.seriesId,

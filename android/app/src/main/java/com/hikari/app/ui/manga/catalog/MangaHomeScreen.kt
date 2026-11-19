@@ -94,7 +94,9 @@ class MangaHomeViewModel @Inject constructor(
     private val repo: MangaRepository,
     settings: SettingsStore,
     @ApplicationContext ctx: Context,
+    positions: com.hikari.app.domain.manga.MangaPositions,
 ) : ViewModel() {
+    private val store = positions.store
     private val prefs = ctx.getSharedPreferences("hikari_manga_catalog", Context.MODE_PRIVATE)
     private val _state = MutableStateFlow(MangaHomeState(lang = prefs.getString("lang", "all") ?: "all"))
     val state: StateFlow<MangaHomeState> = _state.asStateFlow()
@@ -106,10 +108,27 @@ class MangaHomeViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
             val home = runCatching { repo.catalogHome(_state.value.lang) }
-            val reading = runCatching { repo.getContinue() }.getOrNull()
-            _state.update {
-                it.copy(loading = false, offline = home.isFailure, home = home.getOrNull() ?: it.home, reading = reading ?: it.reading)
+            refreshReading()
+            _state.update { it.copy(loading = false, offline = home.isFailure, home = home.getOrNull() ?: it.home) }
+        }
+    }
+
+    /**
+     * „Weiterlesen“ neu: Offline Gelesenes an den Mac nachreichen, neuere Stände vom Mac übernehmen,
+     * und die Karten mit der Stelle zeigen, die das Handy zuletzt gemerkt hat.
+     */
+    fun refreshReading() {
+        viewModelScope.launch {
+            for ((sId, pos) in store.pending()) {
+                runCatching { repo.setProgress(sId, pos.chapterId, pos.page, pos.at) }.onSuccess { store.markSynced(sId, pos.at) }
             }
+            val fromMac = runCatching { repo.getContinue() }.getOrNull() ?: _state.value.reading
+            for (c in fromMac) store.mergeServer(c.seriesId, c.chapterId, c.pageNumber, c.updatedAt)
+            val reading = fromMac.map { c ->
+                val local = store.get(c.seriesId)
+                if (local != null && local.at >= c.updatedAt) c.copy(chapterId = local.chapterId, pageNumber = local.page, updatedAt = local.at) else c
+            }.sortedByDescending { it.updatedAt }
+            _state.update { it.copy(reading = reading) }
         }
     }
 
@@ -161,6 +180,16 @@ fun MangaHomeScreen(
     val s by vm.state.collectAsState()
     val base by vm.backendUrl.collectAsState()
     var tab by rememberSaveable { mutableStateOf("entdecken") }
+    // Zurück aus dem Leser: „Weiterlesen“ sofort auf den neuen Stand bringen.
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    androidx.compose.runtime.DisposableEffect(lifecycle) {
+        var first = true
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) { if (first) first = false else vm.refreshReading() }
+        }
+        lifecycle.addObserver(obs)
+        onDispose { lifecycle.removeObserver(obs) }
+    }
     val openCard: (MangaCatalogCardDto) -> Unit = { c -> vm.open(c, onSeries) }
     Box(Modifier.fillMaxSize().background(HikariBg)) {
         Column(Modifier.fillMaxSize()) {

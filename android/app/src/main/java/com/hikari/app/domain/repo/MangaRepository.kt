@@ -35,8 +35,8 @@ class MangaRepository @Inject constructor(
 
     suspend fun addToLibrary(seriesId: String) = api.addMangaToLibrary(seriesId)
     suspend fun removeFromLibrary(seriesId: String) = api.removeMangaFromLibrary(seriesId)
-    suspend fun setProgress(seriesId: String, chapterId: String, pageNumber: Int) =
-        api.setMangaProgress(seriesId, MangaProgressRequest(chapterId, pageNumber))
+    suspend fun setProgress(seriesId: String, chapterId: String, pageNumber: Int, at: Long? = null) =
+        api.setMangaProgress(seriesId, MangaProgressRequest(chapterId, pageNumber, at))
     suspend fun markChapterRead(chapterId: String) = api.markMangaChapterRead(chapterId)
     suspend fun startChapterSync(chapterId: String) = api.startMangaChapterSync(chapterId)
     suspend fun startSync() = api.startMangaSync()
