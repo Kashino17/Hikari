@@ -55,14 +55,18 @@ class MangaDetailViewModel @Inject constructor(
     fun startSync(seriesId: String) {
         viewModelScope.launch {
             _syncMessage.value = null
-            runCatching { repo.startSync() }
-                .onSuccess { _syncMessage.value = "Abgleich läuft" }
-                .onFailure { e -> _syncMessage.value = if ("409" in e.message.orEmpty()) "Abgleich läuft bereits" else "Server nicht erreichbar" }
+            val started = runCatching { repo.startSync() }
+            val busy = started.exceptionOrNull()?.message.orEmpty().contains("409")
+            if (started.isFailure && !busy) {
+                _syncMessage.value = "Server nicht erreichbar"
+                return@launch
+            }
+            _syncMessage.value = if (busy) "Abgleich läuft bereits" else "Abgleich läuft"
             syncObserver.startPolling()
-            // Warten, bis der Lauf vorbei ist, dann die neuen Kapitel zeigen.
-            kotlinx.coroutines.delay(2_500)
-            syncObserver.status.first { it is SyncStatus.Idle }
-            _syncMessage.value = "Fertig abgeglichen"
+            // Auf den Lauf warten: erst „läuft“ sehen (oder er war schon vorbei), dann „fertig“.
+            kotlinx.coroutines.withTimeoutOrNull(10_000) { syncObserver.status.first { it is SyncStatus.Active } }
+            val done = kotlinx.coroutines.withTimeoutOrNull(30 * 60_000L) { syncObserver.status.first { it is SyncStatus.Idle } } != null
+            _syncMessage.value = if (done) "Fertig abgeglichen" else null
             load(seriesId)
             kotlinx.coroutines.delay(4_000)
             _syncMessage.value = null

@@ -62,6 +62,12 @@ class MangaReaderViewModel @Inject constructor(
         return out
     }
 
+    private var syncStarted = false
+
+    /** Erst lesen, wenn jede Seite auf dem Mac oder auf dem Handy liegt — sonst bleiben Seiten leer. */
+    private fun allReady(pages: List<MangaPageDto>, local: Map<String, String>): Boolean =
+        pages.isNotEmpty() && pages.all { it.ready || local.containsKey(it.id) }
+
     /** Nächstes Kapitel in derselben Sprache (MangaDex hat de und en nebeneinander). */
     private fun nextChapterId(chapters: List<com.hikari.app.data.api.dto.MangaChapterDto>, current: String): String? {
         val lang = chapters.firstOrNull { it.id == current }?.lang
@@ -85,9 +91,10 @@ class MangaReaderViewModel @Inject constructor(
                 val detail = repo.getSeries(seriesId)
                 pages to detail
             }.onSuccess { (pages, detail) ->
-                if (pages.isEmpty()) {
+                val local = resolveLocalPaths(pages)
+                if (!allReady(pages, local)) {
                     _uiState.value = ReaderUiState.Syncing(chapterId)
-                    runCatching { repo.startChapterSync(chapterId) }
+                    syncStarted = runCatching { repo.startChapterSync(chapterId) }.isSuccess || pages.isNotEmpty()
                     startPollingForPages()
                 } else {
                     val next = nextChapterId(detail.chapters, chapterId)
@@ -105,8 +112,10 @@ class MangaReaderViewModel @Inject constructor(
         pollJob = viewModelScope.launch {
             while (isActive) {
                 delay(3_000)
+                // Läuft gerade ein anderer Abgleich (409), später noch einmal anstoßen.
+                if (!syncStarted) syncStarted = runCatching { repo.startChapterSync(chapterId) }.isSuccess
                 runCatching { repo.getChapterPages(chapterId) }.onSuccess { pages ->
-                    if (pages.isNotEmpty()) {
+                    if (allReady(pages, resolveLocalPaths(pages))) {
                         val detail = runCatching { repo.getSeries(seriesId) }.getOrNull()
                         val next = nextChapterId(detail?.chapters.orEmpty(), chapterId)
                         _localPagePaths.value = resolveLocalPaths(pages)

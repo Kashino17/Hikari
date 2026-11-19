@@ -58,6 +58,9 @@ fun pageTransform(idx: Int, position: Float, width: Float, direction: ReadDirect
     val cancel = (if (rtl) -p else p) * width // hebt die Pager-Verschiebung auf
     val z = -idx.toFloat()
     if (p == 0f) return PageTransform(z = z)
+    // Ganz weg (≥ 1) oder noch nicht dran (≤ -1): an der Pager-Stelle lassen, also außerhalb des Bildes —
+    // sonst lägen sie unsichtbar über der aktuellen Seite und fingen Zoom und Doppeltippen ab.
+    if (p >= 1f || p <= -1f) return PageTransform(alpha = 0f, z = z)
     return when (anim) {
         PageAnim.NONE -> PageTransform(z = z)
         PageAnim.SLIDE ->
@@ -103,7 +106,8 @@ fun tapAction(x: Float, direction: ReadDirection, tapTurn: Boolean, menuOpen: Bo
  */
 fun turnOverlay(top: Boolean, p: Float, width: Float, anim: PageAnim): PageTransform {
     val t = pageTransform(if (top) 0 else 1, p, width, ReadDirection.LTR, anim)
-    val natural = if (top) -p * width else (1f - p) * width // dort hätte der Pager die Seite hingeschoben
-    // Die untere liegt als Standbild immer ganz da (der Pager würde sie bei p = 0 ausblenden).
-    return t.copy(translationX = t.translationX + natural, alpha = if (top) t.alpha else 1f)
+    // Die untere liegt als Standbild immer still und ganz sichtbar da.
+    if (!top) return t.copy(translationX = 0f, rotationY = 0f, alpha = 1f)
+    // Die obere: dort, wo der Pager sie hingeschoben hätte, plus die Bewegung der Blätter-Art.
+    return t.copy(translationX = t.translationX - p * width)
 }

@@ -142,6 +142,41 @@ describe("/api/ebooks", () => {
     expect((await get("/api/ebooks/gutenberg%3Af1")).status).toBe(200);
   });
 
+  it("ein gemerktes Doppel bleibt sichtbar (Merkliste, Suche)", async () => {
+    upsertBook(
+      db,
+      raw("f1", { title: "Faust", authors: ["Goethe"], popularity: 3 }),
+      ["drama"],
+      3000,
+    );
+    upsertBook(
+      db,
+      raw("f2", { title: "Faust", authors: ["Goethe"], popularity: 10 }),
+      ["drama"],
+      3001,
+    );
+    await app.inject({
+      method: "PUT",
+      url: `/api/ebooks/state/${encodeURIComponent("gutenberg:f1")}`,
+      payload: { saved: { value: true, at: 1 } },
+    });
+    expect(ids((await get("/api/ebooks/list?state=gemerkt")).json.books)).toEqual(["gutenberg:f1"]);
+    expect(ids((await get("/api/ebooks/list?q=faust")).json.books)).toEqual([
+      "gutenberg:f1",
+      "gutenberg:f2",
+    ]);
+  });
+
+  it("Listen haben eine feste Reihenfolge, auch bei gleichen Titeln (kein Doppel beim Nachladen)", async () => {
+    for (let i = 0; i < 6; i++)
+      upsertBook(db, raw(`g${i}`, { title: "Gedichte", authors: [`A${i}`] }), ["lyrik"], 4000 + i);
+    const first = (await get("/api/ebooks/list?category=lyrik&sort=titel&limit=3")).json.books;
+    const second = (await get("/api/ebooks/list?category=lyrik&sort=titel&limit=3&offset=3")).json
+      .books;
+    const all = [...ids(first), ...ids(second)];
+    expect(new Set(all).size).toBe(6);
+  });
+
   it("BookCard hat Format, Minuten und Titelbild-Weg", async () => {
     const { json } = await get("/api/ebooks/list?category=roman&sort=titel");
     expect(json.books[0]).toMatchObject({

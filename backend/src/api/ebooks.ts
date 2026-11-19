@@ -83,11 +83,11 @@ const LENGTH: Record<string, string> = {
 };
 const SORT: Record<string, string> = {
   beliebt:
-    "e.popularity IS NULL, e.popularity DESC, e.cover_url IS NULL, e.word_count IS NULL, e.word_count DESC, e.title COLLATE NOCASE",
-  titel: "e.title COLLATE NOCASE",
-  autor: "e.authors_json COLLATE NOCASE, e.title COLLATE NOCASE",
-  jahr: "e.year IS NULL, e.year DESC, e.title COLLATE NOCASE",
-  neu: "e.added_at DESC, e.title COLLATE NOCASE",
+    "e.popularity IS NULL, e.popularity DESC, e.cover_url IS NULL, e.word_count IS NULL, e.word_count DESC, e.title COLLATE NOCASE, e.id",
+  titel: "e.title COLLATE NOCASE, e.id",
+  autor: "e.authors_json COLLATE NOCASE, e.title COLLATE NOCASE, e.id",
+  jahr: "e.year IS NULL, e.year DESC, e.title COLLATE NOCASE, e.id",
+  neu: "e.added_at DESC, e.title COLLATE NOCASE, e.id",
 };
 
 interface Row {
@@ -120,10 +120,10 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
   // Dasselbe Werk mehrfach im Katalog (z. B. zwei Gutenberg-Ausgaben von Faust): nur die beliebtere zeigen.
   db.exec("CREATE INDEX IF NOT EXISTS idx_ebooks_title ON ebooks(title)");
   const visible = () =>
-    `${alive("e")} AND NOT EXISTS (SELECT 1 FROM ebooks d WHERE d.title = e.title AND d.authors_json = e.authors_json
+    `${alive("e")} AND (e.id IN (SELECT book_id FROM ebook_state) OR NOT EXISTS (SELECT 1 FROM ebooks d WHERE d.title = e.title AND d.authors_json = e.authors_json
        AND d.id <> e.id AND ${alive("d")}
        AND (COALESCE(d.popularity, -1) > COALESCE(e.popularity, -1)
-            OR (COALESCE(d.popularity, -1) = COALESCE(e.popularity, -1) AND d.id < e.id)))`;
+            OR (COALESCE(d.popularity, -1) = COALESCE(e.popularity, -1) AND d.id < e.id))))`;
   const catsOf = db.prepare(
     "SELECT category FROM ebook_categories WHERE book_id = ? ORDER BY category",
   );

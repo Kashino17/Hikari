@@ -150,4 +150,23 @@ class MangaReaderViewModelTest {
             vm.stopPolling()
         }
     }
+
+    @Test(timeout = 5_000) fun pagesNotReady_keepsSyncing() = runTest {
+        // Der Mac legt alle Seiten sofort an und lädt sie danach — erst wenn alle da sind, wird gelesen.
+        coEvery { repo.getChapterPages("ch-1") } returns listOf(MangaPageDto("p1", 1, true), MangaPageDto("p2", 2, false))
+        coEvery { mangaDownloads.localPageFile(any()) } returns null
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        try {
+            vm.uiState.test(timeout = 4.seconds) {
+                awaitItem()
+                vm.load("s", "ch-1")
+                advanceTimeBy(500)
+                assertTrue(awaitItem() is ReaderUiState.Syncing)
+                cancelAndIgnoreRemainingEvents()
+            }
+        } finally {
+            vm.stopPolling()
+        }
+    }
 }

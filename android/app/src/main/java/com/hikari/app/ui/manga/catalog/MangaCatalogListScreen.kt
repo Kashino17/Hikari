@@ -88,6 +88,7 @@ data class MangaListState(
     val loading: Boolean = false,
     val error: Boolean = false,
     val opening: String? = null,
+    val openError: String? = null,
 )
 
 @HiltViewModel
@@ -128,9 +129,14 @@ class MangaCatalogListViewModel @Inject constructor(
         _state.update { it.copy(loading = true, error = false) }
         job = viewModelScope.launch {
             if (debounce > 0) delay(debounce)
-            runCatching { repo.catalogList(f, offset) }
-                .onSuccess { r -> _state.update { it.copy(items = if (reset) r.items else it.items + r.items, total = r.total, loading = false) } }
-                .onFailure { _state.update { it.copy(loading = false, error = true) } }
+            try {
+                val r = repo.catalogList(f, offset)
+                _state.update { it.copy(items = if (reset) r.items else it.items + r.items, total = r.total, loading = false, error = false) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e // überholt von einer neueren Suche — nichts anzeigen
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, error = true) }
+            }
         }
     }
 
@@ -139,7 +145,7 @@ class MangaCatalogListViewModel @Inject constructor(
         _state.update { it.copy(opening = card.displayTitle) }
         viewModelScope.launch {
             val r = runCatching { repo.openCatalog(card.id) }
-            _state.update { it.copy(opening = null) }
+            _state.update { it.copy(opening = null, openError = if (r.isFailure) "„${card.displayTitle}“ lässt sich gerade nicht öffnen." else null) }
             r.onSuccess(then)
         }
     }
@@ -185,6 +191,7 @@ fun MangaCatalogListScreen(
                     modifier = Modifier.weight(1f).focusRequester(focus),
                 )
             }
+            s.openError?.let { Text(it, color = Color(0xFFF87171), fontSize = 13.sp, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) }
             if (f.title != null) Text(f.title, color = HikariText, fontSize = 26.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 16.dp, top = 6.dp))
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(listOf("all" to "Alle", "de" to "Deutsch", "en" to "Englisch"), key = { "l" + it.first }) { (k, l) ->

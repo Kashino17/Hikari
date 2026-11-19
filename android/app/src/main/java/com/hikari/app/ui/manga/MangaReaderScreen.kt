@@ -141,6 +141,15 @@ private fun ReaderContent(
         }
     }
 
+    // Neue Seite = nicht gezoomt (auch auf der Kapitelende-Seite, die selbst keinen Zoom meldet).
+    LaunchedEffect(position) { zoomed = false }
+    // Vom Streifen zurück zu Seiten: dort weitermachen, wo man im Streifen war.
+    LaunchedEffect(settings.direction) {
+        if (settings.direction != ReadDirection.VERTICAL && pagerState.currentPage != position) {
+            pagerState.scrollToPage(position.coerceIn(0, pageCount - 1))
+        }
+    }
+
     fun turn(forward: Boolean) {
         if (settings.direction == ReadDirection.VERTICAL) return
         val target = pagerState.currentPage + if (forward) 1 else -1
@@ -184,7 +193,7 @@ private fun ReaderContent(
         if (settings.direction == ReadDirection.VERTICAL) {
             VerticalStrip(
                 pages = pages,
-                startIndex = pagerState.currentPage.coerceAtMost(pages.size - 1),
+                startIndex = position.coerceIn(0, pages.size - 1),
                 imageUrl = { vm.pageImageUrl(baseUrl, it.id) },
                 onPage = { idx ->
                     position = idx

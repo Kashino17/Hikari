@@ -79,4 +79,16 @@ class MangaPageMotionTest {
         // Unbekannte Felder aus späteren Versionen stören nicht.
         assertEquals(MangaReaderSettings(anim = PageAnim.SLIDE), MangaReaderSettings.decode("""{"anim":"SLIDE","neu":1}"""))
     }
+
+    @Test fun `ganz weggeblätterte und übernächste Seiten liegen nicht unsichtbar über der aktuellen`() {
+        // In Ruhe bei Seite 3: Seite 2 ist ganz weg, Seite 4 liegt bereit — beide dürfen nicht bei x = 0 liegen,
+        // sonst fangen sie Zoom und Doppeltippen ab.
+        for (anim in PageAnim.entries) {
+            for (dir in listOf(ReadDirection.RTL, ReadDirection.LTR)) {
+                assertEquals(0f, pageTransform(2, 3f, w, dir, anim).translationX, 0.01f)
+                assertEquals(0f, pageTransform(4, 3f, w, dir, anim).translationX, 0.01f)
+                assertEquals(0f, pageTransform(2, 3f, w, dir, anim).alpha, 0.01f)
+            }
+        }
+    }
 }

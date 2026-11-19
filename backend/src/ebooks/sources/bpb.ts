@@ -22,8 +22,12 @@ const NOT_FULL = /leseprobe|inhaltsverzeichnis|widerruf|flyer|vorwort|einleitung
 interface Parsed {
   book?: Omit<RawBook, "source" | "sourceId" | "sourceUrl"> | undefined;
 }
+/** Erhöhen, wenn parseBpbPage anders liest — dann werden gemerkte Seiten einmal neu gelesen. */
+const PARSER_VERSION = 2;
+
 interface Cached {
   lastmod: string | undefined;
+  v?: number;
   book: Parsed["book"];
 }
 
@@ -110,11 +114,15 @@ export const bpbSource: EbookSource = {
     for (const p of pages) {
       const key = `bpb:${p.nid}`;
       let cached = ctx.cache.get<Cached>(key);
-      if (!cached || cached.lastmod !== p.lastmod) {
+      if (!cached || cached.lastmod !== p.lastmod || cached.v !== PARSER_VERSION) {
         try {
           const r = await ctx.http.get(p.url);
           if (r.status !== 200) continue;
-          cached = { lastmod: p.lastmod, book: parseBpbPage(r.body.toString("utf8")) };
+          cached = {
+            lastmod: p.lastmod,
+            v: PARSER_VERSION,
+            book: parseBpbPage(r.body.toString("utf8")),
+          };
           ctx.cache.set(key, cached);
         } catch (err) {
           ctx.log(`bpb: ${p.url} — ${(err as Error).message}`);

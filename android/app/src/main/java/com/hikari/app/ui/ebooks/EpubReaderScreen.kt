@@ -135,8 +135,10 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
     // Blätter-Animation: Standbilder über der WebView, die selbst sofort umblättert.
     val scope = rememberCoroutineScope()
     val turner = remember { PageTurner() }
-    val anim = pageAnimOf(settings.pageAnim)
-    val turnMs = if (anim == PageAnim.BOOK) 560 else 340
+    // Die Leser-Brücke wird nur einmal gebaut und hält diese Funktionen fest — deshalb die Einstellung
+    // bei jedem Aufruf frisch lesen, nicht als Wert der ersten Darstellung.
+    fun anim() = pageAnimOf(settings.pageAnim)
+    fun turnMs() = if (anim() == PageAnim.BOOK) 560 else 340
     fun capture(): ImageBitmap? = web?.takeIf { it.width > 0 && it.height > 0 }
         ?.let { v -> runCatching { v.drawToBitmap().asImageBitmap() }.getOrNull() }
 
@@ -160,10 +162,10 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
     }
 
     fun turnPage(forward: Boolean) {
-        if (anim == PageAnim.NONE) { js("HikariReader.turn(${if (forward) 1 else -1})"); return }
+        if (anim() == PageAnim.NONE) { js("HikariReader.turn(${if (forward) 1 else -1})"); return }
         if (turner.active) return
         scope.launch {
-            if (prepareTurn(forward)) turner.p.animateTo(if (forward) 1f else 0f, tween(turnMs, easing = FastOutSlowInEasing))
+            if (prepareTurn(forward)) turner.p.animateTo(if (forward) 1f else 0f, tween(turnMs(), easing = FastOutSlowInEasing))
             turner.reset()
         }
     }
@@ -171,7 +173,7 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
     fun finishDrag(dx: Float, vx: Float, cancelled: Boolean) {
         if (!turner.dragging) return
         turner.dragging = false
-        if (anim == PageAnim.NONE) {
+        if (anim() == PageAnim.NONE) {
             if (!cancelled && (abs(dx) > 0.12f || abs(vx) > 0.45f)) js("HikariReader.turn(${if (dx < 0) 1 else -1})")
             return
         }
@@ -180,7 +182,7 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
             if (!turner.active) return@launch
             val fwd = turner.forward
             val commit = !cancelled && if (fwd) turner.p.value > 0.33f || vx < -0.45f else turner.p.value < 0.67f || vx > 0.45f
-            turner.p.animateTo(if (commit == fwd) 1f else 0f, tween((turnMs * 0.7f).toInt(), easing = FastOutSlowInEasing))
+            turner.p.animateTo(if (commit == fwd) 1f else 0f, tween((turnMs() * 0.7f).toInt(), easing = FastOutSlowInEasing))
             if (!commit) {
                 // zurücknehmen: die WebView war schon umgeblättert
                 turner.drainTurned()
@@ -197,9 +199,9 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                 if (turner.active || turner.dragging) return
                 turner.dragging = true
                 turner.forward = d.dir > 0
-                if (anim != PageAnim.NONE) turner.prep = scope.launch { if (!prepareTurn(d.dir > 0)) turner.dragging = false }
+                if (anim() != PageAnim.NONE) turner.prep = scope.launch { if (!prepareTurn(d.dir > 0)) turner.dragging = false }
             }
-            "move" -> if (turner.dragging && turner.active && anim != PageAnim.NONE) {
+            "move" -> if (turner.dragging && turner.active && anim() != PageAnim.NONE) {
                 val f = (abs(d.dx) / 0.9f).coerceIn(0f, 1f)
                 val v = if (turner.forward) (if (d.dx < 0) f else 0f) else 1f - (if (d.dx > 0) f else 0f)
                 scope.launch { turner.p.snapTo(v) }
@@ -299,7 +301,7 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
             onRelease = { it.destroy() },
         )
 
-        PageTurnLayer(turner, anim, colors.bg, Modifier.statusBarsPadding().navigationBarsPadding())
+        PageTurnLayer(turner, pageAnimOf(settings.pageAnim), colors.bg, Modifier.statusBarsPadding().navigationBarsPadding())
 
         // Auswahl: markieren, nachschlagen, kopieren
         val sel = s.selection

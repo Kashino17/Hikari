@@ -352,3 +352,23 @@ describe("Gutenberg — Autorennamen zum Anzeigen", () => {
     expect(parseAuthors("Unknown")).toEqual([]);
   });
 });
+
+describe("bpb — alte Zwischenspeicher", () => {
+  it("Einträge einer älteren Lese-Fassung werden neu gelesen, auch ohne neues lastmod", async () => {
+    const http = fakeHttp([
+      [(u) => u.includes("sitemap.xml"), 200, fx("bpb-sitemap.xml")],
+      [(u) => u.includes("deutschland-archiv-2017"), 200, fx("bpb-book-epub.html")],
+      [(u) => u.includes("volk-und-elite"), 200, fx("bpb-book-leseprobe.html")],
+    ]);
+    const c = ctx(http);
+    await bpbSource.listCatalog(c);
+    const before = http.calls.length;
+    // Eintrag wie von der alten Fassung: ohne Versionsnummer, mit altem Titel
+    const key = "bpb:265522";
+    const old = c.cache.get<{ lastmod: string; book: { title: string } }>(key);
+    c.cache.set(key, { lastmod: old?.lastmod, book: { ...old?.book, title: "Alt" } });
+    const books = await bpbSource.listCatalog(c);
+    expect(http.calls.length).toBeGreaterThan(before + 1);
+    expect(books[0]?.title).toBe("Deutschland Archiv 2017");
+  });
+});
