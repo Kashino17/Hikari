@@ -120,77 +120,185 @@ function PendingVideo() {
   <//>`;
 }
 
-// ── Startseite ──────────────────────────────────────────────────────────────
+// ── Bereich Achtsamkeit: vier Reiter, jede Übersicht auf einen Blick ──────
 
-export function Mind() {
+const GUIDED_ART = { ankommen: 'sunrise', 'body-scan': 'body', einschlafen: 'moon', 'notfall-stress': 'wave', 'fokus-arbeit': 'focus' };
+
+/** Kleine Kunst statt Schleier: Nachtblau, ein klarer goldener Mond/Kreis — je Meditation eine Form. */
+function Art({ kind = 'moon', big }) {
+  return html`<div class=${cls('art', `art-${kind}`, big && 'big')}><i /><b /></div>`;
+}
+
+function Rail({ title, more, children }) {
+  return html`<section class="railSec">
+    <div class="railHead"><h2>${title}</h2>${more && html`<button onClick=${more}>Alle</button>`}</div>
+    <div class="rail">${children}</div>
+  </section>`;
+}
+
+function PosterVideo({ v }) {
+  return html`<button class="pv" onClick=${() => startVideo(v)}>
+    <div class="pv-th"><img src=${ytThumb(v.id)} loading="lazy" alt="" /><span class="pv-dur">${min(v.seconds)} min</span></div>
+    <b>${v.title}</b><span>${v.channel}</span></button>`;
+}
+function PosterGuided({ g }) {
+  return html`<button class="pg" onClick=${() => nav(`achtsam/gefuehrt/${g.id}`)}>
+    <${Art} kind=${GUIDED_ART[g.id] ?? 'moon'} /><b>${g.titel}</b><span>${g.minuten} min mit Rem</span></button>`;
+}
+function PosterBreath({ a }) {
+  const cycle = a.phasen.reduce((x, p) => x + p.sekunden, 0);
+  return html`<button class="pb" onClick=${() => nav(`achtsam/atem/${a.id}`)}>
+    <div class="pb-rhythm">${a.phasen.map((p) => html`<i class=${p.typ} style=${{ flex: p.sekunden }} />`)}</div>
+    <b>${a.name}</b><span>${min(cycle * a.runden_standard)} min</span></button>`;
+}
+
+function useMind() {
   const [d] = useData(M);
   useEffect(() => { if (d) mindCache = d; }, [d]);
-  if (!d) return html`<div class="screen tab c-mind"><div class="scroll"><header class="top big"><div class="tt"><h1>Achtsamkeit</h1></div></header><div class="pad"><div class="skel" style="height:420px" /></div></div></div>`;
+  return d;
+}
+const hello = () => { const h = new Date().getHours(); return h < 5 ? 'Gute Nacht' : h < 11 ? 'Guten Morgen' : h < 17 ? 'Hallo' : h < 22 ? 'Guten Abend' : 'Gute Nacht'; };
+
+/** Was jetzt passt — nach Tageszeit. */
+function pickNow(d) {
+  const h = new Date().getHours();
+  const g = (id) => d.gefuehrt.find((x) => x.id === id);
+  const level = d.levels.find((l) => l.stufe === d.path.open) ?? d.levels[0];
+  if (h >= 5 && h < 11 && level) return { kicker: 'Dein Morgen', title: `Yoga · ${level.name}`, meta: `${level.minuten} min · Stufe ${level.stufe}`, go: () => nav(`achtsam/flow/${level.stufe}`), pose: d.asanas.find((a) => level.neu.includes(a.id)) };
+  if (h >= 21 || h < 5) { const x = g('einschlafen'); if (x) return { kicker: 'Für die Nacht', title: x.titel, meta: `${x.minuten} min mit Rem`, go: () => nav(`achtsam/gefuehrt/${x.id}`), art: 'moon' }; }
+  if (h >= 11 && h < 17) { const x = g('fokus-arbeit'); if (x) return { kicker: 'Für deinen Tag', title: x.titel, meta: `${x.minuten} min mit Rem`, go: () => nav(`achtsam/gefuehrt/${x.id}`), art: 'focus' }; }
+  const x = g('ankommen') ?? d.gefuehrt[0];
+  return x ? { kicker: 'Für deinen Abend', title: x.titel, meta: `${x.minuten} min mit Rem`, go: () => nav(`achtsam/gefuehrt/${x.id}`), art: 'sunrise' } : null;
+}
+
+function MindHead({ title, sub, right }) {
+  return html`<header class="mHead"><div><h1>${title}</h1>${sub && html`<p>${sub}</p>`}</div>${right}</header>`;
+}
+
+export function MindHome() {
+  const d = useMind();
+  if (!d) return html`<div class="screen tab"><${MindHead} title=${hello()} /><div class="pad"><div class="skel" style="height:360px" /></div></div>`;
+  const now = pickNow(d);
   const st = d.stats;
   const level = d.levels.find((l) => l.stufe === d.path.open) ?? d.levels[0];
   const prog = d.path.levels.find((p) => p.stufe === d.path.open);
-  const themesWith = THEMES.filter(([k]) => d.videos.some((v) => v.themes.includes(k)) || d.gefuehrt.some((g) => g.themen?.includes(k)));
-  return html`<div class="screen tab c-mind">
+  const quick = d.atem.find((a) => a.id === 'kohaerent') ?? d.atem[0];
+  return html`<div class="screen tab">
     <div class="scroll">
-      <header class="top big"><div class="tt"><h1>Achtsamkeit</h1><div class="t2">${st.todayMinutes ? `Heute ${st.todayMinutes} min` : 'Ein Moment für dich'}${st.streak > 0 ? ` · ${st.streak} ${st.streak === 1 ? 'Tag' : 'Tage'} in Folge` : ''}</div></div>
-        <button class="ib" onClick=${() => nav('achtsam/affirmationen')} aria-label="Affirmationen"><${Icon} n="auto_awesome" /></button></header>
+      <${MindHead} title=${hello()} sub=${st.todayMinutes ? `Heute ${st.todayMinutes} Minuten für dich` : 'Nimm dir einen Moment.'}
+        right=${st.streak > 0 && html`<div class="mStreak"><b class="num">${st.streak}</b><span>${st.streak === 1 ? 'Tag' : 'Tage'}</span></div>`} />
       <div class="pad">
-        <div class="checkin">
-          <div class="h3">Wie geht es dir gerade?</div>
-          <div class="sitGrid mt12">${SITUATIONS.map(([k, l, icon]) => html`<button onClick=${() => nav(`achtsam/fuer/${k}`)}><${Icon} n=${icon} /><span>${l}</span></button>`)}</div>
-        </div>
-
-        <div class="sec"><h2 class="h2">Wie viel Zeit hast du?</h2></div>
-        <div class="timeRow">${[[5, 'Nur kurz'], [10, 'Kleine Pause'], [20, 'Richtig abschalten'], [30, 'Tief eintauchen']].map(([m, l]) => html`<button onClick=${() => nav(`achtsam/zeit/${m}`)}><b>${m}${m === 30 ? '+' : ''}</b><span>min</span><em>${l}</em></button>`)}</div>
-
-        ${level && html`<button class="pathCard mt20" onClick=${() => nav(`achtsam/yoga/${level.stufe}`)}>
-          <div class="pc-img">${(d.asanas.filter((a) => level.neu.includes(a.id)).slice(0, 3)).map((a, i) => html`<img src=${poseImg(a.api)} class=${`p${i}`} alt="" />`)}</div>
-          <div class="pc-tx">
-            <div class="eyebrow">Dein Yoga-Pfad · Stufe ${level.stufe} von ${d.levels.length}</div>
-            <div class="h2 mt4">${level.name}</div>
-            <div class="small muted mt4">${level.untertitel} · ${level.minuten} min</div>
-            ${prog && html`<div class="mt12"><${Bar} value=${Math.min(prog.sessions, prog.need.einheiten)} max=${prog.need.einheiten} /></div>
-              <div class="tiny muted mt4">${prog.met ? 'Nächste Stufe ist frei' : `${prog.sessions} von ${prog.need.einheiten} Einheiten bis zur nächsten Stufe`}</div>`}
-          </div>
-        </button>`}
-        <div class="row gap8 mt8">
-          <button class="btn sm tint grow" onClick=${() => nav('achtsam/yoga')}><${Icon} n="route" />Alle Stufen</button>
-          <button class="btn sm tint grow" onClick=${() => nav('achtsam/haltungen')}><${Icon} n="self_improvement" />Haltungen</button>
-        </div>
-
-        ${d.affirmation && html`<button class="affCard mt20" onClick=${() => voice.speak(d.affirmation.text)}>
-          <div class="eyebrow">Affirmation des Tages</div>
-          <div class="aff mt8">${d.affirmation.text}</div>
-          <div class="row gap6 mt12 small"><${Icon} n="volume_up" style="font-size:18px" />Anhören<span class="grow" /><span class="muted" onClick=${(e) => { e.stopPropagation(); nav('achtsam/affirmationen'); }}>Alle ansehen</span></div>
+        ${now && html`<button class="nowCard" onClick=${now.go}>
+          <div class="nc-art">${now.pose ? html`<div class="nc-pose"><img src=${poseImg(now.pose.api)} alt="" /></div>` : html`<${Art} kind=${now.art} big />`}</div>
+          <div class="nc-tx"><span>${now.kicker}</span><h2>${now.title}</h2><p>${now.meta}</p></div>
+          <div class="nc-play"><${Icon} n="play_arrow" fill /></div>
         </button>`}
 
-        ${d.atem.length > 0 && html`<div class="sec"><h2 class="h2">Atmen</h2><span class="small muted">sofort spürbar</span></div>
-          <div class="hscroll">${d.atem.map((a) => html`<${BreathCard} a=${a} />`)}</div>`}
+        <div class="moodRow mt20"><span>Wie fühlst du dich?</span>
+          <div class="mr-chips">${SITUATIONS.map(([k, l, icon]) => html`<button onClick=${() => nav(`achtsam/fuer/${k}`)}><${Icon} n=${icon} />${l}</button>`)}</div></div>
 
-        ${d.gefuehrt.length > 0 && html`<div class="sec"><h2 class="h2">Geführte Meditation</h2><span class="small muted">in Rems Stimme</span></div>
-          <div class="stack8">${d.gefuehrt.map((g) => html`<${GuidedCard} g=${g} />`)}</div>`}
+        <div class="twoUp mt20">
+          ${level && html`<button class="tu path" onClick=${() => nav(`achtsam/yoga/${level.stufe}`)}>
+            <${Ring} size=${54} stroke=${5} value=${Math.min(prog?.sessions ?? 0, prog?.need.einheiten ?? 1)} max=${prog?.need.einheiten ?? 1} color="rgb(var(--mind))" track="rgba(255,255,255,.1)"><b class="num">${level.stufe}</b><//>
+            <b>${level.name}</b><span>${prog?.met ? 'Nächste Stufe frei' : `${prog?.sessions ?? 0} von ${prog?.need.einheiten ?? 0} Einheiten`}</span></button>`}
+          ${quick && html`<button class="tu breath" onClick=${() => nav(`achtsam/atem/${quick.id}`)}>
+            <div class="pb-rhythm">${quick.phasen.map((p) => html`<i class=${p.typ} style=${{ flex: p.sekunden }} />`)}</div>
+            <b>Kurz durchatmen</b><span>${quick.name}</span></button>`}
+        </div>
 
-        <div class="sec"><h2 class="h2">Für jede Lage</h2></div>
-        <div class="themeGrid">${themesWith.map(([k, l, icon, rgb]) => html`<button style=${{ '--tc': rgb }} onClick=${() => nav(`achtsam/thema/${k}`)}><${Icon} n=${icon} /><b>${l}</b>
-          <span>${d.videos.filter((v) => v.themes.includes(k)).length + d.gefuehrt.filter((g) => g.themen?.includes(k)).length} Einheiten</span></button>`)}</div>
-
-        ${d.impuls && html`<div class="impulse mt20"><div class="row gap8"><${Icon} n="lightbulb" fill style="color:rgb(var(--amber))" /><div class="eyebrow" style="color:rgb(var(--amber))">Impuls für heute</div></div>
-          <div class="h3 mt8">${d.impuls.titel}</div><p class="small mt4" style="line-height:1.5">${d.impuls.text}</p></div>`}
-
-        ${d.deepdives.length > 0 && html`<div class="sec"><h2 class="h2">Wissen</h2><span class="small muted">zum Verstehen</span></div>
-          <div class="stack8">${d.deepdives.map((x) => html`<button class=${cls('deepCard', `t-${x.farbe}`)} onClick=${() => nav(`achtsam/wissen/${x.id}`)}>
-            <div class="grow"><b>${x.titel}</b><span>${x.untertitel}</span></div><em>${x.minuten} min</em></button>`)}</div>`}
-
-        <div class="sec"><h2 class="h2">Deine Woche</h2><span class="small muted">${st.totalMinutes} min insgesamt</span></div>
-        <div class="card pad16"><div class="weekBars">${st.week.map((w) => {
-          const max = Math.max(10, ...st.week.map((x) => x.minutes));
-          return html`<div><i style=${{ height: `${Math.max(w.minutes ? 6 : 2, (w.minutes / max) * 70)}px`, opacity: w.minutes ? 1 : 0.25 }} /><span>${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][new Date(`${w.day}T12:00`).getDay()]}</span></div>`;
-        })}</div>
-          ${st.moodCount >= 3 && st.moodDelta != null && html`<p class="small muted mt12">Nach einer Übung fühlst du dich im Schnitt <b style=${{ color: st.moodDelta >= 0 ? 'rgb(var(--good))' : 'rgb(var(--bad))' }}>${st.moodDelta >= 0 ? '+' : ''}${fmtNum(st.moodDelta, 1)}</b> Stufen ${st.moodDelta >= 0 ? 'besser' : 'schlechter'}.</p>`}</div>
+        ${d.affirmation && html`<button class="affStrip mt12" onClick=${() => voice.speak(d.affirmation.text)}>
+          <p>${d.affirmation.text}</p><${Icon} n="volume_up" /></button>`}
         <div class="end" />
       </div>
     </div>
     <${PendingVideo} />
+  </div>`;
+}
+
+export function MindYoga() {
+  const d = useMind();
+  const railRef = useRef(null);
+  useEffect(() => {
+    // Zum aktuellen Stand scrollen.
+    const el = railRef.current?.querySelector('.stage.cur');
+    if (el) railRef.current.scrollLeft = el.offsetLeft - 16;
+  }, [d?.path?.open]);
+  if (!d) return html`<div class="screen tab"><${MindHead} title="Yoga" /><div class="pad"><div class="skel" style="height:360px" /></div></div>`;
+  const yogaVideos = d.videos.filter((v) => v.kind === 'yoga' && !v.level);
+  return html`<div class="screen tab">
+    <div class="scroll">
+      <${MindHead} title="Yoga" sub="Dein Pfad in sechs Stufen" right=${html`<button class="ib" onClick=${() => nav('achtsam/haltungen')} aria-label="Haltungen"><${Icon} n="grid_view" /></button>`} />
+      <div class="stages" ref=${railRef}>${d.levels.map((l) => {
+        const p = d.path.levels.find((x) => x.stufe === l.stufe);
+        const lock = !p?.unlocked;
+        const done = p?.met && l.stufe < d.path.open;
+        const poses = d.asanas.filter((a) => l.neu.includes(a.id));
+        return html`<button class=${cls('stage', lock && 'locked', p?.current && 'cur')} onClick=${() => nav(`achtsam/yoga/${l.stufe}`)}>
+          <div class="st-img"><img src=${poseImg((poses[1] ?? poses[0])?.api)} alt="" />${lock && html`<span class="st-lock"><${Icon} n="lock" /></span>`}${done && html`<span class="st-done"><${Icon} n="check" /></span>`}</div>
+          <div class="st-tx"><span>Stufe ${l.stufe} · ${l.minuten} min</span><b>${l.name}</b><p>${l.untertitel}</p>
+            ${p?.current && html`<div class="st-bar"><i style=${{ width: `${Math.min(100, (p.sessions / p.need.einheiten) * 100)}%` }} /></div>`}</div>
+        </button>`;
+      })}</div>
+      <div class="pad">
+        <div class="twoUp mt16">
+          <button class="tu poses" onClick=${() => nav('achtsam/haltungen')}>
+            <div class="tu-poses">${d.asanas.slice(3, 6).map((a) => html`<img src=${poseImg(a.api)} alt="" />`)}</div>
+            <b>Haltungen</b><span>${d.asanas.length} mit Anleitung</span></button>
+          <button class="tu" onClick=${() => nav('achtsam/thema/yoga')}>
+            <div class="tu-thumb">${yogaVideos[0] && html`<img src=${ytThumb(yogaVideos[0].id)} alt="" />`}</div>
+            <b>Mit Video</b><span>${d.videos.filter((v) => v.kind === 'yoga').length} Einheiten</span></button>
+        </div>
+        ${yogaVideos.length > 0 && html`<${Rail} title="Kurz zwischendurch" more=${() => nav('achtsam/thema/yoga')}>${yogaVideos.slice(0, 8).map((v) => html`<${PosterVideo} v=${v} />`)}<//>`}
+        <div class="end" />
+      </div>
+    </div>
+    <${PendingVideo} />
+  </div>`;
+}
+
+export function MindMeditation() {
+  const d = useMind();
+  const [theme, setTheme] = useState(local.get('mind:theme', ''));
+  if (!d) return html`<div class="screen tab"><${MindHead} title="Meditation" /><div class="pad"><div class="skel" style="height:360px" /></div></div>`;
+  const pick = (t) => { const v = theme === t ? '' : t; setTheme(v); local.set('mind:theme', v); };
+  const match = (list) => (theme ? list.filter((x) => (x.themes ?? x.themen ?? x.wofuer ?? []).includes(theme)) : list);
+  const guided = match(d.gefuehrt);
+  const breath = match(d.atem.map((a) => ({ ...a, themes: a.wofuer })));
+  const videos = match(d.videos.filter((v) => v.kind !== 'yoga')).sort((a, b) => a.seconds - b.seconds);
+  return html`<div class="screen tab">
+    <div class="scroll">
+      <${MindHead} title="Meditation" sub=${theme ? THEME_NAME[theme] : 'Geführt, zum Atmen, für jede Lage'} />
+      <div class="themeChips">${THEMES.map(([k, l, icon]) => html`<button class=${cls(theme === k && 'on')} onClick=${() => pick(k)}><${Icon} n=${icon} />${l}</button>`)}</div>
+      <div class="pad">
+        ${guided.length > 0 && html`<${Rail} title="Mit Rem">${guided.map((g) => html`<${PosterGuided} g=${g} />`)}<//>`}
+        ${breath.length > 0 && html`<${Rail} title="Atmen">${breath.map((a) => html`<${PosterBreath} a=${a} />`)}<//>`}
+        ${videos.length > 0 && html`<${Rail} title="Videos" more=${() => nav(theme ? `achtsam/thema/${theme}` : 'achtsam/zeit/10')}>${videos.slice(0, 10).map((v) => html`<${PosterVideo} v=${v} />`)}<//>`}
+        ${!guided.length && !breath.length && !videos.length && html`<${Empty} icon="spa" title="Dafür gibt es noch nichts" text="Wähle ein anderes Thema." />`}
+        <div class="end" />
+      </div>
+    </div>
+    <${PendingVideo} />
+  </div>`;
+}
+
+const ART_FOR_DEEP = { teal: 'wave', violet: 'moon', amber: 'sunrise', sky: 'focus', rose: 'body' };
+
+export function MindKnowledge() {
+  const d = useMind();
+  if (!d) return html`<div class="screen tab"><${MindHead} title="Wissen" /><div class="pad"><div class="skel" style="height:360px" /></div></div>`;
+  return html`<div class="screen tab">
+    <div class="scroll">
+      <${MindHead} title="Wissen" sub="Verstehen, was du übst" />
+      <div class="pad">
+        ${d.affirmation && html`<button class="affHero" onClick=${() => nav('achtsam/affirmationen')}>
+          <span>Affirmation des Tages</span><p>${d.affirmation.text}</p>
+          <div class="ah-row"><span onClick=${(e) => { e.stopPropagation(); voice.speak(d.affirmation.text); }}><${Icon} n="volume_up" />Anhören</span><span>Alle 90<${Icon} n="chevron_right" /></span></div></button>`}
+        <${Rail} title="Lesen">${d.deepdives.map((x) => html`<button class=${cls('book', `t-${x.farbe}`)} onClick=${() => nav(`achtsam/wissen/${x.id}`)}>
+          <${Art} kind=${ART_FOR_DEEP[x.farbe] ?? 'moon'} /><b>${x.titel}</b><span>${x.minuten} min</span></button>`)}<//>
+        ${d.impuls && html`<div class="impulseCard mt20"><span>Impuls für heute</span><b>${d.impuls.titel}</b><p>${d.impuls.text}</p></div>`}
+        <div class="end" />
+      </div>
+    </div>
   </div>`;
 }
 
@@ -201,10 +309,11 @@ export function MindList({ by, k }) {
   const [dur, setDur] = useState(by === 'zeit' ? Number(k) : 0);
   if (!d) return html`<div class="screen"><${Top} title="Achtsamkeit" /><div class="pad"><div class="skel" style="height:300px" /></div></div>`;
   const sit = SITUATIONS.find((s) => s[0] === k);
-  const title = by === 'zeit' ? `${k}${k === '30' ? '+' : ''} Minuten` : by === 'fuer' ? sit?.[1] ?? 'Für dich' : THEME_NAME[k] ?? k;
+  const title = by === 'zeit' ? `${k}${k === '30' ? '+' : ''} Minuten` : by === 'fuer' ? sit?.[1] ?? 'Für dich' : k === 'yoga' ? 'Yoga mit Video' : THEME_NAME[k] ?? k;
   const fits = (sec) => !dur || bucket(sec) === dur;
   const match = (themes) => by === 'zeit' || (themes ?? []).includes(k);
-  const videos = d.videos.filter((v) => match(v.themes) && fits(v.seconds) && (by !== 'zeit' || v.kind !== 'yoga' || true));
+  const videos = k === 'yoga' ? d.videos.filter((v) => v.kind === 'yoga' && fits(v.seconds)).sort((a, b) => (a.level ?? 9) - (b.level ?? 9) || a.seconds - b.seconds)
+    : d.videos.filter((v) => match(v.themes) && fits(v.seconds));
   const guided = d.gefuehrt.filter((g) => match(g.themen) && fits(g.minuten * 60));
   const breath = d.atem.filter((a) => (by === 'zeit' ? dur <= 10 : a.wofuer.includes(k)));
   const aff = by === 'fuer' && AFF_FOR[k];
@@ -643,7 +752,7 @@ export function Affirmations({ theme: t0 }) {
     <div class="scroll"><div class="pad">
       <div class="chips wrap">${AFF_THEMES.map(([v, l]) => html`<button class=${cls('chip', theme === v && 'on')} onClick=${() => setTheme(v)}>${l}</button>`)}</div>
       ${cur && html`<div class="affBig mt16" onClick=${() => voice.speak(cur.text)}>
-        <${Icon} n="format_quote" /><div class="aff">${cur.text}</div>
+        <span class="ab-l">Sprich es dir zu</span><div class="aff">${cur.text}</div>
         <div class="row gap8 mt20"><button class="btn sm tint grow" onClick=${(e) => { e.stopPropagation(); voice.speak(cur.text); }}><${Icon} n="volume_up" />Anhören</button>
           <button class="btn sm grow" onClick=${(e) => { e.stopPropagation(); setK(k + 1); }}>Nächste<${Icon} n="arrow_forward" /></button></div></div>`}
       <p class="small muted mt16" style="line-height:1.55">Sprich sie langsam, gern laut, und atme danach einmal bewusst aus. Es geht nicht darum, etwas zu erzwingen, sondern dir freundlich zu begegnen.</p>

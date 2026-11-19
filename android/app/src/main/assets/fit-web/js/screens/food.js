@@ -39,6 +39,7 @@ export function Food() {
 function Diary({ day }) {
   const [d] = useData(`/fitness/food/day?day=${day}`, `/fitness/food/day?day=${day}`, [day]);
   const [add, setAdd] = useState(null);
+  const [open, setOpen] = useState(null);
   const [allN, setAllN] = useState(false);
   if (!d) return html`<div class="skel" style="height:420px" />`;
   const t = d.targets;
@@ -67,18 +68,17 @@ function Diary({ day }) {
       <button class="act" onClick=${() => nav(`mahlzeit/neu/${slotNow()}`)}><${Icon} n="edit_note" /><span>Eintragen</span></button>
     </div>`}
 
-    ${SLOTS.map((slot) => {
+    <div class="mealGrid mt12">${SLOTS.map((slot) => {
       const es = d.entries.filter((e) => e.meal === slot);
       const kc = es.reduce((a, e) => a + (e.totals.kcal ?? 0), 0);
-      return html`<div class="meal">
-        <div class="mh"><span class="mt row gap8"><${Icon} n=${SLOT_ICONS[slot]} style="font-size:20px;color:rgb(var(--food))" />${SLOT_NAMES[slot]}</span><span class="mk">${kc ? `${fmtNum(kc)} kcal` : ''}</span></div>
-        ${es.map((e) => html`<button class="entry" onClick=${() => nav(`eintrag/${e.id}`)}>
-          <div class="pic">${e.photo ? html`<img src=${`/api/fitness/photo/${e.photo}`} alt="" />` : html`<${Icon} n=${e.source === 'rezept' ? 'menu_book' : 'restaurant'} />`}</div>
-          <div class="grow"><div style="font-weight:500" class="ell">${e.title}</div><div class="small muted">${fmtNum(e.totals.kcal)} kcal · ${fmtNum(e.totals.protein)} g Eiweiß</div></div>
-          <${Icon} n="chevron_right" cls="faint" /></button>`)}
-        <button class="addMeal mt8" onClick=${() => setAdd(slot)}><${Icon} n="add" />Hinzufügen</button>
-      </div>`;
-    })}
+      const pic = es.find((e) => e.photo);
+      return html`<button class=${cls('mealTile', !es.length && 'none')} onClick=${() => (es.length ? setOpen(slot) : setAdd(slot))}>
+        <div class="mt-img">${pic ? html`<img src=${`/api/fitness/photo/${pic.photo}`} alt="" />` : html`<${Icon} n=${SLOT_ICONS[slot]} />`}
+          ${es.length > 1 && html`<span class="mt-n">${es.length}</span>`}</div>
+        <div class="mt-tx"><b>${SLOT_NAMES[slot]}</b><span>${es.length ? `${fmtNum(kc)} kcal` : 'Hinzufügen'}</span></div>
+        ${!es.length && html`<span class="mt-add"><${Icon} n="add" /></span>`}
+      </button>`;
+    })}</div>
 
     ${d.entries.length > 0 && html`<div class="sec"><h2 class="h2">Nährstoff-Check</h2><button class="more" onClick=${() => setAllN(!allN)}>${allN ? 'Weniger' : 'Alle'}<${Icon} n=${allN ? 'expand_less' : 'expand_more'} style="font-size:18px" /></button></div>
       <div class="card pad16">
@@ -86,6 +86,12 @@ function Diary({ day }) {
         <button class="btn tint mt16" onClick=${() => nav(`ernaehrung/coach/${day}`)}><${Icon} n="psychology" />Einschätzung vom Ernährungs-Coach</button>
       </div>`}
     ${add && html`<${AddSheet} slot=${add} day=${day} onClose=${() => setAdd(null)} />`}
+    ${open && html`<${Sheet} title=${SLOT_NAMES[open]} onClose=${() => setOpen(null)}><div class="c-food">
+      ${d.entries.filter((e) => e.meal === open).map((e) => html`<button class="entry" onClick=${() => { setOpen(null); nav(`eintrag/${e.id}`); }}>
+        <div class="pic">${e.photo ? html`<img src=${`/api/fitness/photo/${e.photo}`} alt="" />` : html`<${Icon} n=${e.source === 'rezept' ? 'menu_book' : 'restaurant'} />`}</div>
+        <div class="grow"><div style="font-weight:500" class="ell">${e.title}</div><div class="small muted">${fmtNum(e.totals.kcal)} kcal · ${fmtNum(e.totals.protein)} g Eiweiß</div></div>
+        <${Icon} n="chevron_right" cls="faint" /></button>`)}
+      <button class="btn mt12" onClick=${() => { const sl = open; setOpen(null); setAdd(sl); }}><${Icon} n="add" />Noch etwas hinzufügen</button></div><//>`}
   </div>`;
 }
 

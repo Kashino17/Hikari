@@ -192,7 +192,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val isGearSubPage = currentRoute == "settings"
     val isGameRoute = currentRoute?.startsWith("game/") == true ||
         currentRoute?.startsWith("russian") == true ||
-        currentRoute == "fitness" ||
+        currentRoute == "fitness" || currentRoute == "mind" ||
         currentRoute == "whatsapp" ||
         currentRoute?.startsWith("voice-notes") == true
     // Der Browser bringt eigene Leisten oben und unten mit; die Bottom-Nav
@@ -605,6 +605,15 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     com.hikari.app.ui.fitness.FitWebScreen(
                         onClose = { nav.popBackStack() },
                         onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
+                    )
+                }
+            }
+            composable("mind") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.fitness.FitWebScreen(
+                        onClose = { nav.popBackStack() },
+                        onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
+                        area = "mind",
                     )
                 }
             }

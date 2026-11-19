@@ -78,6 +78,8 @@ class FitWebViewModel @Inject constructor(
 fun FitWebScreen(
     onClose: () -> Unit,
     onOpenVideo: (id: String, title: String) -> Unit,
+    /** "fit" (Training, Skills, Ernährung) oder "mind" (Achtsamkeit & Spiritualität, eigener Bereich). */
+    area: String = "fit",
     vm: FitWebViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -122,7 +124,7 @@ fun FitWebScreen(
                 addJavascriptInterface(bridge, "HikariNative")
                 webViewClient = FitWebClient(ctx.applicationContext, vm.okHttp)
                 bridge.webView = this
-                loadUrl("$BASE/index.html#/heute")
+                loadUrl("$BASE/index.html?area=$area#/heute")
             }
         },
         onRelease = { it.destroy() },

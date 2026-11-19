@@ -113,6 +113,20 @@ export function registerMindRoutes(app: FastifyInstance, db: FitDb, dir: string)
     return { ok: true, path: yogaProgress(db, m.levels) };
   });
 
+  /** Kachel im Hikari-Profil: Stand des Yoga-Pfads, Minuten heute, Serie. */
+  app.get("/fitness/mind/tile", async () => {
+    const m = fresh();
+    const st = mindStats(db);
+    const path = yogaProgress(db, m.levels);
+    const level = m.levels.find((l) => l.stufe === path.open);
+    return {
+      title: st.todayMinutes ? `Heute ${st.todayMinutes} min für dich` : "Ein Moment für dich",
+      detail: level ? `Yoga · Stufe ${level.stufe} ${level.name}` : "Yoga, Meditation, Atmen",
+      streak: st.streak,
+      done: st.todayMinutes > 0,
+    };
+  });
+
   /** Für Tageskacheln und den Kalender: Achtsamkeit an einem Tag. */
   app.get<{ Querystring: { day?: string } }>("/fitness/mind/day", async (req) => {
     const day = /^\d{4}-\d{2}-\d{2}$/.test(req.query.day ?? "") ? (req.query.day as string) : localDay();

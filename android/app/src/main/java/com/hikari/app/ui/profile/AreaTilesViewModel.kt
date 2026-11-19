@@ -49,6 +49,16 @@ data class FitnessTile(
     val detail: String,
     val done: Boolean,
     val streak: Int,
+    /** Bild der ersten Hauptübung des Tages (weißer Hintergrund). */
+    val imageUrl: String? = null,
+)
+
+/** Achtsamkeit-Kachel: Minuten heute, Stand des Yoga-Pfads, Serie. */
+data class MindTile(
+    val title: String,
+    val detail: String,
+    val streak: Int,
+    val done: Boolean,
 )
 
 /** Tagesbericht-Kachel: die erste Schlagzeile, die Zahl der Meldungen und von wann der Bericht ist. */
@@ -117,6 +127,8 @@ class AreaTilesViewModel @Inject constructor(
 
     private val _fitness = MutableStateFlow<FitnessTile?>(null)
     val fitness: StateFlow<FitnessTile?> = _fitness.asStateFlow()
+    private val _mind = MutableStateFlow<MindTile?>(null)
+    val mind: StateFlow<MindTile?> = _mind.asStateFlow()
 
     private val _lastGame = MutableStateFlow<String?>(null)
     val lastGame: StateFlow<String?> = _lastGame.asStateFlow()
@@ -139,10 +151,23 @@ class AreaTilesViewModel @Inject constructor(
                     okHttp.newCall(okhttp3.Request.Builder().url("http://hikari.invalid/fitness/tile").build()).execute().use { res ->
                         if (!res.isSuccessful) return@use null
                         val o = org.json.JSONObject(res.body?.string().orEmpty())
-                        FitnessTile(o.optString("title"), o.optString("detail"), o.optBoolean("done"), o.optInt("streak"))
+                        val base = settings.backendUrl.first().trimEnd('/')
+                        val img = o.optString("image").takeIf { it.isNotBlank() && it != "null" }?.let { "$base$it" }
+                        FitnessTile(o.optString("title"), o.optString("detail"), o.optBoolean("done"), o.optInt("streak"), img)
                     }
                 }.getOrNull()
             } ?: _fitness.value
+        }
+        viewModelScope.launch {
+            _mind.value = withContext(Dispatchers.IO) {
+                runCatching {
+                    okHttp.newCall(okhttp3.Request.Builder().url("http://hikari.invalid/fitness/mind/tile").build()).execute().use { res ->
+                        if (!res.isSuccessful) return@use null
+                        val o = org.json.JSONObject(res.body?.string().orEmpty())
+                        MindTile(o.optString("title"), o.optString("detail"), o.optInt("streak"), o.optBoolean("done"))
+                    }
+                }.getOrNull()
+            } ?: _mind.value
         }
         viewModelScope.launch {
             runCatching { musicRepo.getHistory().firstOrNull() }.getOrNull()?.let {

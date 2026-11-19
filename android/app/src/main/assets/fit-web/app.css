@@ -789,3 +789,278 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:none}
 .mood button span{text-align:center;line-height:1.2}
 .pc-img .p1,.pc-img .p2{display:none}
 .pc-img .p0{position:static;width:100%;height:100%;padding:12px;object-fit:contain}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Gestaltung 2 (20.11.2026) — Kadir: »keine verblassten Glaskarten«, Fitness schwarz-weiß wie
+   Freeletics, Ernährung kräftiges Grün, Achtsamkeit eigener Bereich (Nachtblau + Gold).
+   Regel: volle Flächen statt eingefärbter Schleier; Farbe nur als Akzent oder ganz.
+   ════════════════════════════════════════════════════════════════════════════ */
+@font-face{font-family:"Archivo";font-style:normal;font-weight:400 900;font-stretch:62% 125%;font-display:swap;src:url(/fonts/archivo.woff2) format("woff2")}
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:300 700;font-display:swap;src:url(/fonts/fraunces.woff2) format("woff2")}
+:root{
+  --bg:#000; --surface:#141414; --high:#232323; --card:#161616; --deep:#000;
+  --border:rgba(255,255,255,.08); --border2:rgba(255,255,255,.16);
+  --text:#fff; --muted:#9b9b9b; --faint:#5f5f5f; --ink:#000;
+  --train:255,255,255; --skill:255,255,255; --food:34,229,160;
+  --display:"Archivo",Roboto,system-ui,sans-serif;
+}
+html,body,html.full,html.full body{background:#000}
+/* Überschriften: schmal und kräftig — sportlich */
+.top.big h1{font-family:var(--display);font-stretch:78%;font-weight:800;font-size:34px;letter-spacing:-.6px;line-height:1.05}
+.h2{font-family:var(--display);font-stretch:85%;font-weight:750;font-size:20px;letter-spacing:-.2px}
+.hero h2,.review .h3,.bigNum{font-family:var(--display);font-stretch:82%;font-weight:800}
+.eyebrow{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:600}
+/* Reiterleiste: aktiver Reiter voll ausgefüllt */
+.tabbar{background:#000;border-top:1px solid rgba(255,255,255,.08)}
+.tabbar button.on .pill{background:rgb(var(--c));color:var(--ink)}
+.tabbar button.on{color:#fff}
+/* Flächen voll statt eingefärbt */
+.card.tinted,.tile,.review,.hero .body,.foodRep{background:var(--surface);border-color:var(--border)}
+.hero{border-color:var(--border);background:var(--surface)}
+.btn.tint{background:var(--high);color:var(--text)}
+.btn.tint .ms{color:rgb(var(--c))}
+.btn.ghost{background:var(--high)}
+.chip.on,.scale button.on{background:rgb(var(--c));color:var(--ink);border-color:transparent}
+.tag{background:var(--high);color:var(--text)}
+.iconTile.soft,.metricPick{background:var(--high);color:rgb(var(--c))}
+.scoreBadge{background:rgb(var(--c));color:var(--ink)}
+.steps li::before{background:rgb(var(--c));color:var(--ink)}
+.coachline .av,.profileHead .av{background:#fff;color:#000}
+.opt.on,.bigOpt.on,.triOpt.on{background:var(--high);border-color:rgb(var(--c))}
+.coachWork{background:#000}
+.cwBar i{background:rgb(var(--c))}
+.bottombar{background:linear-gradient(0deg,#000 72%,rgba(0,0,0,0))}
+.seg{background:var(--surface)}
+.seg button.on{background:#fff;color:#000;box-shadow:none}
+.c-food .seg button.on{background:rgb(var(--food))}
+/* Ernährung: Hauptknöpfe voll grün */
+.c-food .btn:not(.ghost):not(.tint):not(.solid),.c-food .actionBar .act.main{background:rgb(var(--food));color:#000}
+.c-food .actionBar .act.main .ms{color:#000}
+/* Kopf: Serie + Profil */
+.streakTag{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 10px;border-radius:17px;background:var(--high);font-weight:700;font-family:var(--display);font-size:15px}
+.streakTag .ms{font-size:19px;color:rgb(var(--amber))}
+.avatarBtn{width:40px;height:40px;border-radius:50%;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;margin-left:8px;flex:none}
+.top.big .backBig{margin:0 4px 0 -10px;align-self:flex-start;margin-top:2px}
+/* Training: Dauer als große Zahlen */
+.durPick{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.durPick button{display:flex;flex-direction:column;align-items:center;justify-content:center;height:62px;border-radius:14px;background:var(--surface);border:1px solid var(--border)}
+.durPick b{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:24px;line-height:1}
+.durPick span{font-size:11.5px;color:var(--muted)}
+.durPick button.on{background:#fff;color:#000;border-color:#fff}
+.durPick button.on span{color:#333}
+/* Trainingsarten als Bildkacheln (weißes Übungsbild, schwarzes Band) */
+.typeGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.typeTile{position:relative;border-radius:16px;overflow:hidden;background:#fff;display:flex;flex-direction:column;text-align:left}
+.typeTile.wide{grid-column:1 / -1}
+.typeTile .tt-img{height:116px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.typeTile.wide .tt-img{height:150px}
+.typeTile .tt-img .vid{width:100%;height:100%;background:#fff}
+.typeTile .tt-img img,.typeTile .tt-img video{width:100%;height:100%;object-fit:contain}
+.typeTile .tt-tx{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 12px 11px;background:#000;border:1px solid var(--border);border-top:0;border-radius:0 0 16px 16px}
+.typeTile .tt-tx b{font-family:var(--display);font-stretch:85%;font-weight:750;font-size:17px;color:#fff}
+.typeTile .tt-tx span{font-size:12.5px;color:var(--muted)}
+.typeTile .tt-busy{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.5)}
+.libTile{display:flex;align-items:center;gap:14px;width:100%;padding:10px 14px 10px 10px;border-radius:16px;background:var(--surface);border:1px solid var(--border);text-align:left}
+.lt-imgs{display:flex;flex:none}
+.lt-imgs .vid{width:46px;height:46px;border-radius:10px;overflow:hidden;background:#fff;border:2px solid var(--surface);margin-left:-12px}
+.lt-imgs .vid:first-child{margin-left:0}
+.lt-imgs img{width:100%;height:100%;object-fit:cover}
+.lt-tx{flex:1;min-width:0;display:flex;flex-direction:column}
+.lt-tx b{font-size:15.5px}.lt-tx span{font-size:12.5px;color:var(--muted)}
+/* Bestwerte als Leiste */
+.bestRow{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;scrollbar-width:none;scroll-snap-type:x mandatory}
+.bestRow::-webkit-scrollbar{display:none}
+.bestCard{flex:none;width:132px;scroll-snap-align:start;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--border);text-align:left;display:flex;flex-direction:column;gap:6px}
+.bestCard b{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:30px;line-height:1}
+.bestCard b small{font-size:15px;color:var(--muted);font-weight:600}
+.bestCard span{font-size:12.5px;color:var(--muted);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ════ Bereich Achtsamkeit & Spiritualität: Nachtblau, Kerzengold, Serifenschrift ════ */
+html.area-mind{
+  --bg:#0A0F26; --surface:#131A3A; --high:#1D2550; --card:#151C40; --deep:#070B1D;
+  --border:rgba(255,255,255,.08); --border2:rgba(255,255,255,.14);
+  --text:#F6F0E4; --muted:#A4AACB; --faint:#5F6791; --ink:#0A0F26;
+  --mind:244,193,99; --c:var(--mind);
+  --serif:"Fraunces",Georgia,serif;
+}
+html.area-mind,html.area-mind body,html.area-mind .app{background:var(--bg)}
+html.area-mind .tabbar{background:var(--deep);border-top:1px solid var(--border)}
+html.area-mind .tabbar button.on .pill{background:rgb(var(--mind));color:var(--ink)}
+html.area-mind .top h1,html.area-mind .h2,html.area-mind .h1,html.area-mind .top.big h1{font-family:var(--serif);font-stretch:normal;font-weight:560;letter-spacing:-.2px}
+html.area-mind .btn:not(.ghost):not(.tint){background:rgb(var(--mind));color:var(--ink)}
+html.area-mind .seg button.on{background:rgb(var(--mind));color:var(--ink)}
+html.area-mind .chip.on{background:rgb(var(--mind));color:var(--ink)}
+.mHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:calc(18px + var(--sat)) 20px 8px}
+.mHead h1{font-family:var(--serif);font-weight:520;font-size:34px;line-height:1.08;letter-spacing:-.4px}
+.mHead p{font-size:14.5px;color:var(--muted);margin-top:6px}
+.mStreak{display:flex;flex-direction:column;align-items:center;padding:6px 12px;border-radius:14px;background:var(--surface);border:1px solid var(--border)}
+.mStreak b{font-family:var(--serif);font-size:22px;color:rgb(var(--mind));line-height:1}
+.mStreak span{font-size:11px;color:var(--muted)}
+
+/* Kunst: klare Formen auf Nachtblau — Mond, Sonnenaufgang, Welle, Fokus, Körper */
+.art{position:relative;overflow:hidden;border-radius:16px;background:#121A44;aspect-ratio:1}
+.art i,.art b{position:absolute;display:block}
+.art-moon{background:#0F1640}
+.art-moon i{width:46%;height:46%;left:27%;top:22%;border-radius:50%;background:rgb(var(--mind))}
+.art-moon b{width:46%;height:46%;left:38%;top:16%;border-radius:50%;background:#0F1640}
+.art-sunrise{background:#1B2457}
+.art-sunrise i{width:64%;height:64%;left:18%;top:46%;border-radius:50%;background:rgb(var(--mind))}
+.art-sunrise b{left:0;right:0;bottom:0;height:34%;background:#0E1438}
+.art-wave{background:#132056}
+.art-wave i{left:-10%;right:-10%;height:40%;top:52%;border-radius:50% 50% 0 0;background:#2B3A86}
+.art-wave b{width:22%;height:22%;left:62%;top:20%;border-radius:50%;background:rgb(var(--mind))}
+.art-focus{background:#151D4C}
+.art-focus i{inset:22%;border-radius:50%;border:3px solid rgb(var(--mind))}
+.art-focus b{inset:42%;border-radius:50%;background:rgb(var(--mind))}
+.art-body{background:#1A1F4E}
+.art-body i{width:30%;height:30%;left:35%;top:16%;border-radius:50%;background:rgb(var(--mind))}
+.art-body b{width:56%;height:44%;left:22%;top:50%;border-radius:50% 50% 12px 12px;background:#2E3880}
+.art.big{border-radius:0;aspect-ratio:auto;height:100%}
+
+/* Heute: eine Empfehlung groß, darunter kompakt */
+.nowCard{position:relative;display:block;width:100%;text-align:left;border-radius:24px;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
+.nc-art{height:230px;background:#121A44}
+.nc-pose{height:100%;background:#ffefd6;display:flex;align-items:center;justify-content:center}
+.nc-pose img{height:86%;max-width:80%}
+.nc-tx{padding:16px 18px 18px}
+.nc-tx span{font-size:13px;color:rgb(var(--mind));font-weight:600}
+.nc-tx h2{font-family:var(--serif);font-weight:540;font-size:26px;line-height:1.15;margin-top:4px}
+.nc-tx p{font-size:13.5px;color:var(--muted);margin-top:6px}
+.nc-play{position:absolute;right:16px;top:202px;width:56px;height:56px;border-radius:50%;background:rgb(var(--mind));color:var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.nc-play .ms{font-size:32px}
+.moodRow>span{font-size:13.5px;color:var(--muted)}
+.mr-chips{display:flex;gap:8px;overflow-x:auto;margin:10px -16px 0;padding:0 16px 2px;scrollbar-width:none}
+.mr-chips::-webkit-scrollbar{display:none}
+.mr-chips button{flex:none;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px 0 11px;border-radius:20px;background:var(--surface);border:1px solid var(--border);font-size:14px;white-space:nowrap}
+.mr-chips .ms{font-size:19px;color:rgb(var(--mind))}
+.twoUp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tu{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px;border-radius:20px;background:var(--surface);border:1px solid var(--border);text-align:left;min-height:150px}
+.tu>b{font-family:var(--serif);font-weight:540;font-size:18px;margin-top:auto}
+.tu>span{font-size:12.5px;color:var(--muted)}
+.tu .ring b{font-family:var(--serif);font-size:20px}
+.tu.breath .pb-rhythm{width:100%;margin-top:6px}
+.tu-poses{display:flex;gap:4px;width:100%}
+.tu-poses img{flex:1;min-width:0;aspect-ratio:1;border-radius:10px;background:#ffefd6;padding:4px}
+.tu-thumb{width:100%;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--high)}
+.tu-thumb img{width:100%;height:100%;object-fit:cover}
+.pb-rhythm{display:flex;gap:3px;height:30px;align-items:flex-end}
+.pb-rhythm i{display:block;border-radius:4px}
+.pb-rhythm .ein{height:100%;background:rgb(var(--mind))}
+.pb-rhythm .halten{height:100%;background:#F7DBA6}
+.pb-rhythm .aus{height:45%;background:#6C78C4}
+.pb-rhythm .halten_leer{height:45%;background:#3A4690}
+.affStrip{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:16px 18px;border-radius:20px;background:var(--surface);border:1px solid var(--border)}
+.affStrip p{flex:1;font-family:var(--serif);font-size:17px;line-height:1.35;font-style:italic}
+.affStrip .ms{color:rgb(var(--mind))}
+
+/* Karussells */
+.railSec{margin-top:26px}
+.railHead{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.railHead h2{font-family:var(--serif);font-weight:540;font-size:21px}
+html.area-fit .railHead h2{font-family:var(--display);font-stretch:85%;font-weight:750}
+.railHead button{font-size:13.5px;color:rgb(var(--c));font-weight:600}
+.rail{display:flex;gap:10px;overflow-x:auto;margin:0 -16px;padding:0 16px 4px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.rail::-webkit-scrollbar{display:none}
+.rail>*{scroll-snap-align:start;flex:none}
+.pv{width:220px;text-align:left;display:flex;flex-direction:column;gap:3px}
+.pv-th{position:relative;aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:var(--high);margin-bottom:6px}
+.pv-th img{width:100%;height:100%;object-fit:cover}
+.pv-dur{position:absolute;right:6px;bottom:6px;font-size:11.5px;font-weight:600;background:rgba(0,0,0,.78);color:#fff;padding:2px 7px;border-radius:7px}
+.pv b{font-size:14.5px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.pv span{font-size:12px;color:var(--muted)}
+.pg,.book{width:150px;text-align:left;display:flex;flex-direction:column;gap:3px}
+.pg .art,.book .art{margin-bottom:8px}
+.pg b,.book b{font-family:var(--serif);font-weight:540;font-size:16px;line-height:1.25}
+.pg span,.book span{font-size:12px;color:var(--muted)}
+.pb{width:170px;text-align:left;display:flex;flex-direction:column;gap:3px;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--border)}
+.pb .pb-rhythm{margin-bottom:10px}
+.pb b{font-family:var(--serif);font-weight:540;font-size:16px;line-height:1.25}
+.pb span{font-size:12px;color:var(--muted)}
+.themeChips{display:flex;gap:8px;overflow-x:auto;padding:4px 16px 2px;scrollbar-width:none}
+.themeChips::-webkit-scrollbar{display:none}
+.themeChips button{flex:none;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px 0 11px;border-radius:19px;background:var(--surface);border:1px solid var(--border);font-size:13.5px;white-space:nowrap}
+.themeChips .ms{font-size:18px;color:rgb(var(--mind))}
+.themeChips button.on{background:rgb(var(--mind));color:var(--ink);border-color:transparent}
+.themeChips button.on .ms{color:var(--ink)}
+
+/* Yoga: Stufen als Karussell */
+.stages{display:flex;gap:12px;overflow-x:auto;padding:8px 16px 4px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.stages::-webkit-scrollbar{display:none}
+.stage{flex:none;width:76%;max-width:320px;scroll-snap-align:start;border-radius:24px;overflow:hidden;background:var(--surface);border:1px solid var(--border);text-align:left;display:flex;flex-direction:column}
+.stage.cur{border-color:rgb(var(--mind))}
+.st-img{position:relative;height:190px;background:#ffefd6;display:flex;align-items:center;justify-content:center}
+.st-img img{height:80%;max-width:80%}
+.stage.locked .st-img img{opacity:.35;filter:grayscale(1)}
+.st-lock,.st-done{position:absolute;right:12px;top:12px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.st-lock{background:var(--ink);color:#fff}
+.st-done{background:rgb(var(--mind));color:var(--ink)}
+.st-tx{padding:14px 16px 16px}
+.st-tx span{font-size:12.5px;color:rgb(var(--mind));font-weight:600}
+.st-tx b{display:block;font-family:var(--serif);font-weight:560;font-size:23px;margin-top:3px}
+.st-tx p{font-size:13px;color:var(--muted);margin-top:2px}
+.st-bar{height:4px;border-radius:2px;background:var(--high);margin-top:12px;overflow:hidden}
+.st-bar i{display:block;height:100%;background:rgb(var(--mind))}
+
+/* Wissen */
+.affHero{display:block;width:100%;text-align:left;padding:22px 20px 16px;border-radius:24px;background:rgb(var(--mind));color:var(--ink)}
+.affHero>span{font-size:13px;font-weight:600;opacity:.75}
+.affHero p{font-family:var(--serif);font-weight:500;font-size:25px;line-height:1.28;margin-top:10px}
+.ah-row{display:flex;justify-content:space-between;margin-top:18px;font-size:13.5px;font-weight:600}
+.ah-row span{display:inline-flex;align-items:center;gap:6px}
+.ah-row .ms{font-size:19px}
+.impulseCard{padding:18px;border-radius:20px;background:var(--surface);border:1px solid var(--border)}
+.impulseCard>span{font-size:13px;color:rgb(var(--mind));font-weight:600}
+.impulseCard b{display:block;font-family:var(--serif);font-weight:560;font-size:19px;margin-top:6px}
+.impulseCard p{font-size:14px;line-height:1.55;color:var(--muted);margin-top:6px}
+.rail,.stages,.bestRow,.hscroll,.mr-chips,.themeChips{scroll-padding-inline:16px}
+/* Ich: Kachel-Übersicht statt Liste */
+.bento{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bt{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:118px;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--border);text-align:left;min-width:0}
+.bt.wide{grid-column:1 / -1;min-height:0}
+.bt-l{font-size:12.5px;color:var(--muted);font-weight:600}
+.bt-big{font-family:var(--display);font-stretch:80%;font-weight:800;font-size:34px;line-height:1}
+.bt-big small{font-size:15px;color:var(--muted);font-weight:600}
+.bt-s{font-size:12.5px;color:var(--muted);margin-top:auto;max-width:100%}
+.bt .bt-ic{font-size:30px;margin-top:4px}
+.bt.on .bt-ic{color:#fff}
+.wdots{display:flex;gap:4px;margin-top:4px}
+.wdots i{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:10px;font-weight:700;background:var(--high);color:var(--faint)}
+.wdots i.on{background:#fff;color:#000}
+/* Ernährung: Mahlzeiten als 2×2-Kacheln */
+.mealGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mealTile{position:relative;display:flex;flex-direction:column;border-radius:18px;overflow:hidden;background:var(--surface);border:1px solid var(--border);text-align:left}
+.mt-img{position:relative;height:96px;display:flex;align-items:center;justify-content:center;background:#0f2a22;color:rgb(var(--food))}
+.mt-img img{width:100%;height:100%;object-fit:cover}
+.mt-img .ms{font-size:34px}
+.mealTile.none .mt-img{background:var(--high);color:var(--faint)}
+.mt-n{position:absolute;right:8px;top:8px;min-width:24px;height:24px;border-radius:12px;background:#000;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 6px}
+.mt-tx{display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:10px 12px 12px}
+.mt-tx b{font-size:15px}
+.mt-tx span{font-size:12.5px;color:var(--muted)}
+.mealTile:not(.none) .mt-tx span{color:rgb(var(--food));font-weight:600}
+.mt-add{position:absolute;right:10px;top:62px;width:30px;height:30px;border-radius:50%;background:rgb(var(--food));color:#000;display:flex;align-items:center;justify-content:center}
+.mt-add .ms{font-size:20px}
+.kcalHero .ring circle:last-child{stroke-linecap:round}
+/* Achtsamkeit, tiefe Seiten: volle Flächen statt Schleier */
+html.area-mind .artHead{background:var(--surface);border:1px solid var(--border);border-left:4px solid rgb(var(--mind))}
+html.area-mind .artHead .eyebrow{color:rgb(var(--mind))}
+html.area-mind .artHead h1{font-family:var(--serif);font-weight:560}
+html.area-mind .article h2{font-family:var(--serif);font-weight:560}
+html.area-mind .philo{background:var(--surface);border:1px solid var(--border);border-left:4px solid rgb(var(--mind))}
+html.area-mind .philo .ms,html.area-mind .philo .eyebrow{color:rgb(var(--mind))}
+html.area-mind .lvlHero{background:#ffefd6;color:#1b1f3b}
+html.area-mind .lh-int{background:#ffefd6}
+html.area-mind .lvlHero .lh-int .eyebrow{color:#8a5a00}
+html.area-mind .lvlHero .lh-int p{font-family:var(--serif);font-weight:560;font-size:18px}
+html.area-mind .affBig{background:rgb(var(--mind));color:var(--ink);border:0}
+html.area-mind .affBig .aff{font-family:var(--serif);font-weight:500}
+html.area-mind .affBig .btn.tint{background:rgba(10,15,38,.12);color:var(--ink)}
+html.area-mind .affBig .btn.tint .ms{color:var(--ink)}
+html.area-mind .affBig .btn:not(.tint){background:var(--ink);color:rgb(var(--mind))}
+.ab-l{font-size:13px;font-weight:600;opacity:.7}
+.affList button>span{flex:1 1 auto;min-width:0;width:100%}
+html.area-mind .affList button{font-family:var(--serif);font-size:16px}
+html.area-mind .steps li::before{background:rgb(var(--mind));color:var(--ink)}
+html.area-mind .tag{background:var(--high);color:var(--text)}
+html.area-mind .card{background:var(--surface);border-color:var(--border)}
+.affList button .ms{flex:none}

@@ -3,7 +3,10 @@ import { useEffect, useState, useRef } from '../vendor/preact-htm.js';
 import { api, local } from './platform.js';
 
 // ── Routen (#/heute, #/einheit/<id>, …) ──
-export const TABS = ['heute', 'training', 'skills', 'achtsam', 'ernaehrung', 'ich'];
+/** Zwei Bereiche aus einer App: Fitness (Training, Skills, Ernährung) und Achtsamkeit (eigener Bereich im Profil). */
+export const AREA = new URLSearchParams(location.search).get('area') === 'mind' ? 'mind' : 'fit';
+if (typeof document !== 'undefined') document.documentElement.classList.add(`area-${AREA}`);
+export const TABS = AREA === 'mind' ? ['heute', 'yoga', 'meditation', 'wissen'] : ['heute', 'training', 'skills', 'ernaehrung'];
 export const route = () => decodeURIComponent(location.hash.replace(/^#\/?/, '')) || 'heute';
 let depth = 0;
 export function nav(r, { replace = false } = {}) {

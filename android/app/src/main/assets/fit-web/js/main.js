@@ -1,7 +1,7 @@
 // Start, Rahmen, Reiter und Routen des Fitness-Bereichs.
 import { html, render } from '../vendor/preact-htm.js';
 import { isNative, exitArea } from './platform.js';
-import { TABS, back, nav, route, useRoute, useToast, useData } from './app.js';
+import { AREA, TABS, back, nav, route, useRoute, useToast, useData } from './app.js';
 import { Icon, cls } from './ui.js';
 import { Today } from './screens/today.js';
 import { Training, History, Library } from './screens/training.js';
@@ -12,15 +12,18 @@ import { Skills, SkillDetail, SkillPractice } from './screens/skills.js';
 import { Food, PhotoFlow, AddMeal, EntryDetail, DayReport, Shopping, BarcodeFlow } from './screens/food.js';
 import { RecipeDetail, RecipeList } from './screens/recipes.js';
 import { Me, ProfileEdit, Onboarding } from './screens/me.js';
-import { Mind, MindList, Breath, Guided, YogaPath, YogaLevel, YogaFlow, Poses, AsanaDetail, Deep, Affirmations } from './screens/mind.js';
+import { MindHome, MindYoga, MindMeditation, MindKnowledge, MindList, Breath, Guided, YogaPath, YogaLevel, YogaFlow, Poses, AsanaDetail, Deep, Affirmations } from './screens/mind.js';
 
-const TAB_META = {
+const TAB_META = AREA === 'mind' ? {
+  heute: ['Heute', 'wb_twilight', MindHome, 'c-mind'],
+  yoga: ['Yoga', 'self_improvement', MindYoga, 'c-mind'],
+  meditation: ['Meditation', 'spa', MindMeditation, 'c-mind'],
+  wissen: ['Wissen', 'auto_stories', MindKnowledge, 'c-mind'],
+} : {
   heute: ['Heute', 'today', Today, 'c-train'],
   training: ['Training', 'fitness_center', Training, 'c-train'],
   skills: ['Skills', 'sports_gymnastics', Skills, 'c-skill'],
-  achtsam: ['Achtsam', 'self_improvement', Mind, 'c-mind'],
   ernaehrung: ['Ernährung', 'restaurant', Food, 'c-food'],
-  ich: ['Ich', 'person', Me, 'c-train'],
 };
 
 const ROUTES = [
@@ -42,6 +45,7 @@ const ROUTES = [
   [/^rezepte(?:\/(\w+))?$/, (m) => html`<${RecipeList} filter=${m[1]} />`],
   [/^rezept\/(.+)$/, (m) => html`<${RecipeDetail} id=${m[1]} />`],
   [/^profil$/, () => html`<${ProfileEdit} />`],
+  [/^ich$/, () => html`<${Me} />`],
   [/^achtsam\/(thema|zeit|fuer)\/(\w+)$/, (m) => html`<${MindList} by=${m[1]} k=${m[2]} key=${m[0]} />`],
   [/^achtsam\/atem\/(.+)$/, (m) => html`<${Breath} id=${m[1]} />`],
   [/^achtsam\/gefuehrt\/(.+)$/, (m) => html`<${Guided} id=${m[1]} />`],
@@ -77,7 +81,7 @@ function App() {
   const [state] = useData('/fitness/state');
   const tab = TABS.includes(r);
   // Erster Start: Einrichtung (Ziel, Körper, Ausrüstung, Tage).
-  const needsOnboarding = state && !state.profile?.onboarded && r !== 'start';
+  const needsOnboarding = AREA === 'fit' && state && !state.profile?.onboarded && r !== 'start';
   return html`<div class=${cls('desk', FRAME)}>
     <div class="phone"><div class="app">
       <div style="position:absolute;inset:0;display:flex;flex-direction:column">

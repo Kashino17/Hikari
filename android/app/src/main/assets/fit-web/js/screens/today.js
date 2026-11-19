@@ -38,7 +38,8 @@ export function Today() {
       <header class="top big">
         <div class="tt"><h1>${other ? relDay(sel, day) : 'Heute'}</h1><button class="t2 dateBtn" onClick=${() => setCal(true)}>${longDate(sel)}<${Icon} n="calendar_month" style="font-size:17px" /></button></div>
         ${other ? html`<button class="tag c-train" style="height:32px;padding:0 12px;font-size:13.5px" onClick=${() => setSel(day)}><${Icon} n="today" style="font-size:17px" />Heute</button>`
-          : state?.streak > 0 && html`<div class="tag c-amber" style="height:30px;padding:0 10px;font-size:13.5px"><${Icon} n="local_fire_department" fill style="font-size:18px" />${state.streak}</div>`}
+          : state?.streak > 0 && html`<div class="streakTag"><${Icon} n="local_fire_department" fill />${state.streak}</div>`}
+        <button class="avatarBtn" onClick=${() => nav('ich')} aria-label="Ich"><${Icon} n="person" fill /></button>
       </header>
       <div class="pad">
         <${Week} today=${day} sel=${sel} onSel=${setSel} />
@@ -52,7 +53,7 @@ export function Today() {
           <${FoodTile} food=${food} />
           <${SkillTile} skills=${skills} catalog=${catalog} />
         </div>
-        <${MindTile} />`}
+        `}
         ${state && !state.ai?.hasKey && html`<div class="card pad16 mt16 small muted">Kein Gemini-Schlüssel gefunden — der Coach plant mit festen Regeln, Foto-Tracker und Ernährungs-Coach brauchen den Schlüssel von »Lieder & Szenen«.</div>`}
         <div class="end" />
       </div>

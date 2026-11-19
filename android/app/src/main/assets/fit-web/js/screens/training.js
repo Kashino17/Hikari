@@ -7,21 +7,41 @@ import { PATTERN } from './exercise.js';
 import { TrainingStats } from './stats.js';
 
 const FREE = [
-  ['ganzkoerper', 'Ganzkörper', 'accessibility_new'],
-  ['druck', 'Drücken', 'front_hand'],
-  ['zug', 'Ziehen', 'rowing'],
-  ['beine', 'Beine & Po', 'directions_walk'],
-  ['core', 'Rumpf', 'self_improvement'],
-  ['ausdauer', 'Ausdauer', 'favorite'],
-  ['mobilitaet', 'Beweglichkeit', 'airline_seat_flat_angled'],
+  ['ganzkoerper', 'Ganzkörper', 'burpee'],
+  ['druck', 'Drücken', 'pushup'],
+  ['zug', 'Ziehen', 'pullup'],
+  ['beine', 'Beine & Po', 'squat'],
+  ['core', 'Rumpf', 'plank'],
+  ['ausdauer', 'Ausdauer', 'high_knees'],
+  ['mobilitaet', 'Beweglichkeit', 'worlds_greatest'],
 ];
+let trainTab = 'start';
 
+/** Training in zwei Ebenen: »Starten« (freies Training mit Bildern) und »Fortschritt« (Zahlen, Verlauf, Bestwerte). */
 export function Training() {
-  const [hist] = useData('/fitness/history?days=90');
   const [state] = useData('/fitness/state');
+  const [tab, setTab0] = useState(trainTab);
+  const setTab = (t) => { trainTab = t; setTab0(t); };
+  const total = state?.totals;
+  return html`<div class="screen tab c-train">
+    <div class="scroll">
+      <header class="top big"><div class="tt"><h1>Training</h1><div class="t2">${total ? `${total.sessions} Einheiten · ${Math.round(total.seconds / 3600)} Stunden` : ' '}</div></div>
+        <button class="ib" onClick=${() => nav('bibliothek')} aria-label="Übungen suchen"><${Icon} n="search" /></button></header>
+      <div class="pad">
+        <div class="seg"><button class=${cls(tab === 'start' && 'on')} onClick=${() => setTab('start')}>Starten</button><button class=${cls(tab === 'progress' && 'on')} onClick=${() => setTab('progress')}>Fortschritt</button></div>
+        ${tab === 'start' ? html`<${StartTraining} state=${state} />` : html`<${Progress} />`}
+        <div class="end" />
+      </div>
+    </div>
+  </div>`;
+}
+
+function StartTraining({ state }) {
+  const catalog = useCatalog();
   const [busy, setBusy] = useState(null);
   const [minutes, setMinutes] = useState(null);
   const mins = minutes ?? state?.profile?.sessionMinutes ?? 30;
+  const ex = (id) => catalog?.exercises?.find((e) => e.id === id);
   const free = async (type) => {
     setBusy(type);
     try {
@@ -32,34 +52,31 @@ export function Training() {
     } catch { toast('Server nicht erreichbar'); }
     setBusy(null);
   };
-  const total = state?.totals;
-  return html`<div class="screen tab c-train">
-    <div class="scroll">
-      <header class="top big"><div class="tt"><h1>Training</h1><div class="t2">${total ? `${total.sessions} Einheiten · ${Math.round(total.seconds / 3600)} Stunden insgesamt` : ' '}</div></div>
-        <button class="ib" onClick=${() => nav('bibliothek')} aria-label="Übungen"><${Icon} n="search" /></button></header>
-      <div class="pad">
-        <${TrainingStats} />
+  return html`<div>
+    <div class="durPick mt16">${[15, 20, 30, 45, 60].map((m) => html`<button class=${cls(mins === m && 'on')} onClick=${() => setMinutes(m)}><b class="num">${m}</b><span>min</span></button>`)}</div>
+    <div class="typeGrid mt12">${FREE.map(([k, l, exId], i) => html`<button class=${cls('typeTile', i === 0 && 'wide')} disabled=${!!busy} onClick=${() => free(k)}>
+      <div class="tt-img">${ex(exId) && html`<${Loop} media=${ex(exId).media} still />`}</div>
+      <div class="tt-tx"><b>${l}</b><span>${busy === k ? 'Coach plant …' : `${mins} min`}</span></div>
+      ${busy === k && html`<div class="tt-busy"><${Spinner} /></div>`}
+    </button>`)}</div>
+    <button class="libTile mt12" onClick=${() => nav('bibliothek')}>
+      <div class="lt-imgs">${['pistol_squat', 'muscle_up', 'tuck_planche'].map((id) => ex(id) && html`<${Loop} media=${ex(id).media} still />`)}</div>
+      <div class="lt-tx"><b>Übungsbibliothek</b><span>${catalog ? `${catalog.exercises.length} Übungen mit Video und Technik` : ' '}</span></div>
+      <${Icon} n="chevron_right" />
+    </button>
+  </div>`;
+}
 
-        <div class="sec"><h2 class="h2">Freies Training</h2><span class="small muted">plant der Coach</span></div>
-        <div class="chips">${[15, 20, 30, 45, 60].map((m) => html`<button class=${cls('chip', mins === m && 'on')} onClick=${() => setMinutes(m)}>${m} min</button>`)}</div>
-        <div class="optGrid mt12">${FREE.map(([k, l, ic]) => html`<button class="opt" disabled=${!!busy} onClick=${() => free(k)}>
-          ${busy === k ? html`<${Spinner} />` : html`<${Icon} n=${ic} />`}<b>${l}</b><span>${mins} min</span></button>`)}</div>
-
-        <div class="sec"><h2 class="h2">Verlauf</h2>${hist?.sessions?.length > 5 && html`<button class="more" onClick=${() => nav('verlauf')}>Alle<${Icon} n="chevron_right" style="font-size:18px" /></button>`}</div>
-        ${!hist ? html`<div class="skel" style="height:180px" />` : hist.sessions.length === 0 ? html`<div class="card pad16 small muted">Noch keine Einheit — dein erstes Training steht unter »Heute«.</div>`
-          : html`<div class="list">${hist.sessions.slice(0, 5).map((s) => html`<${HistRow} s=${s} />`)}</div>`}
-
-        ${hist?.bests?.length > 0 && html`<div class="sec"><h2 class="h2">Bestwerte</h2></div>
-          <div class="list">${hist.bests.slice(0, 6).map((b) => html`<button class="li" onClick=${() => nav(`uebung/${b.exercise_id}`)}>
-            <div class="iconTile soft c-amber"><${Icon} n="military_tech" /></div><div class="tx"><div class="t1">${b.name}</div><div class="t2">${b.times}× trainiert</div></div>
-            <b class="num">${b.best}${b.unit === 'sec' ? ' s' : ''}</b></button>`)}</div>`}
-
-        <button class="card pad16 mt20 row" style="width:100%;text-align:left" onClick=${() => nav('bibliothek')}>
-          <div class="iconTile"><${Icon} n="video_library" /></div><div class="grow"><div class="h3">Übungsbibliothek</div><div class="small muted">Videos, Ausführung, häufige Fehler</div></div><${Icon} n="chevron_right" cls="faint" />
-        </button>
-        <div class="end" />
-      </div>
-    </div>
+function Progress() {
+  const [hist] = useData('/fitness/history?days=90');
+  return html`<div>
+    <div class="mt16"><${TrainingStats} /></div>
+    <div class="sec"><h2 class="h2">Zuletzt</h2>${hist?.sessions?.length > 3 && html`<button class="more" onClick=${() => nav('verlauf')}>Alle<${Icon} n="chevron_right" style="font-size:18px" /></button>`}</div>
+    ${!hist ? html`<div class="skel" style="height:140px" />` : hist.sessions.length === 0 ? html`<div class="card pad16 small muted">Noch keine Einheit — dein erstes Training steht unter »Heute«.</div>`
+      : html`<div class="list">${hist.sessions.slice(0, 3).map((s) => html`<${HistRow} s=${s} />`)}</div>`}
+    ${hist?.bests?.length > 0 && html`<div class="sec"><h2 class="h2">Bestwerte</h2></div>
+      <div class="bestRow">${hist.bests.slice(0, 8).map((b) => html`<button class="bestCard" onClick=${() => nav(`uebung/${b.exercise_id}`)}>
+        <b class="num">${b.best}<small>${b.unit === 'sec' ? ' s' : ''}</small></b><span>${b.name}</span></button>`)}</div>`}
   </div>`;
 }
 

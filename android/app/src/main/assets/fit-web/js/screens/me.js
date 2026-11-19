@@ -23,13 +23,14 @@ export function Me() {
   const [state] = useData('/fitness/state');
   const [hist] = useData('/fitness/history?days=180');
   const [w, setW] = useState(false);
+  const [info, setInfo] = useState(null);
   const p = state?.profile;
   const t = state?.targets;
   if (!p) return html`<div class="screen tab"><div class="pad"><div class="skel mt24" style="height:300px" /></div></div>`;
   const pts = (hist?.body ?? []).map((b) => ({ v: b.weight }));
-  return html`<div class="screen tab c-train">
+  return html`<div class="screen c-train">
     <div class="scroll">
-      <header class="top big"><div class="tt"><h1>Ich</h1><div class="t2">${GOALS[p.goal]} · ${LEVELS[p.level - 1][0]}</div></div>
+      <header class="top big"><button class="ib backBig" onClick=${() => back('heute')} aria-label="Zurück"><${Icon} n="arrow_back" /></button><div class="tt"><h1>Ich</h1><div class="t2">${GOALS[p.goal]} · ${LEVELS[p.level - 1][0]}</div></div>
         <button class="ib" onClick=${() => nav('profil')} aria-label="Bearbeiten"><${Icon} n="edit" /></button></header>
       <div class="pad">
         <div class="stats3">
@@ -38,42 +39,48 @@ export function Me() {
           <div class="stat"><b style="color:rgb(var(--amber))">${state.streak}</b><span>Serie</span></div>
         </div>
 
-        <div class="sec"><h2 class="h2">Gewicht</h2><button class="more" onClick=${() => setW(true)}><${Icon} n="add" style="font-size:18px" />Eintragen</button></div>
-        <div class="card pad16">
-          <div class="row"><div class="grow"><div style="font-size:28px;font-weight:700;letter-spacing:-.5px" class="num">${fmtNum(p.weightKg, 1)} <span class="small muted" style="font-weight:500">kg</span></div>
-            <div class="small muted">${state.weight ? `zuletzt ${relDay(state.weight.day, today())}` : 'noch kein Verlauf'}${p.targetWeightKg ? ` · Ziel ${fmtNum(p.targetWeightKg, 1)} kg` : ''}</div></div></div>
-          ${pts.length > 1 ? html`<div class="mt12"><${Spark} points=${pts} goal=${p.targetWeightKg} /></div>` : html`<p class="small muted mt8">Trag dein Gewicht regelmäßig ein (am besten morgens) — der Coach passt Kalorien und Training daran an.</p>`}
+        <div class="bento mt12">
+          <button class="bt wide" onClick=${() => setW(true)}>
+            <span class="bt-l">Gewicht</span>
+            <div class="row" style="align-items:flex-end;gap:14px"><b class="bt-big num">${fmtNum(p.weightKg, 1)}<small> kg</small></b>
+              ${pts.length > 1 && html`<div class="grow"><${Spark} points=${pts} goal=${p.targetWeightKg} /></div>`}</div>
+            <span class="bt-s">${state.weight ? `zuletzt ${relDay(state.weight.day, today())}` : 'Tippen zum Eintragen'}${p.targetWeightKg ? ` · Ziel ${fmtNum(p.targetWeightKg, 1)} kg` : ''}</span>
+          </button>
+          <button class="bt c-food" onClick=${() => setInfo('ziele')}>
+            <span class="bt-l">Tagesziel</span><b class="bt-big num" style="color:rgb(var(--food))">${fmtNum(t.kcal)}</b><span class="bt-s">kcal · ${t.protein} g Eiweiß</span></button>
+          <button class="bt" onClick=${() => nav('profil')}>
+            <span class="bt-l">Trainingstage</span>
+            <div class="wdots">${WD.map((d, i) => html`<i class=${cls(p.trainingDays.includes(i) && 'on')}>${d[0]}</i>`)}</div>
+            <span class="bt-s">${p.sessionMinutes} min je Einheit</span></button>
+          <button class="bt" onClick=${() => nav('profil')}>
+            <span class="bt-l">Ausrüstung</span><${Icon} n="fitness_center" cls="bt-ic" />
+            <span class="bt-s">${p.equipment.length > 1 ? `${p.equipment.filter((e) => e !== 'boden').length} Geräte` : 'Nur Körpergewicht'}</span></button>
+          <button class="bt" onClick=${() => nav('profil')}>
+            <span class="bt-l">Beschwerden</span><${Icon} n="healing" cls="bt-ic" style=${p.limitations.length ? 'color:rgb(var(--bad))' : ''} />
+            <span class="bt-s ell">${p.limitations.length ? p.limitations.map((l) => LIMITS.find((x) => x[0] === l)?.[1] ?? l).join(', ') : 'Keine'}${p.noJumps ? ' · ohne Sprünge' : ''}</span></button>
+          <button class="bt c-food" onClick=${() => nav('profil')}>
+            <span class="bt-l">Ernährung</span><${Icon} n="eco" cls="bt-ic" style="color:rgb(var(--food))" />
+            <span class="bt-s ell">${DIETS.find((d) => d[0] === p.diet)?.[1]}${p.allergies.length ? ` · ohne ${p.allergies.join(', ')}` : ''}</span></button>
+          <button class=${cls('bt', voice.on && 'on')} onClick=${() => { voice.set(!voice.on); setW(w); }}>
+            <span class="bt-l">Rems Ansagen</span><${Icon} n=${voice.on ? 'record_voice_over' : 'voice_over_off'} cls="bt-ic" />
+            <span class="bt-s">${voice.on ? 'An' : 'Aus'}</span></button>
+          <button class="bt c-food" onClick=${() => nav('einkauf')}>
+            <span class="bt-l">Einkaufsliste</span><${Icon} n="shopping_cart" cls="bt-ic" style="color:rgb(var(--food))" />
+            <span class="bt-s">für deinen Plan</span></button>
         </div>
-
-        <div class="sec"><h2 class="h2">Deine Tagesziele</h2></div>
-        <div class="card pad16 c-food">
-          <div class="row"><div class="grow"><div class="eyebrow">Energie</div><div style="font-size:24px;font-weight:700" class="num">${fmtNum(t.kcal)} kcal</div></div><div class="small muted" style="text-align:right">Grundumsatz ${fmtNum(t.explain.bmr)}<br />Alltag ×${t.explain.pal} · Training +${t.explain.training}<br />Ziel ${t.explain.delta >= 0 ? '+' : ''}${t.explain.delta}</div></div>
-          <div class="macroBand mt12"><div><b>${t.protein}</b><span>Eiweiß g</span></div><div><b>${t.carbs}</b><span>KH g</span></div><div><b>${t.fat}</b><span>Fett g</span></div><div><b>${fmtNum(t.water, 1)}</b><span>Wasser l</span></div></div>
-        </div>
-
-        <div class="sec"><h2 class="h2">Training</h2></div>
-        <div class="list">
-          <button class="li" onClick=${() => nav('profil')}><div class="iconTile soft"><${Icon} n="calendar_month" /></div><div class="tx"><div class="t1">Trainingstage</div><div class="t2">${p.trainingDays.map((d) => WD[d]).join(', ')} · ${p.sessionMinutes} min</div></div><${Icon} n="chevron_right" cls="faint" /></button>
-          <button class="li" onClick=${() => nav('profil')}><div class="iconTile soft"><${Icon} n="fitness_center" /></div><div class="tx"><div class="t1">Ausrüstung</div><div class="t2 ell">${p.equipment.length > 1 ? p.equipment.filter((e) => e !== 'boden').length + ' Geräte' : 'Nur Körpergewicht'}</div></div><${Icon} n="chevron_right" cls="faint" /></button>
-          <button class="li" onClick=${() => nav('profil')}><div class="iconTile soft c-bad"><${Icon} n="healing" /></div><div class="tx"><div class="t1">Beschwerden</div><div class="t2">${p.limitations.length ? p.limitations.map((l) => LIMITS.find((x) => x[0] === l)?.[1] ?? l).join(', ') : 'Keine'}${p.noJumps ? ' · ohne Sprünge' : ''}</div></div><${Icon} n="chevron_right" cls="faint" /></button>
-          <button class="li" onClick=${() => { voice.set(!voice.on); setW(w); }}><div class="iconTile soft"><${Icon} n="record_voice_over" /></div><div class="tx"><div class="t1">Sprachansagen im Training</div><div class="t2">${voice.on ? 'An' : 'Aus'}</div></div></button>
-        </div>
-
-        <div class="sec"><h2 class="h2">Ernährung</h2></div>
-        <div class="list c-food">
-          <button class="li" onClick=${() => nav('profil')}><div class="iconTile soft"><${Icon} n="eco" /></div><div class="tx"><div class="t1">Ernährungsform</div><div class="t2">${DIETS.find((d) => d[0] === p.diet)?.[1]}${p.allergies.length ? ` · ohne ${p.allergies.join(', ')}` : ''}</div></div><${Icon} n="chevron_right" cls="faint" /></button>
-          <button class="li" onClick=${() => nav('einkauf')}><div class="iconTile soft"><${Icon} n="shopping_cart" /></div><div class="tx"><div class="t1">Einkaufsliste</div></div><${Icon} n="chevron_right" cls="faint" /></button>
-        </div>
-        <div class="card pad16 mt20 small muted" style="line-height:1.5">
-          <b style="color:var(--text)">KI</b> · ${state.ai.hasKey ? `Gemini (kostenlos) · heute ${Object.values(state.ai.used ?? {}).reduce((a, b) => a + b, 0)} Anfragen` : 'kein Schlüssel'}<br />
-          <b style="color:var(--text)">Rezepte</b> · ${state.recipes.have} von ${state.recipes.total || 790} aufbereitet${state.recipes.running ? ' (läuft)' : ''}<br />
-          Videos: Sworkit, Freeletics, ExerciseDB (AscendAPI) · Nährwerte: BLS 4.0 (MRI) · Rezepte: TheMealDB
-        </div>
+        <button class="link small mt20" onClick=${() => setInfo('ueber')}>Über Daten und Quellen</button>
         ${isNative && html`<button class="btn ghost mt16" onClick=${exitArea}><${Icon} n="logout" />Zurück zu Hikari</button>`}
         <div class="end" />
       </div>
     </div>
     ${w && html`<${WeightSheet} p=${p} onClose=${() => setW(false)} />`}
+    ${info === 'ziele' && html`<${Sheet} title="Deine Tagesziele" onClose=${() => setInfo(null)}><div class="c-food">
+      <div class="row"><div class="grow"><div style="font-size:30px;font-weight:800;font-family:var(--display)" class="num">${fmtNum(t.kcal)} kcal</div></div><div class="small muted" style="text-align:right">Grundumsatz ${fmtNum(t.explain.bmr)}<br />Alltag ×${t.explain.pal} · Training +${t.explain.training}<br />Ziel ${t.explain.delta >= 0 ? '+' : ''}${t.explain.delta}</div></div>
+      <div class="macroBand mt16"><div><b>${t.protein}</b><span>Eiweiß g</span></div><div><b>${t.carbs}</b><span>KH g</span></div><div><b>${t.fat}</b><span>Fett g</span></div><div><b>${fmtNum(t.water, 1)}</b><span>Wasser l</span></div></div></div><//>`}
+    ${info === 'ueber' && html`<${Sheet} title="Daten und Quellen" onClose=${() => setInfo(null)}><p class="small muted" style="line-height:1.6">
+      <b style="color:var(--text)">KI</b> · ${state.ai.hasKey ? `Gemini (kostenlos) · heute ${Object.values(state.ai.used ?? {}).reduce((x, y) => x + y, 0)} Anfragen` : 'kein Schlüssel'}<br />
+      <b style="color:var(--text)">Rezepte</b> · ${state.recipes.have} von ${state.recipes.total || 790} aufbereitet${state.recipes.running ? ' (läuft)' : ''}<br />
+      Videos: Sworkit, Freeletics, ExerciseDB (AscendAPI) · Nährwerte: BLS 4.0 (MRI) · Rezepte: TheMealDB</p><//>`}
   </div>`;
 }
 

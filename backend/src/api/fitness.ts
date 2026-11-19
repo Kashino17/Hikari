@@ -376,6 +376,15 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const left = computeTargets(profile).kcal - kcal;
     const eat = left >= 0 ? `noch ${left} kcal` : `${-left} kcal über Ziel`;
     const streak = trainingStreak(db, day, profile.trainingDays);
+    // Bild für die Profil-Kachel: erste Hauptübung des Tages (sonst ein Klimmzug).
+    const imageOf = (planJson?: string) => {
+      let id = "pullup";
+      try {
+        const blocks = (JSON.parse(planJson ?? "{}").blocks ?? []) as { kind: string; items: { ex: string }[] }[];
+        id = blocks.find((b) => b.kind === "main")?.items?.[0]?.ex ?? id;
+      } catch { /* Standardbild */ }
+      return (exerciseView(id) as { media?: { image?: string } } | null)?.media?.image ?? null;
+    };
     if (s) {
       const plan = JSON.parse(s.plan) as { title: string; minutes: number };
       if (s.status === "done")
@@ -384,12 +393,14 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
           detail: `${Math.round((JSON.parse(s.result ?? "{}").seconds ?? 0) / 60)} min · ${eat}`,
           done: true,
           streak,
+          image: imageOf(s.plan),
         };
       return {
         title: plan.title,
         detail: `${plan.minutes} min Training · ${eat}`,
         done: false,
         streak,
+        image: imageOf(s.plan),
       };
     }
     const rest = !profile.trainingDays.includes(weekday(day));
@@ -398,6 +409,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       detail: rest ? `Erholung · ${eat}` : `Dein Coach plant beim Öffnen · ${eat}`,
       done: false,
       streak,
+      image: imageOf(),
     };
   });
 
