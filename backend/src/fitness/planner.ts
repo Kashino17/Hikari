@@ -165,7 +165,7 @@ export function chooseDayType(ctx: PlanContext): DayType {
   }
   const p = ctx.profile;
   const canPull = p.equipment.some((q) => ["klimmzugstange", "ringe", "band"].includes(q));
-  const last = ctx.recent.find((r) => r.daysAgo >= 1)?.dayType;
+  const last = ctx.recent[0]?.dayType;
   const trainedLast3 = ctx.recent.filter((r) => r.daysAgo <= 3).length;
   const scores: [DayType, number][] = (Object.keys(DAY_TYPES) as DayType[])
     .filter((t) => t !== "mobilitaet" || trainedLast3 >= 3 || energy <= 2)
@@ -290,12 +290,24 @@ export function estimateKcal(
 }
 
 export function buildRulesPlan(ctx: PlanContext): SessionPlan {
-  const rand = seeded(`${ctx.day}:${ctx.forceType ?? ""}:${ctx.checkin?.wish ?? ""}`);
+  const rand = seeded(
+    `${ctx.day}:${ctx.forceType ?? ""}:${ctx.checkin?.wish ?? ""}:${ctx.recent.filter((r) => r.daysAgo === 0).length}`,
+  );
   const p = ctx.profile;
   const dayType = chooseDayType(ctx);
   const energy = ctx.checkin?.energy ?? 3;
+  // Zweites Training am selben Tag: eine Stufe ruhiger.
+  const second = ctx.recent.some((r) => r.daysAgo === 0);
   const intensity: SessionPlan["intensity"] =
-    dayType === "mobilitaet" || energy <= 2 ? "leicht" : energy >= 4 ? "hart" : "mittel";
+    dayType === "mobilitaet" || energy <= 2
+      ? "leicht"
+      : second
+        ? energy >= 4
+          ? "mittel"
+          : "leicht"
+        : energy >= 4
+          ? "hart"
+          : "mittel";
   const minutes = ctx.checkin?.minutes ?? p.sessionMinutes;
   const all = ctx.catalog.exercises.filter((e) => usable(ctx, e));
   const used = new Set<string>();
@@ -463,6 +475,11 @@ export function fitToTime(plan: SessionPlan, catalog: Catalog, minutes: number) 
 
 function rulesCoachText(plan: SessionPlan, ctx: PlanContext): SessionPlan["coach"] {
   const why: string[] = [];
+  const done = ctx.recent.find((r) => r.daysAgo === 0);
+  if (done)
+    why.push(
+      `Heute schon erledigt: ${DAY_TYPES[done.dayType].title} — jetzt andere Schwerpunkte und etwas leichter.`,
+    );
   const recent = ctx.recent.find((r) => r.daysAgo === 1);
   if (recent) why.push(`Gestern: ${DAY_TYPES[recent.dayType].title} — heute andere Muskeln.`);
   if (ctx.painRegions.length)

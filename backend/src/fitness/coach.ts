@@ -135,7 +135,8 @@ export function buildContext(
   forceType?: DayType,
 ): PlanContext {
   const profile = getProfile(db);
-  const recent = sessionsBetween(db, addDays(day, -6), addDays(day, -1))
+  // Heute schon erledigte Einheiten zählen mit (daysAgo 0) — für ein zweites Training am selben Tag.
+  const recent = sessionsBetween(db, addDays(day, -6), day)
     .filter((s) => s.status === "done")
     .map((s) => {
       const daysAgo = Math.round(
@@ -172,6 +173,7 @@ Baue daraus den besten Trainingstag. Regeln:
 - Mengen orientieren sich an "regel" (das ist die vom Feedback gelernte Dosis). Weiche höchstens ±30 % ab, und nur mit Grund.
 - Wo das Feedback "zu schwer" oder "Technik unsicher" sagt: leichtere Variante oder weniger. "zu leicht": mehr oder schwerere Variante.
 - Abwechslung zu den letzten Tagen, Erholung der Muskelgruppen beachten.
+- Steht im Verlauf schon eine Einheit von HEUTE, ist das ein zweites Training am selben Tag: andere Muskelgruppen, eher kürzer und moderater, und sag das in der Nachricht.
 - Sprich den Nutzer mit "du" an, Deutsch, motivierend aber sachlich, ohne Emojis.
 - Erwähne keine internen Werte (Level-Zahlen, Schwierigkeitsstufen, "Regel", Dosis, ids) — sprich über Übungen, Muskeln, Ziele und sein Feedback.
 Antworte NUR mit JSON:
@@ -312,7 +314,7 @@ export function settleAiPlan(raw: AiPlanRaw, ctx: PlanContext, rules: SessionPla
 
 function historyForAi(db: FitDb, catalog: Catalog, day: string) {
   const name = (id: string) => catalog.byId.get(id)?.name ?? id;
-  return sessionsBetween(db, addDays(day, -14), addDays(day, -1))
+  return sessionsBetween(db, addDays(day, -14), day)
     .filter((s) => s.status === "done" || s.status === "skipped")
     .map((s) => ({
       tag: s.day,
@@ -484,7 +486,7 @@ function insertSession(
   source: string,
   replaceId?: string,
 ): SessionRow {
-  const id = `${day}-${Date.now().toString(36)}`;
+  const id = `${day}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   db.transaction(() => {
     if (replaceId)
       db.prepare("DELETE FROM sessions WHERE id = ? AND status != 'done'").run(replaceId);
@@ -546,7 +548,7 @@ export async function todaySession(
   const day = opts.day ?? localDay();
   const existingRow = db
     .prepare(
-      "SELECT * FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC LIMIT 1",
+      "SELECT * FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC, rowid DESC LIMIT 1",
     )
     .get(day) as Record<string, unknown> | undefined;
   const existing = existingRow ? rowToSession(existingRow) : null;
@@ -577,6 +579,38 @@ export async function todaySession(
   return row;
 }
 
+/**
+ * Noch ein Training am selben Tag (wenn das geplante schon erledigt ist): neue Einheit neben der
+ * erledigten, der Coach weiß, was heute schon trainiert wurde. Wartet auf die KI.
+ */
+export async function extraSession(
+  ai: FitnessAi | null,
+  db: FitDb,
+  catalog: Catalog,
+  opts: {
+    day?: string;
+    wait?: boolean;
+    checkin?: PlanContext["checkin"];
+    forceType?: DayType | undefined;
+    log?: ((m: string) => void) | undefined;
+  } = {},
+): Promise<SessionRow> {
+  const day = opts.day ?? localDay();
+  // Noch nicht begonnene Zusatz-Einheit von vorhin ersetzen statt stapeln.
+  db.prepare("DELETE FROM sessions WHERE day = ? AND kind = 'coach' AND status = 'planned'").run(
+    day,
+  );
+  const ctx = buildContext(db, catalog, day, opts.checkin, opts.forceType);
+  const rules = withSkillBlock(db, catalog, day, buildRulesPlan(ctx));
+  const row = insertSession(db, day, rules, "regeln");
+  if (ai?.available()) {
+    // Regelplan sofort; der Coach verfeinert im Hintergrund (freie Modelle brauchen teils Minuten).
+    const job = upgrade(ai, db, catalog, row, opts.checkin, opts.forceType, opts.log);
+    if (opts.wait) await job;
+  }
+  return getSession(db, row.id) as SessionRow;
+}
+
 /** Einmal je Sitzung im Hintergrund nachbessern, nicht bei jedem Abruf erneut. */
 const failedRecently = new Set<string>();
 
@@ -595,7 +629,7 @@ export async function prepareNext(
     // Ein schon vorbereiteter, noch nicht begonnener Plan entstand ohne dieses Feedback → neu planen.
     const has = db
       .prepare(
-        "SELECT status FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC LIMIT 1",
+        "SELECT status FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC, rowid DESC LIMIT 1",
       )
       .get(d) as { status: string } | undefined;
     if (has && has.status !== "planned") return null;

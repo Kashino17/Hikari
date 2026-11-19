@@ -33,7 +33,7 @@ export function Today() {
         <div class="mt16">
           ${!session ? html`<div class="skel" style="height:380px" />`
             : done ? html`<${DoneCard} s=${session} />`
-            : html`<${Hero} s=${session} restDay=${!isTrainingDay} onAdapt=${() => setAdapt(true)} />`}
+            : html`<${Hero} s=${session} restDay=${!isTrainingDay} second=${state?.week?.find((w) => w.day === day)?.done} onAdapt=${() => setAdapt(true)} />`}
         </div>
         <div class="sec"><h2 class="h2">Dein Tag</h2></div>
         <div class="tiles">
@@ -60,7 +60,7 @@ function Week({ state }) {
   })}</div>`;
 }
 
-function Hero({ s, restDay, onAdapt }) {
+function Hero({ s, restDay, second, onAdapt }) {
   const plan = s.plan;
   const mains = plan.blocks.filter((b) => b.kind === 'main' || b.kind === 'finisher').flatMap((b) => b.items.map((i) => i.ex));
   const picks = [...new Set(mains)].slice(0, 3);
@@ -70,7 +70,7 @@ function Hero({ s, restDay, onAdapt }) {
       <div class="media">${picks.map((id, i) => html`<${Loop} media=${s.exercises[id]?.media} still=${i > 0} eager=${i === 0} />`)}</div>
     </button>
     <div class="body">
-      <div class="kicker"><${Icon} n="bolt" fill style="font-size:16px" />${restDay ? 'RUHETAG · OPTIONAL' : 'DEIN TRAINING HEUTE'}</div>
+      <div class="kicker"><${Icon} n="bolt" fill style="font-size:16px" />${second ? 'ZWEITES TRAINING HEUTE' : restDay ? 'RUHETAG · OPTIONAL' : 'DEIN TRAINING HEUTE'}</div>
       <h2>${plan.title}</h2>
       <div class="meta">
         <span><${Icon} n="schedule" />${plan.minutes} min</span>
@@ -92,6 +92,7 @@ function Hero({ s, restDay, onAdapt }) {
 
 function DoneCard({ s }) {
   const [hist] = useData('/fitness/history?days=7');
+  const [extra, setExtra] = useState(false);
   const rev = hist?.sessions?.find((x) => x.id === s.id)?.review;
   return html`<div class="review">
     <div class="row"><div class="iconTile"><${Icon} n="check" /></div><div class="grow"><div class="eyebrow" style="color:rgb(var(--train))">Erledigt</div><div class="h3">${s.plan.title}</div></div></div>
@@ -103,7 +104,9 @@ function DoneCard({ s }) {
     ${rev && html`<div class="grp"><div class="gl"><${Icon} n="psychology" style="font-size:16px" />Coach</div><p class="mt4" style="font-size:14.5px">${rev.headline}</p>
       ${rev.next?.length > 0 && html`<ul>${rev.next.map((n) => html`<li>${n}</li>`)}</ul>`}</div>`}
     ${!rev && html`<button class="btn tint mt16" onClick=${() => nav(`coach/${s.id}`)}><${Icon} n="psychology" />Auswertung des Coachs</button>`}
+    <button class="btn mt12" onClick=${() => setExtra(true)}><${Icon} n="add_circle" />Noch ein Training heute</button>
     <button class="btn ghost mt8" onClick=${() => nav('training', { replace: true })}>Nächstes Training ansehen</button>
+    ${extra && html`<${ExtraSheet} onClose=${() => setExtra(false)} />`}
   </div>`;
 }
 
@@ -178,6 +181,41 @@ function AdaptSheet({ onClose }) {
         <div class="chips wrap">${WISH.map(([k, l]) => html`<button class=${cls('chip', wish === k && 'on')} onClick=${() => setWish(k)}>${l}</button>`)}</div></div>
       <button class="btn mt24" disabled=${busy} onClick=${go}>${busy ? html`<${Spinner} />Coach plant neu …` : 'Plan anpassen'}</button>
       ${busy && html`<p class="small muted mt8" style="text-align:center">Dauert meist 20–60 Sekunden.</p>`}
+    </div>
+  <//>`;
+}
+
+const EXTRA_TYPES = [['', 'Coach entscheidet'], ['ganzkoerper', 'Ganzkörper'], ['druck', 'Drücken'], ['zug', 'Ziehen'], ['beine', 'Beine'], ['core', 'Rumpf'], ['ausdauer', 'Ausdauer'], ['mobilitaet', 'Beweglichkeit']];
+
+/** Noch ein Training am selben Tag — der Coach weiß, was heute schon dran war. */
+function ExtraSheet({ onClose }) {
+  const [type, setType] = useState('');
+  const [minutes, setMinutes] = useState(20);
+  const [energy, setEnergy] = useState(3);
+  const [busy, setBusy] = useState(false);
+  const go = async () => {
+    setBusy(true);
+    try {
+      const s = await api.post('/fitness/extra', { minutes, energy, ...(type ? { dayType: type } : {}) });
+      setData('/fitness/today', s);
+      refresh('/fitness/state');
+      onClose();
+      nav(`einheit/${s.id}`);
+    } catch {
+      toast('Server nicht erreichbar');
+      setBusy(false);
+    }
+  };
+  return html`<${Sheet} title="Noch ein Training" onClose=${busy ? () => {} : onClose}>
+    <div class="c-train">
+      <p class="small muted">Der Coach weiß, was du heute schon trainiert hast, und plant andere Schwerpunkte — eher kürzer und ruhiger. Der Plan steht sofort, der Coach stimmt ihn im Hintergrund noch ab.</p>
+      <div class="fbq"><div class="q">Worauf hast du Lust?</div>
+        <div class="chips wrap">${EXTRA_TYPES.map(([k, l]) => html`<button class=${cls('chip', type === k && 'on')} onClick=${() => setType(k)}>${l}</button>`)}</div></div>
+      <div class="fbq"><div class="q">Wie lange?</div>
+        <div class="chips wrap">${[10, 15, 20, 30, 45].map((m) => html`<button class=${cls('chip', minutes === m && 'on')} onClick=${() => setMinutes(m)}>${m} min</button>`)}</div></div>
+      <div class="fbq"><div class="q">Wie fit fühlst du dich noch?</div>
+        <div class="scale">${['Platt', 'Müde', 'Okay', 'Gut', 'Top'].map((l, i) => html`<button class=${cls(energy === i + 1 && 'on')} onClick=${() => setEnergy(i + 1)}><b>${i + 1}</b>${l}</button>`)}</div></div>
+      <button class="btn mt24" disabled=${busy} onClick=${go}>${busy ? html`<${Spinner} />Coach plant …` : 'Training planen lassen'}</button>
     </div>
   <//>`;
 }

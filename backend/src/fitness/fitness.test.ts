@@ -4,6 +4,7 @@ import { loadCatalog } from "./catalog.js";
 import {
   applyFeedback,
   buildContext,
+  extraSession,
   getSession,
   settleAiPlan,
   todaySession,
@@ -256,5 +257,27 @@ describe("Barcode und Zutatenbilder", () => {
     expect(im.mealDb("mixed wheat bread")).toContain("Bread");
     expect(im.mealDb("salmon fillet")).toContain("Salmon");
     expect(im.mealDb("unbekanntes zeug")).toBeNull();
+  });
+});
+
+describe("Zweites Training am selben Tag", () => {
+  it("legt nach einer erledigten Einheit eine neue an, die den Tag kennt und ruhiger ist", async () => {
+    const db = freshDb();
+    saveProfile(db, { onboarded: true });
+    const day = "2026-11-19";
+    const first = await todaySession(null, db, catalog, { day });
+    applyFeedback(
+      db,
+      first,
+      { overall: 3, pain: [], exercises: [] },
+      { seconds: 1800, done: {}, skipped: [] },
+    );
+    const second = await extraSession(null, db, catalog, { day });
+    expect(second.id).not.toBe(first.id);
+    expect(second.status).toBe("planned");
+    expect(second.plan.intensity).not.toBe("hart");
+    expect(second.plan.coach.why.join(" ")).toContain("Heute schon erledigt");
+    expect((await todaySession(null, db, catalog, { day })).id).toBe(second.id);
+    expect(getSession(db, first.id)?.status).toBe("done");
   });
 });

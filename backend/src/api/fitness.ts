@@ -20,6 +20,7 @@ import {
   type SessionFeedback,
   type SessionResult,
   applyFeedback,
+  extraSession,
   getSession,
   prepareNext,
   reviewSession,
@@ -314,7 +315,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const today =
       (db
         .prepare(
-          "SELECT id, status FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC LIMIT 1",
+          "SELECT id, status FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC, rowid DESC LIMIT 1",
         )
         .get(day) as { id: string; status: string } | undefined) ?? null;
     const streak = trainingStreak(db, day, profile.trainingDays);
@@ -365,7 +366,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       };
     const s = db
       .prepare(
-        "SELECT plan, status, result FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC LIMIT 1",
+        "SELECT plan, status, result FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC, rowid DESC LIMIT 1",
       )
       .get(day) as { plan: string; status: string; result: string | null } | undefined;
     const food = foodLogDay(db, day);
@@ -547,8 +548,38 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     return v ?? reply.code(404).send({ error: "not_found" });
   });
 
+  /** Noch ein Training heute — wenn das geplante schon erledigt ist (der Coach berücksichtigt es). */
+  app.post<{ Body: { dayType?: DayType; minutes?: number; energy?: number } }>(
+    "/fitness/extra",
+    async (req) => {
+      const s = await extraSession(ai, db, catalog, {
+        forceType: req.body.dayType,
+        checkin: {
+          ...(req.body.minutes ? { minutes: req.body.minutes } : {}),
+          ...(req.body.energy ? { energy: req.body.energy } : {}),
+        },
+        log: deps.log,
+      });
+      return sessionView(s);
+    },
+  );
+
   /** Freies Training: Tagestyp und Dauer selbst gewählt (zählt wie eine Coach-Einheit). */
   app.post<{ Body: { dayType: DayType; minutes?: number } }>("/fitness/custom", async (req) => {
+    const latest = db
+      .prepare(
+        "SELECT status FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC, rowid DESC LIMIT 1",
+      )
+      .get(localDay()) as { status: string } | undefined;
+    // Heute schon trainiert → zusätzliche Einheit statt die erledigte zurückzugeben.
+    if (latest?.status === "done" || latest?.status === "active") {
+      const extra = await extraSession(ai, db, catalog, {
+        forceType: req.body.dayType,
+        checkin: req.body.minutes ? { minutes: req.body.minutes } : undefined,
+        log: deps.log,
+      });
+      return sessionView(extra);
+    }
     const s = await todaySession(ai, db, catalog, {
       regenerate: true,
       wait: true,
@@ -699,6 +730,75 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         .send({ error: "lookup_failed" });
     }
   });
+
+  /**
+   * Produkt ohne Datenbank-Eintrag: Nährwerttabelle (und gern die Vorderseite) fotografieren — die KI
+   * liest die Werte je 100 g/ml ab; das Produkt gilt ab dann für diese Nummer (auch auf Reisen).
+   */
+  app.post<{ Body: { ean: string; base64: string; mime?: string; name?: string } }>(
+    "/fitness/food/label",
+    { bodyLimit: 12 * 1024 * 1024 },
+    async (req, reply) => {
+      const ean = String(req.body.ean ?? "").replace(/\D/g, "");
+      if (ean.length < 6) return reply.code(400).send({ error: "ean" });
+      if (!ai.available()) return reply.code(503).send({ error: "no_key" });
+      try {
+        const { value } = await ai.ask(
+          {
+            task: "vision",
+            system:
+              'Lies die Nährwerttabelle auf dem Foto einer Lebensmittelverpackung exakt ab (Sprache egal: Englisch, Malaiisch, Chinesisch, Thai …). Gib die Werte JE 100 g bzw. 100 ml an — steht nur "pro Portion" da, rechne mit der angegebenen Portionsgröße auf 100 um. Energie in kcal (kJ ÷ 4,184). Natrium in Salz umrechnen (Salz = Natrium × 2,5). Lies auch Produktname, Marke, Packungsgröße und Portionsgröße, falls sichtbar. Fehlende Werte = null, nichts erfinden. Antworte NUR mit JSON: {"readable":true,"name":"…","brand":"…","quantity":"…","serving_g":null,"per":"100g|100ml","per100":{"kcal":0,"protein":0,"carbs":0,"sugar":0,"fat":0,"satfat":0,"fiber":0,"salt":0,"calcium_mg":null,"iron_mg":null}}',
+            input: req.body.name
+              ? `Produktname laut Nutzer: ${req.body.name}`
+              : "Lies die Nährwerttabelle.",
+            image: { mime: req.body.mime ?? "image/jpeg", base64: String(req.body.base64 ?? "") },
+            maxTokens: 1500,
+            temperature: 0.1,
+            timeoutMs: 60_000,
+          },
+          (raw) => raw as Record<string, unknown>,
+        );
+        if (!value.readable) return reply.code(422).send({ error: "unreadable" });
+        const p100 = (value.per100 ?? {}) as Record<string, unknown>;
+        const per100: Nutrients = {};
+        for (const k of [
+          "kcal",
+          "protein",
+          "carbs",
+          "sugar",
+          "fat",
+          "satfat",
+          "fiber",
+          "salt",
+        ] as const) {
+          const v = Number(p100[k]);
+          if (p100[k] !== null && Number.isFinite(v) && v >= 0) per100[k] = v;
+        }
+        if (Number(p100.calcium_mg) > 0) per100.calcium = Number(p100.calcium_mg);
+        if (Number(p100.iron_mg) > 0) per100.iron = Number(p100.iron_mg);
+        if (per100.kcal === undefined) return reply.code(422).send({ error: "unreadable" });
+        const quantity = value.quantity ? String(value.quantity) : null;
+        const product = {
+          ean,
+          name: String(req.body.name || value.name || `Produkt ${ean}`).slice(0, 100),
+          brand: value.brand ? String(value.brand).slice(0, 60) : null,
+          quantity,
+          serving: Number(value.serving_g) > 0 ? Number(value.serving_g) : null,
+          servingLabel: null,
+          pack: null,
+          image: null,
+          per100,
+          liquid: value.per === "100ml",
+          nutriscore: null,
+          source: "eigen" as const,
+        };
+        barcodes.save(product);
+        return { product };
+      } catch (e) {
+        return reply.code(502).send({ error: e instanceof Error ? e.message : "label_failed" });
+      }
+    },
+  );
 
   /** Freitext (»2 Eier, 1 Scheibe Vollkornbrot mit Butter«) → Zutaten mit Gramm + Nährwerte. */
   app.post<{ Body: { text: string } }>("/fitness/food/text", async (req, reply) => {

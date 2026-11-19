@@ -26,6 +26,8 @@ export interface BarcodeProduct {
   per100: Nutrients;
   liquid: boolean;
   nutriscore: string | null;
+  /** Woher: Open Food Facts, UPCitemdb (nur Name) oder selbst erfasst (Nährwerttabelle fotografiert) */
+  source?: "openfoodfacts" | "upcitemdb" | "eigen";
 }
 
 // [unser Schlüssel, Feld bei Open Food Facts, Faktor]
@@ -95,6 +97,15 @@ export class BarcodeLookup {
     private request: typeof fetch = fetch,
   ) {}
 
+  /** Selbst erfasstes Produkt (Nährwerttabelle fotografiert) — gilt ab jetzt für diese Nummer. */
+  save(product: BarcodeProduct) {
+    this.db
+      .prepare(
+        "INSERT INTO foods(key, name, source, per100, updated_at) VALUES(?, ?, 'eigen', ?, ?) ON CONFLICT(key) DO UPDATE SET name = excluded.name, source = excluded.source, per100 = excluded.per100, updated_at = excluded.updated_at",
+      )
+      .run(`off:${product.ean}`, product.name, JSON.stringify(product), Date.now());
+  }
+
   async find(ean: string): Promise<BarcodeProduct | null> {
     const key = `off:${ean}`;
     const row = this.db.prepare("SELECT per100, updated_at FROM foods WHERE key = ?").get(key) as
@@ -123,16 +134,59 @@ export class BarcodeLookup {
         if (!r.ok) continue;
         const d = (await r.json()) as { status?: number; product?: Record<string, unknown> };
         product = d.status === 1 && d.product ? mapProduct(ean, d.product) : null;
+        if (product) product.source = "openfoodfacts";
         break;
       } catch {
         /* Ausweich-Host versuchen */
       }
     }
+    // Nicht bei Open Food Facts: Name über UPCitemdb (frei, 100 am Tag), dann Websuche der KI.
+    let hint: { name: string; brand: string | null; image: string | null } | null = null;
+    if (!product?.per100.kcal) hint = await this.upcItemDb(ean).catch(() => null);
+    // Websuche über Gemini (google_search) geht nur mit Abrechnung — im kostenlosen Kontingent
+    // antwortet Google sofort mit 429 (gemessen 19.11.2026). Deshalb: Nährwerttabelle fotografieren.
+    if (!product && hint)
+      product = {
+        ean,
+        name: hint.name,
+        brand: hint.brand,
+        quantity: null,
+        serving: null,
+        servingLabel: null,
+        pack: null,
+        image: hint.image,
+        per100: {},
+        liquid: false,
+        nutriscore: null,
+        source: "upcitemdb",
+      };
+    // Nichts gefunden nur einen Tag merken (vielleicht trägt es jemand bei Open Food Facts ein).
     this.db
       .prepare(
-        "INSERT INTO foods(key, name, source, per100, updated_at) VALUES(?, ?, 'openfoodfacts', ?, ?) ON CONFLICT(key) DO UPDATE SET name = excluded.name, per100 = excluded.per100, updated_at = excluded.updated_at",
+        "INSERT INTO foods(key, name, source, per100, updated_at) VALUES(?, ?, ?, ?, ?) ON CONFLICT(key) DO UPDATE SET name = excluded.name, source = excluded.source, per100 = excluded.per100, updated_at = excluded.updated_at",
       )
-      .run(key, product?.name ?? "", JSON.stringify(product), Date.now());
+      .run(
+        key,
+        product?.name ?? "",
+        product?.source ?? "openfoodfacts",
+        JSON.stringify(product),
+        Date.now(),
+      );
     return product;
+  }
+
+  private async upcItemDb(ean: string) {
+    const r = await this.request(`https://api.upcitemdb.com/prod/trial/lookup?upc=${ean}`, {
+      headers: { "user-agent": UA },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!r.ok) return null;
+    const d = (await r.json()) as {
+      items?: { title?: string; brand?: string; images?: string[] }[];
+    };
+    const it = d.items?.[0];
+    return it?.title
+      ? { name: it.title, brand: it.brand || null, image: it.images?.[0] ?? null }
+      : null;
   }
 }
