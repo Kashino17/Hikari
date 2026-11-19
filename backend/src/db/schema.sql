@@ -267,7 +267,11 @@ CREATE TABLE IF NOT EXISTS ebooks (
   added_at      INTEGER NOT NULL,
   updated_at    INTEGER NOT NULL,
   missing_since INTEGER,
-  hidden_reason TEXT
+  hidden_reason TEXT,
+  -- Titelbild geprüft? NULL = noch nicht, 'source' = Bild der Quelle ist echt,
+  -- 'openlibrary' = echter Deckel aus Open Library (cover_alt_url), 'none' = kein echtes Bild.
+  cover_status  TEXT,
+  cover_alt_url TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_ebooks_source ON ebooks(source);
 CREATE INDEX IF NOT EXISTS idx_ebooks_added ON ebooks(added_at);

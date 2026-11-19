@@ -229,7 +229,27 @@ describe("/api/ebooks", () => {
       (await app.inject({ method: "GET", url: "/api/ebooks/gutenberg%3Ar1/cover" })).statusCode,
     ).toBe(404);
     const { json } = await get("/api/ebooks/gutenberg%3Ac1");
-    expect(json.coverUrl).toBe("/api/ebooks/gutenberg%3Ac1/cover");
+    expect(json.coverUrl).toBe("/api/ebooks/gutenberg%3Ac1/cover?v=2");
+  });
+
+  it("Bücher ohne echtes Titelbild bekommen keinen Bildpfad (die App zeichnet eines)", async () => {
+    upsertBook(db, raw("c2", { coverUrl: "https://img.test/c2.jpg" }), ["roman"], 3000);
+    db.prepare("UPDATE ebooks SET cover_status = 'none' WHERE id = 'gutenberg:c2'").run();
+    expect((await get("/api/ebooks/gutenberg%3Ac2")).json.coverUrl).toBeUndefined();
+    expect(
+      (await app.inject({ method: "GET", url: "/api/ebooks/gutenberg%3Ac2/cover" })).statusCode,
+    ).toBe(404);
+  });
+
+  it("Titelbild aus Open Library wird ausgeliefert", async () => {
+    upsertBook(db, raw("c3", { coverUrl: "https://img.test/c3.jpg" }), ["roman"], 3000);
+    db.prepare(
+      "UPDATE ebooks SET cover_status = 'openlibrary', cover_alt_url = 'https://covers.openlibrary.org/b/id/1-L.jpg' WHERE id = 'gutenberg:c3'",
+    ).run();
+    httpBody = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(300)]);
+    const r = await app.inject({ method: "GET", url: "/api/ebooks/gutenberg%3Ac3/cover" });
+    expect(r.statusCode).toBe(200);
+    expect(r.headers["content-type"]).toBe("image/jpeg");
   });
 
   it("Abgleich starten antwortet sofort mit 202", async () => {

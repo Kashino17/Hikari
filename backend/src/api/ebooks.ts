@@ -11,6 +11,7 @@ import { join } from "node:path";
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
 import { CATEGORIES } from "../ebooks/categories.js";
+import { resolveCover } from "../ebooks/covers.js";
 import { ensureBookFile } from "../ebooks/files.js";
 import type { PoliteHttp } from "../ebooks/http.js";
 import { normalizeForSearch } from "../ebooks/persist.js";
@@ -23,6 +24,8 @@ export interface EbookDeps {
   ebookDir: string;
   coverDir: string;
   http: PoliteHttp;
+  /** Für Open Library (langsamer, 1 Anfrage/s); sonst http. */
+  coverHttp?: PoliteHttp;
   sources: EbookSource[];
   log?: (msg: string) => void;
 }
@@ -60,6 +63,7 @@ interface Row {
   word_count: number | null;
   description: string | null;
   source_url: string;
+  cover_status: string | null;
 }
 
 /** FTS-Anfrage aus freier Eingabe: jedes Wort als Wortanfang, alle Wörter müssen passen. */
@@ -86,7 +90,11 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       authors: JSON.parse(r.authors_json) as string[],
       year: r.year ?? undefined,
       format: r.format,
-      coverUrl: r.cover_url ? `/api/ebooks/${encodeURIComponent(r.id)}/cover` : undefined,
+      // Kein echtes Bild → kein Pfad, die App zeichnet ein Titelbild. v=2: alte Muster-Cover im Bild-Speicher der App verwerfen.
+      coverUrl:
+        r.cover_status === "none" || (r.cover_status === null && !r.cover_url)
+          ? undefined
+          : `/api/ebooks/${encodeURIComponent(r.id)}/cover?v=2`,
       categories: (catsOf.all(r.id) as { category: string }[]).map((c) => c.category),
       source: r.source,
       wordCount: r.word_count ?? undefined,
@@ -94,7 +102,7 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     };
   }
   const COLS =
-    "e.id, e.source, e.title, e.authors_json, e.year, e.format, e.cover_url, e.word_count, e.description, e.source_url";
+    "e.id, e.source, e.title, e.authors_json, e.year, e.format, e.cover_url, e.word_count, e.description, e.source_url, e.cover_status";
 
   app.get("/api/ebooks/home", async () => {
     const newest = db
@@ -277,15 +285,35 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     }
   });
 
+  const resolving = new Map<string, ReturnType<typeof resolveCover>>();
   app.get<{ Params: { id: string } }>("/api/ebooks/:id/cover", async (req, reply) => {
-    const r = db.prepare("SELECT cover_url FROM ebooks WHERE id = ?").get(req.params.id) as
-      | { cover_url: string | null }
+    const id = req.params.id;
+    const r = db
+      .prepare("SELECT cover_url, cover_status, cover_alt_url FROM ebooks WHERE id = ?")
+      .get(id) as
+      | { cover_url: string | null; cover_status: string | null; cover_alt_url: string | null }
       | undefined;
-    if (!r?.cover_url) return reply.code(404).send({ error: "kein Titelbild" });
+    if (!r) return reply.code(404).send({ error: "kein Titelbild" });
+    let status = r.cover_status;
+    let url = status === "openlibrary" ? r.cover_alt_url : r.cover_url;
+    if (status === null) {
+      // Noch nicht geprüft: jetzt prüfen (erzeugte Gutenberg-Muster aussortieren, Open Library fragen).
+      let p = resolving.get(id);
+      if (!p) {
+        p = resolveCover(db, deps.coverHttp ?? deps.http, id).finally(() => resolving.delete(id));
+        resolving.set(id, p);
+      }
+      const res = await p;
+      status = res.status;
+      url = res.status === "none" ? null : res.url;
+    }
+    if (status === "none" || !url) return reply.code(404).send({ error: "kein Titelbild" });
     const dir = join(deps.coverDir, "ebooks");
-    const path = join(dir, `${req.params.id.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 150)}.img`);
+    const path = join(dir, `${id.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 150)}.${status}.img`);
     if (!existsSync(path)) {
-      const got = await deps.http.get(r.cover_url, { tries: 1 }).catch(() => null);
+      const got = await (status === "openlibrary" ? (deps.coverHttp ?? deps.http) : deps.http)
+        .get(url, { tries: 1 })
+        .catch(() => null);
       if (!got || got.status !== 200 || got.body.length < 100)
         return reply.code(404).send({ error: "kein Titelbild" });
       mkdirSync(dir, { recursive: true });

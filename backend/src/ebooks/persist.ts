@@ -63,7 +63,10 @@ export function upsertBook(
     if (exists) {
       db.prepare(
         `UPDATE ebooks SET title=@title, authors_json=@authors_json, year=@year, description=@description,
-           subjects_json=@subjects_json, format=@format, file_url=@file_url, cover_url=@cover_url,
+           subjects_json=@subjects_json, format=@format, file_url=@file_url,
+           cover_status=CASE WHEN cover_url IS @cover_url THEN cover_status ELSE NULL END,
+           cover_alt_url=CASE WHEN cover_url IS @cover_url THEN cover_alt_url ELSE NULL END,
+           cover_url=@cover_url,
            source_url=@source_url, word_count=COALESCE(@word_count, word_count), popularity=@popularity,
            updated_at=@now, missing_since=NULL
          WHERE id=@id`,

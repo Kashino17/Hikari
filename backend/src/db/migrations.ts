@@ -84,6 +84,11 @@ export function applyMigrations(db: Database.Database): void {
   // Live-DB upgrades: columns added after v0.8.x channels page polish.
   // Each call is idempotent — safe across reboots and across CI test DBs.
   addColumnIfMissing(db, "channels", "handle", "TEXT");
+  // E-Books: geprüfte Titelbilder (19.11.2026).
+  if ((db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='ebooks'").get())) {
+    addColumnIfMissing(db, "ebooks", "cover_status", "TEXT");
+    addColumnIfMissing(db, "ebooks", "cover_alt_url", "TEXT");
+  }
   addColumnIfMissing(db, "channels", "description", "TEXT");
   addColumnIfMissing(db, "channels", "subscribers", "INTEGER");
   addColumnIfMissing(db, "channels", "thumbnail_url", "TEXT");
