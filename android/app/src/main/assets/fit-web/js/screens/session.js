@@ -309,7 +309,7 @@ export function Feedback({ id }) {
   const [review, setReview] = useState(null);
   if (!s) return html`<div class="screen"><${Top} title="Feedback" /><div class="pad"><div class="skel" style="height:300px" /></div></div>`;
   if (review) return html`<${ReviewView} s=${s} review=${review} fin=${fin} />`;
-  const mains = [...new Map(s.plan.blocks.filter((b) => b.kind === 'main' || b.kind === 'finisher').flatMap((b) => b.items.map((i) => [i.ex, i]))).values()];
+  const mains = [...new Map(s.plan.blocks.filter((b) => b.kind === 'main' || b.kind === 'finisher').flatMap((b) => b.items.map((i) => [i.ex, i]))).entries()];
   const setEx = (ex, patch) => setExfb({ ...exfb, [ex]: { ...(exfb[ex] ?? {}), ...patch } });
   const regions = catalog?.regions ?? {};
   const submit = async () => {

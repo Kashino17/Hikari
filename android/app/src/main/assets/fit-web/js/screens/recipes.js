@@ -5,6 +5,7 @@ import { back, nav, useData, setData, refresh, toast, fmtNum, img, recipeImg, SL
 import { Icon, Top, cls, Empty, Stepper, Spinner, Sheet } from '../ui.js';
 
 const DIET = { alles: 'Mit Fleisch', vegetarisch: 'Vegetarisch', vegan: 'Vegan', pescetarisch: 'Mit Fisch' };
+const AREA = { American: 'Amerikanisch', British: 'Britisch', Canadian: 'Kanadisch', Chinese: 'Chinesisch', Croatian: 'Kroatisch', Dutch: 'Niederländisch', Egyptian: 'Ägyptisch', Filipino: 'Philippinisch', French: 'Französisch', Greek: 'Griechisch', Indian: 'Indisch', Irish: 'Irisch', Italian: 'Italienisch', Jamaican: 'Jamaikanisch', Japanese: 'Japanisch', Kenyan: 'Kenianisch', Malaysian: 'Malaysisch', Mexican: 'Mexikanisch', Moroccan: 'Marokkanisch', Polish: 'Polnisch', Portuguese: 'Portugiesisch', Russian: 'Russisch', Spanish: 'Spanisch', Thai: 'Thailändisch', Tunisian: 'Tunesisch', Turkish: 'Türkisch', Ukrainian: 'Ukrainisch', Vietnamese: 'Vietnamesisch', Australian: 'Australisch', Argentinian: 'Argentinisch', Colombian: 'Kolumbianisch', Norwegian: 'Norwegisch', Saudi: 'Saudi-arabisch', Syrian: 'Syrisch', Venezulan: 'Venezolanisch', Uruguayan: 'Uruguayisch', Slovakian: 'Slowakisch', Algerian: 'Algerisch', Indonesian: 'Indonesisch', Cambodian: 'Kambodschanisch', Peruvian: 'Peruanisch', Brazilian: 'Brasilianisch', Swedish: 'Schwedisch', Unknown: 'International' };
 const TAGS = { eiweissreich: 'Eiweißreich', leicht: 'Leicht', energiereich: 'Energiereich', ballaststoffreich: 'Ballaststoffreich', lowcarb: 'Low Carb' };
 
 function Card({ r, wide }) {
@@ -88,7 +89,7 @@ export function RecipeDetail({ id }) {
         <div class="row gap6" style="flex-wrap:wrap">${r.tags.map((t) => html`<span class="tag">${TAGS[t] ?? t}</span>`)}<span class="tag plain">${DIET[r.diet]}</span></div>
         <h1 style="font-size:26px;font-weight:700;letter-spacing:-.4px;margin-top:10px;line-height:1.2">${r.title}</h1>
         ${r.summary && html`<p class="muted mt8" style="line-height:1.5">${r.summary}</p>`}
-        <div class="meta"><span><${Icon} n="schedule" />${r.minutes} min</span><span><${Icon} n="signal_cellular_alt" />${['', 'Leicht', 'Mittel', 'Anspruchsvoll'][r.difficulty]}</span><span><${Icon} n="public" />${r.cuisine}</span></div>
+        <div class="meta"><span><${Icon} n="schedule" />${r.minutes} min</span><span><${Icon} n="signal_cellular_alt" />${['', 'Leicht', 'Mittel', 'Anspruchsvoll'][r.difficulty]}</span><span><${Icon} n="public" />${AREA[r.cuisine] ?? r.cuisine}</span></div>
 
         <div class="row mt20" style="justify-content:space-between"><div><div class="h3">Deine Portion</div><div class="tiny muted">${p === d.suggestedFactor ? 'passend zu deinem Tagesziel' : `${fmtNum(p, 2)} Portionen`}</div></div>
           <${Stepper} value=${p} step=${0.25} min=${0.25} max=${r.servings * 2} onChange=${setPortions} fmt=${(v) => `${fmtNum(v, 2)}×`} /></div>
