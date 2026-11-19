@@ -8,6 +8,7 @@ import com.hikari.app.domain.profile.AreaTiles
 import com.hikari.app.domain.profile.MangaReading
 import com.hikari.app.domain.profile.MangaShelfEntry
 import com.hikari.app.domain.profile.MangaTile
+import com.hikari.app.domain.profile.BookReading
 import com.hikari.app.domain.profile.RussianTile
 import com.hikari.app.domain.repo.MangaRepository
 import com.hikari.app.domain.repo.MusicRepository
@@ -59,6 +60,7 @@ class AreaTilesViewModel @Inject constructor(
     private val settings: SettingsStore,
     private val newsRepo: NewsRepository,
     private val mangaRepo: MangaRepository,
+    private val ebookRepo: com.hikari.app.domain.ebooks.EbookRepository,
     private val musicRepo: MusicRepository,
     private val studyTime: RussianStudyTime,
     russianRepo: RussianCourseRepository,
@@ -136,11 +138,22 @@ class AreaTilesViewModel @Inject constructor(
             val cover = { path: String? -> path?.takeIf { it.isNotBlank() }?.let { mangaRepo.coverImageUrl(base, it) } }
             val reading = runCatching { mangaRepo.getContinue() }.getOrNull()
             val shelf = runCatching { mangaRepo.listSeries() }.getOrNull()
-            // Beides nicht erreichbar (kein Netz): stehen lassen, was die Kachel schon zeigt.
-            if (reading == null && shelf == null) return@launch
+            // Angefangene Bücher liegen auf dem Handy — die gehen auch ohne Netz.
+            val books = runCatching {
+                val states = ebookRepo.allStates().first()
+                ebookRepo.local().first().mapNotNull { b ->
+                    val st = states[b.id] ?: return@mapNotNull null
+                    val pct = st.position?.value?.percent ?: return@mapNotNull null
+                    val at = st.lastOpenedAt ?: return@mapNotNull null
+                    if (st.finished?.value == true) null else BookReading(b.title.substringBefore(": "), b.coverPath, pct, at)
+                }
+            }.getOrDefault(emptyList())
+            // Nichts erreichbar und kein Buch: stehen lassen, was die Kachel schon zeigt.
+            if (reading == null && shelf == null && books.isEmpty()) return@launch
             _manga.value = AreaTiles.manga(
-                reading = reading.orEmpty().map { MangaReading(it.title, cover(it.coverPath), it.chapterId, it.pageNumber) },
+                reading = reading.orEmpty().map { MangaReading(it.title, cover(it.coverPath), it.chapterId, it.pageNumber, it.updatedAt) },
                 shelf = shelf.orEmpty().map { MangaShelfEntry(it.title, cover(it.coverPath), it.totalChapters) },
+                books = books,
             )
         }
     }

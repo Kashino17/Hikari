@@ -382,28 +382,40 @@ private fun MangaAreaTile(tile: MangaTile?, modifier: Modifier, onClick: () -> U
                 ) {
                     covers.forEachIndexed { i, url ->
                         val middle = covers.size == 3 && i == 1
-                        AsyncImage(
-                            model = url,
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
+                        val isBook = tile?.kinds?.getOrNull(i) == com.hikari.app.domain.profile.ReadKind.BOOK
+                        Box(
+                            Modifier
                                 .zIndex(if (middle) 1f else 0f)
                                 .graphicsLayer {
                                     rotationZ = fanAngle(i, covers.size)
                                     translationY = if (middle) -3.dp.toPx() else 0f
+                                    shadowElevation = 6.dp.toPx()
+                                    shape = RoundedCornerShape(5.dp)
+                                    clip = true
                                 }
                                 // Ein einzelnes Titelbild darf größer sein als die drei im Fächer.
-                                .width(if (covers.size == 1) 50.dp else 42.dp)
+                                .width(if (covers.size == 1) 52.dp else 44.dp)
                                 .aspectRatio(2f / 3f)
-                                .clip(RoundedCornerShape(5.dp))
                                 .background(HikariSurfaceHigh),
-                        )
+                        ) {
+                            AsyncImage(
+                                model = url,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize(),
+                            )
+                            // Unten ein feiner Streifen: Bernstein = Buch, Violett = Manga.
+                            Box(
+                                Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(3.dp)
+                                    .background(if (isBook) AreaColors.Books else AreaColors.Manga),
+                            )
+                        }
                     }
                 }
             }
             Spacer(Modifier.weight(1f))
             Text(
-                tile?.title ?: "Manga lesen",
+                tile?.title ?: "Lesen",
                 color = HikariText,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
@@ -412,11 +424,16 @@ private fun MangaAreaTile(tile: MangaTile?, modifier: Modifier, onClick: () -> U
             )
             Spacer(Modifier.height(2.dp))
             Text(
-                tile?.detail ?: "Deine Reihen",
+                tile?.detail ?: "Bücher und Manga",
                 color = HikariTextMuted,
                 fontSize = 12.sp,
                 maxLines = 1,
             )
+            tile?.progress?.let { p ->
+                Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(HikariText.copy(alpha = 0.12f))) {
+                    Box(Modifier.fillMaxWidth(p.coerceIn(0f, 1f)).fillMaxHeight().background(AreaColors.Books))
+                }
+            }
         }
     }
 }

@@ -34,7 +34,19 @@ data class MangaReading(
     val cover: String?,
     val chapterId: String,
     val page: Int,
+    /** Zuletzt gelesen (ms) — zum Mischen mit Büchern. */
+    val at: Long = 0,
 )
+
+/** Ein angefangenes Buch für die Kachel „Lesen“. */
+data class BookReading(
+    val title: String,
+    val cover: String?,
+    val percent: Double,
+    val at: Long,
+)
+
+enum class ReadKind { MANGA, BOOK }
 
 /** Was die Manga-Kachel im Profil zeigt. */
 data class MangaTile(
@@ -42,6 +54,10 @@ data class MangaTile(
     val detail: String,
     /** Bis zu drei Titelbilder für den Fächer; das der genannten Reihe steht vorn. */
     val covers: List<String>,
+    /** Art je Titelbild (gleiche Reihenfolge wie [covers]). */
+    val kinds: List<ReadKind> = covers.map { ReadKind.MANGA },
+    /** Fortschritt des vorn genannten Buchs (0..1), bei Manga null. */
+    val progress: Float? = null,
 )
 
 /** Reine Logik hinter den Bereichs-Kacheln im Profil. */
@@ -98,24 +114,31 @@ object AreaTiles {
      * angefangen ist, die erste Reihe aus dem Regal. So zeigt die Kachel Titelbilder, sobald es
      * welche gibt, nicht erst nach dem ersten Lesen. Leeres Regal → null (Kachel bleibt beim Namen).
      */
-    fun manga(reading: List<MangaReading>, shelf: List<MangaShelfEntry>): MangaTile? {
-        val current = reading.firstOrNull()
+    fun manga(reading: List<MangaReading>, shelf: List<MangaShelfEntry>, books: List<BookReading> = emptyList()): MangaTile? {
+        // Zuletzt Gelesenes zuerst, egal ob Buch oder Manga.
+        data class Item(val title: String, val cover: String?, val kind: ReadKind, val at: Long, val detail: String, val progress: Float?)
+        val items = (
+            reading.mapIndexed { i, r ->
+                Item(r.title, r.cover, ReadKind.MANGA, if (r.at > 0) r.at else Long.MAX_VALUE - i,
+                    chapterNumber(r.chapterId)?.let { "Kapitel $it" } ?: "Seite ${r.page}", null)
+            } + books.map { b -> Item(b.title, b.cover, ReadKind.BOOK, b.at, "Buch · ${(b.percent * 100).toInt()} %", b.percent.toFloat()) }
+            ).sortedByDescending { it.at }
+        val current = items.firstOrNull()
         val featured = shelf.firstOrNull { it.cover != null } ?: shelf.firstOrNull()
-        val covers = (
-            listOf(current?.cover ?: featured?.cover.takeIf { current == null }) +
-                reading.map { it.cover } +
-                shelf.map { it.cover }
-            ).filterNotNull().distinct().take(3)
+        val fan = (
+            items.map { it.cover to it.kind } +
+                (if (current == null) listOf(featured?.cover to ReadKind.MANGA) else emptyList()) +
+                shelf.map { it.cover to ReadKind.MANGA }
+            ).filter { it.first != null }.distinctBy { it.first }.take(3)
+        val covers = fan.map { it.first!! }
+        val kinds = fan.map { it.second }
         return when {
-            current != null -> MangaTile(
-                title = current.title,
-                detail = chapterNumber(current.chapterId)?.let { "Kapitel $it" } ?: "Seite ${current.page}",
-                covers = covers,
-            )
+            current != null -> MangaTile(title = current.title, detail = current.detail, covers = covers, kinds = kinds, progress = current.progress)
             featured != null -> MangaTile(
                 title = featured.title,
                 detail = if (featured.totalChapters > 0) "${featured.totalChapters} Kapitel" else "Noch nicht angefangen",
                 covers = covers,
+                kinds = kinds,
             )
             else -> null
         }

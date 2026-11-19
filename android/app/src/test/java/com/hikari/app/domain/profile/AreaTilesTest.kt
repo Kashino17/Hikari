@@ -157,4 +157,24 @@ class AreaTilesTest {
         assertNull(AreaTiles.gameTitle("unbekannt"))
         assertNull(AreaTiles.gameTitle(null))
     }
+
+    @Test fun `Lesen-Kachel - zuletzt Gelesenes vorn, Bücher und Manga gemischt`() {
+        val manga = listOf(MangaReading("One Piece", "c/op.jpg", "onepiecetube:one-piece:763", 4, at = 200))
+        val books = listOf(BookReading("Die Verwandlung", "/files/verw.jpg", 0.42, at = 300))
+        val t = AreaTiles.manga(manga, emptyList(), books)!!
+        assertEquals("Die Verwandlung", t.title)
+        assertEquals("Buch · 42 %", t.detail)
+        assertEquals(0.42f, t.progress!!, 0.001f)
+        assertEquals(listOf("/files/verw.jpg", "c/op.jpg"), t.covers)
+        assertEquals(listOf(ReadKind.BOOK, ReadKind.MANGA), t.kinds)
+    }
+
+    @Test fun `Lesen-Kachel - Manga zuletzt gelesen bleibt bei Kapitelangabe`() {
+        val manga = listOf(MangaReading("One Piece", "c/op.jpg", "onepiecetube:one-piece:763", 4, at = 500))
+        val books = listOf(BookReading("Die Verwandlung", null, 0.42, at = 300))
+        val t = AreaTiles.manga(manga, emptyList(), books)!!
+        assertEquals("One Piece", t.title)
+        assertEquals("Kapitel 763", t.detail)
+        assertEquals(listOf(ReadKind.MANGA), t.kinds)
+    }
 }
