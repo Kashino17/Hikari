@@ -24,4 +24,16 @@ class ReaderBridgeTest {
         assertEquals(listOf(TocEntry("Erstes Kapitel", "c1.xhtml", 0), TocEntry("Teil", "c1.xhtml#a", 1)), toc)
         assertEquals(TextSelection("epubcfi(/6/4)", "Ein Satz."), ReaderMessages.selection("""{"cfi":"epubcfi(/6/4)","text":"Ein Satz."}"""))
     }
+
+    @Test fun einstellungenAlsGueltigesJsonAuchMitStandardwerten() {
+        fun parse(s: String) = kotlinx.serialization.json.Json.parseToJsonElement(s).let { it as kotlinx.serialization.json.JsonObject }
+        fun kotlinx.serialization.json.JsonObject.str(k: String) = (this[k] as kotlinx.serialization.json.JsonPrimitive).content
+        val obj = parse(ReaderMessages.settingsJson(ReaderSettings(), columns = 2))
+        assertEquals("papier", obj.str("theme"))
+        assertEquals("19", obj.str("size"))
+        assertEquals("2", obj.str("columns"))
+        val nacht = parse(ReaderMessages.settingsJson(ReaderSettings(theme = "nacht", size = 22), columns = 1))
+        assertEquals("nacht", nacht.str("theme"))
+        assertEquals("1", nacht.str("columns"))
+    }
 }

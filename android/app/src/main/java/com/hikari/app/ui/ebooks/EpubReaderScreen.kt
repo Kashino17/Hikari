@@ -159,6 +159,13 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                     this.settings.allowFileAccess = false
                     this.settings.textZoom = 100
                     webViewClient = ReaderWebClient(c, File(book.filePath))
+                    // Meldungen der Leser-Seite ins Protokoll (Fehlersuche per adb logcat -s HikariReader).
+                    webChromeClient = object : android.webkit.WebChromeClient() {
+                        override fun onConsoleMessage(m: android.webkit.ConsoleMessage): Boolean {
+                            android.util.Log.d("HikariReader", "${m.messageLevel()}: ${m.message()} (${m.sourceId()}:${m.lineNumber()})")
+                            return true
+                        }
+                    }
                     addJavascriptInterface(
                         ReaderBridge(
                             onBoot = {
@@ -176,7 +183,7 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                             onSelected = { sel -> main.post { vm.onSelection(sel) } },
                             onCenterTap = { main.post { barsVisible = !barsVisible } },
                             onMarkTap = { m -> main.post { sheet = "toc" } },
-                            onFailure = { msg -> main.post { vm.onError(msg) } },
+                            onFailure = { msg -> android.util.Log.w("HikariReader", "Öffnen fehlgeschlagen: $msg"); main.post { vm.onError(msg) } },
                         ),
                         "HikariBridge",
                     )
@@ -256,7 +263,6 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                 modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 6.dp),
             )
         }
-        s.error?.let { if (!s.ready) Text("Dieses Buch lässt sich nicht öffnen.", color = colors.fg, modifier = Modifier.align(Alignment.Center)) }
     }
 
     when (sheet) {

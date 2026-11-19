@@ -177,6 +177,5 @@ class ReaderViewModel @Inject constructor(
         prefs.edit().putString("settings", json.encodeToString(ReaderSettings.serializer(), _settings.value)).apply()
     }
 
-    fun settingsJson(columns: Int): String =
-        json.encodeToString(ReaderSettings.serializer(), _settings.value).dropLast(1) + ",\"columns\":$columns}"
+    fun settingsJson(columns: Int): String = ReaderMessages.settingsJson(_settings.value, columns)
 }

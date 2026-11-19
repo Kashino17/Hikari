@@ -32,6 +32,16 @@ object ReaderMessages {
     fun toc(s: String): List<TocEntry> = runCatching { json.decodeFromString<List<TocEntry>>(s) }.getOrDefault(emptyList())
     fun selection(s: String): TextSelection? = runCatching { json.decodeFromString<TextSelection>(s) }.getOrNull()
     fun tappedMark(s: String): TappedMark? = runCatching { json.decodeFromString<TappedMark>(s) }.getOrNull()
+
+    /** Einstellungen für reader.js — immer vollständig (auch Standardwerte) plus Spaltenzahl. */
+    fun settingsJson(s: ReaderSettings, columns: Int): String = kotlinx.serialization.json.buildJsonObject {
+        put("theme", kotlinx.serialization.json.JsonPrimitive(s.theme))
+        put("font", kotlinx.serialization.json.JsonPrimitive(s.font))
+        put("size", kotlinx.serialization.json.JsonPrimitive(s.size))
+        put("lineHeight", kotlinx.serialization.json.JsonPrimitive(s.lineHeight))
+        put("margin", kotlinx.serialization.json.JsonPrimitive(s.margin))
+        put("columns", kotlinx.serialization.json.JsonPrimitive(columns))
+    }.toString()
 }
 
 /** Die Brücke, die die Leser-Seite als window.HikariBridge sieht. Aufrufe kommen nicht im Haupt-Thread an. */
