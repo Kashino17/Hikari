@@ -76,7 +76,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.hikari.app.player.PlayerTrace.log("activity create neuaufbau=${savedInstanceState != null}")
-        enableEdgeToEdge()
+        // Hikari ist immer dunkel: Statusleisten-Symbole immer hell — auch wenn das Handy im Hellmodus steht.
+        enableEdgeToEdge(
+            statusBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+            navigationBarStyle = androidx.activity.SystemBarStyle.dark(android.graphics.Color.TRANSPARENT),
+        )
         deepLinkRoute = intent.deepLinkRoute()
         sharedImport = intent.sharedImport()
         // Frischer Start (nicht bloß Drehen): nach Updates suchen und einen

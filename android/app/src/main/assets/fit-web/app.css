@@ -1064,3 +1064,18 @@ html.area-mind .steps li::before{background:rgb(var(--mind));color:var(--ink)}
 html.area-mind .tag{background:var(--high);color:var(--text)}
 html.area-mind .card{background:var(--surface);border-color:var(--border)}
 .affList button .ms{flex:none}
+/* Randlos: weiße Übungsbilder nicht unter die Statusleiste (weiße Symbole wären unsichtbar) */
+.sessHero{height:calc(260px + var(--sat));border-top:var(--sat) solid var(--bg)}
+.exHero{height:calc(300px + var(--sat));border-top:var(--sat) solid var(--bg)}
+.sessHero .back,.sessHero .act,.exHero .back{top:8px}
+/* Rezeptfotos dürfen bis oben laufen, oben ein Schatten für die Statusleiste */
+.recHero::before{content:"";position:absolute;left:0;right:0;top:0;height:calc(var(--sat) + 56px);background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0));z-index:1;pointer-events:none}
+/* Affirmationsliste: das Symbol ist auch ein <span> — nur der Text darf wachsen */
+.affList button>span{width:auto}
+.affList button>span:not(.ms){flex:1 1 auto;min-width:0}
+/* Atem-Kugel: volle goldene Scheibe mit Ring statt Leuchtschleier */
+html.area-mind .orb i,html.area-mind .breathPreview .orb i,html.area-mind .orb.done i{background:rgb(var(--mind));box-shadow:none}
+html.area-mind .orb i::after{inset:30%;background:#0A0F26;opacity:.16}
+html.area-mind .orb::before{border:1.5px solid rgba(var(--mind),.38)}
+/* Unterseiten: letzter Inhalt nicht unter der Gestenleiste */
+.scroll::after{content:"";display:block;height:var(--sab)}

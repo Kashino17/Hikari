@@ -600,8 +600,10 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 arguments = listOf(navArgument("id") { type = NavType.StringType }),
             ) { entry -> russianWeb("russian-pattern/${entry.arguments?.getString("id")}") }
             // Fitness: Training mit KI-Coach, Skills, Ernährung — Web-Oberfläche (assets/fit-web).
+            // Fitness und Achtsamkeit laufen randlos: die Web-Seite malt selbst unter Status- und
+            // Gestenleiste und polstert mit den echten Randmaßen (FitWebBridge.insets) — sonst graue Streifen.
             composable("fitness") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
+                Box(Modifier.fillMaxSize()) {
                     com.hikari.app.ui.fitness.FitWebScreen(
                         onClose = { nav.popBackStack() },
                         onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
@@ -609,7 +611,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 }
             }
             composable("mind") {
-                Box(Modifier.fillMaxSize().padding(padding)) {
+                Box(Modifier.fillMaxSize()) {
                     com.hikari.app.ui.fitness.FitWebScreen(
                         onClose = { nav.popBackStack() },
                         onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },

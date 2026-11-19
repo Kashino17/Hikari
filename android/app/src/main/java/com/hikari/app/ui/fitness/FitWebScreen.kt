@@ -23,13 +23,18 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.FileProvider
 import android.media.ExifInterface
@@ -95,6 +100,13 @@ fun FitWebScreen(
     bridge.launchCamera = { runCatching { camera.launch(photoUri) }.onFailure { bridge.onPhoto(null) } }
     bridge.launchGallery = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
 
+    // Randmaße in dp (= CSS-Pixel) — Statusleiste/Kamera-Aussparung oben, Gestenleiste unten.
+    val density = LocalDensity.current
+    val bars = WindowInsets.systemBars.union(WindowInsets.displayCutout)
+    val insetTop = with(density) { bars.getTop(this).toDp().value }
+    val insetBottom = with(density) { bars.getBottom(this).toDp().value }
+    LaunchedEffect(insetTop, insetBottom) { bridge.pushInsets(insetTop, insetBottom) }
+
     // Barcode-Scanner-Modul der Play-Dienste schon vorab laden, damit der erste Scan nicht scheitert.
     LaunchedEffect(Unit) {
         runCatching {
@@ -113,7 +125,8 @@ fun FitWebScreen(
             WebView(ctx).apply {
                 // Ohne eigene LayoutParams rechnet Chromium mit Viewport-Höhe 0.
                 layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                setBackgroundColor(Color.parseColor("#1F1F22"))
+                // Grundfarbe des Bereichs, damit beim Laden kein grauer Blitz entsteht.
+                setBackgroundColor(Color.parseColor(if (area == "mind") "#0A0F26" else "#000000"))
                 overScrollMode = WebView.OVER_SCROLL_NEVER
                 settings.javaScriptEnabled = true
                 settings.domStorageEnabled = true
@@ -236,6 +249,16 @@ class FitWebBridge(
     }
 
     @JavascriptInterface fun exit() { main.post { if (!closed) onClose() } }
+
+    // ── Randmaße: die Seite läuft bis unter Statusleiste und Gestenleiste und polstert selbst ──
+    @Volatile var insetTop = 0f
+    @Volatile var insetBottom = 0f
+    @JavascriptInterface fun insets(): String = "{\"t\":$insetTop,\"b\":$insetBottom}"
+    fun pushInsets(top: Float, bottom: Float) {
+        insetTop = top
+        insetBottom = bottom
+        js("window.__hkInsets && window.__hkInsets()")
+    }
 
     // ── Kleiner Speicher (Zwischenstände, Vorlieben) ──
     @JavascriptInterface fun storeGet(key: String): String = prefs.getString(key, "") ?: ""

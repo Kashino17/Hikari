@@ -10,6 +10,17 @@ let seq = 0;
 if (typeof window !== 'undefined') {
   window.__hkCb = (id, payload) => cbs.get(id)?.(payload);
   window.__hkEvent = (name, payload) => { for (const fn of [...(events.get(name) ?? [])]) fn(payload); };
+  // Randmaße aus der App (Statusleiste oben, Gestenleiste unten) — die Seite läuft randlos.
+  window.__hkInsets = () => {
+    try {
+      const v = JSON.parse(native?.insets?.() ?? 'null');
+      if (!v) return;
+      const st = document.documentElement.style;
+      st.setProperty('--sat', `${v.t}px`);
+      st.setProperty('--sab', `${v.b}px`);
+    } catch { /* Vorschau im Browser */ }
+  };
+  window.__hkInsets();
 }
 export function nativeOn(name, fn) {
   if (!events.has(name)) events.set(name, new Set());
