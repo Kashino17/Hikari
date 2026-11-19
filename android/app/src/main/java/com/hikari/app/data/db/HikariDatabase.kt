@@ -19,8 +19,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         SearchHistoryEntity::class,
         MusicPlayEventEntity::class,
         WhatsAppMessageEntity::class,
+        LocalEbookEntity::class,
+        EbookStateEntity::class,
     ],
-    version = 25,
+    version = 26,
     exportSchema = false,
 )
 abstract class HikariDatabase : RoomDatabase() {
@@ -35,6 +37,8 @@ abstract class HikariDatabase : RoomDatabase() {
     abstract fun searchHistoryDao(): SearchHistoryDao
     abstract fun musicPlayEventDao(): MusicPlayEventDao
     abstract fun whatsAppDao(): WhatsAppDao
+    abstract fun localEbookDao(): LocalEbookDao
+    abstract fun ebookStateDao(): EbookStateDao
 }
 
 /**
@@ -290,5 +294,20 @@ val MIGRATION_24_25 = object : Migration(24, 25) {
         db.execSQL("ALTER TABLE local_downloads ADD COLUMN poster_url TEXT")
         db.execSQL("ALTER TABLE local_downloads ADD COLUMN series_poster_url TEXT")
         db.execSQL("ALTER TABLE local_downloads ADD COLUMN series_backdrop_url TEXT")
+    }
+}
+
+/** E-Books (19.11.2026): geladene Bücher und Lesestand. */
+val MIGRATION_25_26 = object : Migration(25, 26) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `local_ebooks` (`id` TEXT NOT NULL, `title` TEXT NOT NULL, `authors` TEXT NOT NULL, " +
+                "`format` TEXT NOT NULL, `cover_path` TEXT, `file_path` TEXT NOT NULL, `bytes` INTEGER NOT NULL, " +
+                "`added_at` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS `ebook_state` (`book_id` TEXT NOT NULL, `json` TEXT NOT NULL, `dirty` INTEGER NOT NULL, " +
+                "`updated_at` INTEGER NOT NULL, PRIMARY KEY(`book_id`))",
+        )
     }
 }

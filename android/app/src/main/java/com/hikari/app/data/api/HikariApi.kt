@@ -369,6 +369,46 @@ interface HikariApi {
     @GET("languages")
     suspend fun listLanguages(): LanguagesResponse
 
+    // ── E-Books (backend/src/api/ebooks.ts) ──────────────────────────────────
+    @GET("api/ebooks/home")
+    suspend fun getEbookHome(): com.hikari.app.data.api.dto.EbookHomeDto
+
+    @GET("api/ebooks/list")
+    suspend fun listEbooks(
+        @Query("q") q: String? = null,
+        @Query("category") category: String? = null,
+        @Query("source") source: String? = null,
+        @Query("format") format: String? = null,
+        @Query("length") length: String? = null,
+        @Query("state") state: String? = null,
+        @Query("sort") sort: String? = null,
+        @Query("offset") offset: Int = 0,
+        @Query("limit") limit: Int = 30,
+    ): com.hikari.app.data.api.dto.EbookListDto
+
+    @GET("api/ebooks/{id}")
+    suspend fun getEbook(@Path("id") id: String): com.hikari.app.data.api.dto.EbookDetailDto
+
+    @retrofit2.http.Streaming
+    @GET("api/ebooks/{id}/file")
+    suspend fun downloadEbookFile(@Path("id") id: String): retrofit2.Response<okhttp3.ResponseBody>
+
+    @retrofit2.http.Streaming
+    @GET("api/ebooks/{id}/cover")
+    suspend fun downloadEbookCover(@Path("id") id: String): retrofit2.Response<okhttp3.ResponseBody>
+
+    @GET("api/ebooks/state")
+    suspend fun getEbookStates(): Map<String, com.hikari.app.domain.ebooks.BookState>
+
+    @PUT("api/ebooks/state/{id}")
+    suspend fun putEbookState(
+        @Path("id") id: String,
+        @Body state: com.hikari.app.domain.ebooks.BookState,
+    ): com.hikari.app.domain.ebooks.BookState
+
+    @POST("api/ebooks/sync")
+    suspend fun startEbookSync()
+
     @GET("api/manga/series")
     suspend fun listMangaSeries(): List<MangaSeriesDto>
 

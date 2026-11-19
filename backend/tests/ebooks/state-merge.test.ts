@@ -16,3 +16,10 @@ describe("mergeState (gemeinsame Fälle mit der App)", () => {
   for (const c of cases) it(c.name, () => expect(mergeState(c.a, c.b)).toEqual(c.expected));
   it("es gibt mindestens 6 Fälle", () => expect(cases.length).toBeGreaterThanOrEqual(6));
 });
+
+describe("Testfälle in der App", () => {
+  it("sind dieselben wie hier", () => {
+    const app = readFileSync(join(__dirname, "../../../android/app/src/test/resources/ebooks/merge-cases.json"), "utf8");
+    expect(JSON.parse(app)).toEqual(cases);
+  });
+});

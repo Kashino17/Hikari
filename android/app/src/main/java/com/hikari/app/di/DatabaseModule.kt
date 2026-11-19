@@ -20,6 +20,7 @@ import com.hikari.app.data.db.MIGRATION_21_22
 import com.hikari.app.data.db.MIGRATION_22_23
 import com.hikari.app.data.db.MIGRATION_23_24
 import com.hikari.app.data.db.MIGRATION_24_25
+import com.hikari.app.data.db.MIGRATION_25_26
 import com.hikari.app.data.db.MusicPlayEventDao
 import com.hikari.app.data.db.MusicPlaylistDao
 import com.hikari.app.data.db.MusicPlaylistSongDao
@@ -53,6 +54,7 @@ object DatabaseModule {
                 MIGRATION_22_23,
                 MIGRATION_23_24,
                 MIGRATION_24_25,
+                MIGRATION_25_26,
             )
             .fallbackToDestructiveMigration()
             .build()
@@ -67,6 +69,25 @@ object DatabaseModule {
     @Provides @Singleton
     fun provideLocalDownloadDao(db: HikariDatabase): LocalDownloadDao =
         db.localDownloadDao()
+
+    @Provides @Singleton
+    fun provideLocalEbookDao(db: HikariDatabase): com.hikari.app.data.db.LocalEbookDao = db.localEbookDao()
+
+    @Provides @Singleton
+    fun provideEbookStateDao(db: HikariDatabase): com.hikari.app.data.db.EbookStateDao = db.ebookStateDao()
+
+    @Provides @Singleton
+    fun provideEbookRepository(
+        api: com.hikari.app.data.api.HikariApi,
+        localDao: com.hikari.app.data.db.LocalEbookDao,
+        stateDao: com.hikari.app.data.db.EbookStateDao,
+        @ApplicationContext ctx: Context,
+        json: kotlinx.serialization.json.Json,
+    ): com.hikari.app.domain.ebooks.EbookRepository = com.hikari.app.domain.ebooks.EbookRepository(
+        api, localDao, stateDao,
+        com.hikari.app.domain.ebooks.EbookFileStore(java.io.File(ctx.filesDir, "ebooks")),
+        json,
+    )
 
     @Provides @Singleton
     fun provideLocalMangaDao(db: HikariDatabase): LocalMangaDao =
