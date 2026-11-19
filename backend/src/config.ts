@@ -12,6 +12,7 @@ export interface Config {
   dataDir: string;
   videoDir: string;
   mangaDir: string;
+  ebookDir: string;
   coverDir: string;
   dbPath: string;
   dailyBudget: number;
@@ -67,6 +68,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     dataDir,
     videoDir: join(dataDir, "videos"),
     mangaDir: join(dataDir, "manga"),
+    ebookDir: join(dataDir, "ebooks"),
     coverDir: join(dataDir, "covers"),
     dbPath: join(dataDir, "hikari.db"),
     dailyBudget: num("DAILY_BUDGET", env.DAILY_BUDGET, 15),

@@ -42,4 +42,9 @@ describe("loadConfig", () => {
     const cfg = loadConfig({ HIKARI_DATA_DIR: "/tmp/hikari-test" });
     expect(cfg.mangaDir).toBe("/tmp/hikari-test/manga");
   });
+
+  it("exposes ebookDir under HIKARI_DATA_DIR", () => {
+    const cfg = loadConfig({ HIKARI_DATA_DIR: "/tmp/hikari-test" });
+    expect(cfg.ebookDir).toBe("/tmp/hikari-test/ebooks");
+  });
 });

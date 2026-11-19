@@ -16,6 +16,9 @@ import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerMangaRoutes } from "./api/manga.js";
+import { createPoliteHttp } from "./ebooks/http.js";
+import { sources as ebookSources } from "./ebooks/sources/index.js";
+import { runEbookSync, shouldSyncOnStart } from "./ebooks/sync.js";
 import { registerMusicRoutes } from "./api/music.js";
 import { itChannelShorts } from "./api/music-innertube.js";
 import { registerNewsRoutes } from "./api/news.js";
@@ -63,6 +66,7 @@ import { enrichMangaCovers, ensureMangaCover, setMangaCoverScout } from "./manga
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
 mkdirSync(cfg.mangaDir, { recursive: true });
+mkdirSync(cfg.ebookDir, { recursive: true });
 mkdirSync(cfg.coverDir, { recursive: true });
 
 const db = openDatabase(cfg.dbPath);
@@ -436,6 +440,16 @@ cron.schedule("0 4 * * *", () => {
     app.log.info({ result }, "cleanup completed");
   }
 });
+
+// E-Books: Kataloge aller Quellen nachts um 4:30 (nach dem Aufräumen um 4:00),
+// beim Start nur, wenn der Katalog leer ist oder der letzte Lauf über 24 h her ist.
+const ebookHttp = createPoliteHttp();
+const runEbooks = () =>
+  runEbookSync({ db, sources: ebookSources, http: ebookHttp, log: (msg) => app.log.info(msg) }).catch((err) =>
+    app.log.warn({ err }, "ebooks: Abgleich abgestürzt"),
+  );
+cron.schedule("30 4 * * *", () => void runEbooks());
+if (shouldSyncOnStart(db, Date.now())) setTimeout(() => void runEbooks(), 60_000).unref();
 
 app.listen({ port: cfg.port, host: "0.0.0.0" }).catch((err) => {
   app.log.error(err);

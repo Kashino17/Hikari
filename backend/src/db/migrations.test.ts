@@ -17,6 +17,7 @@ describe("applyMigrations", () => {
       "downloaded_videos",
       "ebook_categories",
       "ebook_files",
+      "ebook_source_cache",
       "ebook_state",
       "ebooks",
       "ebooks_fts",

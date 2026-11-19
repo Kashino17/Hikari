@@ -293,3 +293,10 @@ CREATE TABLE IF NOT EXISTS ebook_state (
   state_json TEXT NOT NULL,
   updated_at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS ebook_source_cache (
+  source     TEXT NOT NULL,
+  key        TEXT NOT NULL,
+  value_json TEXT NOT NULL,
+  updated_at INTEGER NOT NULL,
+  PRIMARY KEY (source, key)
+);
