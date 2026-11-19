@@ -1,0 +1,148 @@
+package com.hikari.app.ui.ebooks
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import java.io.File
+
+/** Farbe einer Kategorie — für typografische Titelbilder und Akzente. */
+internal fun categoryColor(category: String?): Color = when (category) {
+    "krimi" -> Color(0xFF7F1D1D)
+    "abenteuer" -> Color(0xFF9A3412)
+    "fantastik" -> Color(0xFF4C1D95)
+    "historisch" -> Color(0xFF78350F)
+    "liebe" -> Color(0xFF9D174D)
+    "humor" -> Color(0xFFA16207)
+    "maerchen" -> Color(0xFF115E59)
+    "drama" -> Color(0xFF1E3A8A)
+    "lyrik" -> Color(0xFF6B21A8)
+    "kinder" -> Color(0xFF0F766E)
+    "roman", "erzaehlungen" -> Color(0xFF14532D)
+    "geschichte", "biografie" -> Color(0xFF57534E)
+    "philosophie", "religion", "psychologie" -> Color(0xFF312E81)
+    "wissenschaft", "reisen" -> Color(0xFF155E75)
+    "politik" -> Color(0xFF334155)
+    "kunst" -> Color(0xFF831843)
+    else -> Color(0xFF3F3F46)
+}
+
+/**
+ * Titelbild eines Buchs: echtes Bild, sonst ein schlichtes typografisches Titelbild.
+ * PDF-Bücher tragen immer ein deutliches „PDF“-Schild.
+ */
+@Composable
+fun BookCover(
+    title: String,
+    authors: String,
+    category: String?,
+    isPdf: Boolean,
+    imageUrl: String?,
+    modifier: Modifier = Modifier,
+    localPath: String? = null,
+) {
+    var failed by remember(imageUrl, localPath) { mutableStateOf(false) }
+    val data: Any? = localPath?.let(::File)?.takeIf { it.exists() } ?: imageUrl
+    Box(
+        modifier
+            .aspectRatio(2f / 3f)
+            .clip(RoundedCornerShape(6.dp))
+            .border(1.dp, Color(0x14FFFFFF), RoundedCornerShape(6.dp)),
+    ) {
+        if (data == null || failed) {
+            TypographicCover(title, authors, category)
+        } else {
+            AsyncImage(
+                model = data,
+                contentDescription = title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                onError = { failed = true },
+            )
+        }
+        if (isPdf) PdfBadge(Modifier.align(Alignment.TopEnd).padding(6.dp))
+    }
+}
+
+@Composable
+fun PdfBadge(modifier: Modifier = Modifier) {
+    Text(
+        "PDF",
+        color = Color.White,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 0.8.sp,
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(Color(0xE6111111))
+            .border(1.dp, Color(0x66FFFFFF), RoundedCornerShape(4.dp))
+            .padding(horizontal = 6.dp, vertical = 2.dp),
+    )
+}
+
+@Composable
+private fun TypographicCover(title: String, authors: String, category: String?) {
+    val c = categoryColor(category)
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(c, c.copy(alpha = 0.75f).compositeOver(Color(0xFF111111))))),
+    ) {
+        Column(Modifier.fillMaxSize().padding(10.dp)) {
+            Box(Modifier.fillMaxWidth().height(2.dp).background(Color(0x55FFFFFF)))
+            Text(
+                title,
+                color = Color(0xF2FFFFFF),
+                fontFamily = FontFamily.Serif,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                lineHeight = 17.sp,
+                maxLines = 5,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+            Box(Modifier.weight(1f))
+            if (authors.isNotBlank()) {
+                Text(
+                    authors,
+                    color = Color(0xB3FFFFFF),
+                    fontFamily = FontFamily.Serif,
+                    fontSize = 10.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+private fun Color.compositeOver(bg: Color): Color = Color(
+    red = red * alpha + bg.red * (1 - alpha),
+    green = green * alpha + bg.green * (1 - alpha),
+    blue = blue * alpha + bg.blue * (1 - alpha),
+    alpha = 1f,
+)

@@ -711,15 +711,48 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 }
             }
             composable("manga") {
-                MangaListScreen(
-                    onSeriesClick = { id ->
-                        nav.navigate("manga/${URLEncoder.encode(id, "UTF-8")}")
+                com.hikari.app.ui.ebooks.LesenScreen(
+                    initialTab = null,
+                    manga = {
+                        MangaListScreen(
+                            onSeriesClick = { id ->
+                                nav.navigate("manga/${URLEncoder.encode(id, "UTF-8")}")
+                            },
+                            onContinueClick = { sId, cId, page ->
+                                val sE = URLEncoder.encode(sId, "UTF-8")
+                                val cE = URLEncoder.encode(cId, "UTF-8")
+                                nav.navigate("manga/$sE/$cE?page=$page")
+                            },
+                            withStatusBar = false,
+                        )
                     },
-                    onContinueClick = { sId, cId, page ->
-                        val sE = URLEncoder.encode(sId, "UTF-8")
-                        val cE = URLEncoder.encode(cId, "UTF-8")
-                        nav.navigate("manga/$sE/$cE?page=$page")
+                    books = {
+                        com.hikari.app.ui.ebooks.BooksHomeScreen(
+                            onBook = { id -> nav.navigate("buecher/${android.net.Uri.encode(id)}") },
+                            onList = { f -> nav.navigate(bookListRoute(f)) },
+                            onRead = { b -> nav.navigate("buecher/${android.net.Uri.encode(b.id)}/lesen") },
+                        )
                     },
+                )
+            }
+            composable(
+                "buecher/liste?q={q}&category={category}&format={format}&state={state}&sort={sort}",
+                arguments = listOf("q", "category", "format", "state", "sort").map { n ->
+                    navArgument(n) { type = NavType.StringType; nullable = true; defaultValue = null }
+                },
+            ) {
+                com.hikari.app.ui.ebooks.BookListScreen(
+                    onBack = { nav.popBackStack() },
+                    onBook = { id -> nav.navigate("buecher/${android.net.Uri.encode(id)}") },
+                )
+            }
+            composable(
+                "buecher/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            ) {
+                com.hikari.app.ui.ebooks.BookDetailScreen(
+                    onBack = { nav.popBackStack() },
+                    onRead = { b -> nav.navigate("buecher/${android.net.Uri.encode(b.id)}/lesen") },
                 )
             }
             composable(
@@ -827,4 +860,16 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
         }
       }
     }
+}
+
+/** Route der Bücher-Liste mit Startfilter. */
+private fun bookListRoute(f: com.hikari.app.domain.ebooks.EbookFilter): String {
+    val parts = listOfNotNull(
+        f.q?.let { "q=${android.net.Uri.encode(it)}" },
+        f.category?.let { "category=$it" },
+        f.format?.let { "format=$it" },
+        f.state?.let { "state=$it" },
+        "sort=${f.sort}",
+    )
+    return "buecher/liste?" + parts.joinToString("&")
 }

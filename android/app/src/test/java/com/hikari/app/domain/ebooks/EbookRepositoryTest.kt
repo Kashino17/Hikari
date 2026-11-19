@@ -46,6 +46,7 @@ class EbookRepositoryTest {
         override fun observe(id: String): Flow<EbookStateEntity?> = rows.map { it[id] }
         override suspend fun get(id: String): EbookStateEntity? = rows.value[id]
         override suspend fun all(): List<EbookStateEntity> = rows.value.values.toList()
+        override fun observeAll(): Flow<List<EbookStateEntity>> = rows.map { it.values.toList() }
         override suspend fun dirty(): List<EbookStateEntity> = rows.value.values.filter { it.dirty }
         override suspend fun upsert(e: EbookStateEntity) { rows.value = rows.value + (e.bookId to e) }
     }

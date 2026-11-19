@@ -60,6 +60,8 @@ fun MangaListScreen(
     onSeriesClick: (seriesId: String) -> Unit,
     onContinueClick: (seriesId: String, chapterId: String, page: Int) -> Unit,
     vm: MangaListViewModel = hiltViewModel(),
+    /** false, wenn „Lesen“ (Manga | Bücher) die Statusleiste schon freihält. */
+    withStatusBar: Boolean = true,
 ) {
     val state by vm.uiState.collectAsState()
     val syncStatus by vm.syncStatus.collectAsState()
@@ -74,7 +76,7 @@ fun MangaListScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(HikariBg)
-            .statusBarsPadding()
+            .then(if (withStatusBar) Modifier.statusBarsPadding() else Modifier)
             .verticalScroll(rememberScrollState()),
     ) {
         if (syncStatus is SyncStatus.Active) {

@@ -94,6 +94,9 @@ class EbookRepository(
 
     // ── Lesestand ────────────────────────────────────────────────────────────
 
+    fun allStates(): Flow<Map<String, BookState>> =
+        states.observeAll().map { rows -> rows.associate { it.bookId to decode(it) } }
+
     fun state(id: String): Flow<BookState> = states.observe(id).map { it?.let(::decode) ?: BookState() }
 
     /** Ändert den Lesestand lokal (sofort) und versucht, ihn zum Mac zu schicken. */

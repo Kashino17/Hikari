@@ -82,6 +82,7 @@ internal object AreaColors {
     val Russian = Color(0xFFF472B6)
     val Music = Color(0xFF22D3EE)
     val Manga = Color(0xFFA78BFA)
+    val Books = Color(0xFFD4A373)
     val News = Color(0xFF60A5FA)
     val Games = Color(0xFFFB923C)
     val Browser = Color(0xFF2DD4BF)
@@ -373,7 +374,7 @@ private fun MangaAreaTile(tile: MangaTile?, modifier: Modifier, onClick: () -> U
     Tile(hue, onClick, modifier.height(168.dp)) {
         if (covers.isEmpty()) GhostIcon(Icons.AutoMirrored.Outlined.MenuBook, hue)
         Column(Modifier.fillMaxSize()) {
-            TileLabel("Manga", hue, icon = Icons.AutoMirrored.Outlined.MenuBook)
+            TileLabel("Lesen", hue, icon = Icons.AutoMirrored.Outlined.MenuBook)
             if (covers.isNotEmpty()) {
                 Row(
                     modifier = Modifier.padding(start = if (covers.size == 1) 0.dp else 4.dp, top = 9.dp),

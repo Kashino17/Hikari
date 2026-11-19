@@ -28,6 +28,9 @@ interface EbookStateDao {
     @Query("SELECT * FROM ebook_state")
     suspend fun all(): List<EbookStateEntity>
 
+    @Query("SELECT * FROM ebook_state")
+    fun observeAll(): Flow<List<EbookStateEntity>>
+
     @Query("SELECT * FROM ebook_state WHERE dirty = 1")
     suspend fun dirty(): List<EbookStateEntity>
 
