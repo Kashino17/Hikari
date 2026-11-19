@@ -154,7 +154,9 @@ function Run({ s }) {
   const ex = step && step.t === 'work' ? s.exercises[step.ex] : null;
   const nextWork = steps.slice(idx + 1).find((x) => x.t === 'work');
 
-  useEffect(() => { keepAwake(true); return () => { keepAwake(false); voice.stop(); }; }, []);
+  const finished = useRef(false);
+  // Beim Verlassen verstummen — außer nach dem Ende: Rems »Training geschafft!« darf ausklingen.
+  useEffect(() => { keepAwake(true); return () => { keepAwake(false); if (!finished.current) voice.stop(); }; }, []);
   useEffect(() => { window.__fitBackGuard = () => { setQuit(true); return true; }; return () => { window.__fitBackGuard = null; }; }, []);
   // Gesamtuhr
   useEffect(() => {
@@ -170,12 +172,25 @@ function Run({ s }) {
     if (!step) return;
     if (step.t === 'rest') {
       setLeft(step.secs);
-      if (!step.short) voice.say(step.blockBreak ? `Pause. Als Nächstes: ${steps[idx + 1]?.block?.title ?? ''}` : 'Pause');
+      if (step.blockBreak) voice.say(`Block ${steps[idx + 1]?.block?.kind ?? 'main'}`);
+      else if (step.roundBreak) voice.say('Rundenpause');
+      else if (!step.short) voice.say('Pause');
     } else {
       setReps(step.unit === 'reps' ? step.amount : null);
       setLeft(step.unit === 'sec' ? step.amount : null);
-      const e = s.exercises[step.ex];
-      voice.say(step.side === 'Rechts' ? 'Seite wechseln' : `${e?.name ?? ''}. ${step.unit === 'sec' ? `${step.amount} Sekunden` : `${step.amount} Wiederholungen`}${step.perSide ? ' je Seite' : ''}`);
+      if (step.side === 'Rechts') voice.say('Seite wechseln');
+      else {
+        const prev = steps[idx - 1];
+        const firstOfRound = step.ii === 0 && step.rounds > 1 && step.block.format !== 'sets';
+        voice.say(
+          idx === 0 && 'Block warmup',
+          firstOfRound && (step.round === step.rounds - 1 ? 'Letzte Runde' : step.round > 0 && `Runde ${step.round + 1}`),
+          `ex:${step.ex}`,
+          voice.amount(step.amount, step.unit),
+          step.perSide && 'je Seite',
+        );
+        void prev;
+      }
       beep('go');
     }
   }, [idx]);
@@ -186,7 +201,11 @@ function Run({ s }) {
     if (left <= 0) { finishStep(); return undefined; }
     const t = setTimeout(() => {
       if (left <= 4 && left > 1) beep('tick');
-      if (step?.t === 'rest' && left === 4) { const n = s.exercises[nextWork?.ex]; if (n) voice.say(`Gleich: ${n.name}`); }
+      if (step?.t === 'rest' && left === 4 && nextWork) voice.say('Gleich', `ex:${nextWork.ex}`);
+      if (step?.t === 'work' && step.unit === 'sec' && step.amount >= 30 && !step.side && ['main', 'finisher', 'skill'].includes(step.block.kind)) {
+        if (left === Math.round(step.amount / 2) && step.amount >= 40) voice.say('Halbzeit');
+        else if (left === 11) voice.say('Noch zehn');
+      }
       setLeft((l) => (l == null ? l : l - 1));
     }, 1000);
     return () => clearTimeout(t);
@@ -217,7 +236,8 @@ function Run({ s }) {
   function done() {
     local.set(`fin:${s.id}`, { elapsed, result: result.current });
     local.set(`run:${s.id}`, null);
-    voice.say('Geschafft. Starke Leistung.');
+    finished.current = true;
+    voice.say('Fertig');
     nav(`feedback/${s.id}`, { replace: true });
   }
 

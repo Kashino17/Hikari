@@ -164,6 +164,7 @@ private class FitWebClient(private val app: Context, private val okHttp: OkHttpC
             "woff2" -> "font/woff2"
             "svg" -> "image/svg+xml"
             "png" -> "image/png"
+            "ogg" -> "audio/ogg"
             else -> "application/octet-stream"
         }
         return WebResourceResponse(mime, if (mime.startsWith("text/") || "json" in mime || "javascript" in mime) "utf-8" else null, 200, "OK", mapOf("Cache-Control" to "no-cache"), stream)

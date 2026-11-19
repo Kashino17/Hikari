@@ -126,22 +126,52 @@ export async function scanBarcode() {
   return { error: 'browser' };
 }
 
-// ── Sprachansagen (Training) ──
+// ── Sprachansagen (Training) in Rems Stimme ──
+// Vorab erzeugte Clips (tools/fit_voice) in assets/fit-web/voice, Index: Schlüssel → Datei.
+// Ansagen werden aus Bausteinen zusammengesetzt (Übung, Menge, »je Seite«). Fehlt ein Clip, bleibt
+// es still — bewusst KEINE Gerätestimme (Kadir mag die Computerstimme nicht).
 let voiceOn = local.get('voice', true);
+let voiceIndex = null;
+const voiceIndexReady = fetch('/voice/index.json').then((r) => (r.ok ? r.json() : {})).then((j) => { voiceIndex = j; }).catch(() => { voiceIndex = {}; });
+let queue = [];
+let current = null;
+let token = 0;
+function playNext(t) {
+  if (t !== token) return;
+  const key = queue.shift();
+  if (!key) { current = null; return; }
+  const id = voiceIndex?.[key];
+  if (!id) { playNext(t); return; }
+  const a = new Audio(`/voice/${id}.ogg`);
+  current = a;
+  a.onended = () => setTimeout(() => playNext(t), 90);
+  a.onerror = () => playNext(t);
+  a.play().catch(() => playNext(t));
+}
 export const voice = {
   get on() { return voiceOn; },
   set(on) { voiceOn = on; local.set('voice', on); if (!on) this.stop(); },
-  say(text) {
-    if (!voiceOn || !text) return;
-    if (native?.ttsSpeak) { native.ttsSpeak(`v${++seq}`, text, 'de-DE', 1.0); return; }
-    try {
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'de-DE';
-      speechSynthesis.speak(u);
-    } catch { /* ohne Stimme */ }
+  /** Bausteine nacheinander sprechen; eine neue Ansage ersetzt die laufende. */
+  async say(...keys) {
+    if (!voiceOn) return;
+    const list = keys.flat().filter(Boolean);
+    if (!list.length) return;
+    if (!voiceIndex) await voiceIndexReady;
+    this.stop();
+    queue = list;
+    playNext(token);
   },
-  stop() { try { if (native?.ttsStop) native.ttsStop(); else speechSynthesis.cancel(); } catch { /* */ } },
+  stop() {
+    token++;
+    queue = [];
+    try { current?.pause(); } catch { /* */ }
+    current = null;
+  },
+  /** Mengen-Baustein: »12 Wdh« bzw. »45 s« (auf 5 s gerundet, wie die Clips). */
+  amount(amount, unit) {
+    if (unit === 'sec') return `${Math.min(180, Math.max(5, Math.round(amount / 5) * 5))} s`;
+    return `${Math.min(60, Math.max(1, Math.round(amount)))} Wdh`;
+  },
 };
 
 export function beep(kind = 'tick') {

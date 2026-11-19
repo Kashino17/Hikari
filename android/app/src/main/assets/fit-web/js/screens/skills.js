@@ -170,7 +170,7 @@ function Practice({ s, st, catalog }) {
       const r = await api.post(`/fitness/skills/${s.id}/log`, { step: stepIdx, sets, feel });
       refresh('/fitness/skills');
       setRes(r);
-      if (r.advanced) { beep('go'); voice.say('Neue Stufe freigeschaltet'); }
+      if (r.advanced) { beep('go'); voice.say('Neue Stufe'); }
     } catch { toast('Server nicht erreichbar'); }
     setBusy(false);
   };

@@ -4,11 +4,14 @@ import { api, pickPhoto, scanBarcode } from '../platform.js';
 import { back, nav, useData, setData, refresh, today as todayStr, relDay, toast, fmtNum, SLOT_NAMES, SLOT_ICONS, slotNow, img, recipeImg, parseDay } from '../app.js';
 import { Icon, Ring, Bar, Sheet, Top, Seg, cls, Spinner, Empty } from '../ui.js';
 import { RecipeBrowse, IngImg } from './recipes.js';
+import { FoodStats } from './stats.js';
 
 const SLOTS = ['fruehstueck', 'mittag', 'abend', 'snack'];
 const shift = (d, n) => { const x = parseDay(d); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
 let foodTab = 'tagebuch';
 let foodDay = null;
+/** Von außen: Tagebuch an einem bestimmten Tag öffnen. */
+export function openFoodDay(day) { foodTab = 'tagebuch'; foodDay = day; nav('ernaehrung', { replace: true }); }
 
 export function Food() {
   const [tab, setTab] = useState(foodTab);
@@ -17,18 +20,19 @@ export function Food() {
   const isToday = day === todayStr();
   return html`<div class="screen tab c-food">
     <div class="scroll">
-      <header class="top big"><div class="tt"><h1>Ernährung</h1><div class="t2">${tab === 'rezepte' ? 'Rezepte passend zu deinem Ziel' : relDay(day, todayStr())}</div></div>
-        ${tab !== 'rezepte' && html`<button class="ib" onClick=${() => setDay(shift(day, -1))} aria-label="Vortag"><${Icon} n="chevron_left" /></button>
+      <header class="top big"><div class="tt"><h1>Ernährung</h1><div class="t2">${tab === 'rezepte' ? 'Rezepte passend zu deinem Ziel' : tab === 'verlauf' ? 'Nährstoffe über die Zeit' : relDay(day, todayStr())}</div></div>
+        ${tab !== 'rezepte' && tab !== 'verlauf' && html`<button class="ib" onClick=${() => setDay(shift(day, -1))} aria-label="Vortag"><${Icon} n="chevron_left" /></button>
         <button class="ib" disabled=${isToday} onClick=${() => setDay(shift(day, 1))} aria-label="Folgetag"><${Icon} n="chevron_right" /></button>`}</header>
-      <div class="pad"><${Seg} items=${[['tagebuch', 'Tagebuch'], ['plan', 'Tagesplan'], ['rezepte', 'Rezepte']]} value=${tab} onChange=${setTab} /></div>
+      <div class="pad"><${Seg} items=${[['tagebuch', 'Tagebuch'], ['plan', 'Plan'], ['verlauf', 'Verlauf'], ['rezepte', 'Rezepte']]} value=${tab} onChange=${setTab} /></div>
       <div class="pad mt16">
         ${tab === 'tagebuch' && html`<${Diary} day=${day} />`}
         ${tab === 'plan' && html`<${DayPlan} day=${day} />`}
         ${tab === 'rezepte' && html`<${RecipeBrowse} />`}
+        ${tab === 'verlauf' && html`<${FoodStats} />`}
       </div>
       <div style="height:90px" />
     </div>
-    ${tab === 'tagebuch' && isToday && html`<button class="fab2" onClick=${() => nav(`barcode/${slotNow()}`)} aria-label="Barcode scannen"><${Icon} n="barcode_scanner" /></button><button class="fab" onClick=${() => nav(`foto/${slotNow()}`)}><${Icon} n="photo_camera" />Foto</button>`}
+
   </div>`;
 }
 
@@ -57,6 +61,11 @@ function Diary({ day }) {
       </div>
       <div class="macros mt16">${mac.map(([key, l, goal]) => html`<div class="macro"><div class="l"><span>${l}</span></div><div class="v num">${fmtNum(d.totals[key] ?? 0)}<span class="muted" style="font-weight:400"> / ${goal} g</span></div><${Bar} value=${d.totals[key] ?? 0} max=${goal} /></div>`)}</div>
     </div>
+    ${day === todayStr() && html`<div class="actionBar mt12">
+      <button class="act main" onClick=${() => nav(`foto/${slotNow()}`)}><${Icon} n="photo_camera" /><span>Foto</span></button>
+      <button class="act" onClick=${() => nav(`barcode/${slotNow()}`)}><${Icon} n="barcode_scanner" /><span>Barcode</span></button>
+      <button class="act" onClick=${() => nav(`mahlzeit/neu/${slotNow()}`)}><${Icon} n="edit_note" /><span>Eintragen</span></button>
+    </div>`}
 
     ${SLOTS.map((slot) => {
       const es = d.entries.filter((e) => e.meal === slot);

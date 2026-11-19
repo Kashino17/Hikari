@@ -1,8 +1,15 @@
 // »Heute«: Woche, Trainingstag vom Coach, Tagesform, Ernährung und Skill auf einen Blick.
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
 import { api } from '../platform.js';
-import { nav, useData, setData, refresh, longDate, wdShort, today as todayStr, INTENSITY, toast, useCatalog, fmtNum } from '../app.js';
-import { Icon, Loop, Ring, Sheet, cls, Spinner } from '../ui.js';
+import { nav, useData, setData, refresh, longDate, wdShort, today as todayStr, relDay, parseDay, INTENSITY, toast, useCatalog, fmtNum, SLOT_NAMES } from '../app.js';
+import { Icon, Loop, Ring, Sheet, Bar, cls, Spinner } from '../ui.js';
+import { openFoodDay } from './food.js';
+
+const isoD = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const plusDays = (day, n) => { const x = parseDay(day); x.setDate(x.getDate() + n); return isoD(x); };
+const mondayOf = (day) => plusDays(day, -((parseDay(day).getDay() + 6) % 7));
+const FEEL = ['', 'sehr leicht', 'leicht', 'passend', 'schwer', 'sehr schwer'];
+let selDay = null; // bleibt beim Zurückkommen erhalten
 
 export function Today() {
   const [state] = useData('/fitness/state');
@@ -12,6 +19,10 @@ export function Today() {
   const catalog = useCatalog();
   const [adapt, setAdapt] = useState(false);
   const day = state?.day ?? todayStr();
+  const [sel, setSel0] = useState(selDay ?? day);
+  const [cal, setCal] = useState(false);
+  const setSel = (d) => { selDay = d === day ? null : d; setSel0(d); };
+  const other = sel !== day;
 
   // Plan wird im Hintergrund vom Coach verfeinert → alle paar Sekunden nachsehen.
   useEffect(() => {
@@ -25,12 +36,13 @@ export function Today() {
   return html`<div class="screen tab c-train">
     <div class="scroll">
       <header class="top big">
-        <div class="tt"><h1>Heute</h1><div class="t2">${longDate(day)}</div></div>
-        ${state?.streak > 0 && html`<div class="tag c-amber" style="height:30px;padding:0 10px;font-size:13.5px"><${Icon} n="local_fire_department" fill style="font-size:18px" />${state.streak}</div>`}
+        <div class="tt"><h1>${other ? relDay(sel, day) : 'Heute'}</h1><button class="t2 dateBtn" onClick=${() => setCal(true)}>${longDate(sel)}<${Icon} n="calendar_month" style="font-size:17px" /></button></div>
+        ${other ? html`<button class="tag c-train" style="height:32px;padding:0 12px;font-size:13.5px" onClick=${() => setSel(day)}><${Icon} n="today" style="font-size:17px" />Heute</button>`
+          : state?.streak > 0 && html`<div class="tag c-amber" style="height:30px;padding:0 10px;font-size:13.5px"><${Icon} n="local_fire_department" fill style="font-size:18px" />${state.streak}</div>`}
       </header>
       <div class="pad">
-        <${Week} state=${state} />
-        <div class="mt16">
+        <${Week} today=${day} sel=${sel} onSel=${setSel} />
+        ${other ? html`<${DayView} day=${sel} today=${day} />` : html`<div class="mt16">
           ${!session ? html`<div class="skel" style="height:380px" />`
             : done ? html`<${DoneCard} s=${session} />`
             : html`<${Hero} s=${session} restDay=${!isTrainingDay} second=${state?.week?.find((w) => w.day === day)?.done} onAdapt=${() => setAdapt(true)} />`}
@@ -39,25 +51,134 @@ export function Today() {
         <div class="tiles">
           <${FoodTile} food=${food} />
           <${SkillTile} skills=${skills} catalog=${catalog} />
-        </div>
+        </div>`}
         ${state && !state.ai?.hasKey && html`<div class="card pad16 mt16 small muted">Kein Gemini-Schlüssel gefunden — der Coach plant mit festen Regeln, Foto-Tracker und Ernährungs-Coach brauchen den Schlüssel von »Lieder & Szenen«.</div>`}
         <div class="end" />
       </div>
     </div>
     ${adapt && html`<${AdaptSheet} onClose=${() => setAdapt(false)} />`}
+    ${cal && html`<${CalendarSheet} today=${day} sel=${sel} onPick=${(d) => { setSel(d); setCal(false); }} onClose=${() => setCal(false)} />`}
   </div>`;
 }
 
-function Week({ state }) {
-  if (!state) return html`<div class="skel" style="height:58px" />`;
-  return html`<div class="week">${state.week.map((w) => {
-    const isToday = w.day === state.day;
-    const n = Number(w.day.slice(8));
-    return html`<div class=${cls('wd', isToday && 'today')}>
-      ${wdShort(w.day)}
-      <div class=${cls('dot', w.done ? 'done' : w.planned ? 'plan' : 'off')}>${w.done ? html`<${Icon} n="check" style="font-size:19px" />` : n}</div>
-    </div>`;
-  })}</div>`;
+/** Woche zum Blättern: jeder Tag antippbar, auch vergangene Wochen und die kommende. */
+function Week({ today, sel, onSel }) {
+  const start = mondayOf(sel);
+  const end = plusDays(start, 6);
+  const [d] = useData(`/fitness/days?from=${start}&to=${end}`, `/fitness/days?from=${start}&to=${end}`, [start]);
+  const days = d?.days ?? Array.from({ length: 7 }, (_, i) => ({ day: plusDays(start, i) }));
+  return html`<div class="weekNav">
+    <button class="ib sm" onClick=${() => onSel(plusDays(sel, -7))} aria-label="Woche zurück"><${Icon} n="chevron_left" /></button>
+    <div class="week grow">${days.map((w) => {
+      const n = Number(w.day.slice(8));
+      const done = w.done > 0;
+      return html`<button class=${cls('wd', w.day === today && 'today', w.day === sel && 'sel', w.day > today && 'future')} onClick=${() => onSel(w.day)}>
+        ${wdShort(w.day)}
+        <div class=${cls('dot', done ? 'done' : w.plan || (w.trainingDay && w.day >= today) ? 'plan' : 'off')}>${done ? html`<${Icon} n="check" style="font-size:19px" />` : n}</div>
+        <i class=${cls('meal', w.meals > 0 && 'on')} />
+      </button>`;
+    })}</div>
+    <button class="ib sm" onClick=${() => onSel(plusDays(sel, 7))} aria-label="Woche vor"><${Icon} n="chevron_right" /></button>
+  </div>`;
+}
+
+const MONTHS_L = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+
+/** Monatskalender zum Springen — beliebig weit zurück. */
+function CalendarSheet({ today, sel, onPick, onClose }) {
+  const [m, setM] = useState(() => { const x = parseDay(sel); return new Date(x.getFullYear(), x.getMonth(), 1, 12); });
+  const first = isoD(m);
+  const last = isoD(new Date(m.getFullYear(), m.getMonth() + 1, 0, 12));
+  const [d] = useData(`/fitness/days?from=${first}&to=${last}`, `/fitness/days?from=${first}&to=${last}`, [first]);
+  const by = Object.fromEntries((d?.days ?? []).map((x) => [x.day, x]));
+  const lead = (m.getDay() + 6) % 7;
+  const n = new Date(m.getFullYear(), m.getMonth() + 1, 0).getDate();
+  const cells = [...Array(lead).fill(null), ...Array.from({ length: n }, (_, i) => isoD(new Date(m.getFullYear(), m.getMonth(), i + 1, 12)))];
+  const go = (k) => setM(new Date(m.getFullYear(), m.getMonth() + k, 1, 12));
+  const trained = (d?.days ?? []).filter((x) => x.done > 0).length;
+  return html`<${Sheet} title="Kalender" onClose=${onClose}>
+    <div class="c-train">
+      <div class="pnav"><button class="ib sm" onClick=${() => go(-1)} aria-label="Monat zurück"><${Icon} n="chevron_left" /></button>
+        <div class="plabel">${MONTHS_L[m.getMonth()]} ${m.getFullYear()}</div>
+        <button class="ib sm" onClick=${() => go(1)} aria-label="Monat vor"><${Icon} n="chevron_right" /></button></div>
+      <div class="calGrid mt12">${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((w) => html`<span class="cw">${w}</span>`)}
+        ${cells.map((c) => {
+          if (!c) return html`<span />`;
+          const x = by[c] ?? {};
+          return html`<button class=${cls('cd', c === today && 'today', c === sel && 'sel', x.done > 0 && 'done', !x.done && (x.plan || (x.trainingDay && c >= today)) && 'plan')} onClick=${() => onPick(c)}>
+            ${Number(c.slice(8))}<i class=${cls('meal', x.meals > 0 && 'on')} /></button>`;
+        })}</div>
+      <div class="calLegend mt16"><span><i class="lg done" />Trainiert</span><span><i class="lg plan" />Trainingstag</span><span><i class="lg meal" />Essen eingetragen</span></div>
+      <p class="small muted mt8">${trained ? `${trained} Trainingstage in diesem Monat.` : 'In diesem Monat noch kein Training.'}</p>
+      ${sel !== today && html`<button class="btn tint mt16" onClick=${() => onPick(today)}><${Icon} n="today" />Zu heute</button>`}
+    </div>
+  <//>`;
+}
+
+/** Ein anderer Tag: was trainiert wurde samt gespeicherter Coach-Auswertung, Ernährung + Auswertung, Skills. */
+function DayView({ day, today }) {
+  const [d] = useData(`/fitness/day/${day}`, `/fitness/day/${day}`, [day]);
+  if (!d) return html`<div class="skel mt16" style="height:320px" />`;
+  const past = day < today;
+  const done = d.sessions.filter((s) => s.status === 'done');
+  const planned = d.sessions.filter((s) => s.status !== 'done');
+  const f = d.food;
+  const kcal = f.totals.kcal ?? 0;
+  return html`<div>
+    ${done.map((s) => html`<${PastSession} s=${s} />`)}
+    ${planned.map((s) => html`<button class="card pad16 mt16 row" style="width:100%;text-align:left" onClick=${() => nav(`einheit/${s.id}`)}>
+      <div class="iconTile"><${Icon} n="event_available" /></div>
+      <div class="grow"><div class="eyebrow" style="color:rgb(var(--train))">Geplant</div><div class="h3 mt4">${s.title}</div>
+        <div class="small muted">${s.minutes} min · ~${s.kcal} kcal · ${INTENSITY[s.intensity]} · ${s.exercises} Übungen</div>
+        ${s.coach && html`<p class="small mt8" style="line-height:1.45">${s.coach}</p>`}</div>
+      <${Icon} n="chevron_right" style="color:var(--faint)" /></button>`)}
+    ${!d.sessions.length && html`<div class="card pad16 mt16 row">
+      <div class="iconTile soft"><${Icon} n=${past ? 'bedtime' : d.trainingDay ? 'event' : 'weekend'} /></div>
+      <div class="grow"><div class="h3">${past ? (d.trainingDay ? 'Kein Training' : 'Ruhetag') : d.trainingDay ? 'Trainingstag' : 'Ruhetag'}</div>
+        <div class="small muted mt4">${past ? (d.trainingDay ? 'An diesem Tag wurde nicht trainiert.' : 'Erholung gehört dazu.') : d.trainingDay ? 'Der Coach plant dieses Training nach deinem letzten Training — mit deinem Feedback.' : 'Kein Training geplant. Du kannst an dem Tag trotzdem ein freies Training machen.'}</div></div></div>`}
+
+    ${(past || f.meals.length > 0) && html`<div class="sec"><h2 class="h2">Ernährung</h2><button class="small" style="color:rgb(var(--food))" onClick=${() => openFoodDay(day)}>Tagebuch</button></div>
+      <div class="card pad16 c-food">
+        ${f.meals.length ? html`<div class="row gap12">
+            <${Ring} size=${62} stroke=${7} value=${kcal} max=${f.targets.kcal}><span class="tiny" style="font-weight:600">${Math.round((kcal / f.targets.kcal) * 100)}%</span><//>
+            <div class="grow"><div class="h3 num">${fmtNum(kcal)} <span class="small muted" style="font-weight:400">/ ${fmtNum(f.targets.kcal)} kcal</span></div>
+              <div class="small muted">${fmtNum(f.totals.protein ?? 0)} g Eiweiß · ${f.meals.length} ${f.meals.length === 1 ? 'Mahlzeit' : 'Mahlzeiten'}</div></div></div>
+          <div class="mt12">${f.meals.map((m) => html`<div class="row small" style="padding:5px 0"><span class="muted" style="width:86px;flex:none">${SLOT_NAMES[m.meal] ?? m.meal}</span><span class="grow ell">${m.title}</span><span class="num muted">${m.kcal}</span></div>`)}</div>
+          ${f.report ? html`<button class="foodRep mt12" onClick=${() => nav(`ernaehrung/coach/${day}`)}>
+              <div class="scoreBadge sm"><b>${f.report.score}</b><span>von 10</span></div>
+              <div class="grow"><div class="eyebrow" style="color:rgb(var(--food))">Ernährungs-Coach</div><div class="small mt4" style="line-height:1.4">${f.report.headline}</div></div>
+              <${Icon} n="chevron_right" style="color:var(--faint)" /></button>`
+            : html`<button class="btn tint mt12" onClick=${() => nav(`ernaehrung/coach/${day}`)}><${Icon} n="psychology" />Auswertung erstellen</button>`}`
+          : html`<div class="small muted">Nichts eingetragen.</div>`}
+      </div>`}
+
+    ${d.skills.length > 0 && html`<div class="sec"><h2 class="h2">Skills</h2></div>
+      <div class="card pad16 c-skill">${d.skills.map((k) => html`<div class="row small" style="padding:4px 0"><${Icon} n="sports_gymnastics" style="font-size:18px;color:rgb(var(--skill))" /><span class="grow">${k.skill} · ${k.step}</span><span class="num">${fmtNum(k.value)} ${k.unit}</span></div>`)}</div>`}
+    ${d.weight && html`<div class="small muted mt16">Gewicht an diesem Tag: ${fmtNum(d.weight, 1)} kg</div>`}
+    <div class="end" />
+  </div>`;
+}
+
+function PastSession({ s }) {
+  const rev = s.review;
+  const t = s.doneAt ? new Date(s.doneAt) : null;
+  return html`<div class="review mt16">
+    <div class="row"><div class="iconTile"><${Icon} n="check" /></div><div class="grow"><div class="eyebrow" style="color:rgb(var(--train))">Trainiert${t ? ` · ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')} Uhr` : ''}</div><div class="h3">${s.title}</div></div></div>
+    <div class="stats3 mt16">
+      <div class="stat"><b>${Math.round(s.seconds / 60)}</b><span>Minuten</span></div>
+      <div class="stat"><b>${s.kcal}</b><span>kcal</span></div>
+      <div class="stat"><b>${FEEL[s.overall ?? 3]}</b><span>Gefühl</span></div>
+    </div>
+    ${s.pain?.length > 0 && html`<div class="small mt12" style="color:rgb(var(--bad))"><${Icon} n="healing" style="font-size:16px;vertical-align:-3px" /> Schmerzen gemeldet</div>`}
+    ${s.note && html`<p class="small muted mt12" style="font-style:italic">»${s.note}«</p>`}
+    ${rev ? html`<div class="mt16"><div class="row gap8"><div class="iconTile soft" style="width:30px;height:30px;border-radius:9px"><${Icon} n="psychology" style="font-size:17px" /></div><div class="eyebrow" style="color:rgb(var(--train))">Dein Coach</div></div>
+        <h3 class="mt8" style="font-size:16px;line-height:1.35">${rev.headline}</h3>
+        ${rev.good?.length > 0 && html`<div class="grp c-good"><div class="gl">Gut gelaufen</div><ul>${rev.good.map((x) => html`<li>${x}</li>`)}</ul></div>`}
+        ${rev.watch?.length > 0 && html`<div class="grp c-amber"><div class="gl">Aufgefallen</div><ul>${rev.watch.map((x) => html`<li>${x}</li>`)}</ul></div>`}
+        ${rev.next?.length > 0 && html`<div class="grp c-train"><div class="gl">Das hat der Coach geändert</div><ul>${rev.next.map((x) => html`<li>${x}</li>`)}</ul></div>`}</div>`
+      : html`<div class="small muted mt12">Zu diesem Training gibt es keine Coach-Auswertung (KI war damals nicht erreichbar).</div>`}
+    <button class="btn ghost mt12" onClick=${() => nav(`einheit/${s.id}`)}><${Icon} n="format_list_bulleted" />Übungen ansehen</button>
+  </div>`;
 }
 
 function Hero({ s, restDay, second, onAdapt }) {

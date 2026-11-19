@@ -92,9 +92,9 @@ html.full,html.full body{background:var(--bg)}
 .chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:9px;background:rgba(255,255,255,.06);color:var(--text);font-size:13.5px;white-space:nowrap;border:1px solid transparent}
 .chip.on{background:rgba(var(--c),.16);color:rgb(var(--c));border-color:rgba(var(--c),.3)}
 .chip .ms{font-size:17px}
-.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 16px;margin:0 -16px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 16px;margin-left:-16px;margin-right:-16px}
 .chips::-webkit-scrollbar{display:none}
-.chips.wrap{flex-wrap:wrap;overflow:visible;padding:0;margin:0}
+.chips.wrap{flex-wrap:wrap;overflow:visible;padding:0;margin-left:0;margin-right:0}
 .tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 8px;border-radius:6px;background:rgba(var(--c),.14);color:rgb(var(--c));font-weight:500}
 .tag.plain{background:rgba(255,255,255,.07);color:var(--muted)}
 
@@ -539,3 +539,71 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:none}
 .pick.main{background:rgb(var(--food));border-color:transparent;color:var(--ink)}
 .pick.main .ms{color:var(--ink)}
 .pick.main span{color:rgba(20,20,22,.7)}
+
+/* Aktionsleiste im Tagebuch (ersetzt die schwebenden Knöpfe) */
+.actionBar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+.actionBar .act{height:56px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:14.5px;color:var(--text)}
+.actionBar .act .ms{font-size:22px;color:rgb(var(--food))}
+.actionBar .act.main{background:rgb(var(--food));border-color:transparent;color:var(--ink)}
+.actionBar .act.main .ms{color:var(--ink)}
+.actionBar .act:active{transform:scale(.98)}
+
+/* ═══ Verlauf (T/W/M/J) ═══ */
+.pnav{display:flex;align-items:center;gap:4px}
+.pnav .plabel{flex:1;text-align:center;font-weight:600;font-size:15px}
+.bigNum{font-size:32px;font-weight:700;letter-spacing:-.6px;line-height:1.1;margin-top:2px}
+.bigNum small{font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:2px}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500}
+.delta.up{color:rgb(var(--good))}.delta.down{color:rgb(var(--bad))}
+.bars{position:relative;display:flex;align-items:stretch;gap:2px}
+.bcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0}
+.bcol .bwrap{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.bcol .bwrap i{display:block;width:72%;max-width:26px;border-radius:4px 4px 2px 2px;background:rgb(var(--c));transition:height .45s var(--ease)}
+.bcol.none .bwrap i{background:rgba(255,255,255,.08);height:3px!important}
+.bcol.sel .bwrap i{background:#fff}
+.bcol .bl{height:18px;margin-top:4px;font-size:11px;color:var(--faint);white-space:nowrap}
+.goalLine{position:absolute;left:0;right:0;border-top:1.5px dashed rgba(255,255,255,.35);pointer-events:none;z-index:1}
+.goalLine span{position:absolute;right:0;top:-18px;font-size:10.5px;color:var(--muted);background:var(--surface);padding:0 4px;border-radius:4px}
+.metricPick{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 10px 0 13px;border-radius:9px;background:rgba(var(--c),.16);color:rgb(var(--c));font-weight:600;font-size:14px}
+.nrow{display:block;width:100%;padding:10px 0;text-align:left;font-size:14.5px}
+.nrow+.nrow{border-top:1px solid var(--border)}
+.nrow.on span:first-child{color:rgb(var(--c));font-weight:600}
+.nrow b.bad{color:rgb(var(--bad))}.nrow b.ok{color:rgb(var(--good))}
+
+/* ═══ Heute: Tage antippen, Kalender ═══ */
+.dateBtn{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:inherit}
+.weekNav{display:flex;align-items:center;gap:2px;margin:0 -10px}
+.weekNav .ib.sm{width:30px;flex:none;color:var(--faint)}
+.wd{background:none;padding:0}
+.wd.future .dot.off{color:var(--muted)}
+.wd.sel{color:var(--text);font-weight:600}
+.wd.sel .dot{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px #fff!important}
+.wd.today:not(.sel) .dot:not(.done){box-shadow:none}
+.wd.today:not(.sel){color:rgb(var(--train))}
+.wd i.meal,.cd i.meal{display:block;width:4px;height:4px;border-radius:50%;background:transparent}
+.wd i.meal.on,.cd i.meal.on{background:rgb(var(--food))}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.calGrid .cw{font-size:11.5px;color:var(--faint);padding-bottom:4px}
+.cd{height:44px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:14px;color:var(--muted);aspect-ratio:1;margin:0 auto;width:44px}
+.cd.plan{border:1.5px solid rgba(var(--train),.45);color:var(--text)}
+.cd.done{background:rgb(var(--train));color:var(--ink);font-weight:600}
+.cd.done i.meal.on{background:var(--ink)}
+.cd.today{color:rgb(var(--train));font-weight:700}
+.cd.done.today{color:var(--ink)}
+.cd.sel{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px #fff}
+.calLegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.calLegend span{display:inline-flex;align-items:center;gap:6px}
+.calLegend .lg{width:12px;height:12px;border-radius:50%;display:inline-block}
+.calLegend .lg.done{background:rgb(var(--train))}
+.calLegend .lg.plan{border:1.5px solid rgba(var(--train),.6)}
+.calLegend .lg.meal{width:6px;height:6px;background:rgb(var(--food))}
+.foodRep{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;border-radius:12px;background:rgba(var(--food),.10);border:1px solid rgba(var(--food),.2)}
+.scoreBadge.sm{width:46px;height:46px;flex:none}
+.scoreBadge.sm b{font-size:18px}
+.scoreBadge.sm span{font-size:9px}
+.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cd{position:relative;gap:0}
+.cd i.meal{position:absolute;bottom:6px;left:50%;margin-left:-2px}
+.calLegend .lg{flex:none}
+.calLegend .lg.meal{width:7px;height:7px;margin:0 2px;align-self:center}
+.calGrid .cw+.cw{}

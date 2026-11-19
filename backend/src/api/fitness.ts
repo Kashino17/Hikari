@@ -632,6 +632,135 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     };
   });
 
+  // ── Kalender: jeder Tag antippbar, vergangene mit gespeicherten Auswertungen ──
+  const reviewsFor = (day: string) =>
+    new Map(
+      (db.prepare("SELECT data FROM coach_notes WHERE kind = 'training' AND day = ? ORDER BY at").all(day) as { data: string }[])
+        .map((n) => JSON.parse(n.data) as { session?: string })
+        .filter((n) => n.session)
+        .map((n) => [n.session as string, n]),
+    );
+
+  /** Markierungen je Tag (Woche oder Monat): trainiert, geplant, Trainingstag, gegessen. */
+  app.get<{ Querystring: { from?: string; to?: string } }>("/fitness/days", async (req) => {
+    const today = localDay();
+    const to = dayParam(req.query.to, addDays(today, 6));
+    let from = dayParam(req.query.from, addDays(to, -6));
+    if (from > to || addDays(from, 62) < to) from = addDays(to, -6);
+    const profile = getProfile(db);
+    const sessions = sessionsBetween(db, from, to);
+    const food = new Map(
+      (db.prepare("SELECT day, COUNT(*) AS n FROM food_log WHERE day >= ? AND day <= ? GROUP BY day").all(from, to) as { day: string; n: number }[]).map((r) => [r.day, r.n]),
+    );
+    const out = [];
+    for (let d = from; d <= to; d = addDays(d, 1)) {
+      const s = sessions.filter((x) => x.day === d);
+      out.push({
+        day: d,
+        trainingDay: profile.trainingDays.includes(weekday(d)),
+        done: s.filter((x) => x.status === "done").length,
+        plan: s.some((x) => x.status === "planned" || x.status === "active"),
+        minutes: s.filter((x) => x.status === "done").reduce((a, x) => a + Math.round((x.result?.seconds ?? 0) / 60), 0),
+        meals: food.get(d) ?? 0,
+      });
+    }
+    const first = db.prepare("SELECT MIN(day) AS d FROM (SELECT day FROM sessions WHERE status = 'done' UNION SELECT day FROM food_log)").get() as { d: string | null };
+    return { today, days: out, first: first.d };
+  });
+
+  /** Alles zu einem Tag: Trainings mit gespeicherter Coach-Auswertung, Plan, Ernährung + gespeicherter Ernährungs-Auswertung. */
+  app.get<{ Params: { day: string } }>("/fitness/day/:day", async (req, reply) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(req.params.day)) return reply.code(400).send({ error: "day" });
+    const day = req.params.day;
+    const today = localDay();
+    const profile = getProfile(db);
+    const reviews = reviewsFor(day);
+    const sessions = sessionsBetween(db, day, day)
+      .filter((s) => s.status !== "skipped" && (s.status === "done" || day >= today))
+      .map((s) => ({
+        id: s.id,
+        status: s.status,
+        kind: s.kind,
+        title: s.plan.title,
+        minutes: s.plan.minutes,
+        kcal: s.plan.kcal,
+        intensity: s.plan.intensity,
+        coach: s.plan.coach?.message ?? null,
+        seconds: s.result?.seconds ?? 0,
+        overall: s.feedback?.overall ?? null,
+        pain: s.feedback?.pain ?? [],
+        note: (s.feedback as { note?: string } | null)?.note ?? null,
+        doneAt: s.done_at ?? null,
+        exercises: [...new Set(s.plan.blocks.flatMap((b) => b.items.map((i) => i.ex)))].length,
+        review: reviews.get(s.id) ?? null,
+      }));
+    const entries = foodLogDay(db, day);
+    const totals = roundNutrients(sumNutrients(entries.map((e) => e.totals)));
+    const targets = computeTargets(profile);
+    const rep = db.prepare("SELECT data FROM coach_notes WHERE kind = 'ernaehrung' AND day = ? ORDER BY at DESC LIMIT 1").get(day) as { data: string } | undefined;
+    const skills = (db.prepare("SELECT skill_id, step, value, feel FROM skill_log WHERE day = ? ORDER BY at").all(day) as { skill_id: string; step: number; value: number; feel: number | null }[]).map((r) => {
+      const sk = catalog.skills.find((x) => x.id === r.skill_id);
+      return { skill: sk?.name ?? r.skill_id, step: sk?.steps[r.step]?.name ?? `Stufe ${r.step + 1}`, value: r.value, unit: sk?.steps[r.step]?.goal.type === "hold" ? "s" : "Wdh" };
+    });
+    const body = db.prepare("SELECT weight FROM body_log WHERE day = ?").get(day) as { weight: number | null } | undefined;
+    return {
+      day,
+      today,
+      trainingDay: profile.trainingDays.includes(weekday(day)),
+      sessions,
+      food: {
+        meals: entries.map((e) => ({ id: e.id, meal: e.meal, title: e.title, kcal: Math.round(e.totals.kcal ?? 0), photo: e.photo ?? null })),
+        totals,
+        targets: { kcal: targets.kcal, protein: targets.protein, carbs: targets.carbs, fat: targets.fat },
+        report: rep ? JSON.parse(rep.data) : null,
+      },
+      skills,
+      weight: body?.weight ?? null,
+    };
+  });
+
+  // ── Verlauf (Tag/Woche/Monat/Jahr wie in Health-Apps) ───────────────────
+  const dayParam = (v: unknown, fallback: string) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : fallback);
+
+  /** Training je Tag im Zeitraum: Minuten, Einheiten, kcal, Wiederholungen, Minuten je Stunde. */
+  app.get<{ Querystring: { from?: string; to?: string } }>("/fitness/stats/training", async (req) => {
+    const to = dayParam(req.query.to, localDay());
+    const from = dayParam(req.query.from, addDays(to, -6));
+    const days: Record<string, { minutes: number; sessions: number; kcal: number; reps: number; hours: Record<number, number>; titles: string[] }> = {};
+    for (const s of sessionsBetween(db, from, to)) {
+      if (s.status !== "done") continue;
+      const d = (days[s.day] ??= { minutes: 0, sessions: 0, kcal: 0, reps: 0, hours: {}, titles: [] });
+      const min = Math.round((s.result?.seconds ?? 0) / 60);
+      d.minutes += min;
+      d.sessions += 1;
+      d.kcal += s.plan.kcal ?? 0;
+      d.reps += Object.values(s.result?.done ?? {}).flat().reduce((a: number, v) => a + (Number(v) || 0), 0);
+      const h = new Date(s.done_at ?? s.created_at).getHours();
+      d.hours[h] = (d.hours[h] ?? 0) + min;
+      d.titles.push(s.plan.title);
+    }
+    const first = db.prepare("SELECT MIN(day) AS d FROM sessions WHERE status = 'done'").get() as { d: string | null };
+    return { from, to, days, first: first.d };
+  });
+
+  /** Ernährung je Tag im Zeitraum: alle Nährstoffe gesamt und je Mahlzeit, dazu die Ziele. */
+  app.get<{ Querystring: { from?: string; to?: string } }>("/fitness/stats/food", async (req) => {
+    const to = dayParam(req.query.to, localDay());
+    const from = dayParam(req.query.from, addDays(to, -6));
+    const rows = db.prepare("SELECT day, meal, totals FROM food_log WHERE day >= ? AND day <= ?").all(from, to) as { day: string; meal: string; totals: string }[];
+    const days: Record<string, { totals: Nutrients; slots: Record<string, Nutrients>; meals: number }> = {};
+    for (const r of rows) {
+      const d = (days[r.day] ??= { totals: {}, slots: {}, meals: 0 });
+      const t = JSON.parse(r.totals) as Nutrients;
+      d.totals = sumNutrients([d.totals, t]);
+      d.slots[r.meal] = sumNutrients([d.slots[r.meal] ?? {}, t]);
+      d.meals += 1;
+    }
+    for (const d of Object.values(days)) d.totals = roundNutrients(d.totals);
+    const first = db.prepare("SELECT MIN(day) AS d FROM food_log").get() as { d: string | null };
+    return { from, to, days, first: first.d, targets: computeTargets(getProfile(db)), nutrients: NUTRIENTS };
+  });
+
   app.post<{ Body: { weight?: number; waist?: number; day?: string } }>(
     "/fitness/body",
     async (req) => {
