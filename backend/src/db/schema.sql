@@ -338,3 +338,10 @@ CREATE TABLE IF NOT EXISTS ebook_source_cache (
   updated_at INTEGER NOT NULL,
   PRIMARY KEY (source, key)
 );
+
+-- Porträts der Buch-Autoren (Open Library); url NULL = geprüft, keins gefunden.
+CREATE TABLE IF NOT EXISTS ebook_author_photos (
+  name       TEXT PRIMARY KEY,
+  url        TEXT,
+  checked_at INTEGER NOT NULL
+);

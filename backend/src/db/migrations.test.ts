@@ -15,6 +15,7 @@ describe("applyMigrations", () => {
       "continue_dismissed",
       "daily_mix_items",
       "downloaded_videos",
+      "ebook_author_photos",
       "ebook_categories",
       "ebook_files",
       "ebook_source_cache",

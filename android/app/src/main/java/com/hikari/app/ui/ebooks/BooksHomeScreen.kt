@@ -191,7 +191,7 @@ private fun DiscoverTab(
                 ShelfHeader("Autoren entdecken", "Die großen Namen im Katalog", null)
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     items(home.authors.take(16), key = { it.name }) { a ->
-                        AuthorBubble(a.name, a.count) { onList(EbookFilter(author = a.name)) }
+                        AuthorBubble(a.name, a.count, a.photoUrl) { onList(EbookFilter(author = a.name)) }
                     }
                 }
             }
@@ -304,16 +304,27 @@ internal fun ShelfHeader(title: String, subtitle: String, onAll: (() -> Unit)?) 
 
 /** Runder Autoren-Knopf mit Anfangsbuchstaben des Nachnamens in einer festen Farbe. */
 @Composable
-internal fun AuthorBubble(name: String, count: Int, onClick: () -> Unit) {
+internal fun AuthorBubble(name: String, count: Int, photoUrl: String? = null, onClick: () -> Unit) {
     Column(Modifier.width(84.dp).clickable(onClick = onClick), horizontalAlignment = Alignment.CenterHorizontally) {
-        val c = authorColor(name)
-        Box(
-            Modifier.size(72.dp).clip(CircleShape).background(Brush.radialGradient(listOf(c.copy(alpha = 0.95f), c.copy(alpha = 0.55f).compositeOverBlack()))),
-            contentAlignment = Alignment.Center,
-        ) { Text(authorInitial(name), color = Color.White, fontSize = 26.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold) }
+        AuthorAvatar(name, photoUrl, 72.dp, 26.sp)
         Text(authorShort(name), color = HikariText, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 2, lineHeight = 14.sp,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 6.dp))
         Text("$count Bücher", color = HikariTextMuted, fontSize = 11.sp)
+    }
+}
+
+/** Porträt des Autors (rund), sonst sein Anfangsbuchstabe in einer festen Farbe. */
+@Composable
+internal fun AuthorAvatar(name: String, photoUrl: String?, size: androidx.compose.ui.unit.Dp, letter: androidx.compose.ui.unit.TextUnit) {
+    val c = authorColor(name)
+    Box(
+        Modifier.size(size).clip(CircleShape).background(Brush.radialGradient(listOf(c.copy(alpha = 0.95f), c.copy(alpha = 0.55f).compositeOverBlack()))),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(authorInitial(name), color = Color.White, fontSize = letter, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold)
+        if (photoUrl != null) {
+            AsyncImage(model = photoUrl, contentDescription = name, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
+        }
     }
 }
 

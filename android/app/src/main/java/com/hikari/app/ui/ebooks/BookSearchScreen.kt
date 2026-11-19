@@ -219,9 +219,7 @@ fun BookSearchScreen(
                     items(authors, key = { "a-" + it.name }) { a ->
                         Row(Modifier.fillMaxWidth().clickable { vm.remember(s.query); onList(EbookFilter(author = a.name)) }.padding(horizontal = 16.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(44.dp).background(authorColor(a.name), CircleShape), contentAlignment = Alignment.Center) {
-                                Text(authorInitial(a.name), color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                            }
+                            AuthorAvatar(a.name, a.photoUrl, 44.dp, 18.sp)
                             Column(Modifier.padding(start = 12.dp)) {
                                 Text(highlight(a.name, tokens.first()), color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
                                 Text("${a.count} Bücher", color = HikariTextMuted, fontSize = 13.sp)

@@ -6,6 +6,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { beforeEach, describe, expect, it } from "vitest";
 import { registerEbookRoutes } from "../../src/api/ebooks.js";
 import { applyMigrations } from "../../src/db/migrations.js";
+import { saveAuthorPhoto } from "../../src/ebooks/authors.js";
 import type { PoliteHttp } from "../../src/ebooks/http.js";
 import { type RawBook, hideBook, upsertBook } from "../../src/ebooks/persist.js";
 import { normalizeState } from "../../src/ebooks/state-merge.js";
@@ -175,6 +176,21 @@ describe("/api/ebooks", () => {
       .books;
     const all = [...ids(first), ...ids(second)];
     expect(new Set(all).size).toBe(6);
+  });
+
+  it("Autoren mit Foto bekommen einen Bildpfad, das Bild kommt über unseren Server", async () => {
+    saveAuthorPhoto(db, "Autor", "https://covers.openlibrary.org/a/olid/OL1A-M.jpg?default=false");
+    httpBody = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(300, 1)]);
+    const { json } = await get("/api/ebooks/home");
+    expect(json.authors[0].photoUrl).toBe(
+      `/api/ebooks/author-photo?name=${encodeURIComponent("Autor")}`,
+    );
+    const r = await app.inject({ method: "GET", url: json.authors[0].photoUrl });
+    expect(r.statusCode).toBe(200);
+    expect(
+      (await app.inject({ method: "GET", url: "/api/ebooks/author-photo?name=Niemand" }))
+        .statusCode,
+    ).toBe(404);
   });
 
   it("BookCard hat Format, Minuten und Titelbild-Weg", async () => {

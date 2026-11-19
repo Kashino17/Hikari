@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   closeSync,
   createReadStream,
@@ -10,6 +11,7 @@ import {
 import { join } from "node:path";
 import type Database from "better-sqlite3";
 import type { FastifyInstance } from "fastify";
+import { authorPhoto } from "../ebooks/authors.js";
 import { CATEGORIES } from "../ebooks/categories.js";
 import { resolveCover } from "../ebooks/covers.js";
 import { ensureBookFile } from "../ebooks/files.js";
@@ -276,7 +278,14 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       .filter(([, n]) => n >= 2)
       .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "de"))
       .slice(0, 30)
-      .map(([name, count]) => ({ name, count }));
+      .map(([name, count]) => ({
+        name,
+        count,
+        // Porträt nur, wenn eins gefunden wurde (sonst zeigt die App den Anfangsbuchstaben).
+        photoUrl: authorPhoto(db, name)
+          ? `/api/ebooks/author-photo?name=${encodeURIComponent(name)}`
+          : undefined,
+      }));
     return {
       shelves,
       featured,
@@ -473,6 +482,23 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
   });
 
   const resolving = new Map<string, ReturnType<typeof resolveCover>>();
+  // Porträt eines Autors: einmal von Open Library holen, dann von der Platte.
+  app.get<{ Querystring: { name?: string } }>("/api/ebooks/author-photo", async (req, reply) => {
+    const name = req.query.name ?? "";
+    const url = name ? authorPhoto(db, name) : null;
+    if (!url) return reply.code(404).send({ error: "kein Foto" });
+    const dir = join(deps.coverDir, "authors");
+    const path = join(dir, `${createHash("sha1").update(name).digest("hex")}.img`);
+    if (!existsSync(path)) {
+      const got = await (deps.coverHttp ?? deps.http).get(url, { tries: 1 }).catch(() => null);
+      if (!got || got.status !== 200 || got.body.length < 100) return reply.code(404).send({ error: "kein Foto" });
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(path, got.body);
+    }
+    reply.header("cache-control", "public, max-age=604800");
+    return reply.type(sniffImage(path)).send(createReadStream(path));
+  });
+
   app.get<{ Params: { id: string } }>("/api/ebooks/:id/cover", async (req, reply) => {
     const id = req.params.id;
     const r = db

@@ -30,7 +30,7 @@ data class EbookCategoryDto(val id: String, val label: String, val group: String
 data class EbookShelfDto(val key: String, val title: String, val subtitle: String = "", val books: List<EbookCardDto> = emptyList())
 
 @Serializable
-data class EbookAuthorDto(val name: String, val count: Int = 0)
+data class EbookAuthorDto(val name: String, val count: Int = 0, val photoUrl: String? = null)
 
 @Serializable
 data class EbookHomeDto(

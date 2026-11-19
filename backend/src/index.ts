@@ -18,6 +18,7 @@ import { registerVideosRoutes } from "./api/videos.js";
 import { registerEbookRoutes } from "./api/ebooks.js";
 import { registerMangaCatalogRoutes } from "./api/manga-catalog.js";
 import { registerMangaRoutes } from "./api/manga.js";
+import { resolvePendingAuthorPhotos } from "./ebooks/authors.js";
 import { resolvePendingCovers } from "./ebooks/covers.js";
 import { createPoliteHttp } from "./ebooks/http.js";
 import { sources as ebookSources } from "./ebooks/sources/index.js";
@@ -477,6 +478,8 @@ const runEbookCovers = async () => {
   if (ebookCoversRunning) return;
   ebookCoversRunning = true;
   try {
+    // Autorenfotos zuerst (wenige, sichtbar auf der Startseite), dann die Titelbilder.
+    await resolvePendingAuthorPhotos(db, ebookCoverHttp, { limit: 300, log: (msg) => app.log.info(msg) });
     await resolvePendingCovers(db, ebookCoverHttp, { limit: 3000, log: (msg) => app.log.info(msg) });
   } catch (err) {
     app.log.warn({ err }, "ebooks: Titelbilder abgestürzt");
