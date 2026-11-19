@@ -1,5 +1,7 @@
 package com.hikari.app.ui.manga
 
+import com.hikari.app.domain.sync.SyncStatus
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -75,6 +77,15 @@ fun MangaDetailScreen(
     val baseUrl by vm.backendUrl.collectAsState()
     val downloadedArcs by vm.downloadedArcs.collectAsState()
     val arcProgress by vm.arcProgress.collectAsState()
+    val syncStatus by vm.syncStatus.collectAsState()
+    val syncMessage by vm.syncMessage.collectAsState()
+    val hasSync = seriesId.startsWith("onepiecetube:")
+    if (hasSync) {
+        DisposableEffect(Unit) {
+            vm.startSyncPolling()
+            onDispose { vm.stopSyncPolling() }
+        }
+    }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(vm) {
@@ -139,6 +150,14 @@ fun MangaDetailScreen(
                                 }
                             },
                             onBack = onBack,
+                        )
+                    }
+                    if (hasSync) item {
+                        SyncCard(
+                            status = syncStatus,
+                            message = syncMessage,
+                            lastChapter = s.detail.chapters.maxOfOrNull { it.number }?.toInt(),
+                            onSync = { vm.startSync(seriesId) },
                         )
                     }
                     item {
@@ -281,5 +300,55 @@ private fun DetailCta(
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
         )
+    }
+}
+
+/** Nur One Piece: neue Kapitel direkt von der Quelle holen — mit Fortschritt, solange es läuft. */
+@Composable
+private fun SyncCard(status: SyncStatus, message: String?, lastChapter: Int?, onSync: () -> Unit) {
+    val job = (status as? SyncStatus.Active)?.job
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(HikariSurfaceHigh)
+            .padding(start = 16.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text("Neue Kapitel holen", color = HikariText, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            val sub = when {
+                job != null && job.totalChapters > 0 -> "Lädt Kapitel ${job.doneChapters} von ${job.totalChapters} …"
+                job != null -> "Sucht nach neuen Kapiteln …"
+                message != null -> message
+                lastChapter != null -> "Bis Kapitel $lastChapter da · holt neue von onepiece.tube"
+                else -> "Gleicht mit onepiece.tube ab"
+            }
+            Text(sub, color = HikariTextFaint, fontSize = 12.sp)
+            if (job != null && job.totalChapters > 0) {
+                Spacer(Modifier.height(8.dp))
+                androidx.compose.material3.LinearProgressIndicator(
+                    progress = { job.doneChapters.toFloat() / job.totalChapters },
+                    modifier = Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(3.dp)),
+                    color = HikariPrimary,
+                    trackColor = Color.White.copy(alpha = 0.1f),
+                )
+            }
+        }
+        Spacer(Modifier.width(10.dp))
+        if (job == null) {
+            Text(
+                "Abgleichen",
+                color = Color.Black,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(HikariPrimary)
+                    .clickable(onClick = onSync)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            )
+        }
     }
 }

@@ -644,7 +644,6 @@ private fun ServerPage(vm: SettingsViewModel) {
     val backendUrl by vm.backendUrl.collectAsState(initial = "")
     val authToken by vm.authToken.collectAsState(initial = "")
     val server by vm.server.collectAsState()
-    val mangaSyncStatus by vm.mangaSyncStatus.collectAsState()
     var urlDraft by remember(backendUrl) { mutableStateOf(backendUrl) }
     var tokenDraft by remember(authToken) { mutableStateOf(authToken) }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -704,34 +703,6 @@ private fun ServerPage(vm: SettingsViewModel) {
         FieldHint("Nur nötig, wenn der Server ein Token verlangt.")
     }
 
-    GroupLabel("Wartung")
-    Card {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(start = 14.dp, end = 10.dp, top = 12.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Manga-Abgleich", color = HikariText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                Text(
-                    mangaSyncStatus ?: "Holt neue Kapitel in die Manga-Bibliothek.",
-                    color = if (mangaSyncStatus != null) ServerColor else HikariTextMuted,
-                    fontSize = 12.sp,
-                )
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "Starten",
-                color = ServerColor,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(ServerColor.copy(alpha = 0.14f))
-                    .clickable(onClick = vm::triggerMangaSync)
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
-            )
-        }
-    }
 }
 
 /** Eingabefeld mit eingebautem Speichern-Haken — er erscheint erst, wenn sich etwas geändert hat. */

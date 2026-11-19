@@ -34,6 +34,10 @@ data class ReaderSettings(
     val lineHeight: Double = 1.5,
     val margin: String = "mittel",
     val volumeKeys: Boolean = true,
+    /** Umblättern: BOOK, SLIDE, FADE oder NONE (wie im Manga-Leser). */
+    val pageAnim: String = "BOOK",
+    /** Tippen an den Rändern blättert; aus = nur wischen. */
+    val tapTurn: Boolean = true,
 )
 
 data class ReaderUiState(

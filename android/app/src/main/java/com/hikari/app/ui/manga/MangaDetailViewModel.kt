@@ -7,6 +7,9 @@ import com.hikari.app.data.api.dto.MangaSeriesDetailDto
 import com.hikari.app.data.prefs.SettingsStore
 import com.hikari.app.domain.download.LocalMangaDownloadManager
 import com.hikari.app.domain.repo.MangaRepository
+import com.hikari.app.domain.sync.MangaSyncObserver
+import com.hikari.app.domain.sync.SyncStatus
+import kotlinx.coroutines.flow.first
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.async
@@ -37,7 +40,34 @@ class MangaDetailViewModel @Inject constructor(
     private val repo: MangaRepository,
     private val downloads: LocalMangaDownloadManager,
     settings: SettingsStore,
+    private val syncObserver: MangaSyncObserver,
 ) : ViewModel() {
+
+    /** Läuft gerade ein Abgleich mit der Quelle (nur One Piece hat einen)? */
+    val syncStatus: StateFlow<SyncStatus> = syncObserver.status
+    private val _syncMessage = MutableStateFlow<String?>(null)
+    val syncMessage: StateFlow<String?> = _syncMessage.asStateFlow()
+
+    fun startSyncPolling() = syncObserver.startPolling()
+    fun stopSyncPolling() = syncObserver.stopPolling()
+
+    /** Holt neue Kapitel von der Quelle; danach wird die Kapitelliste neu geladen. */
+    fun startSync(seriesId: String) {
+        viewModelScope.launch {
+            _syncMessage.value = null
+            runCatching { repo.startSync() }
+                .onSuccess { _syncMessage.value = "Abgleich läuft" }
+                .onFailure { e -> _syncMessage.value = if ("409" in e.message.orEmpty()) "Abgleich läuft bereits" else "Server nicht erreichbar" }
+            syncObserver.startPolling()
+            // Warten, bis der Lauf vorbei ist, dann die neuen Kapitel zeigen.
+            kotlinx.coroutines.delay(2_500)
+            syncObserver.status.first { it is SyncStatus.Idle }
+            _syncMessage.value = "Fertig abgeglichen"
+            load(seriesId)
+            kotlinx.coroutines.delay(4_000)
+            _syncMessage.value = null
+        }
+    }
 
     private val _uiState = MutableStateFlow<MangaDetailUiState>(MangaDetailUiState.Loading)
     val uiState: StateFlow<MangaDetailUiState> = _uiState.asStateFlow()

@@ -13,7 +13,6 @@ import com.hikari.app.data.sponsor.SegmentBehavior
 import com.hikari.app.domain.download.SmartDownloadScheduler
 import com.hikari.app.domain.download.SmartDownloadStorage
 import com.hikari.app.domain.repo.FeedRepository
-import com.hikari.app.domain.repo.MangaRepository
 import com.hikari.app.domain.update.UpdateCoordinator
 import com.hikari.app.domain.update.UpdateState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +49,6 @@ data class DeviceDownloads(
 class SettingsViewModel @Inject constructor(
     private val store: SettingsStore,
     private val feedRepo: FeedRepository,
-    private val mangaRepo: MangaRepository,
     private val sbPrefs: SponsorBlockPrefs,
     private val updates: UpdateCoordinator,
     private val smartScheduler: SmartDownloadScheduler,
@@ -66,8 +64,6 @@ class SettingsViewModel @Inject constructor(
     private val _server = MutableStateFlow<ServerStatus>(ServerStatus.Checking)
     val server: StateFlow<ServerStatus> = _server.asStateFlow()
 
-    private val _mangaSyncStatus = MutableStateFlow<String?>(null)
-    val mangaSyncStatus: StateFlow<String?> = _mangaSyncStatus.asStateFlow()
 
     // ── Wiedergabe ───────────────────────────────────────────────────────
     val sbBehaviors: Flow<Map<String, SegmentBehavior>> = sbPrefs.behaviors
@@ -120,18 +116,6 @@ class SettingsViewModel @Inject constructor(
         store.setAuthToken(token)
         delay(300)
         refreshServer()
-    }
-
-    fun triggerMangaSync() = viewModelScope.launch {
-        _mangaSyncStatus.value = null
-        runCatching { mangaRepo.startSync() }
-            .onSuccess { _mangaSyncStatus.value = "Abgleich gestartet" }
-            .onFailure { e ->
-                _mangaSyncStatus.value =
-                    if ("409" in e.message.orEmpty()) "Abgleich läuft bereits" else "Server nicht erreichbar"
-            }
-        delay(5_000)
-        _mangaSyncStatus.value = null
     }
 
     fun setSbBehavior(apiKey: String, behavior: SegmentBehavior) = viewModelScope.launch {

@@ -72,41 +72,80 @@ function flatToc(items, depth = 0, out = []) {
 }
 
 function hookDoc(doc, index) {
-  // Tippen: linkes/rechtes Drittel blättert, die Mitte zeigt die Leisten.
-  // Ein Tippen erkennen wir selbst und halten es von foliates Wisch-Erkennung fern: sonst rasten
-  // Wischen und Blättern gleichzeitig ein, laden am Kapitelende beide das nächste Kapitel, und der
-  // Leser bleibt gesperrt (am Gerät gesehen, 19.11.). Echtes Wischen bleibt bei foliate.
-  const tapAt = (clientX, target) => {
+  // Tippen und Wischen erkennen wir selbst; die App entscheidet, was passiert (Tippbereiche, Menü,
+  // Blätter-Animation). foliate bekommt Tippen und Wischen nicht mehr: sonst blättern beide zugleich,
+  // und foliate bleibt gesperrt (am Gerät gesehen, 19.11.). Lange Drücke bleiben für die Auswahl.
+  const W = () => window.innerWidth || 1
+  const frameLeft = () => doc.defaultView?.frameElement?.getBoundingClientRect().left ?? 0
+  const tapAt = (clientX, target, big) => {
     if (target?.closest?.('a[href]')) return
     const sel = doc.getSelection()
     if (sel && !sel.isCollapsed) return
-    const frame = doc.defaultView?.frameElement
-    const left = frame ? frame.getBoundingClientRect().left : 0
-    const x = (left + clientX) / window.innerWidth
-    if (x < 0.3) view.goLeft()
-    else if (x > 0.7) view.goRight()
-    else send('onTapCenter', '')
+    const px = frameLeft() + clientX
+    send('onTap', { x: px / W(), edge: px < 10 || px > W() - 10, big: !!big })
   }
   let touch = null
+  let drag = null
   let lastTouchTap = 0
+  let pendingMove = null
+  const flushMove = () => { if (pendingMove != null) { send('onDrag', { phase: 'move', dx: pendingMove }); pendingMove = null } }
   doc.addEventListener('touchstart', (e) => {
     const t = e.changedTouches[0]
-    touch = e.touches.length === 1 && t ? { x: t.screenX, y: t.screenY, cx: t.clientX, at: e.timeStamp, target: e.target } : null
+    if (e.touches.length > 1) {
+      // zweiter Finger: kein Tippen, laufendes Wischen abbrechen
+      if (drag) { send('onDrag', { phase: 'cancel' }); drag = null }
+      touch = null
+      return
+    }
+    touch = t ? { x: t.screenX, y: t.screenY, cx: t.clientX, at: e.timeStamp, target: e.target, r: Math.max(t.radiusX || 0, t.radiusY || 0) } : null
   }, { capture: true, passive: true })
+  doc.addEventListener('touchmove', (e) => {
+    if (!touch || e.touches.length !== 1) return
+    const t = e.touches[0]
+    const dx = t.screenX - touch.x
+    const dy = t.screenY - touch.y
+    if (!drag) {
+      const sel = doc.getSelection()
+      if (sel && !sel.isCollapsed) return
+      if (Math.abs(dx) < 12 || Math.abs(dx) < Math.abs(dy) * 1.3) return
+      drag = { lastX: t.screenX, lastT: e.timeStamp, vx: 0 }
+      send('onDrag', { phase: 'start', dir: dx < 0 ? 1 : -1 })
+    }
+    e.preventDefault()
+    e.stopImmediatePropagation()
+    const dt = Math.max(1, e.timeStamp - drag.lastT)
+    drag.vx = (t.screenX - drag.lastX) / dt
+    drag.lastX = t.screenX
+    drag.lastT = e.timeStamp
+    if (pendingMove == null) requestAnimationFrame(flushMove)
+    pendingMove = dx / W()
+  }, { capture: true, passive: false })
   doc.addEventListener('touchend', (e) => {
     const t = e.changedTouches[0]
     const start = touch
     touch = null
+    if (drag) {
+      e.stopImmediatePropagation()
+      flushMove()
+      send('onDrag', { phase: 'end', dx: start && t ? (t.screenX - start.x) / W() : 0, vx: drag.vx })
+      drag = null
+      return
+    }
     if (!start || !t) return
     const moved = Math.hypot(t.screenX - start.x, t.screenY - start.y)
-    if (moved > 12 || e.timeStamp - start.at > 400) return // Wischen oder langes Drücken: foliate/Auswahl
+    if (moved > 10 || e.timeStamp - start.at > 300) return // gerutscht oder gehalten: kein Tippen
     e.stopImmediatePropagation()
     lastTouchTap = Date.now()
-    tapAt(start.cx, start.target)
+    tapAt(start.cx, start.target, start.r > 30)
+  }, { capture: true })
+  doc.addEventListener('touchcancel', () => {
+    if (drag) send('onDrag', { phase: 'cancel' })
+    drag = null
+    touch = null
   }, { capture: true })
   doc.addEventListener('click', (e) => {
     if (Date.now() - lastTouchTap < 600) return // schon als Tippen erledigt
-    tapAt(e.clientX, e.target)
+    tapAt(e.clientX, e.target, false)
   })
   let selTimer = null
   doc.addEventListener('selectionchange', () => {
@@ -130,6 +169,7 @@ async function open(url, startCfi, settingsJson) {
     document.body.append(view)
     view.addEventListener('load', (e) => hookDoc(e.detail.doc, e.detail.index))
     view.addEventListener('relocate', (e) => {
+      relocations++
       const d = e.detail
       send('onRelocate', {
         cfi: d.cfi,
@@ -167,8 +207,18 @@ async function open(url, startCfi, settingsJson) {
   }
 }
 
+let relocations = 0
+const frames = (n) => new Promise((r) => { const step = () => (n-- <= 0 ? r() : requestAnimationFrame(step)); step() })
+
 window.HikariReader = {
   open,
+  /** Sofort (ohne foliate-Animation) umblättern und melden, ob sich etwas bewegt hat — die App blendet dabei ihre eigene Animation ein. */
+  async turn(dir) {
+    const before = relocations
+    try { await (dir > 0 ? view?.next() : view?.prev()) } catch (e) { console.warn('turn', e) }
+    await frames(2)
+    send('onTurned', { moved: relocations !== before })
+  },
   next: () => view?.goRight(),
   prev: () => view?.goLeft(),
   goTo: (target) => view?.goTo(target).catch((e) => send('onError', String(e))),

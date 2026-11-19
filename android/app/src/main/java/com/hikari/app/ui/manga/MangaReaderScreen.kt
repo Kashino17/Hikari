@@ -1,6 +1,24 @@
 package com.hikari.app.ui.manga
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import android.content.Context
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.pager.PagerDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.zIndex
+import com.hikari.app.MainActivity
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +31,6 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -84,7 +101,7 @@ fun MangaReaderScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun ReaderContent(
     pages: List<MangaPageDto>,
@@ -97,66 +114,168 @@ private fun ReaderContent(
     onOpenChapter: (chapterId: String) -> Unit,
     vm: MangaReaderViewModel,
 ) {
+    val ctx = LocalContext.current
+    val prefs = remember { ctx.getSharedPreferences("hikari_manga_reader", Context.MODE_PRIVATE) }
+    var settings by remember { mutableStateOf(MangaReaderSettings.decode(prefs.getString("settings", null))) }
+    val update: (MangaReaderSettings) -> Unit = { s ->
+        settings = s
+        prefs.edit().putString("settings", s.encode()).apply()
+    }
+    val pageCount = pages.size + 1 // +1 = Kapitelende
     val pagerState = rememberPagerState(
         initialPage = (initialPage - 1).coerceIn(0, pages.size - 1),
-        pageCount = { pages.size + 1 },  // +1 sentinel = chapter-end
+        pageCount = { pageCount },
     )
     var chromeVisible by rememberSaveable { mutableStateOf(true) }
-    var pagerScrollEnabled by remember { mutableStateOf(true) }
+    var zoomed by remember { mutableStateOf(false) }
+    var showSettings by remember { mutableStateOf(false) }
     val failedPages = remember { mutableStateOf<Set<String>>(emptySet()) }
+    val scope = rememberCoroutineScope()
+    var position by remember { mutableIntStateOf(pagerState.currentPage) }
 
-    // Progress save (debounced inside VM) + mark-as-read on last actual page.
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }.collectLatest { idx ->
+            position = idx
             if (idx < pages.size) vm.savePosition(idx + 1)
             if (idx == pages.size - 1) vm.markChapterRead()
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        HorizontalPager(
-            state = pagerState,
-            reverseLayout = true,   // RTL: forward = swipe left
-            beyondViewportPageCount = 1,
-            userScrollEnabled = pagerScrollEnabled,
-            modifier = Modifier.fillMaxSize(),
-        ) { pageIdx ->
-            if (pageIdx == pages.size) {
+    fun turn(forward: Boolean) {
+        if (settings.direction == ReadDirection.VERTICAL) return
+        val target = pagerState.currentPage + if (forward) 1 else -1
+        if (target !in 0 until pageCount || pagerState.isScrollInProgress) return
+        scope.launch {
+            if (settings.anim == PageAnim.NONE) pagerState.scrollToPage(target)
+            else pagerState.animateScrollToPage(
+                target,
+                animationSpec = tween(if (settings.anim == PageAnim.BOOK) 560 else 340, easing = FastOutSlowInEasing),
+            )
+        }
+    }
+    val onTap: (Float) -> Unit = { x ->
+        when (tapAction(x, settings.direction, settings.tapTurn, chromeVisible)) {
+            TapAction.NEXT -> turn(true)
+            TapAction.PREV -> turn(false)
+            TapAction.MENU -> chromeVisible = true
+            TapAction.CLOSE_MENU -> chromeVisible = false
+        }
+    }
+
+    // Lautstärketasten: leiser = weiter, lauter = zurück.
+    val activity = ctx as? MainActivity
+    val currentSettings by rememberUpdatedState(settings)
+    DisposableEffect(activity) {
+        val pager = object : MainActivity.VolumePager {
+            override fun wantsVolumeKeys() = currentSettings.volumeKeys && currentSettings.direction != ReadDirection.VERTICAL
+            override fun page(forward: Boolean) = turn(forward)
+        }
+        activity?.volumePager = pager
+        onDispose { if (activity?.volumePager === pager) activity.volumePager = null }
+    }
+
+    val bg = when (settings.background) {
+        "weiss" -> Color(0xFFF6F3EE)
+        "grau" -> Color(0xFF2A2A2D)
+        else -> Color.Black
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(bg)) {
+        if (settings.direction == ReadDirection.VERTICAL) {
+            VerticalStrip(
+                pages = pages,
+                startIndex = pagerState.currentPage.coerceAtMost(pages.size - 1),
+                imageUrl = { vm.pageImageUrl(baseUrl, it.id) },
+                onPage = { idx ->
+                    position = idx
+                    vm.savePosition(idx + 1)
+                    if (idx == pages.size - 1) vm.markChapterRead()
+                },
+                onTap = { chromeVisible = !chromeVisible },
+                nextChapterId = nextChapterId,
+                onNextChapter = { nextChapterId?.let(onOpenChapter) },
+                onBack = onBack,
+            )
+        } else {
+            HorizontalPager(
+                state = pagerState,
+                reverseLayout = settings.direction == ReadDirection.RTL,
+                beyondViewportPageCount = 1,
+                userScrollEnabled = !zoomed,
+                flingBehavior = PagerDefaults.flingBehavior(
+                    state = pagerState,
+                    snapAnimationSpec = if (settings.anim == PageAnim.NONE) snap() else tween(
+                        if (settings.anim == PageAnim.BOOK) 480 else 300,
+                        easing = FastOutSlowInEasing,
+                    ),
+                ),
+                modifier = Modifier.fillMaxSize(),
+            ) { pageIdx ->
+                val anim = settings.anim
+                val dir = settings.direction
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = { chromeVisible = !chromeVisible })
+                        .zIndex(-pageIdx.toFloat())
+                        .graphicsLayer {
+                            val t = pageTransform(pageIdx, pagerState.currentPage + pagerState.currentPageOffsetFraction, size.width, dir, anim)
+                            translationX = t.translationX
+                            rotationY = t.rotationY
+                            alpha = t.alpha
+                            cameraDistance = 14f * density
+                            transformOrigin = TransformOrigin(t.pivotX, 0.5f)
+                        }
+                        .background(bg)
+                        .drawWithContent {
+                            drawContent()
+                            val t = pageTransform(pageIdx, pagerState.currentPage + pagerState.currentPageOffsetFraction, size.width, dir, anim)
+                            if (t.shade > 0f) drawRect(Color.Black.copy(alpha = t.shade))
                         },
                 ) {
-                    ChapterEndPage(
-                        nextChapterId = nextChapterId,
-                        onNextChapter = { nextChapterId?.let(onOpenChapter) },
-                        onBackToOverview = onBack,
-                    )
+                    if (pageIdx == pages.size) {
+                        Box(
+                            modifier = Modifier.fillMaxSize().pointerInput(Unit) {
+                                detectTapGestures(onTap = { o -> onTap(o.x / size.width) })
+                            },
+                        ) {
+                            ChapterEndPage(
+                                nextChapterId = nextChapterId,
+                                onNextChapter = { nextChapterId?.let(onOpenChapter) },
+                                onBackToOverview = onBack,
+                            )
+                        }
+                    } else {
+                        val page = pages[pageIdx]
+                        ZoomablePage(
+                            pageImageUrl = vm.pageImageUrl(baseUrl, page.id),
+                            pageNumber = page.pageNumber,
+                            isCurrent = position == pageIdx,
+                            onZoomChange = { zoomed = it },
+                            onTap = onTap,
+                            onError = { failedPages.value = failedPages.value + page.id },
+                        )
+                    }
                 }
-            } else {
-                val page = pages[pageIdx]
-                ZoomablePage(
-                    pageImageUrl = vm.pageImageUrl(baseUrl, page.id),
-                    pageNumber = page.pageNumber,
-                    pagerState = pagerState,
-                    pageIdx = pageIdx,
-                    onZoomChange = { isZoomed -> pagerScrollEnabled = !isZoomed },
-                    onTap = { chromeVisible = !chromeVisible },
-                    onError = {
-                        failedPages.value = failedPages.value + page.id
-                    },
-                )
             }
         }
         ReaderChrome(
             visible = chromeVisible,
-            currentPage = (pagerState.currentPage + 1).coerceAtMost(pages.size),
+            currentPage = (position + 1).coerceAtMost(pages.size),
             totalPages = pages.size,
             missingCount = failedPages.value.size,
             onBack = onBack,
+            onSettings = { showSettings = true },
+            onSeek = { page ->
+                scope.launch {
+                    if (settings.direction != ReadDirection.VERTICAL) pagerState.scrollToPage((page - 1).coerceIn(0, pages.size - 1))
+                }
+            },
         )
+    }
+    if (showSettings) {
+        ModalBottomSheet(onDismissRequest = { showSettings = false }, containerColor = Color(0xFF1C1B20)) {
+            MangaReaderSettingsSheet(settings, update)
+        }
     }
 }
 

@@ -24,6 +24,14 @@ data class TextSelection(val cfi: String, val text: String)
 @Serializable
 data class TappedMark(val id: String, val cfi: String)
 
+/** Ein Tippen auf die Seite: x = 0 (links) … 1 (rechts); edge = am Bildschirmrand (Griff); big = große Auflagefläche (Handballen). */
+@Serializable
+data class PageTap(val x: Float = 0.5f, val edge: Boolean = false, val big: Boolean = false)
+
+/** Wischen: start (dir 1 = vorwärts, -1 = zurück), move (dx in Bildschirmbreiten), end (dx, vx in px/ms), cancel. */
+@Serializable
+data class PageDrag(val phase: String, val dir: Int = 0, val dx: Float = 0f, val vx: Float = 0f)
+
 /** Nachrichten der Leser-Seite (assets/ebook-reader/reader.js) lesen — nie abstürzen. */
 object ReaderMessages {
     private val json = Json { ignoreUnknownKeys = true }
@@ -32,6 +40,9 @@ object ReaderMessages {
     fun toc(s: String): List<TocEntry> = runCatching { json.decodeFromString<List<TocEntry>>(s) }.getOrDefault(emptyList())
     fun selection(s: String): TextSelection? = runCatching { json.decodeFromString<TextSelection>(s) }.getOrNull()
     fun tappedMark(s: String): TappedMark? = runCatching { json.decodeFromString<TappedMark>(s) }.getOrNull()
+    fun tap(s: String): PageTap? = runCatching { json.decodeFromString<PageTap>(s) }.getOrNull()
+    fun drag(s: String): PageDrag? = runCatching { json.decodeFromString<PageDrag>(s) }.getOrNull()
+    fun turned(s: String): Boolean = "\"moved\":true" in s.replace(" ", "")
 
     /** Einstellungen für reader.js — immer vollständig (auch Standardwerte) plus Spaltenzahl. */
     fun settingsJson(s: ReaderSettings, columns: Int): String = kotlinx.serialization.json.buildJsonObject {
@@ -51,7 +62,9 @@ class ReaderBridge(
     private val onLocation: (ReaderLocation) -> Unit,
     private val onTocLoaded: (List<TocEntry>) -> Unit,
     private val onSelected: (TextSelection?) -> Unit,
-    private val onCenterTap: () -> Unit,
+    private val onPageTap: (PageTap) -> Unit,
+    private val onPageDrag: (PageDrag) -> Unit,
+    private val onPageTurned: (moved: Boolean) -> Unit,
     private val onMarkTap: (TappedMark) -> Unit,
     private val onFailure: (String) -> Unit,
 ) {
@@ -59,7 +72,9 @@ class ReaderBridge(
     @JavascriptInterface fun onRelocate(s: String) { ReaderMessages.relocate(s)?.let(onLocation) }
     @JavascriptInterface fun onToc(s: String) = onTocLoaded(ReaderMessages.toc(s))
     @JavascriptInterface fun onSelection(s: String) = onSelected(ReaderMessages.selection(s))
-    @JavascriptInterface fun onTapCenter(@Suppress("UNUSED_PARAMETER") s: String) = onCenterTap()
+    @JavascriptInterface fun onTap(s: String) { ReaderMessages.tap(s)?.let(onPageTap) }
+    @JavascriptInterface fun onDrag(s: String) { ReaderMessages.drag(s)?.let(onPageDrag) }
+    @JavascriptInterface fun onTurned(s: String) = onPageTurned(ReaderMessages.turned(s))
     @JavascriptInterface fun onTapMark(s: String) { ReaderMessages.tappedMark(s)?.let(onMarkTap) }
     @JavascriptInterface fun onError(s: String) = onFailure(s)
 }

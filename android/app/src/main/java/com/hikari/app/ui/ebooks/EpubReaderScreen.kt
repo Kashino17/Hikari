@@ -1,5 +1,21 @@
 package com.hikari.app.ui.ebooks
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.core.view.drawToBitmap
+import com.hikari.app.ui.manga.PageAnim
+import com.hikari.app.ui.manga.ReadDirection
+import com.hikari.app.ui.manga.TapAction
+import com.hikari.app.ui.manga.tapAction
+import kotlin.math.abs
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ClipData
@@ -116,6 +132,93 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
 
     fun js(code: String) = web?.evaluateJavascript(code, null)
 
+    // Blätter-Animation: Standbilder über der WebView, die selbst sofort umblättert.
+    val scope = rememberCoroutineScope()
+    val turner = remember { PageTurner() }
+    val anim = pageAnimOf(settings.pageAnim)
+    val turnMs = if (anim == PageAnim.BOOK) 560 else 340
+    fun capture(): ImageBitmap? = web?.takeIf { it.width > 0 && it.height > 0 }
+        ?.let { v -> runCatching { v.drawToBitmap().asImageBitmap() }.getOrNull() }
+
+    /** Standbild der aktuellen Seite legen, WebView sofort umblättern lassen; false = ging nicht weiter. */
+    suspend fun prepareTurn(forward: Boolean): Boolean {
+        val current = capture() ?: return false
+        turner.forward = forward
+        turner.drainTurned()
+        if (forward) { turner.under = null; turner.top = current; turner.p.snapTo(0f) }
+        else { turner.top = null; turner.under = current; turner.p.snapTo(1f) }
+        turner.active = true
+        js("HikariReader.turn(${if (forward) 1 else -1})")
+        val moved = withTimeoutOrNull(4_000) { turner.turned.receive() } ?: false
+        if (!moved) { turner.reset(); return false }
+        if (!forward) {
+            val prev = capture()
+            if (prev == null) { turner.reset(); return false }
+            turner.top = prev
+        }
+        return true
+    }
+
+    fun turnPage(forward: Boolean) {
+        if (anim == PageAnim.NONE) { js("HikariReader.turn(${if (forward) 1 else -1})"); return }
+        if (turner.active) return
+        scope.launch {
+            if (prepareTurn(forward)) turner.p.animateTo(if (forward) 1f else 0f, tween(turnMs, easing = FastOutSlowInEasing))
+            turner.reset()
+        }
+    }
+
+    fun finishDrag(dx: Float, vx: Float, cancelled: Boolean) {
+        if (!turner.dragging) return
+        turner.dragging = false
+        if (anim == PageAnim.NONE) {
+            if (!cancelled && (abs(dx) > 0.12f || abs(vx) > 0.45f)) js("HikariReader.turn(${if (dx < 0) 1 else -1})")
+            return
+        }
+        scope.launch {
+            turner.prep?.join()
+            if (!turner.active) return@launch
+            val fwd = turner.forward
+            val commit = !cancelled && if (fwd) turner.p.value > 0.33f || vx < -0.45f else turner.p.value < 0.67f || vx > 0.45f
+            turner.p.animateTo(if (commit == fwd) 1f else 0f, tween((turnMs * 0.7f).toInt(), easing = FastOutSlowInEasing))
+            if (!commit) {
+                // zurücknehmen: die WebView war schon umgeblättert
+                turner.drainTurned()
+                js("HikariReader.turn(${if (fwd) -1 else 1})")
+                withTimeoutOrNull(4_000) { turner.turned.receive() }
+            }
+            turner.reset()
+        }
+    }
+
+    fun onDrag(d: PageDrag) {
+        when (d.phase) {
+            "start" -> {
+                if (turner.active || turner.dragging) return
+                turner.dragging = true
+                turner.forward = d.dir > 0
+                if (anim != PageAnim.NONE) turner.prep = scope.launch { if (!prepareTurn(d.dir > 0)) turner.dragging = false }
+            }
+            "move" -> if (turner.dragging && turner.active && anim != PageAnim.NONE) {
+                val f = (abs(d.dx) / 0.9f).coerceIn(0f, 1f)
+                val v = if (turner.forward) (if (d.dx < 0) f else 0f) else 1f - (if (d.dx > 0) f else 0f)
+                scope.launch { turner.p.snapTo(v) }
+            }
+            "end" -> finishDrag(d.dx, d.vx, cancelled = false)
+            "cancel" -> finishDrag(0f, 0f, cancelled = true)
+        }
+    }
+
+    fun onPageTap(t: PageTap) {
+        if (t.edge || t.big) return // Griff am Rand oder Handballen: kein Tippen
+        when (tapAction(t.x, ReadDirection.LTR, settings.tapTurn, barsVisible)) {
+            TapAction.NEXT -> turnPage(true)
+            TapAction.PREV -> turnPage(false)
+            TapAction.MENU -> barsVisible = true
+            TapAction.CLOSE_MENU -> barsVisible = false
+        }
+    }
+
     BackHandler { vm.flush(); onBack() }
     DisposableEffect(Unit) { onDispose { vm.flush() } }
     ImmersiveWhileReading(hide = !barsVisible)
@@ -126,7 +229,7 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
     DisposableEffect(activity) {
         val pager = object : MainActivity.VolumePager {
             override fun wantsVolumeKeys() = volumeOn
-            override fun page(forward: Boolean) { js(if (forward) "HikariReader.next()" else "HikariReader.prev()") }
+            override fun page(forward: Boolean) = turnPage(forward)
         }
         activity?.volumePager = pager
         onDispose { if (activity?.volumePager === pager) activity.volumePager = null }
@@ -181,7 +284,9 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
                             onLocation = { loc -> main.post { vm.onLocation(loc) } },
                             onTocLoaded = { toc -> main.post { vm.onToc(toc) } },
                             onSelected = { sel -> main.post { vm.onSelection(sel) } },
-                            onCenterTap = { main.post { barsVisible = !barsVisible } },
+                            onPageTap = { t -> main.post { onPageTap(t) } },
+                            onPageDrag = { d -> main.post { onDrag(d) } },
+                            onPageTurned = { moved -> turner.turned.trySend(moved) },
                             onMarkTap = { m -> main.post { sheet = "toc" } },
                             onFailure = { msg -> android.util.Log.w("HikariReader", "Öffnen fehlgeschlagen: $msg"); main.post { vm.onError(msg) } },
                         ),
@@ -193,6 +298,8 @@ fun EpubReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
             },
             onRelease = { it.destroy() },
         )
+
+        PageTurnLayer(turner, anim, colors.bg, Modifier.statusBarsPadding().navigationBarsPadding())
 
         // Auswahl: markieren, nachschlagen, kopieren
         val sel = s.selection
@@ -310,7 +417,7 @@ private fun lookUp(ctx: Context, text: String) {
 
 @Composable
 private fun ReaderSettingsSheet(s: ReaderSettings, update: ((ReaderSettings) -> ReaderSettings) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 28.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             for ((id, label) in listOf("papier" to "Papier", "sepia" to "Sepia", "nacht" to "Nacht")) {
                 val c = readerColors(id)
@@ -331,6 +438,15 @@ private fun ReaderSettingsSheet(s: ReaderSettings, update: ((ReaderSettings) -> 
         }
         Choices("Zeilenabstand", listOf("1.3" to "Eng", "1.5" to "Normal", "1.8" to "Weit"), s.lineHeight.toString()) { v -> update { it.copy(lineHeight = v.toDouble()) } }
         Choices("Rand", listOf("schmal" to "Schmal", "mittel" to "Mittel", "breit" to "Breit"), s.margin) { v -> update { it.copy(margin = v) } }
+        Choices("Umblättern", listOf("BOOK" to "Blättern", "SLIDE" to "Gleiten", "FADE" to "Ruhig", "NONE" to "Sofort"), s.pageAnim) { v -> update { it.copy(pageAnim = v) } }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Tippen zum Blättern", color = Color(0xB3FFFFFF), fontSize = 14.sp)
+                Text("Nur die äußeren Ränder blättern. Halten, Rutschen und Handballen zählen nicht. Aus: nur wischen.", color = Color(0x80FFFFFF), fontSize = 12.sp)
+            }
+            Switch(checked = s.tapTurn, onCheckedChange = { v -> update { it.copy(tapTurn = v) } },
+                colors = SwitchDefaults.colors(checkedTrackColor = BooksAccent))
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Mit Lautstärketasten blättern", color = Color(0xB3FFFFFF), fontSize = 14.sp, modifier = Modifier.weight(1f))
             Switch(checked = s.volumeKeys, onCheckedChange = { v -> update { it.copy(volumeKeys = v) } },
