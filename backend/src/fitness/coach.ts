@@ -173,6 +173,7 @@ Baue daraus den besten Trainingstag. Regeln:
 - Wo das Feedback "zu schwer" oder "Technik unsicher" sagt: leichtere Variante oder weniger. "zu leicht": mehr oder schwerere Variante.
 - Abwechslung zu den letzten Tagen, Erholung der Muskelgruppen beachten.
 - Sprich den Nutzer mit "du" an, Deutsch, motivierend aber sachlich, ohne Emojis.
+- Erwähne keine internen Werte (Level-Zahlen, Schwierigkeitsstufen, "Regel", Dosis, ids) — sprich über Übungen, Muskeln, Ziele und sein Feedback.
 Antworte NUR mit JSON:
 {"title":"kurzer Name des Tages","dayType":"ganzkoerper|druck|zug|beine|core|ausdauer|mobilitaet","intensity":"leicht|mittel|hart",
  "coach":{"headline":"eine Zeile","message":"2–3 Sätze: worum es heute geht","why":["kurze Begründungen, bezogen auf Feedback/Verlauf"]},
@@ -351,7 +352,7 @@ export async function aiPlan(
       e.id,
       e.name,
       e.pattern,
-      `L${e.level}`,
+      `schwierigkeit ${e.level}/10`,
       e.unit === "sec" ? "s" : "wdh",
       e.perSide ? "je Seite" : "",
       e.use.map((u) => u[0]).join(""),

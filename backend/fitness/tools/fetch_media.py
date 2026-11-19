@@ -38,7 +38,10 @@ def ffmpeg(*args):
 
 
 def poster(mp4: Path, jpg: Path):
-    ffmpeg("-ss", "0.6", "-i", str(mp4), "-frames:v", "1", "-vf", "scale=480:-2", "-q:v", "4", str(jpg))
+    """Standbild aus der Mitte der Bewegung (der Anfang zeigt oft nur die Ausgangsstellung)."""
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(mp4)], capture_output=True, text=True).stdout
+    mid = max(0.3, float(out.strip() or 1.2) * 0.45)
+    ffmpeg("-ss", f"{mid:.2f}", "-i", str(mp4), "-frames:v", "1", "-vf", "scale=480:-2", "-q:v", "4", str(jpg))
 
 
 def normalize(src: Path, dst: Path, crop: str | None = None, width=640):
@@ -97,6 +100,11 @@ def credit(src: str) -> str:
 def main():
     only = None
     force = "--force" in sys.argv
+    if "--posters" in sys.argv:
+        for mp4 in sorted(OUT.glob("*.mp4")):
+            poster(mp4, mp4.with_suffix(".jpg"))
+        print("Standbilder neu")
+        return
     if "--only" in sys.argv:
         only = set(sys.argv[sys.argv.index("--only") + 1].split(","))
     out_file = HERE.parent / "media.json"

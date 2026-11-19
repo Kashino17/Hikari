@@ -15,32 +15,33 @@ export type AiTask = "coach" | "vision" | "text" | "bulk";
 
 /** [Modell, eigene Tagesgrenze]. Die Grenzen liegen knapp unter Googles Gratis-Limits. */
 export const CHAINS: Record<AiTask, [string, number][]> = {
-  // Trainingsplan + Wochenrückblick: das beste freie Modell zuerst.
+  // Trainingsplan + Rückblick: das beste freie Modell zuerst.
   coach: [
     ["gemini-3-flash-preview", 18],
     ["gemini-3.7-flash", 18],
     ["gemini-3.5-flash", 18],
     ["gemma-4-31b-it", 5000],
-    ["gemini-flash-lite-latest", 200],
+    ["gemini-3.1-flash-lite-preview", 120],
   ],
   // Essensfotos.
   vision: [
     ["gemini-3.5-flash", 18],
     ["gemini-3-flash-preview", 18],
-    ["gemini-flash-lite-latest", 200],
-    ["gemini-3.1-flash-lite", 200],
+    ["gemini-3.1-flash-lite-preview", 120],
     ["gemma-4-31b-it", 5000],
   ],
-  // Kurze Texte (Ernährungs-Feedback, Lebensmittel nachschlagen).
+  // Kurze Texte (Ernährungs-Coach, Lebensmittel zuordnen).
   text: [
-    ["gemini-flash-lite-latest", 200],
+    ["gemini-3.1-flash-lite-preview", 120],
     ["gemma-4-31b-it", 5000],
-    ["gemini-3.1-flash-lite", 200],
+    ["gemini-3.1-flash-lite", 120],
   ],
-  // Viele gleichartige Anfragen (Rezepte übersetzen): nur Modelle mit großem Topf.
+  // Viele gleichartige Anfragen (Rezepte aufbereiten). NIE gemini-flash-lite-latest: das ist
+  // 3.5 Flash-Lite und teilt sich das Kontingent mit Anja.
   bulk: [
     ["gemma-4-26b-a4b-it", 5000],
     ["gemma-4-31b-it", 5000],
+    ["gemini-3.1-flash-lite", 220],
   ],
 };
 
