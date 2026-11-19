@@ -207,3 +207,54 @@ describe("Ernährung", () => {
     expect(youtubeId("")).toBeNull();
   });
 });
+
+describe("Barcode und Zutatenbilder", () => {
+  it("rechnet Open-Food-Facts-Werte um (Mineralstoffe g → mg, kJ → kcal)", async () => {
+    const { mapProduct } = await import("./barcode.js");
+    const p = mapProduct("1", {
+      product_name: "Testriegel",
+      brands: "X, Y",
+      quantity: "330 ml",
+      serving_quantity: 55,
+      nutriments: {
+        energy_100g: 1674,
+        proteins_100g: 30,
+        calcium_100g: 0.12,
+        "vitamin-d_100g": 0.000005,
+      },
+    });
+    expect(p?.per100.kcal).toBe(400);
+    expect(p?.per100.calcium).toBe(120);
+    expect(p?.per100.vitD).toBe(5);
+    expect(p?.brand).toBe("X");
+    expect(p?.liquid).toBe(true);
+    expect(p?.serving).toBe(55);
+  });
+
+  it("findet TheMealDB-Bilder auch für Varianten und Synonyme", async () => {
+    const { IngredientImages } = await import("./ingredient-images.js");
+    const db = freshDb();
+    const im = new IngredientImages(
+      db,
+      join((await import("node:os")).tmpdir(), `mdb-${Date.now()}.json`),
+      () => {},
+      (async () =>
+        new Response(
+          JSON.stringify({
+            meals: [
+              { strIngredient: "Carrots" },
+              { strIngredient: "Rocket" },
+              { strIngredient: "Bread" },
+              { strIngredient: "Salmon" },
+            ],
+          }),
+        )) as unknown as typeof fetch,
+    );
+    await im.init();
+    expect(im.mealDb("carrot")).toContain("Carrots");
+    expect(im.mealDb("arugula")).toContain("Rocket");
+    expect(im.mealDb("mixed wheat bread")).toContain("Bread");
+    expect(im.mealDb("salmon fillet")).toContain("Salmon");
+    expect(im.mealDb("unbekanntes zeug")).toBeNull();
+  });
+});

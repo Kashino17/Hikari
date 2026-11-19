@@ -1,9 +1,9 @@
 // Ernährung: Tagebuch mit Foto-Tracker, Nährstoff-Check, Ernährungs-Coach, Tagesplan, Einkaufsliste.
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
-import { api, pickPhoto } from '../platform.js';
+import { api, pickPhoto, scanBarcode } from '../platform.js';
 import { back, nav, useData, setData, refresh, today as todayStr, relDay, toast, fmtNum, SLOT_NAMES, SLOT_ICONS, slotNow, img, recipeImg, parseDay } from '../app.js';
 import { Icon, Ring, Bar, Sheet, Top, Seg, cls, Spinner, Empty } from '../ui.js';
-import { RecipeBrowse } from './recipes.js';
+import { RecipeBrowse, IngImg } from './recipes.js';
 
 const SLOTS = ['fruehstueck', 'mittag', 'abend', 'snack'];
 const shift = (d, n) => { const x = parseDay(d); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
@@ -28,7 +28,7 @@ export function Food() {
       </div>
       <div style="height:90px" />
     </div>
-    ${tab === 'tagebuch' && isToday && html`<button class="fab" onClick=${() => nav(`foto/${slotNow()}`)}><${Icon} n="photo_camera" />Foto</button>`}
+    ${tab === 'tagebuch' && isToday && html`<button class="fab2" onClick=${() => nav(`barcode/${slotNow()}`)} aria-label="Barcode scannen"><${Icon} n="barcode_scanner" /></button><button class="fab" onClick=${() => nav(`foto/${slotNow()}`)}><${Icon} n="photo_camera" />Foto</button>`}
   </div>`;
 }
 
@@ -94,6 +94,7 @@ function AddSheet({ slot, day, onClose }) {
   return html`<${Sheet} title=${`${SLOT_NAMES[slot]} hinzufügen`} onClose=${onClose}>
     <div class="list c-food">
       <button class="li" onClick=${() => go(`foto/${slot}`)}><div class="iconTile"><${Icon} n="photo_camera" /></div><div class="tx"><div class="t1">Foto machen</div><div class="t2">KI erkennt Gericht, Zutaten und Mengen</div></div></button>
+      <button class="li" onClick=${() => go(`barcode/${slot}`)}><div class="iconTile"><${Icon} n="barcode_scanner" /></div><div class="tx"><div class="t1">Barcode scannen</div><div class="t2">Verpackte Produkte weltweit — Cola, Riegel, Joghurt …</div></div></button>
       <button class="li" onClick=${() => go(`mahlzeit/neu/${slot}`)}><div class="iconTile soft"><${Icon} n="edit_note" /></div><div class="tx"><div class="t1">Beschreiben oder suchen</div><div class="t2">»2 Eier, Vollkornbrot mit Butter«</div></div></button>
       <button class="li" onClick=${() => go('rezepte')}><div class="iconTile soft"><${Icon} n="menu_book" /></div><div class="tx"><div class="t1">Aus Rezepten</div><div class="t2">Gekochtes Rezept eintragen</div></div></button>
     </div>
@@ -308,9 +309,80 @@ export function Shopping() {
       ${!l ? html`<div class="skel mt16" style="height:300px" />` : l.items.length === 0 ? html`<${Empty} icon="shopping_cart" title="Noch nichts geplant" text="Öffne den Tagesplan für die kommenden Tage — dann füllt sich die Liste." />`
         : html`<div class="card mt16" style="padding:4px 14px">${l.items.map((it) => html`<button class=${cls('shop', it.checked && 'on')} onClick=${() => toggle(it)}>
           <span class="ck">${it.checked && html`<${Icon} n="check" style="font-size:17px" />`}</span>
-          <div class="ingr" style="padding:0;flex:none"><div class="ii" style="width:38px;height:38px"><img src=${img(it.image)} alt="" style="width:32px;height:32px" loading="lazy" /></div></div>
+          <div class="ingr" style="padding:0;flex:none"><${IngImg} src=${it.image} size=${38} /></div>
           <div class="grow" style="min-width:0"><div class="sn" style="font-weight:500">${it.name}</div><div class="tiny muted ell">${it.recipes.join(', ')}</div></div>
           <span class="small num">${it.grams >= 1000 ? `${fmtNum(it.grams / 1000, 1)} kg` : `${it.grams} g`}</span></button>`)}</div>`}
       <div class="end" />
     </div></div></div>`;
+}
+
+// ── Barcode ─────────────────────────────────────────────────────────────────
+export function BarcodeFlow({ slot }) {
+  const [state, setState] = useState('scan'); // scan | load | product | missing | manual
+  const [code, setCode] = useState('');
+  const [p, setP] = useState(null);
+  const [err, setErr] = useState('');
+  const lookup = async (ean) => {
+    setState('load'); setCode(ean);
+    try { const r = await api.get(`/fitness/food/barcode/${ean}`); setP(r.product); setState('product'); }
+    catch (e) { setState(e.status === 404 ? 'missing' : 'manual'); setErr(e.status === 404 ? '' : 'Die Produktdatenbank ist gerade nicht erreichbar.'); }
+  };
+  const scan = async () => {
+    setErr(''); setState('scan');
+    const r = await scanBarcode();
+    if (r?.code) lookup(r.code);
+    else if (r?.error) { setState('manual'); setErr(r.error === 'browser' ? '' : 'Der Scanner ließ sich nicht starten — beim ersten Mal lädt Android ihn kurz nach. Gleich nochmal versuchen oder die Nummer eintippen.'); }
+    else back('ernaehrung');
+  };
+  useEffect(() => { scan(); }, []);
+  if (state === 'product' && p) return html`<${ProductAdd} p=${p} slot=${slot} onRescan=${scan} />`;
+  return html`<div class="screen c-food"><${Top} title="Barcode" onBack=${() => back('ernaehrung')} />
+    <div class="scroll"><div class="pad">
+      ${state === 'load' || state === 'scan' ? html`<div class="row gap12 mt24"><${Spinner} /><div class="muted">${state === 'load' ? `Suche Produkt ${code} …` : 'Scanner öffnet …'}</div></div>` : null}
+      ${state === 'missing' && html`<div class="card pad16 mt12"><div class="h3">Produkt ${code} nicht gefunden</div>
+        <p class="small muted mt8" style="line-height:1.5">Nicht jedes Produkt ist in Open Food Facts. Fotografier es stattdessen — die KI schätzt die Nährwerte, am besten mit der Nährwerttabelle im Bild.</p>
+        <div class="row mt12"><button class="btn solid" onClick=${() => nav(`foto/${slot ?? slotNow()}`, { replace: true })}><${Icon} n="photo_camera" />Foto</button><button class="btn ghost" onClick=${scan}>Nochmal scannen</button></div></div>`}
+      ${(state === 'manual' || state === 'missing') && html`<div class="mt20">
+        ${err && html`<p class="small muted" style="line-height:1.5">${err}</p>`}
+        <div class="field mt12"><label>Barcode-Nummer eintippen</label>
+          <div class="row"><input class="input" inputmode="numeric" placeholder="z. B. 5449000000996" value=${code} onInput=${(e) => setCode(e.target.value.replace(/\D/g, ''))} /><button class="btn solid sm" style="height:48px" disabled=${code.length < 8} onClick=${() => lookup(code)}>Suchen</button></div></div>
+        ${state === 'manual' && html`<button class="btn ghost mt12" onClick=${scan}><${Icon} n="barcode_scanner" />Scanner öffnen</button>`}</div>`}
+      <p class="tiny faint mt24">Produktdaten: Open Food Facts (weltweit, frei)</p>
+    </div></div></div>`;
+}
+
+function ProductAdd({ p, slot: slot0, onRescan }) {
+  const unit = p.liquid ? 'ml' : 'g';
+  const opts = [p.serving && [p.serving, `1 Portion · ${fmtNum(p.serving)} ${unit}`], p.pack && p.pack !== p.serving && [p.pack, `Ganze Packung · ${fmtNum(p.pack)} ${unit}`], [100, `100 ${unit}`]].filter(Boolean);
+  const [g, setG] = useState(opts[0][0]);
+  const [slot, setSlot] = useState(slot0 && SLOTS.includes(slot0) ? slot0 : slotNow());
+  const [busy, setBusy] = useState(false);
+  const n = (k) => ((p.per100[k] ?? 0) * g) / 100;
+  const save = async () => {
+    setBusy(true);
+    try {
+      const d = await api.post('/fitness/food/log', { day: todayStr(), meal: slot, title: p.brand ? `${p.name} (${p.brand})` : p.name, source: 'barcode', items: [{ name: p.name, grams: g, per100: p.per100, food: { id: `off:${p.ean}`, name: p.name, source: 'Open Food Facts' } }] });
+      setData('/fitness/food/day', d); setData(`/fitness/food/day?day=${todayStr()}`, d);
+      toast('Eingetragen'); nav('ernaehrung', { replace: true });
+    } catch { toast('Server nicht erreichbar'); setBusy(false); }
+  };
+  const missing = p.per100.kcal == null;
+  return html`<div class="screen c-food"><${Top} title="Produkt" onBack=${() => back('ernaehrung')} actions=${html`<button class="ib" onClick=${onRescan} aria-label="Nochmal scannen"><${Icon} n="barcode_scanner" /></button>`} />
+    <div class="scroll"><div class="pad">
+      <div class="row gap12" style="align-items:flex-start">
+        <div class="prodImg">${p.image ? html`<img src=${img(p.image)} alt="" />` : html`<${Icon} n="inventory_2" />`}</div>
+        <div class="grow"><div class="h2" style="line-height:1.25">${p.name}</div><div class="small muted mt4">${[p.brand, p.quantity].filter(Boolean).join(' · ')}</div>
+          ${p.nutriscore && /^[a-e]$/.test(p.nutriscore) && html`<span class=${`nutri ns-${p.nutriscore}`}>Nutri-Score ${p.nutriscore.toUpperCase()}</span>`}</div>
+      </div>
+      ${missing ? html`<div class="card pad16 mt16 small muted">Für dieses Produkt fehlen die Nährwerte in der Datenbank. Mach lieber ein Foto der Nährwerttabelle.</div>` : html`
+      <div class="eyebrow mt24">Wie viel?</div>
+      <div class="bigOpts mt8">${opts.map(([v, l]) => html`<button class=${cls('bigOpt', g === v && 'on')} style="min-height:54px" onClick=${() => setG(v)}><span class="grow"><b style="font-size:15px">${l}</b></span>${g === v && html`<${Icon} n="check" style="color:rgb(var(--food))" />`}</button>`)}</div>
+      <div class="row mt12" style="justify-content:space-between"><span class="small muted">Eigene Menge</span><div class="row gap6"><input class="gramInput" type="number" inputmode="numeric" value=${g} onInput=${(e) => setG(Math.max(0, Number(e.target.value) || 0))} /><span class="small muted">${unit}</span></div></div>
+      <div class="macroBand mt16"><div><b class="num">${fmtNum(n('kcal'))}</b><span>kcal</span></div><div><b class="num">${fmtNum(n('protein'), 1)}</b><span>Eiweiß g</span></div><div><b class="num">${fmtNum(n('carbs'), 1)}</b><span>KH g</span></div><div><b class="num">${fmtNum(n('fat'), 1)}</b><span>Fett g</span></div></div>
+      ${n('sugar') > 0 && html`<p class="small muted mt8">davon Zucker ${fmtNum(n('sugar'), 1)} g${n('salt') ? ` · Salz ${fmtNum(n('salt'), 2)} g` : ''}</p>`}
+      <div class="chips mt20">${SLOTS.map((s) => html`<button class=${cls('chip', slot === s && 'on')} onClick=${() => setSlot(s)}>${SLOT_NAMES[s]}</button>`)}</div>`}
+      <div style="height:100px" />
+    </div></div>
+    ${!missing && html`<div class="bottombar"><button class="btn solid" disabled=${busy || !g} onClick=${save}>${busy ? html`<${Spinner} />` : html`<${Icon} n="check" />Eintragen`}</button></div>`}
+  </div>`;
 }

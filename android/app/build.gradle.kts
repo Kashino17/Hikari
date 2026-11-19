@@ -40,8 +40,8 @@ android {
         applicationId = "com.hikari.app"
         minSdk = 26
         targetSdk = 34   // was 36 in plan — same deviation
-        versionCode = 278
-        versionName = "0.89.127"
+        versionCode = 279
+        versionName = "0.89.128"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -126,6 +126,8 @@ dependencies {
     implementation(libs.media3.cast)
     implementation(libs.mediarouter)
     implementation(libs.cast.framework)
+    // Barcode-Scanner für den Ernährungs-Tracker (Google Code Scanner: eigene Oberfläche, keine Kamera-Berechtigung).
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0")
 
     implementation(libs.coil.compose)
     implementation(libs.telephoto.zoomable.image.coil)

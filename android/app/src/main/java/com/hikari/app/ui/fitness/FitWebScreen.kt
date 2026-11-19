@@ -82,6 +82,7 @@ fun FitWebScreen(
 ) {
     val context = LocalContext.current
     val bridge = remember { FitWebBridge(context.applicationContext, vm.okHttp, onClose, onOpenVideo) }
+    bridge.activity = context
 
     val photoFile = remember { File(context.cacheDir, "fit_photo.jpg") }
     val photoUri = remember { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", photoFile) }
@@ -92,6 +93,15 @@ fun FitWebScreen(
     bridge.launchCamera = { runCatching { camera.launch(photoUri) }.onFailure { bridge.onPhoto(null) } }
     bridge.launchGallery = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
 
+    // Barcode-Scanner-Modul der Play-Dienste schon vorab laden, damit der erste Scan nicht scheitert.
+    LaunchedEffect(Unit) {
+        runCatching {
+            val scanner = com.google.mlkit.vision.codescanner.GmsBarcodeScanning.getClient(context)
+            com.google.android.gms.common.moduleinstall.ModuleInstall.getClient(context).installModules(
+                com.google.android.gms.common.moduleinstall.ModuleInstallRequest.newBuilder().addApi(scanner).build(),
+            )
+        }
+    }
     // Musik pausieren — sonst läuft sie unter Ansagen und Pieptönen weiter.
     LaunchedEffect(Unit) { if (vm.music.isPlaying.value) vm.music.toggle() }
 
@@ -200,6 +210,8 @@ class FitWebBridge(
     var webView: WebView? = null
     var launchCamera: () -> Unit = {}
     var launchGallery: () -> Unit = {}
+    /** Für den Barcode-Scanner (startet seine eigene Oberfläche über die Activity). */
+    var activity: Context? = null
 
     private val main = Handler(Looper.getMainLooper())
     private val prefs = app.getSharedPreferences("hikari_fit", Context.MODE_PRIVATE)
@@ -289,6 +301,27 @@ class FitWebBridge(
         val buf = ByteArrayOutputStream()
         out.compress(Bitmap.CompressFormat.JPEG, 86, buf)
         return Base64.encodeToString(buf.toByteArray(), Base64.NO_WRAP)
+    }
+
+    // ── Barcode (Google Code Scanner, Modul kommt über die Play-Dienste) ──
+    @JavascriptInterface
+    fun scanBarcode(id: String) {
+        main.post {
+            val ctx = activity ?: app
+            val options = com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions.Builder()
+                .setBarcodeFormats(
+                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_13,
+                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_EAN_8,
+                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_A,
+                    com.google.mlkit.vision.barcode.common.Barcode.FORMAT_UPC_E,
+                )
+                .enableAutoZoom()
+                .build()
+            com.google.mlkit.vision.codescanner.GmsBarcodeScanning.getClient(ctx, options).startScan()
+                .addOnSuccessListener { code -> reply(id, JSONObject().put("code", code.rawValue ?: "")) }
+                .addOnCanceledListener { reply(id, JSONObject()) }
+                .addOnFailureListener { e -> reply(id, JSONObject().put("error", e.message ?: "scanner")) }
+        }
     }
 
     // ── Ansagen, Haptik, Bildschirm ──

@@ -8,6 +8,13 @@ const DIET = { alles: 'Mit Fleisch', vegetarisch: 'Vegetarisch', vegan: 'Vegan',
 const AREA = { American: 'Amerikanisch', British: 'Britisch', Canadian: 'Kanadisch', Chinese: 'Chinesisch', Croatian: 'Kroatisch', Dutch: 'Niederländisch', Egyptian: 'Ägyptisch', Filipino: 'Philippinisch', French: 'Französisch', Greek: 'Griechisch', Indian: 'Indisch', Irish: 'Irisch', Italian: 'Italienisch', Jamaican: 'Jamaikanisch', Japanese: 'Japanisch', Kenyan: 'Kenianisch', Malaysian: 'Malaysisch', Mexican: 'Mexikanisch', Moroccan: 'Marokkanisch', Polish: 'Polnisch', Portuguese: 'Portugiesisch', Russian: 'Russisch', Spanish: 'Spanisch', Thai: 'Thailändisch', Tunisian: 'Tunesisch', Turkish: 'Türkisch', Ukrainian: 'Ukrainisch', Vietnamese: 'Vietnamesisch', Australian: 'Australisch', Argentinian: 'Argentinisch', Colombian: 'Kolumbianisch', Norwegian: 'Norwegisch', Saudi: 'Saudi-arabisch', Syrian: 'Syrisch', Venezulan: 'Venezolanisch', Uruguayan: 'Uruguayisch', Slovakian: 'Slowakisch', Algerian: 'Algerisch', Indonesian: 'Indonesisch', Cambodian: 'Kambodschanisch', Peruvian: 'Peruanisch', Brazilian: 'Brasilianisch', Swedish: 'Schwedisch', Unknown: 'International' };
 const TAGS = { eiweissreich: 'Eiweißreich', leicht: 'Leicht', energiereich: 'Energiereich', ballaststoffreich: 'Ballaststoffreich', lowcarb: 'Low Carb' };
 
+/** Zutatenbild; ohne Bild (oder wenn es nicht lädt) ein ruhiges Symbol statt einer leeren Kachel. */
+export function IngImg({ src, size }) {
+  const [bad, setBad] = useState(!src);
+  const st = size ? { width: `${size}px`, height: `${size}px` } : null;
+  return html`<div class="ii" style=${st}>${bad ? html`<${Icon} n="grocery" />` : html`<img src=${img(src)} alt="" loading="lazy" onError=${() => setBad(true)} />`}</div>`;
+}
+
 function Card({ r, wide }) {
   const [fav, setFav] = useState(r.favorite);
   const toggle = async (e) => {
@@ -103,7 +110,7 @@ export function RecipeDetail({ id }) {
 
         <div class="sec"><h2 class="h2">Zutaten</h2><span class="small muted">für ${fmtNum(p, 2)} ${p === 1 ? 'Portion' : 'Portionen'}</span></div>
         <div class="card" style="padding:4px 14px">${r.ingredients.map((i) => html`<div class="ingr">
-          <div class="ii"><img src=${img(i.image)} alt="" loading="lazy" onError=${(e) => { e.target.style.display = 'none'; }} /></div>
+          <${IngImg} src=${i.image} />
           <div class="grow" style="min-width:0"><div style="font-weight:500">${i.name}</div><div class="tiny muted">${i.amount ? `Original: ${i.amount} für ${r.servings}` : ''}</div></div>
           <div class="amt">${i.grams ? `${fmtNum((i.grams / r.servings) * p)} g` : i.amount}</div></div>`)}</div>
 

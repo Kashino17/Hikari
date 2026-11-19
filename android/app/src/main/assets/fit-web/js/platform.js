@@ -112,6 +112,17 @@ async function shrink(file) {
   return { base64: url.split(',')[1], mime: 'image/jpeg' };
 }
 
+// ── Barcode ──
+/** Scannt einen Produkt-Barcode. Gibt { code } zurück, null bei Abbruch, { error } wenn es nicht geht. */
+export async function scanBarcode() {
+  if (native?.scanBarcode) {
+    const m = await call((id) => native.scanBarcode(id));
+    if (m?.code) return { code: m.code };
+    return m?.error ? { error: m.error } : null;
+  }
+  return { error: 'browser' };
+}
+
 // ── Sprachansagen (Training) ──
 let voiceOn = local.get('voice', true);
 export const voice = {

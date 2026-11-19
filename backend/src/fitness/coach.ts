@@ -581,20 +581,31 @@ export async function todaySession(
 const failedRecently = new Set<string>();
 
 /** Nach dem Training: Plan für den nächsten Trainingstag schon vorbereiten (mit dem frischen Feedback). */
-export function prepareNext(
+export async function prepareNext(
   ai: FitnessAi | null,
   db: FitDb,
   catalog: Catalog,
   fromDay: string,
   log?: (m: string) => void,
-) {
+): Promise<{ day: string; session: SessionRow } | null> {
   const p = getProfile(db);
   for (let i = 1; i <= 7; i++) {
     const d = addDays(fromDay, i);
     if (!p.trainingDays.includes(weekdayOf(d))) continue;
-    const has = db.prepare("SELECT 1 FROM sessions WHERE day = ? AND kind = 'coach'").get(d);
-    if (!has) void todaySession(ai, db, catalog, { day: d, log });
-    return d;
+    // Ein schon vorbereiteter, noch nicht begonnener Plan entstand ohne dieses Feedback → neu planen.
+    const has = db
+      .prepare(
+        "SELECT status FROM sessions WHERE day = ? AND kind = 'coach' ORDER BY created_at DESC LIMIT 1",
+      )
+      .get(d) as { status: string } | undefined;
+    if (has && has.status !== "planned") return null;
+    const session = await todaySession(ai, db, catalog, {
+      day: d,
+      regenerate: !!has,
+      wait: true,
+      log,
+    });
+    return { day: d, session };
   }
   return null;
 }

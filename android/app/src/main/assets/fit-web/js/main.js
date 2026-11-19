@@ -5,10 +5,11 @@ import { TABS, back, nav, route, useRoute, useToast, useData } from './app.js';
 import { Icon, cls } from './ui.js';
 import { Today } from './screens/today.js';
 import { Training, History, Library } from './screens/training.js';
-import { SessionPreview, Player, Feedback } from './screens/session.js';
+import { SessionPreview, Player } from './screens/session.js';
+import { Feedback, CoachWork } from './screens/feedback.js';
 import { ExerciseDetail } from './screens/exercise.js';
 import { Skills, SkillDetail, SkillPractice } from './screens/skills.js';
-import { Food, PhotoFlow, AddMeal, EntryDetail, DayReport, Shopping } from './screens/food.js';
+import { Food, PhotoFlow, AddMeal, EntryDetail, DayReport, Shopping, BarcodeFlow } from './screens/food.js';
 import { RecipeDetail, RecipeList } from './screens/recipes.js';
 import { Me, ProfileEdit, Onboarding } from './screens/me.js';
 
@@ -24,12 +25,14 @@ const ROUTES = [
   [/^einheit\/(.+)$/, (m) => html`<${SessionPreview} id=${m[1]} />`],
   [/^los\/(.+)$/, (m) => html`<${Player} id=${m[1]} />`],
   [/^feedback\/(.+)$/, (m) => html`<${Feedback} id=${m[1]} />`],
+  [/^coach\/(.+)$/, (m) => html`<${CoachWork} id=${m[1]} />`],
   [/^uebung\/(.+)$/, (m) => html`<${ExerciseDetail} id=${m[1]} />`],
   [/^bibliothek$/, () => html`<${Library} />`],
   [/^verlauf$/, () => html`<${History} />`],
   [/^skill\/([^/]+)\/ueben$/, (m) => html`<${SkillPractice} id=${m[1]} />`],
   [/^skill\/([^/]+)$/, (m) => html`<${SkillDetail} id=${m[1]} />`],
   [/^foto(?:\/(\w+))?$/, (m) => html`<${PhotoFlow} slot=${m[1]} />`],
+  [/^barcode(?:\/(\w+))?$/, (m) => html`<${BarcodeFlow} slot=${m[1]} />`],
   [/^mahlzeit\/neu(?:\/(\w+))?$/, (m) => html`<${AddMeal} slot=${m[1]} />`],
   [/^eintrag\/(.+)$/, (m) => html`<${EntryDetail} id=${m[1]} />`],
   [/^ernaehrung\/coach(?:\/(.+))?$/, (m) => html`<${DayReport} day=${m[1]} />`],

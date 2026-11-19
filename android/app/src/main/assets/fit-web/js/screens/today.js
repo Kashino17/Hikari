@@ -102,7 +102,8 @@ function DoneCard({ s }) {
     </div>
     ${rev && html`<div class="grp"><div class="gl"><${Icon} n="psychology" style="font-size:16px" />Coach</div><p class="mt4" style="font-size:14.5px">${rev.headline}</p>
       ${rev.next?.length > 0 && html`<ul>${rev.next.map((n) => html`<li>${n}</li>`)}</ul>`}</div>`}
-    <button class="btn ghost mt16" onClick=${() => nav('training', { replace: true })}>Nächstes Training ansehen</button>
+    ${!rev && html`<button class="btn tint mt16" onClick=${() => nav(`coach/${s.id}`)}><${Icon} n="psychology" />Auswertung des Coachs</button>`}
+    <button class="btn ghost mt8" onClick=${() => nav('training', { replace: true })}>Nächstes Training ansehen</button>
   </div>`;
 }
 
@@ -118,6 +119,7 @@ function FoodTile({ food }) {
     </div>
     <div class="row gap6" style="margin-top:auto">
       <span class="btn sm solid" style="height:34px;flex:1" onClick=${(e) => { e.stopPropagation(); nav('foto'); }}><${Icon} n="photo_camera" style="font-size:18px" />Foto</span>
+      <span class="btn sm tint" style="height:34px;width:40px;padding:0" onClick=${(e) => { e.stopPropagation(); nav('barcode'); }} aria-label="Barcode"><${Icon} n="barcode_scanner" style="font-size:19px" /></span>
     </div>
   </button>`;
 }

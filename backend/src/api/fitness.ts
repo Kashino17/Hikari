@@ -14,6 +14,7 @@ import {
 import { join } from "node:path";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { FitnessAi } from "../fitness/ai.js";
+import { BarcodeLookup } from "../fitness/barcode.js";
 import { EQUIPMENT, loadCatalog } from "../fitness/catalog.js";
 import {
   type SessionFeedback,
@@ -36,6 +37,7 @@ import {
   weekday,
 } from "../fitness/db.js";
 import { BlsDb } from "../fitness/foods.js";
+import { IngredientImages } from "../fitness/ingredient-images.js";
 import {
   type MealItem,
   analyzePhoto,
@@ -167,6 +169,18 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   setTimeout(() => void importer.run(), 20_000);
   setInterval(() => void importer.run(), 6 * 60 * 60 * 1000).unref();
 
+  // Zutatenbilder: TheMealDB-Namen zuordnen, Rest einmal über Wikimedia nachschlagen (im Hintergrund).
+  const images = new IngredientImages(db, join(deps.dir, "mealdb-ingredients.json"), deps.log);
+  const prefetchImages = () => {
+    for (const r of allRecipes(db)) images.prefetch(r.ingredients);
+  };
+  void images.init().then(() => setTimeout(prefetchImages, 60_000));
+  setInterval(prefetchImages, 30 * 60 * 1000).unref();
+  const withImages = (r: ReturnType<typeof allRecipes>[number]) => ({
+    ...r,
+    ingredients: r.ingredients.map((i) => ({ ...i, image: images.image(i.en, i.name) })),
+  });
+
   const exerciseView = (id: string) => {
     const e = catalog.byId.get(id);
     if (!e) return null;
@@ -179,6 +193,98 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
             credit: e.media.credit,
           }
         : null,
+    };
+  };
+
+  // ── Auswertung nach dem Training (Hintergrund) ─────────────────────────
+  interface CoachJob {
+    session: string;
+    startedAt: number;
+    review: { state: "running" | "done" | "failed"; doneAt?: number; data?: unknown };
+    plan: {
+      state: "running" | "done" | "failed" | "none";
+      doneAt?: number;
+      day?: string;
+      title?: string;
+      minutes?: number;
+      source?: string;
+    };
+    skills: unknown[];
+  }
+  const jobs = new Map<string, CoachJob>();
+  const startCoachJob = (
+    s: NonNullable<ReturnType<typeof getSession>>,
+    fb: SessionFeedback,
+    result: SessionResult,
+    skills: unknown[],
+  ) => {
+    const job: CoachJob = {
+      session: s.id,
+      startedAt: Date.now(),
+      review: { state: "running" },
+      plan: { state: "running" },
+      skills,
+    };
+    jobs.set(s.id, job);
+    void (async () => {
+      if (!ai.available()) {
+        job.review = { state: "failed", doneAt: Date.now() };
+        return;
+      }
+      try {
+        const review = await reviewSession(ai, catalog, s, fb, result);
+        db.prepare(
+          "INSERT INTO coach_notes(kind, day, data, model, at) VALUES('training', ?, ?, ?, ?)",
+        ).run(s.day, JSON.stringify({ session: s.id, ...review }), review.model, Date.now());
+        job.review = { state: "done", doneAt: Date.now(), data: review };
+      } catch (e) {
+        deps.log(`[fitness] Auswertung: ${e instanceof Error ? e.message : e}`);
+        job.review = { state: "failed", doneAt: Date.now() };
+      }
+    })();
+    void (async () => {
+      try {
+        const next = await prepareNext(ai, db, catalog, s.day, deps.log);
+        job.plan = next
+          ? {
+              state: "done",
+              doneAt: Date.now(),
+              day: next.day,
+              title: next.session.plan.title,
+              minutes: next.session.plan.minutes,
+              source: next.session.source ?? "regeln",
+            }
+          : { state: "none", doneAt: Date.now() };
+      } catch (e) {
+        deps.log(`[fitness] Nächster Plan: ${e instanceof Error ? e.message : e}`);
+        job.plan = { state: "failed", doneAt: Date.now() };
+      }
+    })();
+    // Alte Aufträge nach einem Tag vergessen.
+    for (const [k, j] of jobs) if (Date.now() - j.startedAt > 86_400_000) jobs.delete(k);
+  };
+  /** Ohne laufenden Auftrag (z. B. nach Neustart) aus der Datenbank: Auswertung vorhanden → fertig. */
+  const coachJobView = (sessionId: string) => {
+    const j = jobs.get(sessionId);
+    if (j) return { ...j, elapsed: Date.now() - j.startedAt };
+    const s = getSession(db, sessionId);
+    if (!s || s.status !== "done") return null;
+    const note = (
+      db
+        .prepare(
+          "SELECT data FROM coach_notes WHERE kind = 'training' AND day = ? ORDER BY at DESC",
+        )
+        .all(s.day) as { data: string }[]
+    )
+      .map((n) => JSON.parse(n.data))
+      .find((n: { session?: string }) => n.session === sessionId);
+    return {
+      session: sessionId,
+      startedAt: s.done_at ?? Date.now(),
+      elapsed: 0,
+      review: note ? { state: "done", data: note } : { state: "failed" },
+      plan: { state: "none" },
+      skills: [],
     };
   };
 
@@ -429,22 +535,17 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
           /* Skill unbekannt */
         }
       });
-      // Nächsten Trainingstag mit dem frischen Feedback schon vorbereiten.
-      prepareNext(ai, db, catalog, s.day, deps.log);
-      let review = null;
-      if (ai.available()) {
-        try {
-          review = await reviewSession(ai, catalog, s, fb, result);
-          db.prepare(
-            "INSERT INTO coach_notes(kind, day, data, model, at) VALUES('training', ?, ?, ?, ?)",
-          ).run(s.day, JSON.stringify({ session: s.id, ...review }), review.model, Date.now());
-        } catch (e) {
-          deps.log(`[fitness] Auswertung: ${e instanceof Error ? e.message : e}`);
-        }
-      }
-      return { ok: true, review, skills: skillNews };
+      // Auswertung und nächster Plan laufen auf dem Server weiter — die App darf zu sein.
+      startCoachJob(s, fb, result, skillNews);
+      return { ok: true, job: coachJobView(s.id), skills: skillNews };
     },
   );
+
+  /** Stand der Auswertung nach dem Training (für die Fortschrittsseite). */
+  app.get<{ Params: { id: string } }>("/fitness/session/:id/coach", async (req, reply) => {
+    const v = coachJobView(req.params.id);
+    return v ?? reply.code(404).send({ error: "not_found" });
+  });
 
   /** Freies Training: Tagestyp und Dauer selbst gewählt (zählt wie eine Coach-Einheit). */
   app.post<{ Body: { dayType: DayType; minutes?: number } }>("/fitness/custom", async (req) => {
@@ -583,6 +684,21 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       }
     },
   );
+
+  // Barcode → Produkt (Open Food Facts, weltweit, kostenlos).
+  const barcodes = new BarcodeLookup(db);
+  app.get<{ Params: { ean: string } }>("/fitness/food/barcode/:ean", async (req, reply) => {
+    const ean = req.params.ean.replace(/\D/g, "");
+    if (ean.length < 6 || ean.length > 14) return reply.code(400).send({ error: "ean" });
+    try {
+      const product = await barcodes.find(ean);
+      return product ? { product } : reply.code(404).send({ error: "not_found", ean });
+    } catch (e) {
+      return reply
+        .code(e instanceof Error && e.message === "rate" ? 429 : 502)
+        .send({ error: "lookup_failed" });
+    }
+  });
 
   /** Freitext (»2 Eier, 1 Scheibe Vollkornbrot mit Butter«) → Zutaten mit Gramm + Nährwerte. */
   app.post<{ Body: { text: string } }>("/fitness/food/text", async (req, reply) => {
@@ -856,7 +972,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const targets = computeTargets(getProfile(db));
     const slot = (r.meals.find((m) => m !== "dessert") ?? "abend") as MealSlot;
     return {
-      recipe: r,
+      recipe: withImages(r),
       state: recipeStates(db).get(r.id) ?? null,
       suggestedFactor: portionFactor(r, slot, targets),
       targets,
@@ -914,7 +1030,11 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const slots = SLOTS.filter((s) => s !== "snack" || p.mealsPerDay > 3).map((slot) => {
       // Frühstück und Snack nur aus Rezepten, die dafür gedacht sind (keine Paella zum Frühstück).
       const ranked = pool
-        .filter((r) => (slot === "fruehstueck" || slot === "snack" ? r.meals.includes(slot) : !r.meals.includes("dessert") || r.meals.length > 1))
+        .filter((r) =>
+          slot === "fruehstueck" || slot === "snack"
+            ? r.meals.includes(slot)
+            : !r.meals.includes("dessert") || r.meals.length > 1,
+        )
         .map((r) => ({
           r,
           s:
@@ -971,7 +1091,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const targets = computeTargets(p);
     const items = new Map<
       string,
-      { name: string; grams: number; image: string; recipes: string[] }
+      { name: string; grams: number; image: string | null; recipes: string[] }
     >();
     const checked = kvGet<string[]>(db, "shopping:checked") ?? [];
     for (let i = 0; i < days; i++) {
@@ -983,7 +1103,12 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         const f = portionFactor(r, slot as MealSlot, targets) / r.servings;
         for (const ing of r.ingredients) {
           const k = ing.name.toLowerCase();
-          const cur = items.get(k) ?? { name: ing.name, grams: 0, image: ing.image, recipes: [] };
+          const cur = items.get(k) ?? {
+            name: ing.name,
+            grams: 0,
+            image: images.image(ing.en, ing.name),
+            recipes: [] as string[],
+          };
           cur.grams += ing.grams * f;
           if (!cur.recipes.includes(r.title)) cur.recipes.push(r.title);
           items.set(k, cur);
@@ -1018,7 +1143,13 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         u,
       );
     const lecker = /^https:\/\/(images|cdn)\.lecker\.de\/[^\s"'<>]+$/i.test(u);
-    if (!mealdb && !lecker) return reply.code(400).send({ error: "url" });
+    const spoon =
+      /^https:\/\/img\.spoonacular\.com\/ingredients_\d+x\d+\/[a-z0-9-]+\.(jpg|png)$/i.test(u);
+    const off =
+      /^https:\/\/images\.openfoodfacts\.(org|net)\/images\/products\/[\w./-]+\.(jpg|png|webp)$/i.test(
+        u,
+      );
+    if (!mealdb && !lecker && !spoon && !off) return reply.code(400).send({ error: "url" });
     const base = join(imgDir, createHash("sha1").update(u).digest("hex"));
     const TYPES: Record<string, string> = {
       jpg: "image/jpeg",
