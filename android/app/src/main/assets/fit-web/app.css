@@ -569,3 +569,41 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:none}
 .nrow+.nrow{border-top:1px solid var(--border)}
 .nrow.on span:first-child{color:rgb(var(--c));font-weight:600}
 .nrow b.bad{color:rgb(var(--bad))}.nrow b.ok{color:rgb(var(--good))}
+
+/* ═══ Heute: Tage antippen, Kalender ═══ */
+.dateBtn{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:inherit}
+.weekNav{display:flex;align-items:center;gap:2px;margin:0 -10px}
+.weekNav .ib.sm{width:30px;flex:none;color:var(--faint)}
+.wd{background:none;padding:0}
+.wd.future .dot.off{color:var(--muted)}
+.wd.sel{color:var(--text);font-weight:600}
+.wd.sel .dot{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px #fff!important}
+.wd.today:not(.sel) .dot:not(.done){box-shadow:none}
+.wd.today:not(.sel){color:rgb(var(--train))}
+.wd i.meal,.cd i.meal{display:block;width:4px;height:4px;border-radius:50%;background:transparent}
+.wd i.meal.on,.cd i.meal.on{background:rgb(var(--food))}
+.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.calGrid .cw{font-size:11.5px;color:var(--faint);padding-bottom:4px}
+.cd{height:44px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:14px;color:var(--muted);aspect-ratio:1;margin:0 auto;width:44px}
+.cd.plan{border:1.5px solid rgba(var(--train),.45);color:var(--text)}
+.cd.done{background:rgb(var(--train));color:var(--ink);font-weight:600}
+.cd.done i.meal.on{background:var(--ink)}
+.cd.today{color:rgb(var(--train));font-weight:700}
+.cd.done.today{color:var(--ink)}
+.cd.sel{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px #fff}
+.calLegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.calLegend span{display:inline-flex;align-items:center;gap:6px}
+.calLegend .lg{width:12px;height:12px;border-radius:50%;display:inline-block}
+.calLegend .lg.done{background:rgb(var(--train))}
+.calLegend .lg.plan{border:1.5px solid rgba(var(--train),.6)}
+.calLegend .lg.meal{width:6px;height:6px;background:rgb(var(--food))}
+.foodRep{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;border-radius:12px;background:rgba(var(--food),.10);border:1px solid rgba(var(--food),.2)}
+.scoreBadge.sm{width:46px;height:46px;flex:none}
+.scoreBadge.sm b{font-size:18px}
+.scoreBadge.sm span{font-size:9px}
+.ell{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cd{position:relative;gap:0}
+.cd i.meal{position:absolute;bottom:6px;left:50%;margin-left:-2px}
+.calLegend .lg{flex:none}
+.calLegend .lg.meal{width:7px;height:7px;margin:0 2px;align-self:center}
+.calGrid .cw+.cw{}

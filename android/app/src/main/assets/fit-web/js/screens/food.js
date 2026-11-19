@@ -10,6 +10,8 @@ const SLOTS = ['fruehstueck', 'mittag', 'abend', 'snack'];
 const shift = (d, n) => { const x = parseDay(d); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
 let foodTab = 'tagebuch';
 let foodDay = null;
+/** Von außen: Tagebuch an einem bestimmten Tag öffnen. */
+export function openFoodDay(day) { foodTab = 'tagebuch'; foodDay = day; nav('ernaehrung', { replace: true }); }
 
 export function Food() {
   const [tab, setTab] = useState(foodTab);
