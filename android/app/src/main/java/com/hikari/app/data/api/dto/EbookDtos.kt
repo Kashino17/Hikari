@@ -25,8 +25,18 @@ data class EbookRowDto(val category: String, val label: String, val books: List<
 @Serializable
 data class EbookCategoryDto(val id: String, val label: String, val group: String, val count: Int = 0)
 
+/** Ein Regal der Startseite (Server: home.shelves). key z. B. beliebt, kurz, kat:krimi, pdf, neu, because. */
+@Serializable
+data class EbookShelfDto(val key: String, val title: String, val subtitle: String = "", val books: List<EbookCardDto> = emptyList())
+
+@Serializable
+data class EbookAuthorDto(val name: String, val count: Int = 0)
+
 @Serializable
 data class EbookHomeDto(
+    val shelves: List<EbookShelfDto> = emptyList(),
+    val featured: EbookCardDto? = null,
+    val authors: List<EbookAuthorDto> = emptyList(),
     val newest: List<EbookCardDto> = emptyList(),
     val rows: List<EbookRowDto> = emptyList(),
     val categories: List<EbookCategoryDto> = emptyList(),
@@ -58,6 +68,8 @@ data class EbookDetailDto(
     val sourceName: String = "",
     val downloaded: Boolean = false,
     val fileBytes: Long? = null,
+    val moreByAuthor: List<EbookCardDto> = emptyList(),
+    val similar: List<EbookCardDto> = emptyList(),
 ) {
     val isPdf: Boolean get() = format == "pdf"
     fun toCard() = EbookCardDto(id, title, authors, year, format, coverUrl, categories, source, wordCount, minutes)

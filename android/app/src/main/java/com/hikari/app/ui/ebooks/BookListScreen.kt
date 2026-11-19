@@ -113,6 +113,11 @@ fun BookListScreen(
                 modifier = Modifier.weight(1f),
             )
         }
+        val heading = f.author ?: f.category?.let { CATEGORY_LABEL[it] }
+        if (heading != null) {
+            Text(heading, color = HikariText, fontSize = 26.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
+        }
         LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

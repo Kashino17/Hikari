@@ -1,5 +1,7 @@
 package com.hikari.app.ui.ebooks
 
+import kotlinx.coroutines.flow.first
+
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +33,9 @@ data class BooksHomeState(
     val local: List<LocalEbookEntity> = emptyList(),
     val continueReading: List<ContinueItem> = emptyList(),
     val saved: Set<String> = emptySet(),
+    val finishedCount: Int = 0,
+    /** Gemerkt / Gelesen vom Mac (auch Bücher, die nicht auf dem Handy sind). */
+    val mine: Map<String, List<EbookCardDto>> = emptyMap(),
 )
 
 @HiltViewModel
@@ -51,6 +56,7 @@ class BooksViewModel @Inject constructor(private val repo: EbookRepository) : Vi
                         local = local,
                         continueReading = cont,
                         saved = states.filterValues { s -> s.saved?.value == true }.keys,
+                        finishedCount = states.count { (_, s) -> s.finished?.value == true },
                     )
                 }
             }
@@ -61,9 +67,27 @@ class BooksViewModel @Inject constructor(private val repo: EbookRepository) : Vi
     fun refresh() {
         viewModelScope.launch {
             _state.update { it.copy(loading = true) }
-            val r = repo.home()
+            // Zuletzt gelesenes Buch für „Weil du … liest“.
+            val states = runCatching { repo.allStates().first() }.getOrDefault(emptyMap())
+            val because = states.filter { (_, st) -> st.lastOpenedAt != null && st.finished?.value != true }
+                .maxByOrNull { (_, st) -> st.lastOpenedAt ?: 0L }?.key
+            val r = repo.home(because)
             _state.update { it.copy(loading = false, offline = r.isFailure, home = r.getOrNull() ?: it.home) }
             if (r.isSuccess) runCatching { repo.syncStates() }
+        }
+    }
+
+    fun loadMine(kind: String) {
+        viewModelScope.launch {
+            repo.list(EbookFilter(state = kind, sort = "titel"), 0, 100)
+                .onSuccess { r -> _state.update { it.copy(mine = it.mine + (kind to r.books)) } }
+                .onFailure { _state.update { it.copy(mine = it.mine + (kind to emptyList())) } }
+        }
+    }
+
+    fun toggleSaved(id: String) {
+        viewModelScope.launch {
+            repo.updateState(id) { s -> s.copy(saved = Stamped(!(s.saved?.value ?: false), System.currentTimeMillis())) }
         }
     }
 }
@@ -122,7 +146,7 @@ class BookListScreenViewModel @Inject constructor(repo: EbookRepository, handle:
 
 private fun filterFrom(handle: SavedStateHandle): EbookFilter {
     fun arg(k: String) = handle.get<String>(k)?.takeIf { it.isNotBlank() }
-    return EbookFilter(q = arg("q"), category = arg("category"), format = arg("format"), state = arg("state"), sort = arg("sort") ?: "beliebt")
+    return EbookFilter(q = arg("q"), category = arg("category"), author = arg("author"), format = arg("format"), length = arg("length"), state = arg("state"), sort = arg("sort") ?: "beliebt")
 }
 
 data class BookDetailState(

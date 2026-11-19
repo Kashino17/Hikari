@@ -1,5 +1,7 @@
 package com.hikari.app.ui.ebooks
 
+import com.hikari.app.domain.ebooks.EbookFilter
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -54,7 +56,7 @@ import com.hikari.app.ui.theme.HikariText
 import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 
-private val CATEGORY_LABEL = mapOf(
+internal val CATEGORY_LABEL = mapOf(
     "roman" to "Roman", "krimi" to "Krimi & Mystery", "abenteuer" to "Abenteuer", "fantastik" to "Fantastik & Grusel",
     "historisch" to "Historischer Roman", "liebe" to "Liebe", "humor" to "Humor", "erzaehlungen" to "Erzählungen",
     "maerchen" to "Märchen & Sagen", "drama" to "Drama", "lyrik" to "Lyrik", "kinder" to "Kinder & Jugend",
@@ -68,6 +70,8 @@ private val CATEGORY_LABEL = mapOf(
 fun BookDetailScreen(
     onBack: () -> Unit,
     onRead: (LocalEbookEntity) -> Unit,
+    onBook: (String) -> Unit = {},
+    onList: (EbookFilter) -> Unit = {},
     vm: BookDetailViewModel = hiltViewModel(),
 ) {
     val s by vm.state.collectAsState()
@@ -96,12 +100,12 @@ fun BookDetailScreen(
                 if (wide) {
                     Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                         cover(Modifier.width(200.dp))
-                        Column(Modifier.weight(1f)) { Header(title, authors, d?.year, d?.minutes, isPdf) }
+                        Column(Modifier.weight(1f)) { Header(title, authors, d?.year, d?.minutes, isPdf, d?.authors?.firstOrNull()?.let { a -> { onList(EbookFilter(author = a)) } }) }
                     }
                 } else {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { cover(Modifier.width(170.dp)) }
                     Spacer(Modifier.height(18.dp))
-                    Header(title, authors, d?.year, d?.minutes, isPdf)
+                    Header(title, authors, d?.year, d?.minutes, isPdf, d?.authors?.firstOrNull()?.let { a -> { onList(EbookFilter(author = a)) } })
                 }
                 if (isPdf) {
                     Row(
@@ -153,6 +157,19 @@ fun BookDetailScreen(
                     d.description?.let {
                         Text(it, color = HikariTextMuted, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.padding(top = 18.dp))
                     }
+                    val first = d.authors.firstOrNull()
+                    if (d.moreByAuthor.isNotEmpty() && first != null) {
+                        Column {
+                            ShelfHeader("Mehr von ${authorShort(first)}", "", { onList(EbookFilter(author = first)) })
+                            CardRow(d.moreByAuthor, onBook)
+                        }
+                    }
+                    if (d.similar.isNotEmpty()) {
+                        Column {
+                            ShelfHeader("Ähnliche Bücher", CATEGORY_LABEL[d.categories.firstOrNull { it != "roman" && it != "erzaehlungen" } ?: d.categories.firstOrNull()] ?: "", null)
+                            CardRow(d.similar, onBook)
+                        }
+                    }
                     Text("Quelle: ${d.sourceName}", color = HikariTextFaint, fontSize = 12.sp, modifier = Modifier.padding(top = 18.dp, bottom = 120.dp))
                 }
             }
@@ -161,9 +178,13 @@ fun BookDetailScreen(
 }
 
 @Composable
-private fun Header(title: String, authors: String, year: Int?, minutes: Int?, isPdf: Boolean) {
+private fun Header(title: String, authors: String, year: Int?, minutes: Int?, isPdf: Boolean, onAuthor: (() -> Unit)? = null) {
     Text(title, color = HikariText, fontSize = 24.sp, lineHeight = 29.sp, fontWeight = FontWeight.Bold, fontFamily = FontFamily.Serif)
-    if (authors.isNotBlank()) Text(authors, color = HikariTextMuted, fontSize = 15.sp, modifier = Modifier.padding(top = 6.dp))
+    if (authors.isNotBlank()) Text(
+        authors, color = if (onAuthor != null) BooksAccent else HikariTextMuted, fontSize = 15.sp,
+        fontWeight = if (onAuthor != null) FontWeight.SemiBold else FontWeight.Normal,
+        modifier = Modifier.padding(top = 6.dp).then(if (onAuthor != null) Modifier.clickable(onClick = onAuthor) else Modifier),
+    )
     val meta = listOfNotNull(
         if (isPdf) "PDF" else "EPUB",
         year?.toString(),

@@ -371,12 +371,13 @@ interface HikariApi {
 
     // ── E-Books (backend/src/api/ebooks.ts) ──────────────────────────────────
     @GET("api/ebooks/home")
-    suspend fun getEbookHome(): com.hikari.app.data.api.dto.EbookHomeDto
+    suspend fun getEbookHome(@Query("because") because: String? = null): com.hikari.app.data.api.dto.EbookHomeDto
 
     @GET("api/ebooks/list")
     suspend fun listEbooks(
         @Query("q") q: String? = null,
         @Query("category") category: String? = null,
+        @Query("author") author: String? = null,
         @Query("source") source: String? = null,
         @Query("format") format: String? = null,
         @Query("length") length: String? = null,

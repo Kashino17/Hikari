@@ -732,13 +732,21 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                             onBook = { id -> nav.navigate("buecher/${android.net.Uri.encode(id)}") },
                             onList = { f -> nav.navigate(bookListRoute(f)) },
                             onRead = { b -> nav.navigate("buecher/${android.net.Uri.encode(b.id)}/lesen") },
+                            onSearch = { nav.navigate("buecher/suche") },
                         )
                     },
                 )
             }
+            composable("buecher/suche") {
+                com.hikari.app.ui.ebooks.BookSearchScreen(
+                    onBack = { nav.popBackStack() },
+                    onBook = { id -> nav.navigate("buecher/${android.net.Uri.encode(id)}") },
+                    onList = { f -> nav.navigate(bookListRoute(f)) },
+                )
+            }
             composable(
-                "buecher/liste?q={q}&category={category}&format={format}&state={state}&sort={sort}",
-                arguments = listOf("q", "category", "format", "state", "sort").map { n ->
+                "buecher/liste?q={q}&category={category}&author={author}&format={format}&length={length}&state={state}&sort={sort}",
+                arguments = listOf("q", "category", "author", "format", "length", "state", "sort").map { n ->
                     navArgument(n) { type = NavType.StringType; nullable = true; defaultValue = null }
                 },
             ) {
@@ -760,6 +768,8 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 com.hikari.app.ui.ebooks.BookDetailScreen(
                     onBack = { nav.popBackStack() },
                     onRead = { b -> nav.navigate("buecher/${android.net.Uri.encode(b.id)}/lesen") },
+                    onBook = { id -> nav.navigate("buecher/${android.net.Uri.encode(id)}") },
+                    onList = { f -> nav.navigate(bookListRoute(f)) },
                 )
             }
             composable(
@@ -874,7 +884,9 @@ private fun bookListRoute(f: com.hikari.app.domain.ebooks.EbookFilter): String {
     val parts = listOfNotNull(
         f.q?.let { "q=${android.net.Uri.encode(it)}" },
         f.category?.let { "category=$it" },
+        f.author?.let { "author=${android.net.Uri.encode(it)}" },
         f.format?.let { "format=$it" },
+        f.length?.let { "length=$it" },
         f.state?.let { "state=$it" },
         "sort=${f.sort}",
     )

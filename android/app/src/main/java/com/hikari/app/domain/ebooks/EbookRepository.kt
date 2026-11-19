@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 data class EbookFilter(
     val q: String? = null,
     val category: String? = null,
+    val author: String? = null,
     val source: String? = null,
     val format: String? = null,
     val length: String? = null,
@@ -53,11 +54,11 @@ class EbookRepository(
     /** Eigener Rahmen für Speichern beim Schließen — läuft weiter, wenn der Bildschirm schon weg ist. */
     private val detached = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
-    suspend fun home(): Result<EbookHomeDto> = runCatching { api.getEbookHome() }
+    suspend fun home(because: String? = null): Result<EbookHomeDto> = runCatching { api.getEbookHome(because) }
 
     suspend fun list(filter: EbookFilter, offset: Int, limit: Int = 30): Result<EbookListDto> = runCatching {
         api.listEbooks(
-            q = filter.q?.takeIf { it.isNotBlank() }, category = filter.category, source = filter.source,
+            q = filter.q?.takeIf { it.isNotBlank() }, category = filter.category, author = filter.author, source = filter.source,
             format = filter.format, length = filter.length, state = filter.state, sort = filter.sort,
             offset = offset, limit = limit,
         )
