@@ -1,0 +1,210 @@
+{
+ "version": 1,
+ "_": "Progressionsleitern nach etablierten Calisthenics-Standards (r/bodyweightfitness, Overcoming Gravity). Freischalten: Ziel in zwei verschiedenen Einheiten erreicht. Videos: YouTube-IDs, am 19.11.2026 per yt-dlp geprüft.",
+ "skills": [
+  {
+   "id": "handstand", "name": "Handstand", "en": "Handstand", "color": "#A78BFA", "icon": "accessibility_new", "group": "balance",
+   "summary": "Frei auf den Händen stehen — die Grundlage für fast alle Balance-Skills.",
+   "prep": ["wrist_prep", "pike_hold", "hollow_hold"],
+   "safety": ["Vor dem freien Üben das Abrollen oder seitliche Aussteigen (Radwende) lernen.", "Handgelenke jedes Mal mindestens eine Minute aufwärmen.", "Auf weichem Untergrund und mit Platz rundherum üben."],
+   "videos": [
+    {"id": "ctunmnwbbSI", "title": "Handstand Tutorial", "channel": "Calisthenicmovement"},
+    {"id": "lzGzDMzTUQE", "title": "Handstand Progression", "channel": "FitnessFAQs"},
+    {"id": "2-3wv5kLNnw", "title": "The Complete Handstand Guide", "channel": "Tom Merrick"}
+   ],
+   "steps": [
+    {"name": "Pike-Stütz", "exercise": "pike_hold", "goal": {"type": "hold", "sets": 3, "value": 30}, "description": "Schultern über den Händen tragen lernen — Füße erhöht, Hüfte hoch.", "cues": ["Boden wegdrücken", "Arme neben den Ohren", "Hüfte über die Schultern"]},
+    {"name": "Bauch zur Wand", "exercise": "wall_handstand", "goal": {"type": "hold", "sets": 3, "value": 30}, "description": "Die gerade Handstand-Linie an der Wand — der wichtigste Schritt.", "cues": ["Rippen rein, Po fest", "Hände 10–20 cm von der Wand", "Schultern ganz öffnen"]},
+    {"name": "Bauch zur Wand, 60 s", "exercise": "wall_handstand", "goal": {"type": "hold", "sets": 1, "value": 60}, "description": "Ausdauer in der Linie — jetzt hält der Körper die Form von allein.", "cues": ["Ruhig atmen", "Körper bleibt eine Linie"]},
+    {"name": "Wand mit Schulter-Tippen", "exercise": "wall_handstand_tap", "goal": {"type": "reps", "sets": 3, "value": 10}, "description": "Gewicht verlagern lernen — Vorbereitung für die Balance.", "cues": ["Hüfte bleibt ruhig", "Gewicht erst verlagern, dann tippen"]},
+    {"name": "Aufschwung mit Ausstieg", "exercise": "handstand_kickup", "goal": {"type": "reps", "sets": 1, "value": 5}, "description": "Kontrolliert in den Handstand schwingen und sicher seitlich aussteigen.", "cues": ["Arme gestreckt aufsetzen", "Wenig Schwung, viel Kontrolle", "Ausstieg vorher festlegen"]},
+    {"name": "Frei 15 s", "exercise": "freestanding_handstand", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Erste freie Haltezeiten — Balance kommt aus den Fingern.", "cues": ["Fallen nach vorn → Finger drücken", "Nach hinten → Handballen", "Blick zwischen die Hände"]},
+    {"name": "Frei 30 s", "exercise": "freestanding_handstand", "goal": {"type": "hold", "sets": 3, "value": 30}, "description": "Stabiler freier Handstand.", "cues": ["Gerade Linie", "Ruhig atmen"]},
+    {"name": "Frei 60 s", "exercise": "freestanding_handstand", "goal": {"type": "hold", "sets": 1, "value": 60}, "description": "Gemeistert.", "cues": ["Lange Linie", "Minimale Korrekturen"]}
+   ]
+  },
+  {
+   "id": "handstand_walk", "name": "Handstand-Laufen", "en": "Handstand Walk", "color": "#C4B5FD", "icon": "directions_walk", "group": "balance", "requires": ["handstand"],
+   "summary": "Auf den Händen gehen — kontrolliert, nicht stolpernd.",
+   "prep": ["wrist_prep", "wall_handstand"],
+   "safety": ["Erst ab 20 s freiem Handstand.", "Freie Fläche, keine Möbel in Laufrichtung."],
+   "videos": [
+    {"id": "vD-BUucL9F4", "title": "Handstand Walk Progression", "channel": "WODprep"},
+    {"id": "65bAfT9kUOg", "title": "Handstand Walking", "channel": "The Progrm"}
+   ],
+   "steps": [
+    {"name": "An der Wand seitlich gehen", "exercise": "wall_handstand_tap", "goal": {"type": "reps", "sets": 3, "value": 10}, "description": "Im Wand-Handstand Hand für Hand zur Seite setzen.", "cues": ["Kleine Schritte", "Schultern offen"]},
+    {"name": "Frei Gewicht verlagern", "exercise": "freestanding_handstand", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Frei stehend links-rechts verlagern, ohne zu fallen.", "cues": ["Hüfte über den Händen", "Langsam"]},
+    {"name": "3 kontrollierte Schritte", "exercise": "freestanding_handstand", "goal": {"type": "reps", "sets": 3, "value": 3}, "description": "Drei Schritte, dann sicher aussteigen.", "cues": ["Erst kippen, dann Hand nachsetzen", "Kurze Schritte"]},
+    {"name": "5 Meter", "exercise": "freestanding_handstand", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Fünf Meter am Stück (Wert = Meter).", "cues": ["Gleichmäßiges Tempo", "Blick zwischen die Hände"]},
+    {"name": "10 Meter", "exercise": "freestanding_handstand", "goal": {"type": "reps", "sets": 3, "value": 10}, "description": "Zehn Meter am Stück.", "cues": ["Rumpf fest", "Atmen nicht vergessen"]},
+    {"name": "25 Meter", "exercise": "freestanding_handstand", "goal": {"type": "reps", "sets": 1, "value": 25}, "description": "Gemeistert.", "cues": ["Rhythmus"]}
+   ]
+  },
+  {
+   "id": "planche", "name": "Planche", "en": "Planche", "color": "#F472B6", "icon": "horizontal_rule", "group": "druck",
+   "summary": "Den Körper waagerecht nur auf den Händen tragen — einer der härtesten Druck-Skills.",
+   "prep": ["wrist_prep", "planche_lean", "pseudo_planche_pushup"],
+   "safety": ["Handgelenke und Ellbogen brauchen Monate Gewöhnung — nicht schneller steigern als das Ziel es erlaubt.", "Arme immer ganz gestreckt (Bizepssehne)."],
+   "videos": [
+    {"id": "UZ-1jwG7aQ4", "title": "Planche Tutorial", "channel": "Calisthenicmovement"},
+    {"id": "bn-HZm7bpy0", "title": "Planche Progression", "channel": "FitnessFAQs"},
+    {"id": "tMyO7id-lKM", "title": "Planche Guide", "channel": "Tom Merrick"}
+   ],
+   "steps": [
+    {"name": "Planche Lean", "exercise": "planche_lean", "goal": {"type": "hold", "sets": 3, "value": 30}, "description": "Schultern vor die Hände lehnen — die Grundlage.", "cues": ["Arme gestreckt", "Oberer Rücken rund", "Hüfte in Linie"]},
+    {"name": "Pseudo-Planche-Liegestütz", "exercise": "pseudo_planche_pushup", "goal": {"type": "reps", "sets": 3, "value": 10}, "description": "Kraft in der Vorlage aufbauen.", "cues": ["Vorlage bleibt", "Ellbogen eng"]},
+    {"name": "Frog Stand", "exercise": "frog_stand", "goal": {"type": "hold", "sets": 1, "value": 30}, "description": "Balance auf den Händen mit Knien auf den Armen.", "cues": ["Finger aktiv", "Blick leicht nach vorn"]},
+    {"name": "Tuck Planche", "exercise": "tuck_planche", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Ohne Stütz der Knie — Rücken rund, Knie an die Brust.", "cues": ["Schultern vor die Hände", "Arme gestreckt"]},
+    {"name": "Advanced Tuck", "exercise": "adv_tuck_planche", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Rücken flach, Hüfte auf Schulterhöhe.", "cues": ["Rücken flach", "Knie weg von der Brust"]},
+    {"name": "Straddle Planche", "exercise": "adv_tuck_planche", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Beine gegrätscht gestreckt.", "cues": ["Po fest", "Beine weit"]},
+    {"name": "Full Planche", "exercise": "adv_tuck_planche", "goal": {"type": "hold", "sets": 3, "value": 5}, "description": "Gemeistert.", "cues": ["Gerade Linie"]}
+   ]
+  },
+  {
+   "id": "front_lever", "name": "Front Lever", "en": "Front Lever", "color": "#38BDF8", "icon": "straighten", "group": "zug",
+   "summary": "Waagerecht unter der Stange hängen, Gesicht nach oben.",
+   "prep": ["dead_hang", "scap_pullup", "hollow_hold"],
+   "safety": ["Erst ab ~10 sauberen Klimmzügen sinnvoll.", "Arme gestreckt halten, Steigerung über die Hebellänge."],
+   "videos": [
+    {"id": "AGhb8V8M758", "title": "Front Lever — all progressions", "channel": "FitnessFAQs"},
+    {"id": "abT3pEtoBh4", "title": "Front Lever Guide", "channel": "Tom Merrick"},
+    {"id": "u3fafe1ggpA", "title": "Front Lever", "channel": "Saturno Movement"}
+   ],
+   "steps": [
+    {"name": "Aktives Hängen", "exercise": "scap_pullup", "goal": {"type": "reps", "sets": 3, "value": 10}, "description": "Schulterblätter kontrollieren — dazu 10 saubere Klimmzüge als Ziel.", "cues": ["Schulterblätter runter", "Arme gestreckt"]},
+    {"name": "Tuck Front Lever", "exercise": "tuck_front_lever", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Knie zur Brust, Rücken waagerecht.", "cues": ["Stange zur Hüfte drücken", "Rücken waagerecht"]},
+    {"name": "Advanced Tuck", "exercise": "adv_tuck_front_lever", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Rücken flach, Hüfte geöffnet.", "cues": ["Flacher Rücken", "Hüfte bleibt oben"]},
+    {"name": "Ein Bein gestreckt", "exercise": "adv_tuck_front_lever", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Ein Bein lang, das andere gebeugt — Seiten wechseln.", "cues": ["Becken gerade"]},
+    {"name": "Straddle", "exercise": "adv_tuck_front_lever", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Beide Beine gegrätscht gestreckt.", "cues": ["Po fest", "Waagerecht bleiben"]},
+    {"name": "Full Front Lever", "exercise": "tuck_front_lever", "goal": {"type": "hold", "sets": 3, "value": 8}, "description": "Gemeistert.", "cues": ["Gerade Linie"]}
+   ]
+  },
+  {
+   "id": "back_lever", "name": "Back Lever", "en": "Back Lever", "color": "#2DD4BF", "icon": "swap_vert", "group": "zug",
+   "summary": "Waagerecht hängen, Gesicht nach unten — der zugänglichste Lever.",
+   "prep": ["skin_the_cat", "german_hang"],
+   "safety": ["Bizepssehne und Schultern ohne Zeitdruck gewöhnen.", "Nie ruckartig in die Dehnung."],
+   "videos": [
+    {"id": "HXaG8mJmSnU", "title": "Back Lever Progression", "channel": "FitnessFAQs"},
+    {"id": "FZZqbeZti84", "title": "Back Lever", "channel": "THENX"}
+   ],
+   "steps": [
+    {"name": "Skin the Cat", "exercise": "skin_the_cat", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Langsam durchdrehen und zurück.", "cues": ["Langsam", "Nur schmerzfrei tief"]},
+    {"name": "German Hang", "exercise": "german_hang", "goal": {"type": "hold", "sets": 3, "value": 30}, "description": "Schultern an die Dehnung gewöhnen.", "cues": ["Arme gestreckt", "Locker atmen"]},
+    {"name": "Tuck Back Lever", "exercise": "tuck_back_lever", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Knie zur Brust, Rücken waagerecht nach oben.", "cues": ["Hüfte hoch", "Ringe nah am Körper"]},
+    {"name": "Advanced Tuck", "exercise": "tuck_back_lever", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Rücken flach, Hüfte offen.", "cues": ["Flacher Rücken"]},
+    {"name": "Straddle", "exercise": "tuck_back_lever", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Beine gegrätscht gestreckt.", "cues": ["Po fest"]},
+    {"name": "Full Back Lever", "exercise": "tuck_back_lever", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Gemeistert.", "cues": ["Gerade Linie"]}
+   ]
+  },
+  {
+   "id": "muscle_up", "name": "Muscle-up", "en": "Muscle-up", "color": "#FBBF24", "icon": "upgrade", "group": "zug",
+   "summary": "In einer Bewegung vom Hang über die Stange in den Stütz.",
+   "prep": ["pullup", "dip", "chest_to_bar"],
+   "safety": ["Voraussetzung: 10 strikte Klimmzüge und 15 Dips.", "Übergang erst mit Band oder Sprung üben."],
+   "videos": [
+    {"id": "Fpk1a_PxEw4", "title": "Muscle Up Tutorial", "channel": "FitnessFAQs"},
+    {"id": "89v8LYbgg5M", "title": "Muscle Up", "channel": "Calisthenicmovement"},
+    {"id": "_eQ2gw_Gg5Y", "title": "Muscle Up Mistakes", "channel": "FitnessFAQs"}
+   ],
+   "steps": [
+    {"name": "10 Klimmzüge", "exercise": "pullup", "goal": {"type": "reps", "sets": 1, "value": 10}, "description": "Saubere Zugkraft als Basis (dazu 15 Dips).", "cues": ["Volle Bewegung", "Kein Schwung"]},
+    {"name": "Brust zur Stange", "exercise": "chest_to_bar", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Höher ziehen — die Brust berührt die Stange.", "cues": ["Ellbogen nach hinten", "Leicht zurücklehnen"]},
+    {"name": "Hoher Zug bis zur Hüfte", "exercise": "chest_to_bar", "goal": {"type": "reps", "sets": 3, "value": 3}, "description": "Explosiv, die Stange kommt Richtung Bauchnabel.", "cues": ["Explosiv", "Stange weg von dir drücken"]},
+    {"name": "Langsame Negative", "exercise": "muscle_up", "goal": {"type": "reps", "sets": 3, "value": 3}, "description": "Vom Stütz über den Übergang 5 s ablassen.", "cues": ["Langsam durch den Übergang"]},
+    {"name": "Mit Sprung oder Band", "exercise": "muscle_up", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Den Übergang mit Hilfe fließend machen.", "cues": ["Beide Arme gleichzeitig"]},
+    {"name": "Erster Muscle-up", "exercise": "muscle_up", "goal": {"type": "reps", "sets": 1, "value": 1}, "description": "Ein strikter Muscle-up.", "cues": ["Zug Richtung Hüfte", "Schneller Übergang"]},
+    {"name": "5 am Stück", "exercise": "muscle_up", "goal": {"type": "reps", "sets": 1, "value": 5}, "description": "Gemeistert.", "cues": ["Kontrolliert ablassen"]}
+   ]
+  },
+  {
+   "id": "human_flag", "name": "Human Flag", "en": "Human Flag", "color": "#FB923C", "icon": "flag", "group": "core",
+   "summary": "Seitlich waagerecht an einer senkrechten Stange — Kraft in Schultern und Flanke.",
+   "prep": ["side_plank", "pullup", "wall_handstand"],
+   "safety": ["Voraussetzung: 10 Klimmzüge, 30 s Wand-Handstand, 45 s Seitstütz.", "Stange muss fest verankert sein."],
+   "videos": [
+    {"id": "zKIrM55AAtk", "title": "Human Flag Tutorial", "channel": "FitnessFAQs"},
+    {"id": "TF9XhvYh_m8", "title": "Human Flag", "channel": "Chris Heria"}
+   ],
+   "steps": [
+    {"name": "Vertikale Flagge", "exercise": "vertical_flag", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Körper senkrecht an der Stange tragen.", "cues": ["Oben ziehen, unten drücken", "Arme gestreckt"]},
+    {"name": "Negative aus der Vertikalen", "exercise": "vertical_flag", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Langsam zur Seite absenken.", "cues": ["Langsam", "Untere Schulter fest"]},
+    {"name": "Tuck Flag", "exercise": "tuck_flag", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Waagerecht mit angezogenen Knien.", "cues": ["Hüfte hoch"]},
+    {"name": "Straddle Flag", "exercise": "tuck_flag", "goal": {"type": "hold", "sets": 3, "value": 8}, "description": "Beine gegrätscht gestreckt.", "cues": ["Gerade Linie"]},
+    {"name": "Full Flag", "exercise": "tuck_flag", "goal": {"type": "hold", "sets": 3, "value": 5}, "description": "Gemeistert.", "cues": ["Ruhig halten"]}
+   ]
+  },
+  {
+   "id": "lsit", "name": "L-Sitz", "en": "L-Sit", "color": "#34D399", "icon": "chair_alt", "group": "core",
+   "summary": "Im Stütz die gestreckten Beine waagerecht halten — Weg zum V-Sitz.",
+   "prep": ["support_hold", "hollow_hold"],
+   "safety": ["Schultern immer tief, Arme gestreckt."],
+   "videos": [
+    {"id": "IUZJoSP66HI", "title": "L-Sit Tutorial", "channel": "Antranik"},
+    {"id": "cu0fHp8HCDo", "title": "L-Sit", "channel": "FitnessFAQs"},
+    {"id": "XblDyJlfe3k", "title": "L-Sit to V-Sit", "channel": "Saturno Movement"}
+   ],
+   "steps": [
+    {"name": "Stütz", "exercise": "support_hold", "goal": {"type": "hold", "sets": 3, "value": 30}, "description": "Sicherer Stütz, Schultern tief.", "cues": ["Schultern weg von den Ohren"]},
+    {"name": "Tuck L-Sitz", "exercise": "tuck_lsit", "goal": {"type": "hold", "sets": 3, "value": 20}, "description": "Knie zur Brust, Füße frei.", "cues": ["Arme gestreckt"]},
+    {"name": "Ein Bein gestreckt", "exercise": "tuck_lsit", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Abwechselnd ein Bein strecken.", "cues": ["Knie durchdrücken"]},
+    {"name": "L-Sitz", "exercise": "lsit", "goal": {"type": "hold", "sets": 3, "value": 15}, "description": "Beide Beine waagerecht.", "cues": ["Zehen strecken", "Beine nicht sinken lassen"]},
+    {"name": "L-Sitz 30 s", "exercise": "lsit", "goal": {"type": "hold", "sets": 1, "value": 30}, "description": "Gemeistert — weiter Richtung V-Sitz.", "cues": ["Hüftbeuger aktiv"]}
+   ]
+  },
+  {
+   "id": "pistol", "name": "Pistol Squat", "en": "Pistol Squat", "color": "#4ADE80", "icon": "directions_run", "group": "beine",
+   "summary": "Einbeinige Kniebeuge bis ganz unten — Kraft, Balance, Beweglichkeit.",
+   "prep": ["deep_squat_hold", "ankle_rocks"],
+   "safety": ["Knie zeigt immer über die Zehen.", "Bei Knieschmerz einen Schritt zurück."],
+   "videos": [
+    {"id": "t7Oj8-8Htyw", "title": "Pistol Squat Tutorial", "channel": "Antranik"},
+    {"id": "d7SLe_ubwy4", "title": "Pistol Squat", "channel": "FitnessFAQs"},
+    {"id": "vq5-vdgJc0I", "title": "Pistol Squat", "channel": "Squat University"}
+   ],
+   "steps": [
+    {"name": "Tiefe Kniebeuge", "exercise": "squat", "goal": {"type": "reps", "sets": 3, "value": 20}, "description": "Volle Tiefe beidbeinig, Fersen unten.", "cues": ["Fersen am Boden", "Knie nach außen"]},
+    {"name": "Bulgarische Kniebeuge", "exercise": "bulgarian_split_squat", "goal": {"type": "reps", "sets": 3, "value": 8}, "description": "Einbeinige Kraft aufbauen (je Seite).", "cues": ["Vorderes Knie stabil"]},
+    {"name": "Pistol mit Halt", "exercise": "assisted_pistol", "goal": {"type": "reps", "sets": 3, "value": 8}, "description": "Mit leichtem Halt an Türrahmen oder Stange (je Seite).", "cues": ["Möglichst wenig ziehen"]},
+    {"name": "Pistol Squat", "exercise": "pistol_squat", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Frei, volle Tiefe (je Seite).", "cues": ["Arme nach vorn", "Kontrolliert unten"]},
+    {"name": "Shrimp Squat", "exercise": "shrimp_squat", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Gemeistert — die nächste Herausforderung.", "cues": ["Knie sanft ablegen"]}
+   ]
+  },
+  {
+   "id": "one_arm_pullup", "name": "Einarmiger Klimmzug", "en": "One-arm Pull-up", "color": "#60A5FA", "icon": "front_hand", "group": "zug", "requires": ["muscle_up"],
+   "summary": "Der Klimmzug mit einem Arm — jahrelanges Ziel für viele.",
+   "prep": ["pullup", "archer_pullup"],
+   "safety": ["Voraussetzung: 15 strikte Klimmzüge.", "Ellbogen-Sehnen langsam gewöhnen."],
+   "videos": [
+    {"id": "vdjWgw98EeI", "title": "One Arm Pull Up", "channel": "Calisthenicmovement"},
+    {"id": "mTJHClMQPM8", "title": "One Arm Pull Up Progression", "channel": "FitnessFAQs"}
+   ],
+   "steps": [
+    {"name": "15 Klimmzüge", "exercise": "pullup", "goal": {"type": "reps", "sets": 1, "value": 15}, "description": "Basis-Kraft.", "cues": ["Volle Bewegung"]},
+    {"name": "Archer-Klimmzug", "exercise": "archer_pullup", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Ein Arm zieht, einer hilft (je Seite).", "cues": ["Hilfsarm gestreckt"]},
+    {"name": "Typewriter", "exercise": "typewriter_pullup", "goal": {"type": "reps", "sets": 3, "value": 3}, "description": "Oben von Seite zu Seite.", "cues": ["Auf Stangenhöhe bleiben"]},
+    {"name": "Einarmig oben halten", "exercise": "archer_pullup", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "In der Endposition einarmig halten.", "cues": ["Schulter tief"]},
+    {"name": "Einarmige Negative", "exercise": "archer_pullup", "goal": {"type": "reps", "sets": 3, "value": 3}, "description": "5 s einarmig ablassen.", "cues": ["Gleichmäßig"]},
+    {"name": "Einarmiger Klimmzug", "exercise": "archer_pullup", "goal": {"type": "reps", "sets": 1, "value": 1}, "description": "Gemeistert.", "cues": ["Körper ruhig"]}
+   ]
+  },
+  {
+   "id": "dragon_flag", "name": "Dragon Flag", "en": "Dragon Flag", "color": "#F87171", "icon": "airline_seat_flat", "group": "core",
+   "summary": "Der Körper als gerade Linie, nur auf den Schultern getragen.",
+   "prep": ["hollow_hold", "leg_raise"],
+   "safety": ["Nie auf dem Nacken — Gewicht auf die oberen Schultern.", "Bank muss fest stehen."],
+   "videos": [
+    {"id": "At0mMAHqWrQ", "title": "Dragon Flag Tutorial", "channel": "FitnessFAQs"},
+    {"id": "moyFIvRrS0s", "title": "Dragon Flag", "channel": "Antranik"}
+   ],
+   "steps": [
+    {"name": "Hollow Hold", "exercise": "hollow_hold", "goal": {"type": "hold", "sets": 3, "value": 30}, "description": "Rumpfspannung als Basis.", "cues": ["Unterer Rücken am Boden"]},
+    {"name": "Tuck halten", "exercise": "tuck_dragon_flag", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Mit gebeugten Knien oben halten.", "cues": ["Hüfte gestreckt"]},
+    {"name": "Negative gestreckt", "exercise": "dragon_flag_neg", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "5 s als Linie absenken.", "cues": ["Kein Knick in der Hüfte"]},
+    {"name": "Halten gestreckt", "exercise": "dragon_flag_neg", "goal": {"type": "hold", "sets": 3, "value": 10}, "description": "Gerade Linie halten.", "cues": ["Ganzer Körper fest"]},
+    {"name": "Volle Wiederholungen", "exercise": "dragon_flag_neg", "goal": {"type": "reps", "sets": 3, "value": 5}, "description": "Gemeistert.", "cues": ["Hoch und runter als Linie"]}
+   ]
+  }
+ ]
+}

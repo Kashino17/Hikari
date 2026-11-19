@@ -43,6 +43,14 @@ data class MusicTile(
     val playing: Boolean,
 )
 
+/** Fitness-Kachel: heutiges Training (oder Ruhetag), Serie, übrige Kalorien. */
+data class FitnessTile(
+    val title: String,
+    val detail: String,
+    val done: Boolean,
+    val streak: Int,
+)
+
 /** Tagesbericht-Kachel: die erste Schlagzeile, die Zahl der Meldungen und von wann der Bericht ist. */
 data class NewsTile(
     val headline: String,
@@ -67,6 +75,7 @@ class AreaTilesViewModel @Inject constructor(
     russianStore: RussianProgressStore,
     player: MusicPlayerController,
     whatsApp: WhatsAppRepository,
+    private val okHttp: okhttp3.OkHttpClient,
 ) : ViewModel() {
 
     private val gamePrefs = context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE)
@@ -106,6 +115,9 @@ class AreaTilesViewModel @Inject constructor(
     val whatsAppDeleted: StateFlow<Int> =
         whatsApp.deletedCount.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
+    private val _fitness = MutableStateFlow<FitnessTile?>(null)
+    val fitness: StateFlow<FitnessTile?> = _fitness.asStateFlow()
+
     private val _lastGame = MutableStateFlow<String?>(null)
     val lastGame: StateFlow<String?> = _lastGame.asStateFlow()
 
@@ -120,6 +132,17 @@ class AreaTilesViewModel @Inject constructor(
 
         viewModelScope.launch {
             _studySeconds.value = withContext(Dispatchers.IO) { studyTime.todaySeconds() }
+        }
+        viewModelScope.launch {
+            _fitness.value = withContext(Dispatchers.IO) {
+                runCatching {
+                    okHttp.newCall(okhttp3.Request.Builder().url("http://hikari.invalid/fitness/tile").build()).execute().use { res ->
+                        if (!res.isSuccessful) return@use null
+                        val o = org.json.JSONObject(res.body?.string().orEmpty())
+                        FitnessTile(o.optString("title"), o.optString("detail"), o.optBoolean("done"), o.optInt("streak"))
+                    }
+                }.getOrNull()
+            } ?: _fitness.value
         }
         viewModelScope.launch {
             runCatching { musicRepo.getHistory().firstOrNull() }.getOrNull()?.let {

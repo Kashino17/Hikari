@@ -192,6 +192,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
     val isGearSubPage = currentRoute == "settings"
     val isGameRoute = currentRoute?.startsWith("game/") == true ||
         currentRoute?.startsWith("russian") == true ||
+        currentRoute == "fitness" ||
         currentRoute == "whatsapp" ||
         currentRoute?.startsWith("voice-notes") == true
     // Der Browser bringt eigene Leisten oben und unten mit; die Bottom-Nav
@@ -585,6 +586,15 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 route = "russian-pattern/{id}",
                 arguments = listOf(navArgument("id") { type = NavType.StringType }),
             ) { entry -> russianWeb("russian-pattern/${entry.arguments?.getString("id")}") }
+            // Fitness: Training mit KI-Coach, Skills, Ernährung — Web-Oberfläche (assets/fit-web).
+            composable("fitness") {
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.fitness.FitWebScreen(
+                        onClose = { nav.popBackStack() },
+                        onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
+                    )
+                }
+            }
             composable("games") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
                     GamesScreen(
