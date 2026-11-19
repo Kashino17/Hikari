@@ -14,7 +14,7 @@ const app = Fastify({ logger: false, bodyLimit: 12 * 1024 * 1024 });
 const h = registerFitnessRoutes(app, {
   dir,
   dataDir: new URL("../fitness", import.meta.url).pathname,
-  geminiKey: () => readGeminiKey(join(home, ".hikari", "erleben")),
+  geminiKey: () => readGeminiKey(join(home, ".hikari", "fitness"), {}),
   log: (m) => console.log(m),
 });
 if (process.env.NO_IMPORT) h.importer.run = async () => {};

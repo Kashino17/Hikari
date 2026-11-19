@@ -188,7 +188,7 @@ await registerRussianAnjaLiveRoutes(app, {
 registerFitnessRoutes(app, {
   dir: join(cfg.dataDir, "fitness"),
   dataDir: new URL("../fitness", import.meta.url).pathname,
-  geminiKey: () => readGeminiKey(join(cfg.dataDir, "erleben")),
+  geminiKey: () => readGeminiKey(join(cfg.dataDir, "fitness"), {}),
   log: (msg) => app.log.info(msg),
 });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
