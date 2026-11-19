@@ -23,6 +23,8 @@ jobs:
         run: npm ci
       - name: Typecheck
         run: npx tsc -p tsconfig.json --noEmit
+      - name: ffmpeg (Erkennung der Gutenberg-Muster-Cover)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
       - name: Test
         run: npm test
       # Lint is informational for now: the repo predates CI and carries a
