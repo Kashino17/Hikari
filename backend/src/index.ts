@@ -1,71 +1,66 @@
 import "dotenv/config";
-import { mkdirSync, existsSync, readdirSync, unlinkSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import fastifyStatic from "@fastify/static";
 import fastifyCompress from "@fastify/compress";
 import fastifyMultipart from "@fastify/multipart";
+import fastifyStatic from "@fastify/static";
 import Fastify from "fastify";
 import cron from "node-cron";
 import { registerAuth } from "./api/auth.js";
-import { registerCors } from "./api/cors.js";
+import { registerCastRoutes } from "./api/cast.js";
 import { registerChannelsRoutes } from "./api/channels.js";
+import { registerClientTraceRoutes } from "./api/client-trace.js";
+import { registerCors } from "./api/cors.js";
 import { registerDownloadsRoutes } from "./api/downloads.js";
-import { registerFeedRoutes } from "./api/feed.js";
-import { registerHealthRoute } from "./api/health.js";
-import { registerStatsRoutes } from "./api/stats.js";
-import { registerVideosRoutes } from "./api/videos.js";
 import { registerEbookRoutes } from "./api/ebooks.js";
+import { registerFeedRoutes } from "./api/feed.js";
+import { registerFitnessRoutes } from "./api/fitness.js";
+import { registerHealthRoute } from "./api/health.js";
 import { registerMangaCatalogRoutes } from "./api/manga-catalog.js";
 import { registerMangaRoutes } from "./api/manga.js";
+import { itChannelShorts } from "./api/music-innertube.js";
+import { registerMusicRoutes } from "./api/music.js";
+import { registerNewsRoutes } from "./api/news.js";
+import { readGeminiKey, registerRussianAnjaLiveRoutes } from "./api/russian-anja-live.js";
+import { registerRussianBackupRoutes } from "./api/russian-backup.js";
+import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
+import { registerRussianErlebenRoutes } from "./api/russian-erleben.js";
+import { registerRussianRoutes } from "./api/russian.js";
+import { registerStatsRoutes } from "./api/stats.js";
+import { registerStreamRoutes } from "./api/stream.js";
+import { registerVideoFullRoute } from "./api/video-full.js";
+import { registerVideosRoutes } from "./api/videos.js";
+import { registerVoiceRoutes } from "./api/voice.js";
+import { registerWatchLaterRoutes } from "./api/watch-later.js";
+import { loadConfig } from "./config.js";
+import { openDatabase } from "./db/connection.js";
+import { runCleanup } from "./download/cleanup.js";
 import { resolvePendingAuthorPhotos } from "./ebooks/authors.js";
 import { resolvePendingCovers } from "./ebooks/covers.js";
 import { createPoliteHttp } from "./ebooks/http.js";
 import { sources as ebookSources } from "./ebooks/sources/index.js";
 import { runEbookSync, shouldSyncOnStart } from "./ebooks/sync.js";
-import { registerMusicRoutes } from "./api/music.js";
-import { itChannelShorts } from "./api/music-innertube.js";
-import { registerNewsRoutes } from "./api/news.js";
-import { registerStreamRoutes } from "./api/stream.js";
-import { registerWatchLaterRoutes } from "./api/watch-later.js";
-import { registerRussianRoutes } from "./api/russian.js";
-import { registerRussianBackupRoutes } from "./api/russian-backup.js";
-import { registerRussianConversationRoutes } from "./api/russian-conversation.js";
-import { readGeminiKey, registerRussianAnjaLiveRoutes } from "./api/russian-anja-live.js";
-import { AnjaLive } from "./russian/anja-live.js";
-import { LocalConversationProvider } from "./russian/conversation.js";
-import { registerRussianErlebenRoutes } from "./api/russian-erleben.js";
-import { registerVideoFullRoute } from "./api/video-full.js";
-import { registerFitnessRoutes } from "./api/fitness.js";
-import { registerCastRoutes } from "./api/cast.js";
-import { KeepAwake, registerKeepAwake } from "./system/keep-awake.js";
-import { registerVoiceRoutes } from "./api/voice.js";
-import { VoiceJobStore, VoiceProcessor } from "./voice/jobs.js";
-import { VoiceSummarizer } from "./voice/summarize.js";
-import { WhisperWorker } from "./voice/whisper.js";
-import { loadConfig } from "./config.js";
-import { openDatabase } from "./db/connection.js";
 import { buildDailyMix } from "./feed/daily-mix.js";
 import { SUBSCRIBED_CHANNEL_IDS_SQL } from "./feed/subscriptions.js";
-import { runCleanup } from "./download/cleanup.js";
 import { MetadataExtractor } from "./import/metadata-extractor.js";
 import { fetchVideoMetadata } from "./ingest/metadata.js";
-import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
-import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
-import { refreshChannelMetadata } from "./monitor/channel-resolver.js";
-import { processNewVideo } from "./pipeline/orchestrator.js";
 import {
-  enqueueIngest,
   claimNextIngest,
   completeIngest,
+  enqueueIngest,
   failIngest,
   isTransientInfraError,
   requeueIngest,
   unlockStaleIngest,
 } from "./ingest/queue.js";
-import { fetchSponsorSegments } from "./sponsorblock/client.js";
 import { ArtworkScout, enrichArtwork, setArtworkScout } from "./library/artwork.js";
-import { enrichGenres, ensureFilmGenres, ensureSeriesGenres, setGenreScout } from "./library/genres.js";
+import {
+  enrichGenres,
+  ensureFilmGenres,
+  ensureSeriesGenres,
+  setGenreScout,
+} from "./library/genres.js";
 import { enrichMangaCovers, ensureMangaCover, setMangaCoverScout } from "./manga/cover.js";
 import {
   checkReadableChapters,
@@ -74,7 +69,18 @@ import {
   shouldSyncCatalogOnStart,
 } from "./manga/mangadex/catalog.js";
 import { mangadexClient } from "./manga/mangadex/client.js";
-import { registerClientTraceRoutes } from "./api/client-trace.js";
+import { computePollIntervalMs, isChannelDue } from "./monitor/cadence.js";
+import { refreshChannelMetadata } from "./monitor/channel-resolver.js";
+import { fetchChannelFeedConditional } from "./monitor/rss-poller.js";
+import { NewsDiscover } from "./news/discover.js";
+import { processNewVideo } from "./pipeline/orchestrator.js";
+import { AnjaLive } from "./russian/anja-live.js";
+import { LocalConversationProvider } from "./russian/conversation.js";
+import { fetchSponsorSegments } from "./sponsorblock/client.js";
+import { KeepAwake, registerKeepAwake } from "./system/keep-awake.js";
+import { VoiceJobStore, VoiceProcessor } from "./voice/jobs.js";
+import { VoiceSummarizer } from "./voice/summarize.js";
+import { WhisperWorker } from "./voice/whisper.js";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
@@ -99,9 +105,10 @@ for (const f of readdirSync(cfg.videoDir)) {
   }
 }
 // Startup consistency check: DB rows without files
-const orphanRows = db
-  .prepare("SELECT video_id, file_path FROM downloaded_videos")
-  .all() as { video_id: string; file_path: string }[];
+const orphanRows = db.prepare("SELECT video_id, file_path FROM downloaded_videos").all() as {
+  video_id: string;
+  file_path: string;
+}[];
 for (const r of orphanRows) {
   if (!existsSync(r.file_path)) {
     db.prepare("DELETE FROM downloaded_videos WHERE video_id = ?").run(r.video_id);
@@ -257,7 +264,11 @@ await registerMusicRoutes(app, {
   app.addHook("onClose", async () => whisper.stop());
 }
 
-await registerNewsRoutes(app, { db, cfg });
+const newsDiscover = new NewsDiscover(cfg.dataDir);
+await registerNewsRoutes(app, { db, cfg, discover: newsDiscover });
+// Tagesbericht vorwärmen und alle 30 Minuten frisch halten — die App soll sofort Karten sehen.
+setTimeout(() => void newsDiscover.discover(true).catch(() => {}), 20_000).unref();
+setInterval(() => void newsDiscover.discover(true).catch(() => {}), 30 * 60_000).unref();
 registerVideoFullRoute(app, db);
 registerCastRoutes(app, cfg.port);
 
@@ -296,7 +307,9 @@ async function pollAllChannels(): Promise<void> {
       // Adaptive cadence: skip a channel that isn't due yet for its own
       // upload rhythm. The cron still fires every 15 min; dormant channels are
       // simply checked far less often, cutting wasted RSS/yt-dlp load.
-      const pub = (recentPublished.all(c.id) as { publishedAt: number }[]).map((r) => r.publishedAt);
+      const pub = (recentPublished.all(c.id) as { publishedAt: number }[]).map(
+        (r) => r.publishedAt,
+      );
       const interval = computePollIntervalMs(pub, now);
       if (!isChannelDue(c.lastPolledAt, interval, now)) continue;
 
@@ -314,9 +327,11 @@ async function pollAllChannels(): Promise<void> {
           for (const e of result.entries) {
             enqueueIngest(db, e.videoId, c.id);
           }
-          db.prepare(
-            "UPDATE channels SET rss_etag = ?, rss_last_modified = ? WHERE id = ?",
-          ).run(result.etag, result.lastModified, c.id);
+          db.prepare("UPDATE channels SET rss_etag = ?, rss_last_modified = ? WHERE id = ?").run(
+            result.etag,
+            result.lastModified,
+            c.id,
+          );
         }
         // Shorts-Tab zusätzlich zum RSS: Kanal-RSS enthält Shorts unzuverlässig.
         // Best-effort — enqueueIngest skippt bereits bekannte Videos ohnehin.
@@ -489,8 +504,14 @@ const runEbookCovers = async () => {
   ebookCoversRunning = true;
   try {
     // Autorenfotos zuerst (wenige, sichtbar auf der Startseite), dann die Titelbilder.
-    await resolvePendingAuthorPhotos(db, ebookCoverHttp, { limit: 300, log: (msg) => app.log.info(msg) });
-    await resolvePendingCovers(db, ebookCoverHttp, { limit: 3000, log: (msg) => app.log.info(msg) });
+    await resolvePendingAuthorPhotos(db, ebookCoverHttp, {
+      limit: 300,
+      log: (msg) => app.log.info(msg),
+    });
+    await resolvePendingCovers(db, ebookCoverHttp, {
+      limit: 3000,
+      log: (msg) => app.log.info(msg),
+    });
   } catch (err) {
     app.log.warn({ err }, "ebooks: Titelbilder abgestürzt");
   } finally {

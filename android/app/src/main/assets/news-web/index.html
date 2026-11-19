@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tagesbericht</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,800;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root{--amber:#FBBF24}
+body.paper{--bg:#F4F1EA;--card:#F4F1EA;--ink:#141414;--muted:#6B6B6B;--line:#1414141f;--kick:#B45309;--chip:#E7E2D6;--chipOn:#141414;--chipOnInk:#F4F1EA}
+body.dark{--bg:#1F1F22;--card:#17171A;--ink:#F5F5F5;--muted:#9A9AA0;--line:#ffffff14;--kick:#FBBF24;--chip:#2A2A2E;--chipOn:#FBBF24;--chipOnInk:#111}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{max-width:480px;margin:0 auto;min-height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.serif{font-family:'Source Serif 4',Georgia,serif}
+.clamp2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.clamp3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+
+/* Kopf */
+.top{padding:18px 18px 6px;display:flex;align-items:flex-end;gap:12px}
+.top h1{font-size:30px;font-weight:800;letter-spacing:-.4px;line-height:1}
+.paper .top h1{font-family:'Source Serif 4',serif}
+.top .date{font-size:13px;color:var(--muted);margin-top:6px}
+.top button{margin-left:auto;padding:8px 12px;border-radius:999px;background:var(--chip);font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+.paper .rule{height:3px;background:var(--ink);margin:10px 18px 0;box-shadow:0 5px 0 -4px var(--ink)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:14px 18px 6px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;padding:7px 13px;border-radius:999px;background:var(--chip);font-size:13.5px;font-weight:500;white-space:nowrap}
+.chip small{opacity:.55;margin-left:5px;font-size:12px}
+.chip.on{background:var(--chipOn);color:var(--chipOnInk);font-weight:700}
+.chip.add{background:transparent;border:1.5px dashed var(--muted);color:var(--muted)}
+
+/* Aufmacher */
+.lead{margin:10px 18px 4px;cursor:pointer}
+.lead .ph{aspect-ratio:16/10;border-radius:14px;background:#0003 center/cover;position:relative;overflow:hidden}
+.dark .lead .ph{border-radius:20px}
+.lead .ph .badges{position:absolute;left:10px;bottom:10px;display:flex;gap:6px}
+.kick{font-size:11.5px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--kick);margin-top:14px}
+.lead h2{font-size:26px;line-height:1.14;font-weight:800;margin-top:6px;letter-spacing:-.2px}
+.paper .lead h2{font-family:'Source Serif 4',serif}
+.lead p{font-size:15.5px;line-height:1.5;color:var(--muted);margin-top:8px}
+.paper .lead p{font-family:'Source Serif 4',serif;color:#3a3a3a}
+.meta{font-size:12.5px;color:var(--muted);margin-top:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.more{margin-top:12px;display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:var(--kick)}
+.dark .more{background:var(--amber);color:#111;padding:10px 16px;border-radius:999px}
+.badge{font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:6px;background:#000000b0;color:#fff;letter-spacing:.3px}
+.badge.vid{background:#DC2626}
+
+/* Liste */
+.sec{margin:22px 18px 4px;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.list{padding:0 18px}
+.row{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.dark .list{display:flex;flex-direction:column;gap:10px;padding:6px 16px}
+.dark .row{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.row .tx{flex:1;min-width:0}
+.row h3{font-size:17px;line-height:1.22;font-weight:700;margin-top:4px}
+.paper .row h3{font-family:'Source Serif 4',serif;font-weight:800}
+.row p{font-size:13.5px;line-height:1.45;color:var(--muted);margin-top:5px}
+.row .th{flex:none;width:92px;height:92px;border-radius:10px;background:#0002 center/cover;position:relative}
+.row .th .badge{position:absolute;left:6px;bottom:6px}
+.row .kick{margin-top:0;font-size:10.5px}
+
+/* Leser */
+.reader{position:fixed;inset:0;z-index:80;background:var(--bg);overflow-y:auto;transform:translateX(100%);transition:transform .28s ease}
+.reader.open{transform:none}
+.rbar{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:8px;padding:10px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
+.rbar .back{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:22px}
+.rbar .site{flex:1;text-align:center;font-weight:700;font-size:14px}
+.rbar .fs{display:flex;gap:2px}
+.rbar .fs button{width:36px;height:36px;border-radius:50%;font-weight:700;background:var(--chip)}
+.prog{position:absolute;left:0;bottom:-1px;height:2px;background:var(--kick);width:0}
+.art{max-width:640px;margin:0 auto;padding:18px 20px 60px;--fs:18px}
+.art h1{font-family:'Source Serif 4',serif;font-size:29px;line-height:1.14;font-weight:800;margin-top:6px;letter-spacing:-.3px}
+.art .by{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.5}
+.art .body{margin-top:18px}
+.art .body p{font-family:'Source Serif 4',serif;font-size:var(--fs);line-height:1.62;margin:0 0 1em}
+.art .body h4{font-family:'Source Serif 4',serif;font-size:calc(var(--fs) + 3px);font-weight:800;margin:1.3em 0 .5em;line-height:1.25}
+.art figure{margin:18px -20px}
+.art figure img{width:100%;display:block;background:#0002}
+.art figure figcaption{font-size:12.5px;color:var(--muted);padding:6px 20px 0;line-height:1.4}
+.art .vid{position:relative;aspect-ratio:16/9;background:#000;margin:18px -20px}
+.art .vid iframe,.art .vid video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.art blockquote{font-family:'Source Serif 4',serif;font-style:italic;font-size:calc(var(--fs) + 1px);line-height:1.5;border-left:3px solid var(--kick);padding:2px 0 2px 14px;margin:1.2em 0}
+.art ul,.art ol{font-family:'Source Serif 4',serif;font-size:var(--fs);line-height:1.6;margin:0 0 1em 1.3em}
+.art .end{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:10px}
+.art .next{background:var(--chip);border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.art .next .th{width:64px;height:64px;border-radius:10px;background:#0002 center/cover;flex:none}
+
+/* Themen-Blatt */
+.sheet{position:fixed;inset:0;z-index:90;background:#0008;display:none;align-items:flex-end}
+.sheet.open{display:flex}
+.sheet .pan{width:100%;max-width:480px;margin:0 auto;background:var(--bg);border-radius:22px 22px 0 0;padding:18px 18px 28px;max-height:85vh;overflow-y:auto}
+.sheet h3{font-size:20px;font-weight:800}
+.sheet .hint{font-size:13px;color:var(--muted);margin-top:4px;line-height:1.4}
+.sheet form{display:flex;gap:8px;margin-top:14px}
+.sheet input{flex:1;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);font-size:15px;outline:none}
+.sheet form button{padding:0 16px;border-radius:12px;background:var(--chipOn);color:var(--chipOnInk);font-weight:700}
+.sheet .mine{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.sheet .mine span{padding:7px 8px 7px 13px;border-radius:999px;background:var(--chipOn);color:var(--chipOnInk);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.sheet .mine span button{width:20px;height:20px;border-radius:50%;background:#0002;font-size:13px;line-height:1;color:inherit}
+.sheet .sug{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.sheet .sug button{padding:6px 12px;border-radius:999px;border:1.5px dashed var(--muted);color:var(--muted);font-size:13px}
+.sheet .done{width:100%;margin-top:22px;padding:14px;border-radius:14px;background:var(--amber);color:#111;font-weight:800;font-size:15px}
+
+.skel{margin:12px 18px;border-radius:14px;background:linear-gradient(90deg,var(--chip),var(--line),var(--chip));background-size:200% 100%;animation:sh 1.2s infinite}
+@keyframes sh{from{background-position:200% 0}to{background-position:-200% 0}}
+.empty{padding:40px 24px;text-align:center;color:var(--muted);font-size:14px;line-height:1.5}
+
+/* Reiter */
+.tabs{display:flex;gap:6px;margin:14px 18px 2px;padding:4px;border-radius:14px;background:var(--chip)}
+.tabs button{flex:1;padding:9px 0;border-radius:11px;font-size:14.5px;font-weight:600;color:var(--muted)}
+.tabs button.on{background:var(--bg);color:var(--ink);font-weight:800;box-shadow:0 1px 4px #0002}
+.dark .tabs button.on{background:#3A3A40}
+.tabs small{font-size:12px;margin-left:5px;opacity:.6}
+.cta{display:flex;flex-direction:column;gap:8px;padding:22px 18px 6px}
+.cta button{padding:13px;border-radius:14px;font-weight:700;font-size:14.5px;background:var(--chip)}
+.cta .big{background:var(--chipOn);color:var(--chipOnInk)}
+/* Themen-Raster */
+.gridhead{display:flex;align-items:center;justify-content:space-between;margin:16px 18px 10px;font-size:12.5px;color:var(--muted)}
+.gridhead button{font-weight:700;color:var(--kick);font-size:13.5px}
+.tgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 18px}
+.tt{border-radius:16px;overflow:hidden;cursor:pointer;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column}
+.tt .ph{aspect-ratio:4/3;background:#0002 center/cover;position:relative}
+.tt .cnt{position:absolute;top:8px;left:8px;min-width:26px;height:26px;padding:0 8px;border-radius:13px;background:var(--chipOn);color:var(--chipOnInk);font-size:13px;font-weight:800;display:grid;place-items:center}
+.tt .tx{padding:10px 11px 12px}
+.tt b{font-size:16.5px;font-weight:800;display:block;line-height:1.15}
+.paper .tt b{font-family:'Source Serif 4',serif}
+.tt p{font-size:12.5px;line-height:1.35;color:var(--muted);margin-top:4px}
+.paper .tt p{font-family:'Source Serif 4',serif;color:#444}
+.tt small{display:block;font-size:11px;color:var(--muted);margin-top:6px}
+.paper .tt{background:#fff8;border-color:#1414141a}
+.tt.none,.tt.add{border:1.5px dashed var(--muted);background:transparent;justify-content:center;align-items:center;text-align:center;padding:18px 12px;min-height:120px;gap:6px}
+.tt.none b{font-size:15px;opacity:.75}.tt.none span,.tt.add span{font-size:12px;color:var(--muted)}
+.tt.add b{font-size:30px;font-weight:400;color:var(--muted)}
+/* Unterseiten */
+.subbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
+.subbar .back{width:40px;height:40px;border-radius:50%;font-size:22px}
+.subbar b{font-size:15px}
+.subhead{padding:18px 18px 4px}
+.subhead h1{font-size:30px;font-weight:800;letter-spacing:-.3px;line-height:1.05}
+.paper .subhead h1{font-family:'Source Serif 4',serif}
+.subhead .date{font-size:13px;color:var(--muted);margin-top:6px}
+
+.vid.yt{background:#000 center/cover;cursor:pointer;display:grid;place-items:center}
+.vid.yt .playbtn{width:64px;height:64px;border-radius:50%;background:#000000b3;color:#fff;font-size:26px;display:grid;place-items:center;padding-left:4px}
+/* Discover-Karten: alle gleich groß */
+.feed{display:flex;flex-direction:column;gap:14px;padding:14px 12px 30px}
+.dc{border-radius:24px;overflow:hidden;background:var(--card);cursor:pointer;transition:transform .15s}
+.dc:active{transform:scale(.985)}
+.dark .dc{background:#2A2A2E}
+.paper .dc{background:#FFFDF8;border:1px solid #14141414;box-shadow:0 1px 3px #0000000d}
+.dc .ph{aspect-ratio:16/9;background:#0003 center/cover;position:relative}
+.dc .ph .badge{position:absolute;left:12px;bottom:12px}
+.dc .bd{padding:16px 18px 12px}
+.dc h3{font-size:21px;line-height:1.3;font-weight:400;color:var(--ink)}
+.paper .dc h3{font-family:'Source Serif 4',serif;font-weight:600;font-size:21.5px;line-height:1.28}
+.dc .ft{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:14px;color:var(--muted)}
+.dc .fav{width:26px;height:26px;border-radius:50%;background:#fff center/70% no-repeat;flex:none;border:1px solid var(--line)}
+.dc .ft .src{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dc .ft .src b{font-weight:500;color:var(--ink);opacity:.85}
+.dc .ft button{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
+.dc .ft button svg{width:21px;height:21px}
+.dc .tp{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--chip);color:var(--muted);white-space:nowrap}
+.dc.noimg .bd{padding-top:18px}
+</style>
+</head>
+<body class="dark">
+<div id="app"></div>
+<div class="reader" id="reader"></div>
+<div class="sheet" id="sheet"></div>
+
+<script>
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const img = (u) => (u ? `/api/news/img?u=${encodeURIComponent(u)}` : "");
+const bgi = (u) => (u ? `background-image:url('${img(u)}')` : "");
+const ago = (t) => {
+  if (!t) return ""; const m = Math.round((Date.now() - t) / 60000);
+  if (m < 60) return `vor ${Math.max(1, m)} Min.`; const h = Math.round(m / 60);
+  if (h < 24) return `vor ${h} Std.`; const d = Math.round(h / 24); return d === 1 ? "gestern" : `vor ${d} Tagen`;
+};
+const today = new Date().toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+const SUGGEST = ["Apple", "Nvidia", "Google Gemini", "Russland", "Ukraine", "Wissenschaft", "Raumfahrt", "Fußball", "Anime", "Börse", "Android", "Cybersecurity"];
+
+let DATA = null, STYLE = "dark";
+const NATIVE = window.HikariNative || null;
+
+function badges(i) {
+  return `${i.videos ? `<span class="badge vid">▶ Video</span>` : ""}${i.images > 2 ? `<span class="badge">${i.images} Bilder</span>` : ""}${i.lang === "en" ? `<span class="badge">EN</span>` : ""}`;
+}
+
+
+// ── Navigation: Reiter »Für dich« / »Themen«, Themenseite, Alle Meldungen ──
+let TAB = "foryou", VIEW = null; // VIEW: null | {topic} | {all:true}
+const byTopic = () => {
+  const m = {}; DATA.topics.forEach((t) => (m[t] = []));
+  DATA.items.forEach((i) => (m[i.topic] = m[i.topic] || []).push(i));
+  return m;
+};
+const leadOf = (list) => list.find((i) => i.image && i.readMin >= 3 && i.lang === "de") || list.find((i) => i.image && i.readMin >= 3) || list.find((i) => i.image) || list[0];
+
+function leadCard(lead) {
+  return `<div class="lead" onclick="openArticle('${lead.id}')">
+      <div class="ph" style="${bgi(lead.image)}"><div class="badges">${badges(lead)}</div></div>
+      <div class="kick">${esc(lead.topic)} · ${esc(lead.site)}</div>
+      <h2>${esc(lead.title)}</h2>
+      <p class="clamp3">${esc(lead.teaser)}</p>
+      <div class="meta">${ago(lead.at)} · ${lead.readMin} min Lesezeit</div>
+      <span class="more">Weiterlesen →</span></div>`;
+}
+function rowCard(i, showTopic = true) {
+  return `<div class="row" onclick="openArticle('${i.id}')">
+        <div class="tx"><div class="kick">${showTopic ? esc(i.topic) + " · " : ""}${esc(i.site)}</div>
+          <h3 class="clamp3">${esc(i.title)}</h3>
+          <p class="clamp2">${esc(i.teaser)}</p>
+          <div class="meta">${ago(i.at)} · ${i.readMin} min${i.lang === "en" ? " · EN" : ""}</div></div>
+        ${i.image ? `<div class="th" style="${bgi(i.image)}">${i.videos ? `<span class="badge vid">▶</span>` : ""}</div>` : ""}
+      </div>`;
+}
+
+
+const SHARE = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.1c-.8 0-1.4.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.2c.5.5 1.2.8 2 .8 1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .2 0 .5.1.7L8 9.8C7.5 9.3 6.8 9 6 9c-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 1.5-.3 2-.8l7.1 4.2c-.1.2-.1.4-.1.6 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9-1.2-2.9-2.8-2.9z"/></svg>`;
+const shortAgo = (t) => ago(t).replace("vor ", "").replace(" Std.", " Std.").replace(" Min.", " Min.");
+/** Neueste zuerst, aber dasselbe Thema möglichst nicht zweimal hintereinander. */
+function diversify(list) {
+  const rest = [...list].sort((a, b) => b.at - a.at), out = [];
+  while (rest.length) {
+    const prev = out[out.length - 1]?.topic;
+    const k = rest.findIndex((i) => i.topic !== prev);
+    out.push(rest.splice(k < 0 || k > 3 ? 0 : k, 1)[0]);
+  }
+  return out;
+}
+function dcard(i, showTopic = true) {
+  const fav = i.favicon ? `<span class="fav" style="background-image:url('${img(i.favicon)}')"></span>` : `<span class="fav"></span>`;
+  return `<div class="dc ${i.image ? "" : "noimg"}" onclick="openArticle('${i.id}')">
+    ${i.image ? `<div class="ph" style="${bgi(i.image)}">${i.videos ? `<span class="badge vid">▶ Video</span>` : ""}</div>` : ""}
+    <div class="bd"><h3>${esc(i.title)}</h3>
+      <div class="ft">${fav}<span class="src"><b>${esc(i.site)}</b> · ${shortAgo(i.at)}${i.lang === "en" ? " · EN" : ""}</span>
+        ${showTopic ? `<span class="tp">${esc(i.topic)}</span>` : ""}
+        <button onclick="event.stopPropagation();share('${i.id}')" aria-label="Teilen">${SHARE}</button></div></div></div>`;
+}
+async function share(id) {
+  const a = await (await fetch(`/api/news/article/${id}`)).json();
+  if (NATIVE) return NATIVE.share(a.title, a.url);
+  try { await navigator.share({ title: a.title, url: a.url }); } catch { try { await navigator.clipboard.writeText(a.url); } catch {} }
+}
+
+function render() {
+  const app = document.getElementById("app");
+  if (VIEW) return renderSub(app);
+  const n = DATA ? DATA.items.length : 0;
+  const head = `
+    <div class="top"><div><h1>Tagesbericht</h1><div class="date">${today}${DATA ? ` · ${n} Meldungen` : ""}</div></div></div>
+    ${STYLE === "paper" ? `<div class="rule"></div>` : ""}
+    <div class="tabs"><button class="${TAB === "foryou" ? "on" : ""}" onclick="setTab('foryou')">Für dich</button><button class="${TAB === "topics" ? "on" : ""}" onclick="setTab('topics')">Themen<small>${DATA ? DATA.topics.length : ""}</small></button></div>`;
+  if (!DATA) {
+    app.innerHTML = head + `<div class="skel" style="height:230px"></div><div class="skel" style="height:90px"></div><div class="skel" style="height:90px"></div><p class="empty">Suche frei lesbare Artikel zu deinen Themen …</p>`;
+    return;
+  }
+  if (TAB === "topics") return (app.innerHTML = head + topicsGrid());
+  if (!n) return (app.innerHTML = head + `<p class="empty">Gerade nichts frei Lesbares zu deinen Themen.</p>`);
+  // Für dich: alle Meldungen als gleich große Karten (wie Chrome »Discover«), nichts hervorgehoben.
+  app.innerHTML = head + `<div class="feed">${diversify(DATA.items).map((i) => dcard(i)).join("")}</div>
+    <p class="empty" style="padding:0 24px 50px">Das war alles für heute.<br>Nur Artikel, die komplett und kostenlos lesbar sind.</p>`;
+}
+
+function topicsGrid() {
+  const g = byTopic();
+  const tiles = [...DATA.topics].sort((a, b) => ((g[b] || [])[0]?.at || 0) - ((g[a] || [])[0]?.at || 0)).map((t) => {
+    const list = g[t] || [];
+    const top = list.find((i) => i.image) || list[0];
+    if (!list.length) return `<div class="tt none" onclick="openSheet()"><b>${esc(t)}</b><span>Gerade nichts frei Lesbares</span></div>`;
+    return `<div class="tt" onclick='go({topic:${JSON.stringify(t)}})'>
+      <div class="ph" style="${bgi(top.image)}"><span class="cnt">${list.length}</span></div>
+      <div class="tx"><b>${esc(t)}</b><p class="clamp2">${esc(top.title)}</p><small>${ago(list[0].at)}</small></div></div>`;
+  });
+  return `<div class="gridhead"><span>Neueste zuerst</span><button onclick="openSheet()">Bearbeiten</button></div>
+    <div class="tgrid">${tiles.join("")}<div class="tt add" onclick="openSheet()"><b>+</b><span>Thema hinzufügen</span></div></div>
+    <div style="height:40px"></div>`;
+}
+
+function renderSub(app) {
+  const list = VIEW.all ? DATA.items : (byTopic()[VIEW.topic] || []);
+  const title = VIEW.all ? "Alle Meldungen" : VIEW.topic;
+  const bar = `<div class="subbar"><button class="back" onclick="history.back()">←</button><b>${esc(title)}</b></div>`;
+  const intro = `<div class="subhead"><h1>${esc(title)}</h1><div class="date">${list.length} Meldungen${list[0] ? ` · zuletzt ${ago(list[0].at)}` : ""}</div></div>${STYLE === "paper" ? `<div class="rule"></div>` : ""}`;
+  if (!list.length) return (app.innerHTML = bar + intro + `<p class="empty">Gerade nichts frei Lesbares zu diesem Thema.</p>`);
+  if (true) {
+    return (app.innerHTML = bar + intro + `<div class="feed">${[...list].sort((a, b) => b.at - a.at).map((i) => dcard(i, !!VIEW.all)).join("")}</div><div style="height:30px"></div>`);
+  }
+  if (VIEW.all) {
+    // nach Tagen gruppiert
+    const days = {}; list.forEach((i) => { const k = ago(i.at).includes("Std") || ago(i.at).includes("Min") ? "Heute" : ago(i.at) === "gestern" ? "Gestern" : "Früher"; (days[k] = days[k] || []).push(i); });
+    return (app.innerHTML = bar + intro + Object.entries(days).map(([d, l]) => `<div class="sec">${d}</div><div class="list">${l.map((i) => rowCard(i)).join("")}</div>`).join("") + `<div style="height:50px"></div>`);
+  }
+  const lead = leadOf(list);
+  app.innerHTML = bar + intro + leadCard(lead) + (list.length > 1 ? `<div class="sec">Weitere Meldungen</div><div class="list">${list.filter((i) => i !== lead).map((i) => rowCard(i, false)).join("")}</div>` : "") + `<div style="height:50px"></div>`;
+}
+
+function setTab(t) { TAB = t; try { sessionStorage.setItem("tab", t); } catch {} render(); window.scrollTo({ top: 0 }); }
+function go(v) { VIEW = v; history.pushState({ v }, "", v.all ? "#alle" : `#t=${encodeURIComponent(v.topic)}`); render(); window.scrollTo({ top: 0 }); }
+function routeFromHash() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  if (/^[a-f0-9]{16}$/.test(h)) return openArticle(h, false);
+  document.getElementById("reader").classList.remove("open");
+  VIEW = h === "alle" ? { all: true } : h.startsWith("t=") ? { topic: h.slice(2) } : null;
+  render();
+}
+try { TAB = sessionStorage.getItem("tab") || "foryou"; } catch {}
+
+// ── Leseansicht ──────────────────────────────────────────────────────────
+let FS = 18;
+async function openArticle(id, push = true) {
+  const r = document.getElementById("reader");
+  const item = DATA.items.find((i) => i.id === id) || {};
+  r.innerHTML = `<div class="rbar"><button class="back" onclick="history.back()">←</button><div class="site">${esc(item.site || "")}</div><div class="fs"><button onclick="font(-1)">A-</button><button onclick="font(1)">A+</button></div><div class="prog" id="prog"></div></div><div class="art"><div class="skel" style="height:200px;margin:0"></div></div>`;
+  r.classList.add("open"); r.scrollTop = 0;
+  if (push) history.pushState({ id }, "", `#${id}`);
+  const a = await (await fetch(`/api/news/article/${id}`)).json();
+  const body = a.blocks.map((b) => {
+    if (b.t === "p") return `<p>${esc(b.text)}</p>`;
+    if (b.t === "h") return `<h4>${esc(b.text)}</h4>`;
+    if (b.t === "img") return `<figure><img loading="lazy" src="${img(b.src)}" alt="">${b.caption && b.caption.length > 3 ? `<figcaption>${esc(b.caption)}</figcaption>` : ""}</figure>`;
+    if (b.t === "video" && b.type === "youtube") return NATIVE
+      ? `<div class="vid yt" onclick='NATIVE.openVideo(${JSON.stringify(b.id)}, ${JSON.stringify(a.title)})' style="background-image:url('https://i.ytimg.com/vi/${b.id}/hqdefault.jpg')"><span class="playbtn">▶</span></div>`
+      : `<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/${b.id}" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe></div>`;
+    if (b.t === "video" && b.type === "vimeo") return `<div class="vid"><iframe src="https://player.vimeo.com/video/${b.id}" allowfullscreen></iframe></div>`;
+    if (b.t === "video" && b.type === "file") return `<div class="vid"><video controls playsinline src="${esc(b.src)}"></video></div>`;
+    if (b.t === "quote") return `<blockquote>${esc(b.text)}</blockquote>`;
+    if (b.t === "list") return `<${b.ordered ? "ol" : "ul"}>${b.items.map((x) => `<li>${esc(x)}</li>`).join("")}</${b.ordered ? "ol" : "ul"}>`;
+    return "";
+  }).join("");
+  const idx = DATA.items.findIndex((i) => i.id === id), next = DATA.items[idx + 1];
+  r.querySelector(".art").outerHTML = `<div class="art" style="--fs:${FS}px">
+    <div class="kick" style="margin-top:4px">${esc(item.topic || "")}</div>
+    <h1>${esc(a.title)}</h1>
+    <div class="by">${[a.byline, a.site, ago(item.at), `${a.readMin} min Lesezeit`].filter(Boolean).map(esc).join(" · ")}</div>
+    <div class="body">${body}</div>
+    <div class="end">
+      <div>Ende des Artikels · Quelle: ${esc(a.site)}</div>
+      ${next ? `<div class="next" onclick="openArticle('${next.id}')"><div class="th" style="${bgi(next.image)}"></div><div><div style="font-size:11.5px;font-weight:700;color:var(--kick);text-transform:uppercase;letter-spacing:.8px">Nächste Meldung</div><div class="serif clamp2" style="font-weight:800;font-size:16px;color:var(--ink);margin-top:3px">${esc(next.title)}</div></div></div>` : ""}
+    </div></div>`;
+}
+function font(d) { FS = Math.min(24, Math.max(15, FS + d)); const a = document.querySelector(".art"); if (a) a.style.setProperty("--fs", FS + "px"); }
+document.getElementById("reader").addEventListener("scroll", (e) => {
+  const r = e.target, p = document.getElementById("prog");
+  if (p) p.style.width = `${Math.min(100, (r.scrollTop / Math.max(1, r.scrollHeight - r.clientHeight)) * 100)}%`;
+});
+window.addEventListener("popstate", () => { if (DATA) routeFromHash(); });
+// Android-Zurück: erst Blatt/Artikel/Unterseite schließen, dann den Bereich verlassen.
+window.__hkBack = () => {
+  const sheet = document.getElementById("sheet");
+  if (sheet.classList.contains("open")) { sheet.classList.remove("open"); return true; }
+  if (location.hash) { history.back(); return true; }
+  return false;
+};
+
+// ── Themen ───────────────────────────────────────────────────────────────
+let EDIT = [], FORCE = false;
+function openSheet() { EDIT = [...(DATA?.topics || [])]; drawSheet(); document.getElementById("sheet").classList.add("open"); }
+function drawSheet() {
+  document.getElementById("sheet").innerHTML = `<div class="pan" onclick="event.stopPropagation()">
+    <h3>Deine Themen</h3>
+    <div class="hint">Schreib ein Stichwort, eine Firma, Person oder ein Thema. Der Tagesbericht sucht dazu nur Artikel, die du komplett kostenlos hier lesen kannst.</div>
+    <form onsubmit="event.preventDefault();addTopic(this.q.value);this.q.value=''"><input name="q" placeholder="z. B. OpenAI, Gaming, Politik" autocomplete="off"><button>Hinzufügen</button></form>
+    <div class="mine">${EDIT.map((t, i) => `<span>${esc(t)}<button onclick="EDIT.splice(${i},1);drawSheet()">×</button></span>`).join("")}</div>
+    <div class="hint" style="margin-top:18px">Vorschläge</div>
+    <div class="sug">${SUGGEST.filter((s) => !EDIT.includes(s)).map((s) => `<button onclick='addTopic(${JSON.stringify(s)})'>+ ${esc(s)}</button>`).join("")}</div>
+    <button class="done" onclick="saveTopics()">Fertig</button></div>`;
+}
+function addTopic(t) { t = t.trim(); if (t && !EDIT.includes(t)) EDIT.push(t); drawSheet(); }
+async function saveTopics() {
+  document.getElementById("sheet").classList.remove("open");
+  await fetch(`/api/news/keywords?set=${encodeURIComponent(JSON.stringify(EDIT))}`);
+  DATA = null; FORCE = true; render(); load();
+}
+document.getElementById("sheet").addEventListener("click", () => document.getElementById("sheet").classList.remove("open"));
+
+async function load() {
+  try {
+    const r = await fetch(`/api/news/discover${FORCE ? "?force=1" : ""}`);
+    if (!r.ok) throw new Error(r.status);
+    DATA = await r.json(); FORCE = false;
+  } catch {
+    document.getElementById("app").innerHTML = `<div class="top"><div><h1>Tagesbericht</h1></div></div><p class="empty">Der Hikari-Server ist gerade nicht erreichbar.<br><br><button class="chip" onclick="load()">Nochmal versuchen</button></p>`;
+    return;
+  }
+  routeFromHash();
+}
+render(); load();
+</script>
+</body>
+</html>

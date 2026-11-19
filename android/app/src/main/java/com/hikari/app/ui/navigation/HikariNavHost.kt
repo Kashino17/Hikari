@@ -73,7 +73,6 @@ import com.hikari.app.ui.music.MusicScreen
 import com.hikari.app.ui.music.NowPlayingScreen
 import com.hikari.app.ui.music.PlaylistDetailScreen
 import com.hikari.app.ui.music.RemotePlaylistScreen
-import com.hikari.app.ui.news.NewsScreen
 import com.hikari.app.ui.games.GamesScreen
 import com.hikari.app.ui.russian.RussianBlitzScreen
 import com.hikari.app.ui.russian.RussianHomeScreen
@@ -387,7 +386,10 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             }
             composable("news") {
                 Box(Modifier.fillMaxSize().padding(padding)) {
-                    NewsScreen()
+                    com.hikari.app.ui.news.NewsWebScreen(
+                        onClose = { nav.popBackStack() },
+                        onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
+                    )
                 }
             }
             composable(

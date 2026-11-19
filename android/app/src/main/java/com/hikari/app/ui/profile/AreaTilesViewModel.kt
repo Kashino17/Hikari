@@ -12,7 +12,6 @@ import com.hikari.app.domain.profile.BookReading
 import com.hikari.app.domain.profile.RussianTile
 import com.hikari.app.domain.repo.MangaRepository
 import com.hikari.app.domain.repo.MusicRepository
-import com.hikari.app.domain.repo.NewsRepository
 import com.hikari.app.domain.russian.RuSrs
 import com.hikari.app.domain.russian.RussianCourseRepository
 import com.hikari.app.domain.russian.RussianProgressStore
@@ -106,7 +105,6 @@ data class BrowserTile(
 class AreaTilesViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val settings: SettingsStore,
-    private val newsRepo: NewsRepository,
     private val mangaRepo: MangaRepository,
     private val ebookRepo: com.hikari.app.domain.ebooks.EbookRepository,
     private val musicRepo: MusicRepository,
@@ -233,16 +231,31 @@ class AreaTilesViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
-            runCatching { newsRepo.getBriefing(force = false) }.onSuccess { items ->
-                _news.value = items.firstOrNull()?.let {
-                    NewsTile(
-                        headline = it.title,
-                        count = items.size,
-                        day = AreaTiles.newsDay(it.publishedAt, LocalDate.now()),
-                        slides = items.take(6).map { n -> NewsSlide(n.title, n.imageUrls.firstOrNull(), n.source) },
-                    )
-                }
+            // Gleiche Meldungen wie im Tagesbericht (Discover): nur frei lesbare Volltexte zu Kadirs Stichwörtern.
+            val tile = withContext(Dispatchers.IO) {
+                runCatching {
+                    okHttp.newCall(okhttp3.Request.Builder().url("http://hikari.invalid/news/discover").build()).execute().use { res ->
+                        if (!res.isSuccessful) return@use null
+                        val items = org.json.JSONObject(res.body?.string().orEmpty()).optJSONArray("items") ?: return@use null
+                        if (items.length() == 0) return@use null
+                        val base = settings.backendUrl.first().trimEnd('/')
+                        val slides = (0 until minOf(6, items.length())).map { i ->
+                            val o = items.getJSONObject(i)
+                            val image = o.optString("image").takeIf { it.isNotBlank() && it != "null" }
+                                ?.let { "$base/news/img?u=${android.net.Uri.encode(it)}" }
+                            NewsSlide(o.optString("title"), image, o.optString("site"))
+                        }
+                        val newest = (0 until items.length()).maxOf { items.getJSONObject(it).optLong("at") }
+                        NewsTile(
+                            headline = slides.first().headline,
+                            count = items.length(),
+                            day = AreaTiles.newsDay(java.time.Instant.ofEpochMilli(newest).toString(), LocalDate.now()),
+                            slides = slides,
+                        )
+                    }
+                }.getOrNull()
             }
+            if (tile != null) _news.value = tile
         }
         viewModelScope.launch {
             val base = settings.backendUrl.first()
