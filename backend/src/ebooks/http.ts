@@ -9,6 +9,8 @@ export interface PoliteHttp {
 
 export const USER_AGENT = "Hikari-Ebooks/1.0 (private reader)";
 const DEFAULT_WAIT_MS = 10 * 60 * 1000;
+/** Länger wartet ein Lauf nie am Stück — eine Quelle darf die anderen nicht stundenlang aufhalten. */
+const MAX_WAIT_MS = 15 * 60 * 1000;
 const TRIES = 3;
 
 export function createPoliteHttp(
@@ -47,7 +49,7 @@ export function createPoliteHttp(
           await res.arrayBuffer().catch(() => undefined);
           if (attempt === TRIES) break;
           const ra = Number(res.headers.get("retry-after"));
-          await sleep(Number.isFinite(ra) && ra > 0 ? ra * 1000 : DEFAULT_WAIT_MS);
+          await sleep(Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : DEFAULT_WAIT_MS, MAX_WAIT_MS));
           continue;
         }
         return { status: res.status, body: Buffer.from(await res.arrayBuffer()) };

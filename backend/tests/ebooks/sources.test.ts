@@ -197,6 +197,21 @@ describe("createPoliteHttp", () => {
     expect(sleeps).toContain(2000);
   });
 
+  it("wartet nie länger als 15 Minuten, auch wenn retry-after mehr verlangt", async () => {
+    const sleeps: number[] = [];
+    let n = 0;
+    const http = createPoliteHttp({
+      perSecond: 1000,
+      sleep: async (ms) => void sleeps.push(ms),
+      fetchImpl: async () =>
+        ++n === 1
+          ? new Response("", { status: 503, headers: { "retry-after": "3600" } })
+          : new Response("ok"),
+    });
+    await http.get("https://x.test/a");
+    expect(Math.max(...sleeps)).toBe(15 * 60 * 1000);
+  });
+
   it("gibt nach drei Fehlschlägen auf", async () => {
     const http = createPoliteHttp({
       perSecond: 1000,
