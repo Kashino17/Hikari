@@ -98,7 +98,13 @@ class HikariApp : Application(), Configuration.Provider {
      * und das Auth-Token geht nur ans eigene Backend, nie an fremde Bild-Hosts.
      */
     private fun buildImageLoader(): ImageLoader {
+        // Titelbilder und Porträts aus Manga und Büchern auch ohne Netz.
+        val offlineCovers = com.hikari.app.data.net.OfflineResponseCache(
+            java.io.File(filesDir, "offline_covers"),
+            com.hikari.app.data.net.OfflineResponseCache.IMAGE_PATHS,
+        )
         val client = OkHttpClient.Builder()
+            .addInterceptor(offlineCovers.interceptor())
             .addInterceptor { chain ->
                 val req = chain.request()
                 val token = imageAuthToken

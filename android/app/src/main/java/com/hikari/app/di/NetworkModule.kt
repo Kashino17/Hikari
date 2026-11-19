@@ -40,7 +40,10 @@ object NetworkModule {
     private val settingsScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Provides @Singleton
-    fun provideOkHttpClient(store: SettingsStore): OkHttpClient {
+    fun provideOkHttpClient(
+        store: SettingsStore,
+        @dagger.hilt.android.qualifiers.ApplicationContext context: android.content.Context,
+    ): OkHttpClient {
         settingsScope.launch { store.backendUrl.collect { cachedBackendUrl = it } }
         settingsScope.launch { store.authToken.collect { cachedAuthToken = it } }
         val baseUrlInterceptor = Interceptor { chain ->
@@ -88,9 +91,16 @@ object NetworkModule {
                 chain.proceed(chain.request())
             }
         }
+        // Ohne Netz: die zuletzt geladenen Antworten zu Manga und Büchern — gleiche Ansichten, nur offline.
+        val offline = com.hikari.app.data.net.OfflineResponseCache(
+            java.io.File(context.filesDir, "offline_api"),
+            com.hikari.app.data.net.OfflineResponseCache.API_PATHS,
+            maxBytes = 30L * 1024 * 1024,
+        )
         return OkHttpClient.Builder()
             .addInterceptor(baseUrlInterceptor)
             .addInterceptor(authInterceptor)
+            .addInterceptor(offline.interceptor())
             .addInterceptor(slowCallInterceptor)
             .addInterceptor(logging)
             .connectTimeout(15, TimeUnit.SECONDS)
