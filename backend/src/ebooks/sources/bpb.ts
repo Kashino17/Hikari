@@ -5,6 +5,18 @@ import type { EbookSource } from "./types.js";
 const BASE = "https://www.bpb.de";
 /** Buchseiten: /shop/buecher/<reihe>/<nid>/<slug>/ */
 const BOOK_URL = /^https:\/\/www\.bpb\.de\/shop\/buecher\/[^/]+\/(\d+)\/[^/]+\/$/;
+const EN = /^(the|and|of|for|to|with|on|from|an|a|is|are|between|towards|making)$/i;
+const DE =
+  /^(der|die|das|und|für|mit|von|zu|im|den|dem|des|ein|eine|einer|zum|zur|über|auf|ist|sind|oder)$/i;
+
+/** Englischer Titel? (bpb führt einige englische Bücher, ihre Seiten sind trotzdem „de“.) */
+export function looksEnglish(title: string): boolean {
+  const words = title.split(/[^\p{L}]+/u).filter(Boolean);
+  const en = words.filter((w) => EN.test(w)).length;
+  const de = words.filter((w) => DE.test(w)).length;
+  return en >= 1 && en > de;
+}
+
 const NOT_FULL = /leseprobe|inhaltsverzeichnis|widerruf|flyer|vorwort|einleitung/i;
 
 interface Parsed {
@@ -61,7 +73,11 @@ export const bpbSource: EbookSource = {
     const pages: { url: string; nid: string; lastmod: string | undefined }[] = [];
     for (const page of ["1", "2", "3"]) {
       const r = await ctx.http.get(`${BASE}/sitemap.xml?page=${page}`);
-      if (r.status !== 200) break;
+      if (r.status !== 200) {
+        // Ohne die erste Seite wüssten wir nichts — scheitern statt den Katalog zu leeren.
+        if (page === "1") throw new Error(`bpb: Sitemap antwortet ${r.status}`);
+        break;
+      }
       const xml = r.body.toString("utf8");
       for (const m of xml.matchAll(
         /<url>\s*<loc>([^<]+)<\/loc>(?:\s*<lastmod>([^<]+)<\/lastmod>)?/g,
@@ -72,6 +88,8 @@ export const bpbSource: EbookSource = {
       }
       if (!xml.includes("<url>")) break;
     }
+    if (pages.length === 0)
+      throw new Error("bpb: keine Buchseiten in der Sitemap — Aufbau geändert?");
     const out: RawBook[] = [];
     for (const p of pages) {
       const key = `bpb:${p.nid}`;

@@ -69,6 +69,20 @@ describe("ensureBookFile", () => {
     expect(readdirSync(dir).some((f) => f.endsWith(".epub"))).toBe(true);
   });
 
+  it("PDF mit komprimiertem Seitenbaum: /Count zählt, unbekannt heißt nicht zu kurz", async () => {
+    const objStm = Buffer.from(
+      "%PDF-1.7\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 212 >> endobj\n3 0 obj << /Type /ObjStm /N 5 /First 20 /Length 9 /Filter /FlateDecode >> stream\nxxxxxxxxx\nendstream endobj\n%%EOF",
+    );
+    expect(countPdfPages(objStm)).toBe(212);
+    const unknown = Buffer.from(
+      "%PDF-1.7\n3 0 obj << /Type /ObjStm /N 5 /Filter /FlateDecode >> stream\nxx\nendstream endobj\n%%EOF",
+    );
+    expect(countPdfPages(unknown)).toBeNull();
+    const id = add("objstm", "pdf");
+    const r = await ensureBookFile({ db, ebookDir: dir, http: http(unknown) }, id);
+    expect(r).toMatchObject({ format: "pdf" });
+  });
+
   it("PDF: zu wenige Seiten → versteckt, genug Seiten → ok", async () => {
     expect(countPdfPages(fx("long.pdf"))).toBe(80);
     expect(countPdfPages(fx("short.pdf"))).toBe(3);
@@ -119,9 +133,11 @@ describe("ensureBookFile", () => {
       1,
     ).id;
     const calls: string[] = [];
+    const tries: (number | undefined)[] = [];
     const http: PoliteHttp = {
-      get: async (u) => {
+      get: async (u, o) => {
         calls.push(u);
+        tries.push(o?.tries);
         return u.includes("nabasny")
           ? { status: 404, body: Buffer.from("") }
           : { status: 200, body: fx("long.epub") };
@@ -133,6 +149,8 @@ describe("ensureBookFile", () => {
       "https://gutenberg.nabasny.com/cache/epub/7/pg7-images-3.epub",
       "https://gutenberg.pglaf.org/cache/epub/7/pg7-images-3.epub",
     ]);
+    // Kein langes Warten am ersten Spiegel — der Ausweichspiegel ist die Wiederholung.
+    expect(tries).toEqual([1, 1]);
   });
 
   it("zweiter Aufruf nimmt die vorhandene Datei", async () => {

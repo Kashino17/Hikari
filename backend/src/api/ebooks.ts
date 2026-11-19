@@ -285,7 +285,7 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     const dir = join(deps.coverDir, "ebooks");
     const path = join(dir, `${req.params.id.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 150)}.img`);
     if (!existsSync(path)) {
-      const got = await deps.http.get(r.cover_url).catch(() => null);
+      const got = await deps.http.get(r.cover_url, { tries: 1 }).catch(() => null);
       if (!got || got.status !== 200 || got.body.length < 100)
         return reply.code(404).send({ error: "kein Titelbild" });
       mkdirSync(dir, { recursive: true });

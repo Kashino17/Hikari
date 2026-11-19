@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { type PoliteHttp, createPoliteHttp } from "../../src/ebooks/http.js";
-import { bpbSource } from "../../src/ebooks/sources/bpb.js";
+import { bpbSource, looksEnglish } from "../../src/ebooks/sources/bpb.js";
 import {
   GUTENBERG_POPULARITY_PER_RUN,
   gutenbergSource,
@@ -189,6 +189,27 @@ describe("bpb", () => {
     });
     expect(books[0].description).toMatch(/^Das Online-Portal "Deutschland Archiv"/);
     expect(http.calls.some((u) => u.includes("/themen/"))).toBe(false);
+  });
+});
+
+describe("bpb — Ausfälle und Sprache", () => {
+  it("Sitemap nicht erreichbar → Fehler statt leerer Liste", async () => {
+    const http = fakeHttp([[(u) => u.includes("sitemap.xml"), 503, ""]]);
+    await expect(bpbSource.listCatalog(ctx(http))).rejects.toThrow(/bpb/);
+  });
+  it("Sitemap ohne Bücher → Fehler statt leerer Liste", async () => {
+    const http = fakeHttp([[(u) => u.includes("sitemap.xml"), 200, "<urlset></urlset>"]]);
+    await expect(bpbSource.listCatalog(ctx(http))).rejects.toThrow(/bpb/);
+  });
+  it("englische Titel gehören nicht in den deutschen Katalog", () => {
+    expect(
+      looksEnglish("Civic Education and Democratisation in the Eastern Partnership Countries"),
+    ).toBe(true);
+    expect(
+      looksEnglish("Haben Tiere Rechte? Aspekte und Dimensionen der Mensch-Tier-Beziehung"),
+    ).toBe(false);
+    expect(looksEnglish("Deutschland Archiv 2017")).toBe(false);
+    expect(looksEnglish("The Making of the German Constitution")).toBe(true);
   });
 });
 

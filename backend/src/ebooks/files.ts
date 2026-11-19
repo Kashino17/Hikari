@@ -11,8 +11,20 @@ import { MIN_WORDS } from "./whole-book.js";
 /** Ein PDF unter so vielen Seiten ist kein ganzes Buch (Flyer, Leseprobe, Inhaltsverzeichnis). */
 export const MIN_PDF_PAGES = 40;
 
-export function countPdfPages(pdf: Buffer): number {
-  return (pdf.toString("latin1").match(/\/Type\s*\/Page(?![s\w])/g) ?? []).length;
+/**
+ * Seitenzahl eines PDF: Seiten-Objekte zählen; stecken sie in komprimierten Objektströmen
+ * (PDF 1.5+), gilt der /Count des Seitenbaums. Nichts gefunden → null (unbekannt, nicht „zu kurz“).
+ */
+export function countPdfPages(pdf: Buffer): number | null {
+  const text = pdf.toString("latin1");
+  const pages = (text.match(/\/Type\s*\/Page(?![s\w])/g) ?? []).length;
+  if (pages > 0) return pages;
+  const counts = [
+    ...text.matchAll(
+      /\/Type\s*\/Pages\b[^>]*?\/Count\s+(\d+)|\/Count\s+(\d+)[^>]*?\/Type\s*\/Pages\b/g,
+    ),
+  ].map((m) => Number(m[1] ?? m[2]));
+  return counts.length ? Math.max(...counts) : null;
 }
 
 /** Wörter des Fließtexts eines EPUB (alle (x)html-Dateien, Tags entfernt). */
@@ -82,7 +94,8 @@ async function load(
   let lastError: unknown = null;
   for (const url of [book.file_url, ...gutenbergAlternates(book.file_url)]) {
     try {
-      r = await http.get(url);
+      // Ein Versuch je Spiegel: der nächste Spiegel ist die Wiederholung (sonst Minuten Wartezeit).
+      r = await http.get(url, { tries: 1 });
       if (r.status === 200 && r.body.length > 0) break;
     } catch (err) {
       lastError = err;
@@ -113,7 +126,7 @@ async function load(
     if (words < min) tooShort = `zu kurz (${words} Wörter)`;
   } else {
     const pages = countPdfPages(r.body);
-    if (pages < MIN_PDF_PAGES) tooShort = `zu kurz (${pages} Seiten)`;
+    if (pages !== null && pages < MIN_PDF_PAGES) tooShort = `zu kurz (${pages} Seiten)`;
   }
   db.prepare(
     `INSERT INTO ebook_files (book_id, local_path, bytes, measured_words, fetched_at) VALUES (?, ?, ?, ?, ?)

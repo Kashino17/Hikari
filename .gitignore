@@ -14,3 +14,7 @@ node_modules
 android/.kotlin/
 backend/.env
 backend/.env.*
+
+# Python-Zwischendateien (enthalten lokale Pfade)
+__pycache__/
+*.pyc
