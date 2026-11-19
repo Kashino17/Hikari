@@ -87,19 +87,8 @@ data class GamesTile(
     val earned: Boolean,
     /** Zwei weitere Spiele für den Symbol-Fächer hinter dem Hauptsymbol. */
     val others: List<String>,
-)
-
-/** Eine vom Wächter gerettete WhatsApp-Nachricht. */
-data class WaRescue(
-    val sender: String,
-    val text: String,
-    val deleted: Boolean,
-)
-
-/** WhatsApp-Kachel: die zuletzt geretteten Nachrichten und wie viele es insgesamt sind. */
-data class WhatsAppTile(
-    val count: Int,
-    val latest: List<WaRescue>,
+    /** Schon einmal gespielt — sonst zeigt die Leiste »Spiele« statt eines Spielnamens. */
+    val played: Boolean = true,
 )
 
 /** Browser-Kachel: das zuletzt über den Browser gefundene Video. */
@@ -131,19 +120,6 @@ class AreaTilesViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val gamePrefs = context.getSharedPreferences("hikari_games", Context.MODE_PRIVATE)
-    private val profilePrefs = context.getSharedPreferences("hikari_profile", Context.MODE_PRIVATE)
-
-    /**
-     * Vorschau der neuen Bereichs-Gestaltung (Kadir 20.11.2026: erst ansehen, dann live schalten).
-     * An = neue Reihenfolge + neue untere Kacheln; aus = die Seite wie in v0.89.142.
-     */
-    private val _previewV2 = MutableStateFlow(profilePrefs.getBoolean(KEY_PREVIEW_V2, true))
-    val previewV2: StateFlow<Boolean> = _previewV2.asStateFlow()
-
-    fun setPreviewV2(on: Boolean) {
-        _previewV2.value = on
-        profilePrefs.edit().putBoolean(KEY_PREVIEW_V2, on).apply()
-    }
 
     /** Zählt bei jedem Zurückkehren hoch, damit »heute« und die Serie neu berechnet werden. */
     private val resumed = MutableStateFlow(0)
@@ -177,19 +153,9 @@ class AreaTilesViewModel @Inject constructor(
     private val _news = MutableStateFlow<NewsTile?>(null)
     val news: StateFlow<NewsTile?> = _news.asStateFlow()
 
-    val whatsAppDeleted: StateFlow<Int> =
-        whatsApp.deletedCount.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
-
-    val whatsApp: StateFlow<WhatsAppTile?> = whatsApp.allMessages.map { msgs ->
-        WhatsAppTile(
-            count = msgs.size,
-            latest = msgs.asSequence()
-                .filter { it.text.isNotBlank() }
-                .take(3)
-                .map { m -> WaRescue(m.senderName.ifBlank { m.chatTitle }, (m.originalText ?: m.text).trim(), m.isDeleted) }
-                .toList(),
-        )
-    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    /** Vom Wächter gerettete Nachrichten (gelöscht oder bearbeitet). */
+    val whatsAppRescued: StateFlow<Int> =
+        whatsApp.allMessages.map { it.size }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     private val _games = MutableStateFlow<GamesTile?>(null)
     val games: StateFlow<GamesTile?> = _games.asStateFlow()
@@ -202,9 +168,6 @@ class AreaTilesViewModel @Inject constructor(
     private val _mind = MutableStateFlow<MindTile?>(null)
     val mind: StateFlow<MindTile?> = _mind.asStateFlow()
 
-    private val _lastGame = MutableStateFlow<String?>(null)
-    val lastGame: StateFlow<String?> = _lastGame.asStateFlow()
-
     init {
         refresh()
     }
@@ -212,7 +175,6 @@ class AreaTilesViewModel @Inject constructor(
     /** Beim Öffnen und bei jedem Zurückkehren auf die Seite. */
     fun refresh() {
         resumed.value += 1
-        _lastGame.value = AreaTiles.gameTitle(gamePrefs.getString("last_played_game", null))
         _games.value = run {
             val catalog = com.hikari.app.ui.games.GameCatalog
             val last = gamePrefs.getString("last_played_game", null)?.let { id -> catalog.firstOrNull { it.id == id } }
@@ -224,6 +186,7 @@ class AreaTilesViewModel @Inject constructor(
                 stat = stat.spelledOut,
                 earned = last != null && stat.earned,
                 others = catalog.filter { it.id != main.id }.take(2).map { it.id },
+                played = last != null,
             )
         }
         viewModelScope.launch {
@@ -307,9 +270,5 @@ class AreaTilesViewModel @Inject constructor(
                 books = books,
             )
         }
-    }
-
-    private companion object {
-        const val KEY_PREVIEW_V2 = "areas_preview_v2"
     }
 }

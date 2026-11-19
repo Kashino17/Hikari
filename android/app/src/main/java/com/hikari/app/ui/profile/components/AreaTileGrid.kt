@@ -93,12 +93,14 @@ internal object AreaColors {
 }
 
 internal val TileShape = RoundedCornerShape(22.dp)
-internal val Gap = 10.dp
+internal val Gap = 12.dp
 internal val Pad = 16.dp
 
 /**
- * Die Bereiche als Bild-Mosaik: jede Kachel zeigt ein echtes Bild aus ihrem Bereich (Übung,
- * Plattencover, Titelbilder) oder ist ein kräftiges Plakat in ihrer Farbe.
+ * Die Bereiche, in drei ruhigen Abschnitten (Kadir wählte am 20.11.2026 Entwurf H):
+ * »Heute« (Achtsamkeit, Russisch + Musik, Fitness), »Lesen & Nachrichten« (gleich großes
+ * Paar) und »Apps« (Spiele, WhatsApp, Browser als neutrale Symbol-Leiste). Mehr Luft,
+ * gleiche Abstände und Höhen — vorher wirkte die Seite zusammengequetscht und zu bunt.
  */
 @Composable
 fun AreaTileGrid(
@@ -109,84 +111,10 @@ fun AreaTileGrid(
     val music by vm.music.collectAsState()
     val manga by vm.manga.collectAsState()
     val news by vm.news.collectAsState()
-    val whatsAppDeleted by vm.whatsAppDeleted.collectAsState()
-    val lastGame by vm.lastGame.collectAsState()
-    val fitness by vm.fitness.collectAsState()
-    val mind by vm.mind.collectAsState()
-    val previewV2 by vm.previewV2.collectAsState()
-
-    if (previewV2) {
-        AreaTileGridV2(vm, onOpenSection)
-        return
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(Gap),
-    ) {
-        FitnessAreaTile(fitness) { onOpenSection("fitness") }
-        MindAreaTile(mind) { onOpenSection("mind") }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
-            RussianAreaTile(russian, Modifier.weight(1f)) { onOpenSection("russian") }
-            MusicAreaTile(music, Modifier.weight(1f)) { onOpenSection("music") }
-        }
-
-        ReadAreaTile(manga) { onOpenSection("manga") }
-        NewsAreaTile(news) { onOpenSection("news") }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
-            SmallAreaTile(
-                color = AreaColors.Games,
-                icon = Icons.Outlined.SportsEsports,
-                title = "Spiele",
-                subtitle = lastGame?.let { "$it weiter" } ?: "${AreaTiles.GAME_COUNT} Spiele",
-                modifier = Modifier.weight(1f),
-            ) { onOpenSection("games") }
-            SmallAreaTile(
-                color = AreaColors.Browser,
-                icon = Icons.Outlined.Public,
-                title = "Browser",
-                subtitle = "Videos finden",
-                modifier = Modifier.weight(1f),
-            ) { onOpenSection("browser") }
-            SmallAreaTile(
-                color = AreaColors.WhatsApp,
-                icon = Icons.AutoMirrored.Outlined.Chat,
-                title = "WhatsApp",
-                subtitle = if (whatsAppDeleted > 0) "$whatsAppDeleted gerettet" else "Wächter",
-                modifier = Modifier.weight(1f),
-            ) { onOpenSection("whatsapp") }
-        }
-
-        PreviewSwitch(on = false, onChange = vm::setPreviewV2)
-
-        // Platz für die Musik-Blase unten rechts und die Navigationsleiste.
-        Spacer(Modifier.height(84.dp))
-    }
-}
-
-/**
- * Neue Gestaltung (Vorschau): Achtsamkeit oben, Russisch + Musik, Fitness —
- * darunter Tagesbericht + Lesen als Bild/Plakat-Paar und ein Spiele/WhatsApp/Browser-Block.
- * Rhythmus: breit · Paar · breit · Paar · Block, Bild und Plakat im Schachbrett.
- */
-@Composable
-private fun AreaTileGridV2(
-    vm: AreaTilesViewModel,
-    onOpenSection: (route: String) -> Unit,
-) {
-    val russian by vm.russian.collectAsState()
-    val music by vm.music.collectAsState()
-    val manga by vm.manga.collectAsState()
-    val news by vm.news.collectAsState()
     val fitness by vm.fitness.collectAsState()
     val mind by vm.mind.collectAsState()
     val games by vm.games.collectAsState()
-    val whatsApp by vm.whatsApp.collectAsState()
+    val rescued by vm.whatsAppRescued.collectAsState()
     val browser by vm.browser.collectAsState()
 
     Column(
@@ -196,30 +124,31 @@ private fun AreaTileGridV2(
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(Gap),
     ) {
+        SectionHeader("Heute", first = true)
         MindAreaTile(mind) { onOpenSection("mind") }
-
         Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
             RussianAreaTile(russian, Modifier.weight(1f)) { onOpenSection("russian") }
             MusicAreaTile(music, Modifier.weight(1f)) { onOpenSection("music") }
         }
-
         FitnessAreaTile(fitness) { onOpenSection("fitness") }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
-            NewsPhotoTile(news, Modifier.weight(1f)) { onOpenSection("news") }
-            ReadPosterTile(manga, Modifier.weight(1f)) { onOpenSection("manga") }
+        SectionHeader("Lesen & Nachrichten")
+        Row(Modifier.height(PairHeight), horizontalArrangement = Arrangement.spacedBy(Gap)) {
+            ReadStackTile(manga, Modifier.weight(1f).fillMaxHeight()) { onOpenSection("manga") }
+            NewsPaperTile(news, Modifier.weight(1f).fillMaxHeight()) { onOpenSection("news") }
         }
 
-        Row(Modifier.height(LowerRowHeight), horizontalArrangement = Arrangement.spacedBy(Gap)) {
-            GamesPosterTile(games, Modifier.weight(1f).fillMaxHeight()) { onOpenSection("games") }
-            Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(Gap)) {
-                WhatsAppChatTile(whatsApp, Modifier.fillMaxWidth().weight(1f)) { onOpenSection("whatsapp") }
-                BrowserPhotoTile(browser, Modifier.fillMaxWidth().weight(1f)) { onOpenSection("browser") }
-            }
-        }
+        SectionHeader("Apps")
+        AppsDock(
+            games = games,
+            rescued = rescued,
+            browserCount = browser?.count,
+            onGames = { onOpenSection("games") },
+            onWhatsApp = { onOpenSection("whatsapp") },
+            onBrowser = { onOpenSection("browser") },
+        )
 
-        PreviewSwitch(on = true, onChange = vm::setPreviewV2)
-
+        // Platz für die Musik-Blase unten rechts und die Navigationsleiste.
         Spacer(Modifier.height(84.dp))
     }
 }
@@ -511,149 +440,6 @@ private fun PlayingBars(color: Color) {
                     .fillMaxHeight(level)
                     .clip(RoundedCornerShape(1.dp))
                     .background(color),
-            )
-        }
-    }
-}
-
-// ── Lesen: die Titelbilder randlos nebeneinander ─────────────────────────────
-
-@Composable
-private fun ReadAreaTile(tile: MangaTile?, onClick: () -> Unit) {
-    val covers = tile?.covers.orEmpty().take(3)
-    Tile(if (covers.isEmpty()) AreaColors.Manga else Color.Black, onClick, Modifier.fillMaxWidth().height(176.dp)) {
-        if (covers.isNotEmpty()) {
-            Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                covers.forEachIndexed { i, url ->
-                    val isBook = tile?.kinds?.getOrNull(i) == ReadKind.BOOK
-                    Box(Modifier.weight(1f).fillMaxHeight()) {
-                        if (isBook) {
-                            com.hikari.app.ui.ebooks.BookCover(
-                                title = tile?.titles?.getOrNull(i).orEmpty(), authors = "", category = null, isPdf = false,
-                                imageUrl = url.takeIf { it.startsWith("/api/") },
-                                localPath = url.takeUnless { it.startsWith("/api/") },
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        } else {
-                            AsyncImage(
-                                model = url,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                    }
-                }
-            }
-            BottomScrim(0.95f)
-        } else {
-            Icon(
-                Icons.AutoMirrored.Outlined.MenuBook,
-                contentDescription = null,
-                tint = AreaColors.Ink,
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 24.dp).size(84.dp),
-            )
-        }
-        val fg = if (covers.isNotEmpty()) Color.White else AreaColors.Ink
-        Column(Modifier.fillMaxSize().padding(Pad)) {
-            if (covers.isNotEmpty()) ImageLabel("Lesen") else Text("Lesen", color = fg.copy(alpha = 0.75f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.weight(1f))
-            Text(
-                tile?.title ?: "Bücher und Manga",
-                color = fg,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                tile?.detail ?: "Weiterlesen, wo du warst",
-                color = fg.copy(alpha = 0.72f),
-                fontSize = 12.5.sp,
-                maxLines = 1,
-            )
-            tile?.progress?.let { p ->
-                Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(fg.copy(alpha = 0.2f))) {
-                    Box(Modifier.fillMaxWidth(p.coerceIn(0f, 1f)).fillMaxHeight().background(fg))
-                }
-            }
-        }
-    }
-}
-
-// ── Tagesbericht: volle blaue Fläche ────────────────────────────────────────
-
-@Composable
-private fun NewsAreaTile(tile: NewsTile?, onClick: () -> Unit) {
-    Tile(AreaColors.News, onClick, Modifier.fillMaxWidth()) {
-        Column(Modifier.fillMaxWidth().padding(Pad)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text("Tagesbericht", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                if (tile != null && tile.count > 0) {
-                    Text(
-                        if (tile.count == 1) "1 Meldung" else "${tile.count} Meldungen",
-                        color = AreaColors.News,
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(9.dp))
-                            .background(Color.White)
-                            .padding(horizontal = 8.dp, vertical = 2.dp),
-                    )
-                }
-            }
-            Spacer(Modifier.height(10.dp))
-            Text(
-                tile?.headline ?: "Noch kein Bericht für heute",
-                color = Color.White,
-                fontSize = 17.sp,
-                lineHeight = 21.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
-            )
-            val day = if (tile != null) tile.day else "Kommt jeden Morgen"
-            if (day != null) {
-                Spacer(Modifier.height(6.dp))
-                Text(day, color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp, maxLines = 1)
-            }
-        }
-    }
-}
-
-// ── Kleine Kacheln: volle Farbe, dunkle Schrift ─────────────────────────────
-
-@Composable
-private fun SmallAreaTile(
-    color: Color,
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    modifier: Modifier,
-    onClick: () -> Unit,
-) {
-    Tile(color, onClick, modifier.height(104.dp)) {
-        Column(Modifier.fillMaxSize().padding(12.dp)) {
-            Icon(icon, contentDescription = null, tint = AreaColors.Ink, modifier = Modifier.size(26.dp))
-            Spacer(Modifier.weight(1f))
-            Text(
-                title,
-                color = AreaColors.Ink,
-                fontSize = 14.5.sp,
-                fontWeight = FontWeight.Black,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Text(
-                subtitle,
-                color = AreaColors.Ink.copy(alpha = 0.7f),
-                fontSize = 11.5.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
             )
         }
     }

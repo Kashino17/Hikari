@@ -1,6 +1,5 @@
 package com.hikari.app.ui.profile.components
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -10,14 +9,11 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +30,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
-import androidx.compose.material.icons.outlined.EmojiEvents
-import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,11 +46,16 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -66,189 +65,79 @@ import com.hikari.app.domain.profile.MangaTile
 import com.hikari.app.domain.profile.ReadKind
 import com.hikari.app.ui.games.GameAppIcon
 import com.hikari.app.ui.games.GameCatalog
-import com.hikari.app.ui.profile.BrowserTile
 import com.hikari.app.ui.profile.GamesTile
 import com.hikari.app.ui.profile.NewsTile
-import com.hikari.app.ui.profile.WhatsAppTile
 import kotlinx.coroutines.delay
 
-/** Höhe der Paar-Reihen — gleich hoch wie Russisch/Musik, damit das Raster ruhig bleibt. */
-internal val LowerRowHeight = 204.dp
+/** Höhe des Paars »Lesen & Nachrichten«. */
+internal val PairHeight = 250.dp
 
-private const val NEWS_SLIDE_MS = 5200
-private const val WA_SLIDE_MS = 4600
+private const val NEWS_SLIDE_MS = 5200L
+private val Paper = Color(0xFFF4F1EA)
+private val PaperInk = Color(0xFF111111)
+private val PaperMuted = Color(0xFF666666)
+private val ReadNight = Color(0xFF18122B)
+private val DockSurface = Color(0xFF17171A)
 
-// ── Tagesbericht: Pressefotos im Wechsel, Story-Balken oben ─────────────────
+// ── Abschnitts-Überschrift ──────────────────────────────────────────────────
 
 @Composable
-internal fun NewsPhotoTile(tile: NewsTile?, modifier: Modifier, onClick: () -> Unit) {
-    val slides = tile?.slides.orEmpty().let { all -> all.filter { it.imageUrl != null }.ifEmpty { all } }
-    val withPhotos = slides.any { it.imageUrl != null }
-
-    if (tile == null || !withPhotos) {
-        // Kein Foto: kräftiges blaues Plakat mit der Schlagzeile.
-        Tile(AreaColors.News, onClick, modifier.height(LowerRowHeight)) {
-            Column(Modifier.fillMaxSize().padding(Pad)) {
-                Text("Tagesbericht", color = Color.White.copy(alpha = 0.8f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    tile?.headline ?: "Kommt jeden Morgen",
-                    color = Color.White,
-                    fontSize = 17.sp,
-                    lineHeight = 21.sp,
-                    fontWeight = FontWeight.Black,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(Modifier.weight(1f))
-                tile?.day?.let { Text(it, color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp) }
-            }
-        }
-        return
-    }
-
-    var index by remember(slides) { mutableIntStateOf(0) }
-    val progress = remember { Animatable(0f) }
-    LaunchedEffect(slides, index) {
-        progress.snapTo(0f)
-        progress.animateTo(1f, tween(NEWS_SLIDE_MS, easing = LinearEasing))
-        index = (index + 1) % slides.size
-    }
-
-    Tile(Color.Black, onClick, modifier.height(LowerRowHeight)) {
-        Crossfade(targetState = index, animationSpec = tween(700), label = "news-slide") { i ->
-            val slide = slides[i]
-            Box(Modifier.fillMaxSize()) {
-                KenBurnsImage(slide.imageUrl, key = i, durationMs = NEWS_SLIDE_MS + 900)
-                BottomScrim(0.96f)
-                Column(Modifier.fillMaxSize().padding(Pad).padding(top = 34.dp)) {
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        slide.headline,
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        lineHeight = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        maxLines = 4,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        listOfNotNull(slide.source.ifBlank { null }, tile.day).joinToString(" · "),
-                        color = Color.White.copy(alpha = 0.7f),
-                        fontSize = 11.5.sp,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-        }
-        // Story-Balken: welche Meldung gerade läuft — wie bei Instagram.
-        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                slides.indices.forEach { i ->
-                    val fill = when {
-                        i < index -> 1f
-                        i == index -> progress.value
-                        else -> 0f
-                    }
-                    Box(
-                        Modifier.weight(1f).height(2.5.dp).clip(RoundedCornerShape(2.dp))
-                            .background(Color.White.copy(alpha = 0.32f)),
-                    ) {
-                        Box(Modifier.fillMaxWidth(fill).fillMaxHeight().background(Color.White))
-                    }
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                ImageLabel("Tagesbericht")
-                if (tile.count > 0) {
-                    Spacer(Modifier.width(6.dp))
-                    Text(
-                        "${tile.count}",
-                        color = Color.White,
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Black,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(AreaColors.News)
-                            .padding(horizontal = 7.dp, vertical = 3.dp),
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** Bild, das langsam heranfährt — die Kachel lebt, ohne zu zappeln. */
-@Composable
-private fun KenBurnsImage(model: Any?, key: Any, durationMs: Int, from: Float = 1f, to: Float = 1.12f) {
-    val zoom = remember(key) { Animatable(from) }
-    LaunchedEffect(key) { zoom.animateTo(to, tween(durationMs, easing = LinearEasing)) }
-    AsyncImage(
-        model = model,
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = Modifier.fillMaxSize().graphicsLayer {
-            scaleX = zoom.value
-            scaleY = zoom.value
-        },
+internal fun SectionHeader(title: String, first: Boolean = false) {
+    Text(
+        title,
+        color = Color.White,
+        fontSize = 17.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(top = if (first) 2.dp else 14.dp, start = 2.dp),
     )
 }
 
-// ── Lesen: violettes Plakat, das Buch liegt schräg darauf ───────────────────
+// ── Lesen: Titelbilder als Stapel auf dunklem Violett ──────────────────────
 
 @Composable
-internal fun ReadPosterTile(tile: MangaTile?, modifier: Modifier, onClick: () -> Unit) {
-    val ink = AreaColors.Ink
-    val color = AreaColors.Manga
-    val covers = tile?.covers.orEmpty()
-    Tile(color, onClick, modifier.height(LowerRowHeight)) {
-        if (covers.isNotEmpty()) {
-            // Hinteres Buch leicht nach rechts gekippt, vorderes nach links — wie hingelegt.
-            covers.getOrNull(1)?.let { url ->
-                CoverCard(
-                    url = url, kind = tile?.kinds?.getOrNull(1), title = tile?.titles?.getOrNull(1).orEmpty(),
-                    width = 78.dp, height = 114.dp, angle = 11f,
-                    modifier = Modifier.align(Alignment.BottomEnd).offset(x = 24.dp, y = 2.dp),
-                )
+internal fun ReadStackTile(tile: MangaTile?, modifier: Modifier, onClick: () -> Unit) {
+    val covers = tile?.covers.orEmpty().take(3)
+    Tile(ReadNight, onClick, modifier) {
+        Column(Modifier.fillMaxSize().padding(14.dp)) {
+            Text("Lesen", color = AreaColors.Manga, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Box(Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp, bottom = 8.dp)) {
+                if (covers.isEmpty()) {
+                    Icon(
+                        Icons.AutoMirrored.Outlined.MenuBook,
+                        contentDescription = null,
+                        tint = AreaColors.Manga,
+                        modifier = Modifier.align(Alignment.Center).size(72.dp),
+                    )
+                }
+                // Hinterste zuerst zeichnen, das zuletzt Gelesene liegt oben.
+                val angles = listOf(-4f, 5f, 12f)
+                for (k in covers.indices.reversed()) {
+                    CoverCard(
+                        url = covers[k],
+                        kind = tile?.kinds?.getOrNull(k),
+                        title = tile?.titles?.getOrNull(k).orEmpty(),
+                        width = 92.dp,
+                        height = 134.dp,
+                        angle = angles[k],
+                        modifier = Modifier.offset(x = (k * 24).dp, y = (k * 6 + 4).dp),
+                    )
+                }
             }
-            CoverCard(
-                url = covers.first(), kind = tile?.kinds?.firstOrNull(), title = tile?.titles?.firstOrNull().orEmpty(),
-                width = 88.dp, height = 128.dp, angle = -8f,
-                modifier = Modifier.align(Alignment.BottomEnd).offset(x = (-14).dp, y = 22.dp),
-            )
-        } else {
-            Icon(
-                Icons.AutoMirrored.Outlined.MenuBook,
-                contentDescription = null,
-                tint = ink,
-                modifier = Modifier.align(Alignment.BottomEnd).offset(x = 14.dp, y = 14.dp).size(120.dp),
-            )
-        }
-        Column(Modifier.fillMaxSize().padding(Pad)) {
-            Text("Lesen", color = ink.copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(6.dp))
             Text(
                 tile?.title ?: "Bücher und Manga",
-                color = ink,
-                fontSize = 19.sp,
-                lineHeight = 21.sp,
+                color = Color.White,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Black,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 tile?.detail ?: "Weiterlesen, wo du warst",
-                color = ink.copy(alpha = 0.72f),
-                fontSize = 12.5.sp,
-                maxLines = 2,
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 11.5.sp,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp, end = 64.dp),
             )
-            Spacer(Modifier.weight(1f))
-            ProgressPlay(progress = tile?.progress, fill = ink, glyph = color, track = ink.copy(alpha = 0.18f))
         }
     }
 }
@@ -269,7 +158,7 @@ private fun CoverCard(
         modifier
             .rotate(angle)
             .size(width, height)
-            .shadow(14.dp, shape)
+            .shadow(12.dp, shape)
             .clip(shape)
             .background(Color(0xFF1B1B1F)),
     ) {
@@ -283,254 +172,257 @@ private fun CoverCard(
         } else {
             AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         }
-        // Buchrücken: schmaler dunkler Streifen links.
-        Box(Modifier.width(4.dp).fillMaxHeight().background(Color.Black.copy(alpha = 0.28f)))
     }
 }
 
-/** Start-Knopf; mit Fortschritt als Ring drumherum. */
+// ── Tagesbericht: Zeitungsseite, oben Pressefotos im Wechsel ────────────────
+
 @Composable
-private fun ProgressPlay(progress: Float?, fill: Color, glyph: Color, track: Color) {
-    if (progress == null) {
-        PlayDot(done = false, fill = fill, ink = glyph)
-        return
-    }
-    Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.fillMaxSize()) {
-            val stroke = 3.dp.toPx()
-            val inset = stroke / 2
-            val arcSize = Size(size.width - stroke, size.height - stroke)
-            drawArc(track, 0f, 360f, false, topLeft = Offset(inset, inset), size = arcSize, style = Stroke(stroke))
-            drawArc(
-                fill, -90f, 360f * progress.coerceIn(0.02f, 1f), false,
-                topLeft = Offset(inset, inset), size = arcSize, style = Stroke(stroke, cap = StrokeCap.Round),
-            )
+internal fun NewsPaperTile(tile: NewsTile?, modifier: Modifier, onClick: () -> Unit) {
+    val slides = tile?.slides.orEmpty().let { all -> all.filter { it.imageUrl != null }.ifEmpty { all } }
+    var index by remember(slides) { mutableIntStateOf(0) }
+    LaunchedEffect(slides) {
+        if (slides.size < 2) return@LaunchedEffect
+        while (true) {
+            delay(NEWS_SLIDE_MS)
+            index = (index + 1) % slides.size
         }
-        PlayDot(done = false, fill = fill, ink = glyph, modifier = Modifier.size(42.dp))
+    }
+    Tile(Paper, onClick, modifier) {
+        Column(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxWidth().weight(0.44f).background(Color.Black)) {
+                Crossfade(targetState = index, animationSpec = tween(700), label = "news-photo") { i ->
+                    val url = slides.getOrNull(i)?.imageUrl
+                    if (url != null) KenBurnsImage(url, key = i, durationMs = NEWS_SLIDE_MS.toInt() + 900)
+                    else Box(Modifier.fillMaxSize().background(AreaColors.News))
+                }
+            }
+            Column(Modifier.fillMaxWidth().weight(0.56f).padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 12.dp)) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text(
+                        "Tagesbericht",
+                        color = PaperInk,
+                        fontSize = 13.5.sp,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.ExtraBold,
+                    )
+                    Spacer(Modifier.weight(1f))
+                    if ((tile?.count ?: 0) > 0) {
+                        Text("${tile?.count}", color = PaperMuted, fontSize = 10.5.sp)
+                    }
+                }
+                Box(Modifier.padding(top = 4.dp).fillMaxWidth().height(1.5.dp).background(PaperInk))
+                Crossfade(
+                    targetState = index,
+                    animationSpec = tween(700),
+                    label = "news-text",
+                    modifier = Modifier.weight(1f).padding(top = 6.dp),
+                ) { i ->
+                    val s = slides.getOrNull(i)
+                    Column(Modifier.fillMaxSize()) {
+                        Text(
+                            s?.headline ?: tile?.headline ?: "Kommt jeden Morgen",
+                            color = PaperInk,
+                            fontSize = 14.sp,
+                            lineHeight = 17.sp,
+                            fontFamily = FontFamily.Serif,
+                            fontWeight = FontWeight.ExtraBold,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Spacer(Modifier.weight(1f))
+                        val line = listOfNotNull(s?.source?.ifBlank { null }, tile?.day).joinToString(" · ")
+                        if (line.isNotEmpty()) {
+                            Text(line, color = PaperMuted, fontSize = 10.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
-// ── Spiele: Plakat in der Farbe des letzten Spiels, Symbole als Fächer ──────
+/** Bild, das langsam heranfährt — die Kachel lebt, ohne zu zappeln. */
+@Composable
+private fun KenBurnsImage(model: Any?, key: Any, durationMs: Int) {
+    val zoom = remember(key) { Animatable(1f) }
+    LaunchedEffect(key) { zoom.animateTo(1.12f, tween(durationMs, easing = LinearEasing)) }
+    AsyncImage(
+        model = model,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier.fillMaxSize().graphicsLayer {
+            scaleX = zoom.value
+            scaleY = zoom.value
+        },
+    )
+}
+
+// ── Apps: drei gleiche Symbole auf ruhiger Fläche ───────────────────────────
 
 @Composable
-internal fun GamesPosterTile(tile: GamesTile?, modifier: Modifier, onClick: () -> Unit) {
-    val ink = AreaColors.Ink
-    val info = GameCatalog.firstOrNull { it.id == tile?.id }
-    val color = info?.color ?: AreaColors.Games
-    val float = rememberInfiniteTransition(label = "game-float")
-    val bob by float.animateFloat(
-        initialValue = -3f,
-        targetValue = 3f,
-        animationSpec = infiniteRepeatable(tween(2400, easing = FastOutSlowInEasing), RepeatMode.Reverse),
+internal fun AppsDock(
+    games: GamesTile?,
+    rescued: Int,
+    browserCount: Int?,
+    onGames: () -> Unit,
+    onWhatsApp: () -> Unit,
+    onBrowser: () -> Unit,
+) {
+    val bob = rememberInfiniteTransition(label = "dock-bob").animateFloat(
+        initialValue = -2f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(tween(2600, easing = FastOutSlowInEasing), RepeatMode.Reverse),
         label = "bob",
     )
-    Tile(color, onClick, modifier) {
-        tile?.others?.getOrNull(1)?.let {
-            GameAppIcon(it, 58.dp, Modifier.align(Alignment.BottomEnd).offset(x = 4.dp, y = (-74).dp).rotate(16f).shadow(8.dp, RoundedCornerShape(14.dp)))
-        }
-        tile?.others?.getOrNull(0)?.let {
-            GameAppIcon(it, 62.dp, Modifier.align(Alignment.BottomEnd).offset(x = (-76).dp, y = (-4).dp).rotate(-14f).shadow(8.dp, RoundedCornerShape(15.dp)))
-        }
-        GameAppIcon(
-            tile?.id ?: "blockblast",
-            92.dp,
-            Modifier
-                .align(Alignment.BottomEnd)
-                .offset(x = (-8).dp, y = (-10).dp)
-                .graphicsLayer {
-                    translationY = bob.dp.toPx()
-                    rotationZ = -6f + bob * 0.5f
-                }
-                .shadow(16.dp, RoundedCornerShape(22.dp)),
-        )
-        Column(Modifier.fillMaxSize().padding(Pad)) {
-            Text("Spiele", color = ink.copy(alpha = 0.7f), fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(6.dp))
-            Text(
-                tile?.title ?: "${GameCatalog.size} Spiele",
-                color = ink,
-                fontSize = 21.sp,
-                lineHeight = 23.sp,
-                fontWeight = FontWeight.Black,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-            Spacer(Modifier.height(3.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (tile?.earned == true) {
-                    Icon(Icons.Outlined.EmojiEvents, contentDescription = null, tint = ink, modifier = Modifier.size(15.dp))
-                    Spacer(Modifier.width(4.dp))
-                }
-                Text(
-                    tile?.stat ?: "Weiterspielen",
-                    color = ink.copy(alpha = if (tile?.earned == true) 0.9f else 0.72f),
-                    fontSize = 12.5.sp,
-                    fontWeight = if (tile?.earned == true) FontWeight.Bold else FontWeight.Normal,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            PlayDot(done = false, fill = ink, ink = color)
-        }
-    }
-}
-
-// ── WhatsApp: grüne Fläche, die zuletzt gerettete Nachricht als Sprechblase ─
-
-private val WaGreen = Color(0xFF25D366)
-private val WaDark = Color(0xFF075E54)
-
-@Composable
-internal fun WhatsAppChatTile(tile: WhatsAppTile?, modifier: Modifier, onClick: () -> Unit) {
-    val ink = AreaColors.Ink
-    val msgs = tile?.latest.orEmpty()
-    var index by remember(msgs) { mutableIntStateOf(0) }
-    LaunchedEffect(msgs) {
-        if (msgs.size < 2) return@LaunchedEffect
-        while (true) {
-            delay(WA_SLIDE_MS.toLong())
-            index = (index + 1) % msgs.size
-        }
-    }
-    Tile(WaGreen, onClick, modifier) {
-        Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp)) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("WhatsApp", color = ink.copy(alpha = 0.75f), fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.weight(1f))
-                Text(
-                    if ((tile?.count ?: 0) > 0) "${tile?.count} gerettet" else "Wächter an",
-                    color = ink,
-                    fontSize = 11.5.sp,
-                    fontWeight = FontWeight.Black,
-                )
-            }
-            Spacer(Modifier.weight(1f))
-            AnimatedContent(
-                targetState = index,
-                transitionSpec = {
-                    (slideInVertically(tween(420)) { it / 2 } + fadeIn(tween(420))) togetherWith
-                        (slideOutVertically(tween(320)) { -it / 2 } + fadeOut(tween(260)))
-                },
-                label = "wa-bubble",
-            ) { i ->
-                val m = msgs.getOrNull(i)
-                Bubble(
-                    sender = m?.sender ?: "Wächter",
-                    text = m?.text ?: "Gelöschte Nachrichten landen hier",
-                    tag = when {
-                        m == null -> null
-                        m.deleted -> "gelöscht"
-                        else -> "bearbeitet"
-                    },
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun Bubble(sender: String, text: String, tag: String?) {
-    Column(
+    Row(
         Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 3.dp, topEnd = 12.dp, bottomEnd = 12.dp, bottomStart = 12.dp))
-            .background(Color.White)
-            .padding(horizontal = 9.dp, vertical = 5.dp),
+            .clip(TileShape)
+            .background(DockSurface)
+            .border(1.dp, Color.White.copy(alpha = 0.06f), TileShape)
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                sender,
-                color = WaDark,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f, fill = false),
+        val played = games?.played == true
+        DockApp(
+            name = if (played) games!!.title else "Spiele",
+            sub = if (played) games!!.stat else "${GameCatalog.size} Spiele",
+            modifier = Modifier.weight(1f),
+            onClick = onGames,
+        ) {
+            GameAppIcon(
+                games?.id ?: GameCatalog.first().id,
+                DockIcon,
+                Modifier.graphicsLayer {
+                    translationY = bob.value.dp.toPx()
+                    rotationZ = bob.value
+                },
             )
-            if (tag != null) {
-                Spacer(Modifier.width(6.dp))
-                Text(tag, color = Color(0xFF8696A0), fontSize = 10.sp, maxLines = 1)
-            }
         }
+        DockDivider()
+        DockApp(
+            name = "WhatsApp",
+            sub = if (rescued > 0) "$rescued gerettet" else "Wächter an",
+            modifier = Modifier.weight(1f),
+            onClick = onWhatsApp,
+        ) { WhatsAppLogo(DockIcon) }
+        DockDivider()
+        DockApp(
+            name = "Browser",
+            sub = browserCount?.takeIf { it > 0 }?.let { "$it gefunden" } ?: "Videos finden",
+            modifier = Modifier.weight(1f),
+            onClick = onBrowser,
+        ) { HikariBrowserIcon(DockIcon) }
+    }
+}
+
+private val DockIcon = 58.dp
+
+@Composable
+private fun DockDivider() {
+    Box(Modifier.width(1.dp).height(70.dp).background(Color.White.copy(alpha = 0.06f)))
+}
+
+@Composable
+private fun DockApp(
+    name: String,
+    sub: String,
+    modifier: Modifier,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+) {
+    Column(
+        modifier
+            .clickable(remember { MutableInteractionSource() }, indication = null, onClick = onClick)
+            .padding(horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        icon()
+        Spacer(Modifier.height(10.dp))
         Text(
-            text,
-            color = AreaColors.Ink,
-            fontSize = 12.5.sp,
-            lineHeight = 15.sp,
+            name,
+            color = Color.White,
+            fontSize = 13.5.sp,
+            fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            sub,
+            color = Color.White.copy(alpha = 0.5f),
+            fontSize = 11.5.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 2.dp),
         )
     }
 }
 
-// ── Browser: Vorschaubild des zuletzt gefundenen Videos ─────────────────────
+// ── Gezeichnete Symbole ─────────────────────────────────────────────────────
 
+private val WaGreen = Color(0xFF25D366)
+private val WaBubble = PathParser().parsePathString(
+    "M24 6.5c-9.7 0-17.5 7.8-17.5 17.4 0 3.3.9 6.5 2.6 9.2L6.5 41.5l8.6-2.5c2.6 1.5 5.6 2.3 8.9 2.3 " +
+        "9.7 0 17.5-7.8 17.5-17.4S33.7 6.5 24 6.5z",
+).toPath()
+private val WaPhone = PathParser().parsePathString(
+    "M17.6 15.2c-.5-1.1-1-1.1-1.5-1.1h-1.3c-.4 0-1.2.2-1.8.8-.6.7-2.3 2.3-2.3 5.6s2.4 6.5 2.7 6.9" +
+        "c.3.5 4.6 7.4 11.4 10.1 5.7 2.2 6.8 1.8 8.1 1.7 1.2-.1 4-1.6 4.5-3.2.6-1.6.6-2.9.4-3.2" +
+        "-.2-.3-.6-.5-1.3-.8l-4.3-2.1c-.6-.2-1-.3-1.4.3-.4.6-1.6 2.1-2 2.5-.4.4-.7.5-1.4.2" +
+        "-.6-.3-2.7-1-5.1-3.2-1.9-1.7-3.2-3.8-3.5-4.4-.4-.6 0-1 .3-1.3l1-1.1c.3-.4.4-.6.6-1.1" +
+        ".2-.4.1-.8 0-1.1l-1.9-4.5z",
+).toPath()
+
+/** WhatsApp-Logo: weiße Sprechblase mit Hörer auf Grün, im App-Symbol-Rahmen. */
 @Composable
-internal fun BrowserPhotoTile(tile: BrowserTile?, modifier: Modifier, onClick: () -> Unit) {
-    val thumb = tile?.thumbnailUrl
-    if (thumb == null) {
-        Tile(AreaColors.Browser, onClick, modifier) {
-            Icon(
-                Icons.Outlined.Public,
-                contentDescription = null,
-                tint = AreaColors.Ink,
-                modifier = Modifier.align(Alignment.CenterEnd).offset(x = 16.dp).size(96.dp),
-            )
-            Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp)) {
-                Text("Browser", color = AreaColors.Ink.copy(alpha = 0.75f), fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.weight(1f))
-                Text("Videos finden", color = AreaColors.Ink, fontSize = 14.sp, fontWeight = FontWeight.Black)
+private fun WhatsAppLogo(size: Dp) {
+    Box(
+        Modifier.size(size).shadow(8.dp, RoundedCornerShape(size * 0.24f)).clip(RoundedCornerShape(size * 0.24f)).background(WaGreen),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(size * 0.74f)) {
+            val k = this.size.minDimension / 48f
+            scale(k, k, pivot = Offset.Zero) {
+                drawPath(WaBubble, Color.White, style = Stroke(width = 3.2f, join = StrokeJoin.Round))
+                translate(4.6f, 4.4f) {
+                    scale(0.82f, 0.82f, pivot = Offset.Zero) { drawPath(WaPhone, Color.White) }
+                }
             }
-        }
-        return
-    }
-    Tile(Color.Black, onClick, modifier) {
-        KenBurnsImage(thumb, key = thumb, durationMs = 14_000, to = 1.18f)
-        BottomScrim(0.9f)
-        Column(Modifier.fillMaxSize().padding(horizontal = 12.dp, vertical = 10.dp)) {
-            ImageLabel("Browser")
-            Spacer(Modifier.weight(1f))
-            Text(
-                tile.title,
-                color = Color.White,
-                fontSize = 13.sp,
-                lineHeight = 15.sp,
-                fontWeight = FontWeight.Bold,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
         }
     }
 }
 
-// ── Vorschau-Schalter: neu ↔ bisher, bis Kadir die neue Gestaltung freigibt ─
+private val Sparkle = PathParser().parsePathString(
+    "M38 5l1.6 4.4L44 11l-4.4 1.6L38 17l-1.6-4.4L32 11l4.4-1.6z",
+).toPath()
 
+/** Hikari-Browser: amberfarbene Weltkugel mit Funkeln auf fast Schwarz. */
 @Composable
-internal fun PreviewSwitch(on: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(top = 6.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically,
+private fun HikariBrowserIcon(size: Dp) {
+    val bg = Color(0xFF14141A)
+    Box(
+        Modifier
+            .size(size)
+            .shadow(8.dp, RoundedCornerShape(size * 0.24f))
+            .clip(RoundedCornerShape(size * 0.24f))
+            .background(bg)
+            .border(1.dp, Color.White.copy(alpha = 0.11f), RoundedCornerShape(size * 0.24f)),
+        contentAlignment = Alignment.Center,
     ) {
-        Text("Vorschau", color = Color.White.copy(alpha = 0.45f), fontSize = 12.sp)
-        Spacer(Modifier.width(10.dp))
-        Row(
-            Modifier.clip(RoundedCornerShape(50)).background(Color.White.copy(alpha = 0.08f)).padding(3.dp),
-        ) {
-            listOf(true to "Neu", false to "Bisher").forEach { (value, label) ->
-                val selected = value == on
-                Text(
-                    label,
-                    color = if (selected) AreaColors.Ink else Color.White.copy(alpha = 0.7f),
-                    fontSize = 12.5.sp,
-                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(if (selected) Color.White else Color.Transparent)
-                        .clickable { onChange(value) }
-                        .padding(horizontal = 14.dp, vertical = 5.dp),
-                )
+        Canvas(Modifier.size(size * 0.78f)) {
+            val k = this.size.minDimension / 48f
+            scale(k, k, pivot = Offset.Zero) {
+                val c = Offset(22f, 26f)
+                drawCircle(Color(0xFFFBBF24), radius = 14f, center = c)
+                val line = Stroke(width = 2.4f)
+                drawOval(bg, topLeft = Offset(16f, 12f), size = Size(12f, 28f), style = line)
+                drawLine(bg, Offset(8f, 26f), Offset(36f, 26f), strokeWidth = 2.4f)
+                drawLine(bg, Offset(10.5f, 19f), Offset(33.5f, 19f), strokeWidth = 2.4f)
+                drawLine(bg, Offset(10.5f, 33f), Offset(33.5f, 33f), strokeWidth = 2.4f)
+                drawPath(Sparkle, Color(0xFFFDE68A))
             }
         }
     }
