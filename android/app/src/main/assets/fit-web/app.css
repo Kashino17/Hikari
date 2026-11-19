@@ -92,9 +92,9 @@ html.full,html.full body{background:var(--bg)}
 .chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:9px;background:rgba(255,255,255,.06);color:var(--text);font-size:13.5px;white-space:nowrap;border:1px solid transparent}
 .chip.on{background:rgba(var(--c),.16);color:rgb(var(--c));border-color:rgba(var(--c),.3)}
 .chip .ms{font-size:17px}
-.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 16px;margin:0 -16px}
+.chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:0 16px;margin-left:-16px;margin-right:-16px}
 .chips::-webkit-scrollbar{display:none}
-.chips.wrap{flex-wrap:wrap;overflow:visible;padding:0;margin:0}
+.chips.wrap{flex-wrap:wrap;overflow:visible;padding:0;margin-left:0;margin-right:0}
 .tag{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 8px;border-radius:6px;background:rgba(var(--c),.14);color:rgb(var(--c));font-weight:500}
 .tag.plain{background:rgba(255,255,255,.07);color:var(--muted)}
 
@@ -539,3 +539,11 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:none}
 .pick.main{background:rgb(var(--food));border-color:transparent;color:var(--ink)}
 .pick.main .ms{color:var(--ink)}
 .pick.main span{color:rgba(20,20,22,.7)}
+
+/* Aktionsleiste im Tagebuch (ersetzt die schwebenden Knöpfe) */
+.actionBar{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+.actionBar .act{height:56px;border-radius:12px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:14.5px;color:var(--text)}
+.actionBar .act .ms{font-size:22px;color:rgb(var(--food))}
+.actionBar .act.main{background:rgb(var(--food));border-color:transparent;color:var(--ink)}
+.actionBar .act.main .ms{color:var(--ink)}
+.actionBar .act:active{transform:scale(.98)}

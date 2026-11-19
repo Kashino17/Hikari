@@ -28,7 +28,7 @@ export function Food() {
       </div>
       <div style="height:90px" />
     </div>
-    ${tab === 'tagebuch' && isToday && html`<button class="fab2" onClick=${() => nav(`barcode/${slotNow()}`)} aria-label="Barcode scannen"><${Icon} n="barcode_scanner" /></button><button class="fab" onClick=${() => nav(`foto/${slotNow()}`)}><${Icon} n="photo_camera" />Foto</button>`}
+
   </div>`;
 }
 
@@ -57,6 +57,11 @@ function Diary({ day }) {
       </div>
       <div class="macros mt16">${mac.map(([key, l, goal]) => html`<div class="macro"><div class="l"><span>${l}</span></div><div class="v num">${fmtNum(d.totals[key] ?? 0)}<span class="muted" style="font-weight:400"> / ${goal} g</span></div><${Bar} value=${d.totals[key] ?? 0} max=${goal} /></div>`)}</div>
     </div>
+    ${day === todayStr() && html`<div class="actionBar mt12">
+      <button class="act main" onClick=${() => nav(`foto/${slotNow()}`)}><${Icon} n="photo_camera" /><span>Foto</span></button>
+      <button class="act" onClick=${() => nav(`barcode/${slotNow()}`)}><${Icon} n="barcode_scanner" /><span>Barcode</span></button>
+      <button class="act" onClick=${() => nav(`mahlzeit/neu/${slotNow()}`)}><${Icon} n="edit_note" /><span>Eintragen</span></button>
+    </div>`}
 
     ${SLOTS.map((slot) => {
       const es = d.entries.filter((e) => e.meal === slot);
