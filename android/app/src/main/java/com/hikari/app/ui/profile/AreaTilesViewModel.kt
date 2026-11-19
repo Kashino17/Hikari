@@ -145,7 +145,10 @@ class AreaTilesViewModel @Inject constructor(
                     val st = states[b.id] ?: return@mapNotNull null
                     val pct = st.position?.value?.percent ?: return@mapNotNull null
                     val at = st.lastOpenedAt ?: return@mapNotNull null
-                    if (st.finished?.value == true) null else BookReading(b.title.substringBefore(": "), b.coverPath, pct, at)
+                    // Titelbild auf dem Handy nur, wenn die Datei wirklich da ist — sonst vom Mac.
+                    val cover = b.coverPath?.takeIf { java.io.File(it).length() > 100 }
+                        ?: "/api/ebooks/${android.net.Uri.encode(b.id)}/cover?v=2"
+                    if (st.finished?.value == true) null else BookReading(b.title.substringBefore(": "), cover, pct, at)
                 }
             }.getOrDefault(emptyList())
             // Nichts erreichbar und kein Buch: stehen lassen, was die Kachel schon zeigt.

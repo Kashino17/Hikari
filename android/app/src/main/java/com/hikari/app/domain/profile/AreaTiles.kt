@@ -56,6 +56,8 @@ data class MangaTile(
     val covers: List<String>,
     /** Art je Titelbild (gleiche Reihenfolge wie [covers]). */
     val kinds: List<ReadKind> = covers.map { ReadKind.MANGA },
+    /** Titel je Titelbild — für ein gezeichnetes Buch-Cover, wenn das Bild fehlt. */
+    val titles: List<String> = emptyList(),
     /** Fortschritt des vorn genannten Buchs (0..1), bei Manga null. */
     val progress: Float? = null,
 )
@@ -126,19 +128,21 @@ object AreaTiles {
         val current = items.firstOrNull()
         val featured = shelf.firstOrNull { it.cover != null } ?: shelf.firstOrNull()
         val fan = (
-            items.map { it.cover to it.kind } +
-                (if (current == null) listOf(featured?.cover to ReadKind.MANGA) else emptyList()) +
-                shelf.map { it.cover to ReadKind.MANGA }
+            items.map { Triple(it.cover, it.kind, it.title) } +
+                (if (current == null) listOf(Triple(featured?.cover, ReadKind.MANGA, featured?.title ?: "")) else emptyList()) +
+                shelf.map { Triple(it.cover, ReadKind.MANGA, it.title) }
             ).filter { it.first != null }.distinctBy { it.first }.take(3)
         val covers = fan.map { it.first!! }
         val kinds = fan.map { it.second }
+        val titles = fan.map { it.third }
         return when {
-            current != null -> MangaTile(title = current.title, detail = current.detail, covers = covers, kinds = kinds, progress = current.progress)
+            current != null -> MangaTile(title = current.title, detail = current.detail, covers = covers, kinds = kinds, progress = current.progress, titles = titles)
             featured != null -> MangaTile(
                 title = featured.title,
                 detail = if (featured.totalChapters > 0) "${featured.totalChapters} Kapitel" else "Noch nicht angefangen",
                 covers = covers,
                 kinds = kinds,
+                titles = titles,
             )
             else -> null
         }

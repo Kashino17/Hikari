@@ -398,12 +398,23 @@ private fun MangaAreaTile(tile: MangaTile?, modifier: Modifier, onClick: () -> U
                                 .aspectRatio(2f / 3f)
                                 .background(HikariSurfaceHigh),
                         ) {
-                            AsyncImage(
-                                model = url,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize(),
-                            )
+                            if (isBook) {
+                                // Buch: Bild vom Handy oder Mac; fehlt es, das gezeichnete Cover statt einer grauen Fläche.
+                                val title = tile?.titles?.getOrNull(i).orEmpty()
+                                com.hikari.app.ui.ebooks.BookCover(
+                                    title = title, authors = "", category = null, isPdf = false,
+                                    imageUrl = url.takeIf { it.startsWith("/api/") },
+                                    localPath = url.takeUnless { it.startsWith("/api/") },
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            } else {
+                                AsyncImage(
+                                    model = url,
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                )
+                            }
                             // Unten ein feiner Streifen: Bernstein = Buch, Violett = Manga.
                             Box(
                                 Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(3.dp)
