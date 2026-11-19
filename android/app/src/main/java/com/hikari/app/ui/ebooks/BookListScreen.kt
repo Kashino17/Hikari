@@ -76,7 +76,7 @@ private val LENGTH_CHOICES = listOf(
     Choice(null, "Jede Länge"), Choice("kurz", "Kurz (< 2 Std.)"), Choice("mittel", "Mittel (2–7 Std.)"), Choice("lang", "Lang (> 7 Std.)"),
 )
 private val SOURCE_CHOICES = listOf(
-    Choice(null, "Alle Quellen"), Choice("gutenberg", "Gutenberg"), Choice("wikisource", "Wikisource"),
+    Choice(null, "Alle Quellen"), Choice("gutenberg", "Gutenberg"),
     Choice("bpb", "bpb"), Choice("openaccess", "Open Access"),
 )
 private val SORT_CHOICES = listOf(
