@@ -71,7 +71,12 @@ private class PdfPages(file: File) : AutoCloseable {
     val dispatcher = executor.asCoroutineDispatcher()
     private val cache = LruCache<Int, Bitmap>(6)
     val count: Int = renderer.pageCount
-    val ratios: List<Float> = (0 until count).map { i -> renderer.openPage(i).use { it.width.toFloat() / it.height.coerceAtLeast(1) } }
+    private val ratios = arrayOfNulls<Float>(count)
+
+    /** Seitenverhältnis erst bei Bedarf messen — bei 600 Seiten nicht alle beim Öffnen. */
+    suspend fun ratio(index: Int): Float = withContext(dispatcher) {
+        ratios[index] ?: renderer.openPage(index).use { it.width.toFloat() / it.height.coerceAtLeast(1) }.also { ratios[index] = it }
+    }
 
     suspend fun render(index: Int, widthPx: Int): Bitmap = withContext(dispatcher) {
         cache.get(index)?.takeIf { it.width == widthPx } ?: renderer.openPage(index).use { p ->
@@ -102,12 +107,17 @@ fun PdfReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
         }
         return
     }
-    val pages = remember(book.filePath) { runCatching { PdfPages(File(book.filePath)) }.getOrNull() }
-    DisposableEffect(pages) { onDispose { pages?.close() } }
-    BackHandler { onBack() }
+    // Öffnen abseits des Haupt-Threads; null = lädt noch, Result.failure = kaputt.
+    val opened by produceState<Result<PdfPages>?>(null, book.filePath) {
+        value = withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { PdfPages(File(book.filePath)) } }
+    }
+    DisposableEffect(opened) { onDispose { opened?.getOrNull()?.close() } }
+    BackHandler { vm.flush(); onBack() }
+    DisposableEffect(Unit) { onDispose { vm.flush() } }
+    val pages = opened?.getOrNull()
     if (pages == null) {
         Box(Modifier.fillMaxSize().background(Color(0xFF1F1F22)), contentAlignment = Alignment.Center) {
-            Text("Dieses PDF lässt sich nicht öffnen.", color = Color.White)
+            Text(if (opened == null) "PDF wird geöffnet …" else "Dieses PDF lässt sich nicht öffnen.", color = Color.White)
         }
         return
     }
@@ -121,7 +131,7 @@ fun PdfReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
 
     Column(Modifier.fillMaxSize().background(Color(0xFF1F1F22))) {
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Zurück", tint = Color.White) }
+            IconButton(onClick = { vm.flush(); onBack() }) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Zurück", tint = Color.White) }
             PdfBadge()
             Text(book.title, color = Color.White, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).padding(horizontal = 10.dp))
@@ -151,7 +161,8 @@ fun PdfReaderScreen(onBack: () -> Unit, vm: ReaderViewModel) {
             ) {
                 items(pages.count) { i ->
                     val bmp by produceState<Bitmap?>(null, i, widthPx) { value = runCatching { pages.render(i, widthPx) }.getOrNull() }
-                    Box(Modifier.fillMaxWidth().aspectRatio(pages.ratios[i].coerceIn(0.3f, 3f)).background(Color.White)) {
+                    val ratio by produceState(0.707f, i) { value = runCatching { pages.ratio(i) }.getOrDefault(0.707f) }
+                    Box(Modifier.fillMaxWidth().aspectRatio(ratio.coerceIn(0.3f, 3f)).background(Color.White)) {
                         bmp?.let { Image(it.asImageBitmap(), "Seite ${i + 1}", contentScale = ContentScale.FillWidth, modifier = Modifier.fillMaxSize()) }
                     }
                 }

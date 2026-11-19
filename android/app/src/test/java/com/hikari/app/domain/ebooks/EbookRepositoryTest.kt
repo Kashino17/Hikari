@@ -9,6 +9,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -133,6 +135,16 @@ class EbookRepositoryTest {
         val row = states.get("gutenberg:1")!!
         assertTrue(row.dirty)
         assertEquals(true, repo.state("gutenberg:1").first().saved?.value)
+    }
+
+    @Test fun speichernBeimSchliessenUeberlebtDasEndeDesBildschirms() = runTest {
+        coEvery { api.putEbookState(any(), any()) } throws IOException("offline")
+        val screen = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Job())
+        var job: kotlinx.coroutines.Job? = null
+        screen.launch { job = repo.updateStateDetached("gutenberg:1") { it.copy(position = Stamped(ReadingPosition("c9", 0.5), 9)) } }.join()
+        screen.cancel() // wie viewModelScope beim Verlassen des Lesers
+        job!!.join()
+        assertEquals("c9", repo.state("gutenberg:1").first().position?.value?.cfi)
     }
 
     @Test fun syncSchicktSchmutzigesUndUebernimmtDenMac() = runTest {

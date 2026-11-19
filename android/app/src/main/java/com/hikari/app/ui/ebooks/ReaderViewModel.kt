@@ -100,6 +100,7 @@ class ReaderViewModel @Inject constructor(
 
     /** PDF: Seite merken. */
     fun onPdfPage(page: Int, pages: Int) {
+        lastPdf = page to pages
         saveJob?.cancel()
         saveJob = viewModelScope.launch {
             delay(1_000)
@@ -107,11 +108,26 @@ class ReaderViewModel @Inject constructor(
         }
     }
 
-    /** Beim Verlassen sofort speichern. */
+    private var lastPdf: Pair<Int, Int>? = null
+
+    /** Beim Verlassen sofort speichern — unabhängig vom Bildschirm, der gerade verschwindet. */
     fun flush() {
-        val loc = _state.value.location ?: return
         saveJob?.cancel()
-        viewModelScope.launch { savePosition(loc.cfi, loc.fraction, null) }
+        val now = System.currentTimeMillis()
+        val loc = _state.value.location
+        val pdf = lastPdf
+        val pos = when {
+            loc != null -> ReadingPosition(loc.cfi, loc.fraction, null)
+            pdf != null -> ReadingPosition("", if (pdf.second > 0) (pdf.first + 1).toDouble() / pdf.second else 0.0, pdf.first)
+            else -> return
+        }
+        repo.updateStateDetached(id) { s ->
+            s.copy(
+                position = Stamped(pos, now),
+                lastOpenedAt = now,
+                finished = if (pos.percent >= 0.99 && s.finished?.value != true) Stamped(true, now) else s.finished,
+            )
+        }
     }
 
     private suspend fun savePosition(cfi: String, fraction: Double, page: Int?) {

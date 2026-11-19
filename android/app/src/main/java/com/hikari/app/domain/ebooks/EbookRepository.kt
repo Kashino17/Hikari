@@ -10,6 +10,7 @@ import com.hikari.app.data.db.LocalEbookDao
 import com.hikari.app.data.db.LocalEbookEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -49,6 +50,8 @@ class EbookRepository(
 ) {
     private val locks = ConcurrentHashMap<String, Mutex>()
     private val stateLock = Mutex()
+    /** Eigener Rahmen für Speichern beim Schließen — läuft weiter, wenn der Bildschirm schon weg ist. */
+    private val detached = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
     suspend fun home(): Result<EbookHomeDto> = runCatching { api.getEbookHome() }
 
@@ -136,6 +139,10 @@ class EbookRepository(
         updateStateLocal(id, transform)
         runCatching { push(id) }
     }
+
+    /** Wie [updateState], aber unabhängig vom Aufrufer (Leser wird gerade geschlossen). */
+    fun updateStateDetached(id: String, transform: (BookState) -> BookState): kotlinx.coroutines.Job =
+        detached.launch { updateState(id, transform) }
 
     suspend fun updateStateLocal(id: String, transform: (BookState) -> BookState) = stateLock.withLock {
         val now = System.currentTimeMillis()
