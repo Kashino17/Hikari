@@ -62,8 +62,36 @@ class EbookRepositoryTest {
         source = "gutenberg", sourceUrl = "https://x", sourceName = "Project Gutenberg",
     )
 
+    @Test fun downloadWartetBisDerMacDasBuchGeholtHat() = runTest {
+        coEvery { api.getEbook("gutenberg:1") } returns detail()
+        coEvery { api.prepareEbook("gutenberg:1") } returnsMany listOf(
+            com.hikari.app.data.api.dto.EbookPrepareDto("loading"),
+            com.hikari.app.data.api.dto.EbookPrepareDto("loading"),
+            com.hikari.app.data.api.dto.EbookPrepareDto("ready"),
+        )
+        coEvery { api.downloadEbookFile("gutenberg:1") } returns Response.success("EPUB".toResponseBody("application/epub+zip".toMediaType()))
+        val phases = mutableListOf<Float>()
+        assertTrue(repo.download("gutenberg:1") { phases += it }.isSuccess)
+        coVerify(exactly = 3) { api.prepareEbook("gutenberg:1") }
+        assertEquals(-1f, phases.first()) // -1 = „Der Mac holt das Buch“
+    }
+
+    @Test fun keinGanzesBuchGibtVerstaendlicheMeldung() = runTest {
+        coEvery { api.getEbook("gutenberg:1") } returns detail()
+        coEvery { api.prepareEbook("gutenberg:1") } returns com.hikari.app.data.api.dto.EbookPrepareDto("hidden", error = "zu kurz (500 Wörter) — kein ganzes Buch")
+        val r = repo.download("gutenberg:1") {}
+        assertEquals("Kein ganzes Buch — es wurde aus dem Katalog genommen.", r.exceptionOrNull()?.message)
+    }
+
+    @Test fun netzfehlerGibtVerstaendlicheMeldung() = runTest {
+        coEvery { api.getEbook("gutenberg:1") } throws java.net.SocketTimeoutException("timeout")
+        val r = repo.download("gutenberg:1") {}
+        assertEquals("Der Mac ist gerade nicht erreichbar.", r.exceptionOrNull()?.message)
+    }
+
     @Test fun downloadDoppeltGleichzeitigLaedtEinmal() = runTest {
         coEvery { api.getEbook("gutenberg:1") } returns detail()
+        coEvery { api.prepareEbook(any()) } returns com.hikari.app.data.api.dto.EbookPrepareDto("ready")
         coEvery { api.downloadEbookFile("gutenberg:1") } coAnswers {
             delay(50)
             Response.success("EPUB-INHALT".toResponseBody("application/epub+zip".toMediaType()))
@@ -79,6 +107,7 @@ class EbookRepositoryTest {
 
     @Test fun abbruchMittenImLadenHinterlaesstKeineDatei() = runTest {
         coEvery { api.getEbook("gutenberg:1") } returns detail()
+        coEvery { api.prepareEbook(any()) } returns com.hikari.app.data.api.dto.EbookPrepareDto("ready")
         val broken = object : ResponseBody() {
             override fun contentType() = "application/epub+zip".toMediaType()
             override fun contentLength() = 1000L

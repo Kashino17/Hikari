@@ -9,6 +9,7 @@ import com.hikari.app.data.db.EbookStateEntity
 import com.hikari.app.data.db.LocalEbookDao
 import com.hikari.app.data.db.LocalEbookEntity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -32,6 +33,13 @@ data class EbookFilter(
  * Der Lesestand wird immer zuerst lokal gespeichert (auch ohne Netz) und dann mit dem Mac
  * zusammengeführt — so geht auf keiner Seite etwas verloren.
  */
+/** Verständliche Fehlermeldung fürs Laden. */
+class EbookException(message: String) : Exception(message)
+
+private const val NOT_WHOLE = "Kein ganzes Buch — es wurde aus dem Katalog genommen."
+private const val PREPARE_POLL_MS = 3_000L
+private const val PREPARE_MAX_MS = 15 * 60 * 1000
+
 class EbookRepository(
     private val api: HikariApi,
     private val local: LocalEbookDao,
@@ -58,18 +66,36 @@ class EbookRepository(
 
     suspend fun localBook(id: String): LocalEbookEntity? = local.get(id)?.takeIf { java.io.File(it.filePath).exists() }
 
-    /** Lädt das Buch aufs Handy; gleichzeitige Aufrufe für dasselbe Buch laden nur einmal. */
+    /**
+     * Lädt das Buch aufs Handy; gleichzeitige Aufrufe für dasselbe Buch laden nur einmal.
+     * Erst holt der Mac das Buch (Quellen sind teils langsam) — solange meldet [onProgress] -1 —,
+     * dann kommt es vom Mac aufs Handy (0…1).
+     */
     suspend fun download(id: String, onProgress: (Float) -> Unit): Result<LocalEbookEntity> =
         locks.getOrPut(id) { Mutex() }.withLock {
             localBook(id)?.let { return@withLock Result.success(it) }
             runCatching {
+                val d = api.getEbook(id)
+                var waited = 0
+                var failures = 0
+                while (true) {
+                    val p = api.prepareEbook(id)
+                    when (p.status) {
+                        "ready" -> break
+                        "hidden" -> throw EbookException(NOT_WHOLE)
+                        else -> {
+                            if (p.lastError != null && ++failures >= 3) throw EbookException("Die Quelle liefert dieses Buch gerade nicht — später noch einmal versuchen.")
+                            if (waited >= PREPARE_MAX_MS) throw EbookException("Das Buch braucht zu lange — später noch einmal versuchen.")
+                            onProgress(-1f)
+                            delay(PREPARE_POLL_MS)
+                            waited += PREPARE_POLL_MS.toInt()
+                        }
+                    }
+                }
                 withContext(Dispatchers.IO) {
-                    val d = api.getEbook(id)
                     val res = api.downloadEbookFile(id)
                     val body = res.body()
-                    if (!res.isSuccessful || body == null) {
-                        error(if (res.code() == 410) "Kein ganzes Buch — es wurde aus dem Katalog genommen." else "Laden fehlgeschlagen (${res.code()})")
-                    }
+                    if (!res.isSuccessful || body == null) throw EbookException(if (res.code() == 410) NOT_WHOLE else "Laden fehlgeschlagen (${res.code()})")
                     val target = files.bookFile(id, d.format)
                     val bytes = files.writeAtomic(target, body.byteStream(), body.contentLength(), onProgress)
                     val cover = if (d.coverUrl != null) runCatching {
@@ -82,6 +108,12 @@ class EbookRepository(
                     )
                     local.upsert(e)
                     e
+                }
+            }.recoverCatching { err ->
+                throw when (err) {
+                    is EbookException -> err
+                    is java.io.IOException -> EbookException(if (err is java.net.SocketTimeoutException || err is java.net.ConnectException || err is java.net.UnknownHostException) "Der Mac ist gerade nicht erreichbar." else "Die Verbindung ist abgebrochen — noch einmal versuchen.")
+                    else -> err
                 }
             }
         }

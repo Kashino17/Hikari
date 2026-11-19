@@ -1,0 +1,6 @@
+:root { --bg: #F7F3EA; --fg: #1E1B16; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); overflow: hidden;
+  -webkit-tap-highlight-color: transparent; font-family: 'Literata', Georgia, serif; }
+foliate-view { position: absolute; inset: 0; }
+#msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  padding: 32px; text-align: center; font-size: 16px; opacity: .7; pointer-events: none; }

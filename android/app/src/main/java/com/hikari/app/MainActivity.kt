@@ -38,6 +38,26 @@ class MainActivity : ComponentActivity() {
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
+    /** Leser: Lautstärketasten blättern, solange ein Leser das will. */
+    interface VolumePager {
+        fun wantsVolumeKeys(): Boolean
+        fun page(forward: Boolean)
+    }
+    var volumePager: VolumePager? = null
+
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        val code = event.keyCode
+        val pager = volumePager
+        val isVolume = code == android.view.KeyEvent.KEYCODE_VOLUME_UP || code == android.view.KeyEvent.KEYCODE_VOLUME_DOWN
+        if (pager != null && isVolume && pager.wantsVolumeKeys()) {
+            // Leiser = weiter, Lauter = zurück (wie beim Kindle). Nur beim Drücken blättern;
+            // das Loslassen trotzdem verbrauchen, sonst ändert Android die Lautstärke.
+            if (event.action == android.view.KeyEvent.ACTION_DOWN) pager.page(forward = code == android.view.KeyEvent.KEYCODE_VOLUME_DOWN)
+            return true
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
         onUserLeaveHintListener?.invoke()

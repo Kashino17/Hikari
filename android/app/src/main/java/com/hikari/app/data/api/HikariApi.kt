@@ -389,6 +389,9 @@ interface HikariApi {
     @GET("api/ebooks/{id}")
     suspend fun getEbook(@Path("id") id: String): com.hikari.app.data.api.dto.EbookDetailDto
 
+    @POST("api/ebooks/{id}/prepare")
+    suspend fun prepareEbook(@Path("id") id: String): com.hikari.app.data.api.dto.EbookPrepareDto
+
     @retrofit2.http.Streaming
     @GET("api/ebooks/{id}/file")
     suspend fun downloadEbookFile(@Path("id") id: String): retrofit2.Response<okhttp3.ResponseBody>

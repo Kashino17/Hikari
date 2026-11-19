@@ -120,11 +120,15 @@ fun BookDetailScreen(
                 when {
                     local != null -> MainButton("Lesen", null) { onRead(local) }
                     progress != null -> Column(Modifier.fillMaxWidth()) {
-                        Text("Wird geladen … ${(progress * 100).toInt()} %", color = HikariTextMuted, fontSize = 13.sp)
-                        LinearProgressIndicator(
-                            progress = { progress }, color = BooksAccent, trackColor = Color(0x22FFFFFF),
-                            modifier = Modifier.fillMaxWidth().padding(top = 8.dp).height(6.dp).clip(RoundedCornerShape(3.dp)),
-                        )
+                        val barMod = Modifier.fillMaxWidth().padding(top = 8.dp).height(6.dp).clip(RoundedCornerShape(3.dp))
+                        if (progress < 0f) {
+                            // Der Mac holt das Buch erst von der Quelle (kann etwas dauern).
+                            Text("Der Mac holt das Buch …", color = HikariTextMuted, fontSize = 13.sp)
+                            LinearProgressIndicator(color = BooksAccent, trackColor = Color(0x22FFFFFF), modifier = barMod)
+                        } else {
+                            Text("Aufs Handy … ${(progress * 100).toInt()} %", color = HikariTextMuted, fontSize = 13.sp)
+                            LinearProgressIndicator(progress = { progress }, color = BooksAccent, trackColor = Color(0x22FFFFFF), modifier = barMod)
+                        }
                     }
                     else -> MainButton("Aufs Handy laden", Icons.Outlined.CloudDownload) { vm.download() }
                 }

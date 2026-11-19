@@ -34,6 +34,10 @@ data class EbookHomeDto(
     val syncing: Boolean = false,
 )
 
+/** Stand von „Buch holen“ auf dem Mac: loading | ready | hidden. */
+@Serializable
+data class EbookPrepareDto(val status: String, val error: String? = null, val lastError: String? = null)
+
 @Serializable
 data class EbookListDto(val total: Int = 0, val books: List<EbookCardDto> = emptyList())
 

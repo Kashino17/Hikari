@@ -185,7 +185,8 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
 
     val isVideoRoute = currentRoute?.startsWith("video/") == true ||
         currentRoute?.startsWith("original/") == true
-    val isReaderRoute = currentRoute?.matches(Regex("manga/[^/]+/[^/?]+(\\?.*)?")) == true
+    val isReaderRoute = currentRoute?.matches(Regex("manga/[^/]+/[^/?]+(\\?.*)?")) == true ||
+        currentRoute == "buecher/{id}/lesen"
     // Settings sind ab v0.25.0 nur über Profil-Gear erreichbar — Sub-Page,
     // also auch ohne Bottom-Nav rendern (eigener Back-Button reicht).
     val isGearSubPage = currentRoute == "settings"
@@ -745,6 +746,12 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     onBack = { nav.popBackStack() },
                     onBook = { id -> nav.navigate("buecher/${android.net.Uri.encode(id)}") },
                 )
+            }
+            composable(
+                "buecher/{id}/lesen",
+                arguments = listOf(navArgument("id") { type = NavType.StringType }),
+            ) {
+                com.hikari.app.ui.ebooks.ReaderRoute(onBack = { nav.popBackStack() })
             }
             composable(
                 "buecher/{id}",
