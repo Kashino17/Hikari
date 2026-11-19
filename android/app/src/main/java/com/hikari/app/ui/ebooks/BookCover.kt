@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -104,36 +105,82 @@ fun PdfBadge(modifier: Modifier = Modifier) {
     )
 }
 
+/** Welches Ornament-Band ein Titel bekommt (0–3) — fest je Titel, damit nicht alle gleich aussehen. */
+internal fun coverOrnament(title: String): Int = (title.fold(7) { h, c -> h * 31 + c.code } and 0x7fffffff) % 4
+
+/**
+ * Eigenes Titelbild für Bücher ohne echten Deckel — klassisch wie die Insel-Bücherei: gedeckter Grund
+ * in der Farbe der Kategorie, feiner Doppelrahmen, Ornament-Band, Titel in Serifenschrift, Autor gesperrt.
+ */
 @Composable
 private fun TypographicCover(title: String, authors: String, category: String?) {
-    val c = categoryColor(category)
+    val base = categoryColor(category)
+    val ink = Color(0xFFF3E9D2) // Papierweiß für Schrift und Linien
+    val ornament = coverOrnament(title)
     Box(
         Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(c, c.copy(alpha = 0.75f).compositeOver(Color(0xFF111111))))),
+            .background(Brush.radialGradient(listOf(base.copy(alpha = 0.92f).compositeOver(Color(0xFF2A2420)), base.copy(alpha = 0.7f).compositeOver(Color(0xFF14110F))))),
     ) {
-        Column(Modifier.fillMaxSize().padding(10.dp)) {
-            Box(Modifier.fillMaxWidth().height(2.dp).background(Color(0x55FFFFFF)))
+        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+            val w = size.width
+            val h = size.height
+            val line = ink.copy(alpha = 0.55f)
+            val m1 = w * 0.06f
+            val m2 = w * 0.085f
+            // Doppelrahmen
+            drawRect(line, topLeft = androidx.compose.ui.geometry.Offset(m1, m1), size = androidx.compose.ui.geometry.Size(w - 2 * m1, h - 2 * m1), style = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.008f))
+            drawRect(line.copy(alpha = 0.35f), topLeft = androidx.compose.ui.geometry.Offset(m2, m2), size = androidx.compose.ui.geometry.Size(w - 2 * m2, h - 2 * m2), style = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.004f))
+            // Ornament-Band oben und unten
+            val bandH = h * 0.07f
+            for (yTop in listOf(h * 0.14f, h * 0.79f)) {
+                val cy = yTop + bandH / 2
+                val step = w * 0.09f
+                var x = m2 + step / 2
+                while (x < w - m2) {
+                    when (ornament) {
+                        0 -> { // Rauten
+                            val r = bandH * 0.32f
+                            val path = androidx.compose.ui.graphics.Path().apply { moveTo(x, cy - r); lineTo(x + r, cy); lineTo(x, cy + r); lineTo(x - r, cy); close() }
+                            drawPath(path, ink.copy(alpha = 0.6f))
+                        }
+                        1 -> drawCircle(ink.copy(alpha = 0.6f), radius = bandH * 0.13f, center = androidx.compose.ui.geometry.Offset(x, cy)) // Punkte
+                        2 -> { // Bögen
+                            drawArc(ink.copy(alpha = 0.55f), 180f, 180f, false, topLeft = androidx.compose.ui.geometry.Offset(x - step / 2, cy - bandH * 0.25f), size = androidx.compose.ui.geometry.Size(step, bandH * 0.5f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = w * 0.006f))
+                        }
+                        else -> drawLine(ink.copy(alpha = 0.5f), androidx.compose.ui.geometry.Offset(x - step * 0.3f, cy + bandH * 0.3f), androidx.compose.ui.geometry.Offset(x + step * 0.3f, cy - bandH * 0.3f), strokeWidth = w * 0.007f) // Schraffur
+                    }
+                    x += step
+                }
+            }
+        }
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = 14.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+        ) {
             Text(
                 title,
-                color = Color(0xF2FFFFFF),
+                color = ink,
                 fontFamily = FontFamily.Serif,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp,
                 lineHeight = 17.sp,
-                maxLines = 5,
+                maxLines = 4,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 10.dp),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             )
-            Box(Modifier.weight(1f))
             if (authors.isNotBlank()) {
+                Box(Modifier.padding(vertical = 7.dp).size(width = 18.dp, height = 1.dp).background(ink.copy(alpha = 0.6f)))
                 Text(
-                    authors,
-                    color = Color(0xB3FFFFFF),
+                    authors.uppercase(),
+                    color = ink.copy(alpha = 0.85f),
                     fontFamily = FontFamily.Serif,
-                    fontSize = 10.sp,
+                    fontSize = 8.sp,
+                    letterSpacing = 1.2.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 )
             }
         }
