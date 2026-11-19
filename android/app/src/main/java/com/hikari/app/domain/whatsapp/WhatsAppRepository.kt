@@ -265,6 +265,7 @@ class WhatsAppRepository @Inject constructor(
             when (event) {
                 is WhatsAppStackDiff.Event.New -> {
                     val message = event.message
+                    val claimedFile = message.mediaType?.let { claimUnclaimedFile(it, message.timestamp) }
                     val id = dao.insert(
                         WhatsAppMessageEntity(
                             chatKey = message.chatKey,
@@ -274,13 +275,14 @@ class WhatsAppRepository @Inject constructor(
                             packageName = message.packageName,
                             text = message.text,
                             mediaType = message.mediaType,
+                            mediaPreviewPath = claimedFile,
                             avatarPath = avatarPath,
                             timestamp = message.timestamp,
                             notificationKey = message.notificationKey,
                         ),
                     )
                     newCount++
-                    if (message.mediaType != null) {
+                    if (message.mediaType != null && claimedFile == null) {
                         pendingMedia += PendingMedia(id, message.mediaType, message.dataUri, message.dataMimeType, now)
                     }
                 }
@@ -361,6 +363,47 @@ class WhatsAppRepository @Inject constructor(
                 "deleted=$deletedCount edited=$editedCount other=$otherCount",
             pendingMedia = pendingMedia,
         )
+    }
+
+    /** Gesicherte Dateien, für die (noch) keine Nachricht protokolliert ist — je Medientyp. */
+    private val unclaimedFiles = HashMap<String, MutableList<WhatsAppMediaMatcher.IncomingFile>>()
+
+    /**
+     * Eine Datei, die WhatsApp gerade heruntergeladen hat und die der Medien-Wächter schon in
+     * Hikaris Speicher kopiert hat. Sie geht an die passende wartende Nachricht
+     * ([WhatsAppMediaMatcher]); gibt es keine, wartet sie kurz auf eine — WhatsApp kann die Datei
+     * auch vor der Benachrichtigung schreiben. Gibt die Zeilen-ID zurück, an der sie hängt.
+     */
+    suspend fun onIncomingMedia(mediaType: String, path: String, arrivedAt: Long): Long? = mutex.withLock {
+        val waiting = dao.getMediaMessagesWithoutFile(mediaType, arrivedAt - WhatsAppMediaMatcher.WINDOW_MS)
+        val match = WhatsAppMediaMatcher.messageFor(
+            arrivedAt,
+            waiting.map { WhatsAppMediaMatcher.Message(it.id, it.timestamp, it.deletedAt) },
+        )
+        val row = match?.let { m -> waiting.first { it.id == m.id } }
+        if (row != null) {
+            dao.update(row.copy(mediaPreviewPath = path))
+            return@withLock row.id
+        }
+        val list = unclaimedFiles.getOrPut(mediaType) { mutableListOf() }
+        list += WhatsAppMediaMatcher.IncomingFile(path, arrivedAt)
+        // Was nach ein paar Minuten keiner Nachricht gehört (Chat war offen, eigene Weiterleitung),
+        // fliegt wieder raus.
+        val stale = list.filter { it.arrivedAt < arrivedAt - UNCLAIMED_FILE_TTL_MS }
+        stale.forEach { runCatching { File(it.path).delete() } }
+        list.removeAll(stale)
+        null
+    }
+
+    /** Nimmt eine schon angekommene freie Datei für eine eben protokollierte Mediennachricht. */
+    private fun claimUnclaimedFile(mediaType: String, timestamp: Long): String? {
+        val list = unclaimedFiles[mediaType] ?: return null
+        val file = WhatsAppMediaMatcher.fileFor(
+            WhatsAppMediaMatcher.Message(0, timestamp, null),
+            list,
+        ) ?: return null
+        list.remove(file)
+        return file.path
     }
 
     /**
@@ -506,6 +549,7 @@ class WhatsAppRepository @Inject constructor(
 
         private const val PRUNE_INTERVAL_MS = 10L * 60L * 1000L
         private const val ORPHAN_MEDIA_GRACE_MS = 15L * 60L * 1000L
+        private const val UNCLAIMED_FILE_TTL_MS = 5L * 60L * 1000L
 
         /** Obergrenze für vorsorglich gesicherte Medien, deren Nachricht (noch) nicht gelöscht wurde. */
         private const val MAX_STAGED_MEDIA_BYTES = 300L * 1024L * 1024L

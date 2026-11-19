@@ -411,6 +411,44 @@ class WhatsAppGuardTest {
     }
 
     @Test
+    fun `a late download lands on its photo, a photo deleted before downloading gets nothing`() = runTest {
+        // Ablauf wie in der Messung vom 20.11.: A, dann B (vor dem Download gelöscht), dann C.
+        // Die Dateien kommen nach dem Erkennen der Löschung, also nach „jetzt“.
+        val base = sec(System.currentTimeMillis() - 190_000L, 0)
+        post("mia", "Mia", msg("Mia", "📷 Foto", base))
+        post("mia", "Mia", msg("Mia", "📷 Foto", base), msg("Mia", "📷 Foto", base + 28_000))
+        post("mia", "Mia", msg("Mia", "📷 Foto", base)) // B still entfernt = gelöscht
+        post("mia", "Mia", msg("Mia", "📷 Foto", base), msg("Mia", "📷 Foto", base + 189_000))
+
+        val fileA = File.createTempFile("wa_in_a_", ".jpg").apply { writeText("a") }
+        val fileC = File.createTempFile("wa_in_c_", ".jpg").apply { writeText("c") }
+        val arrival = System.currentTimeMillis() + 30_000
+        val rowA = repository.onIncomingMedia("photo", fileA.absolutePath, arrival)
+        val rowC = repository.onIncomingMedia("photo", fileC.absolutePath, arrival + 1_000)
+
+        val rows = fakeDao.all().sortedBy { it.timestamp }
+        assertEquals(listOf(base, base + 28_000, base + 189_000), rows.map { it.timestamp })
+        assertTrue(rows[1].isDeleted)
+        assertEquals(rows[0].id, rowA)
+        assertEquals(rows[2].id, rowC)
+        assertEquals(null, rows[1].mediaPreviewPath)
+        assertEquals(fileC.absolutePath, rows[2].mediaPreviewPath)
+        fileA.delete(); fileC.delete()
+    }
+
+    @Test
+    fun `a file written before its notification is handed to the message once it arrives`() = runTest {
+        val ts = sec(System.currentTimeMillis() - 30_000L, 0)
+        val file = File.createTempFile("wa_in_early_", ".jpg").apply { writeText("x") }
+        assertEquals(null, repository.onIncomingMedia("photo", file.absolutePath, ts + 1_000))
+
+        val result = post("ole", "Ole", msg("Ole", "📷 Foto", ts))
+        assertTrue("schon gesichert, keine Suche mehr nötig", result.pendingMedia.isEmpty())
+        assertEquals(file.absolutePath, fakeDao.all().single().mediaPreviewPath)
+        file.delete()
+    }
+
+    @Test
     fun `log rows expire after a day unless their message is still in a visible stack`() = runTest {
         val now = System.currentTimeMillis()
         val old = sec(now - 3L * 24L * 3_600_000L, 0)
@@ -567,6 +605,11 @@ private class FakeWhatsAppDao : WhatsAppDao {
 
     override fun observeEditedCount(): Flow<Int> =
         items.map { list -> list.count { it.isEdited } }
+
+    override suspend fun getMediaMessagesWithoutFile(mediaType: String, sinceTimestamp: Long): List<WhatsAppMessageEntity> =
+        items.value
+            .filter { it.mediaType == mediaType && it.mediaPreviewPath == null && it.timestamp >= sinceTimestamp }
+            .sortedWith(compareBy({ it.timestamp }, { it.id }))
 
     override suspend fun getActiveMediaPaths(): List<String> =
         items.value.mapNotNull { it.mediaPreviewPath }

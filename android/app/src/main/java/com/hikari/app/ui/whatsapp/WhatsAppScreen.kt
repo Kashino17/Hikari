@@ -106,8 +106,12 @@ fun WhatsAppScreen(
     val searchQuery by vm.searchQuery.collectAsState()
     val chatAnalysis by vm.chatAnalysis.collectAsState()
     val mediaFolderState by vm.mediaFolderState.collectAsState()
-    val hasMediaAccess = mediaFolderState == MediaFolderState.READY
-    val mediaFolderWrong = mediaFolderState == MediaFolderState.WRONG_FOLDER
+    val allFilesAccess by vm.allFilesAccess.collectAsState()
+    // Gemessen 20.11.: Die Ordnerfreigabe ist zu langsam und gibt zu früh auf — Medien werden
+    // nur mit „Zugriff auf alle Dateien“ verlässlich gesichert. Die alte Freigabe läuft als
+    // Notlösung weiter, gilt aber nicht mehr als „eingerichtet“.
+    val hasMediaAccess = allFilesAccess
+    val mediaFolderWrong = false
 
     // Saveable: nach dem Zurück aus einer Zusammenfassung bleibt der Tab offen.
     var activeTab by rememberSaveable { mutableStateOf(initialTab) }
@@ -154,7 +158,17 @@ fun WhatsAppScreen(
         }
     }
     val openMediaFolderPicker = {
-        runCatching { mediaFolderPicker.launch(vm.buildInitialMediaTreeUri()) }
+        val forApp = Intent(
+            Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION,
+            android.net.Uri.parse("package:${context.packageName}"),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { context.startActivity(forApp) }.onFailure {
+            runCatching {
+                context.startActivity(
+                    Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                )
+            }
+        }
         Unit
     }
 
@@ -468,11 +482,11 @@ private fun GuardSettingsSheet(
                 SheetRow(
                     icon = Icons.Outlined.FolderOpen,
                     accent = if (hasMediaAccess) WaGreen else HikariAmber,
-                    title = "Medienordner",
-                    subtitle = when {
-                        hasMediaAccess -> "Freigegeben — Fotos, Videos und Sprachnachrichten werden gesichert"
-                        mediaFolderWrong -> "Falscher Ordner freigegeben — bitte WhatsApps Ordner „Media“ wählen"
-                        else -> "Nicht freigegeben — gelöschte Fotos lassen sich so nicht retten"
+                    title = "Zugriff auf alle Dateien",
+                    subtitle = if (hasMediaAccess) {
+                        "Erteilt — jede Datei wird gesichert, sobald WhatsApp sie lädt"
+                    } else {
+                        "Fehlt — ohne ihn werden gelöschte Fotos meist verpasst"
                     },
                     onClick = onOpenMediaFolderPicker,
                 )

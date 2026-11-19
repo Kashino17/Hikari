@@ -328,13 +328,9 @@ private fun SetupCard(
         if (!hasMediaAccess) {
             SetupStep(
                 icon = Icons.Outlined.FolderOpen,
-                title = if (mediaFolderWrong) "Medienordner neu freigeben" else "WhatsApp-Medienordner freigeben",
-                text = if (mediaFolderWrong) {
-                    "Die bisherige Freigabe zeigt nicht auf WhatsApps Ordner „Media“ — so wird nichts gesichert. Im nächsten Fenster unten auf „Diesen Ordner verwenden“ tippen."
-                } else {
-                    "Nur so lassen sich gelöschte Fotos, Videos und Sprachnachrichten retten. Im nächsten Fenster unten auf „Diesen Ordner verwenden“ tippen."
-                },
-                action = "Freigeben",
+                title = "Zugriff auf alle Dateien erlauben",
+                text = "Damit sichert Hikari jedes Foto, Video und jede Sprachnachricht in dem Moment, in dem WhatsApp sie lädt. Im nächsten Fenster den Schalter bei Hikari einschalten.",
+                action = "Erlauben",
                 onClick = onGrantMediaAccess,
             )
         }
@@ -536,7 +532,7 @@ private fun MediaStatusLine(active: Boolean, wrongFolder: Boolean, onGrant: () -
                 text = if (active) {
                     "Neue Fotos, Videos und Sprachnachrichten werden beim Eintreffen gesichert."
                 } else {
-                    "Tippen, um WhatsApps Ordner „Media“ freizugeben."
+                    "Tippen, um Hikari den Zugriff auf alle Dateien zu erlauben."
                 },
                 color = HikariTextMuted,
                 fontSize = 12.5.sp,

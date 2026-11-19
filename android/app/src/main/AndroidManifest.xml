@@ -28,6 +28,10 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Für den In-App-Updater: Installation der heruntergeladenen APK. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- WhatsApp-Wächter: liest WhatsApps Medienordner direkt, um Dateien beim Download zu sichern. -->
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
 
     <application
         android:name=".HikariApp"

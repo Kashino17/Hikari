@@ -138,6 +138,10 @@ class WhatsAppMediaVault @Inject constructor(
         null
     }
 
+    /** Nur der Bild-Anhang der Benachrichtigung, ohne Ordnersuche. */
+    suspend fun captureNotificationAttachment(pending: PendingMedia): String? =
+        withContext(Dispatchers.IO) { copyNotificationAttachment(pending) }
+
     private fun copyNotificationAttachment(pending: PendingMedia): String? {
         val raw = pending.dataUri ?: return null
         return runCatching {

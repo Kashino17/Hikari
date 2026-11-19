@@ -35,6 +35,7 @@ import javax.inject.Inject
 class WhatsAppViewModel @Inject constructor(
     private val repository: WhatsAppRepository,
     private val mediaVault: WhatsAppMediaVault,
+    private val mediaWatcher: com.hikari.app.whatsapp.WhatsAppMediaWatcher,
 ) : ViewModel() {
 
     /** Alles Gerettete — gelöschte und bearbeitete Nachrichten, neueste zuerst. `null` = lädt noch. */
@@ -55,6 +56,10 @@ class WhatsAppViewModel @Inject constructor(
         if (mediaVault.hasMediaFolderAccess()) MediaFolderState.READY else MediaFolderState.MISSING,
     )
     val mediaFolderState: StateFlow<MediaFolderState> = _mediaFolderState.asStateFlow()
+
+    /** „Zugriff auf alle Dateien“ — damit sichert der Medien-Wächter jede Datei beim Download. */
+    private val _allFilesAccess = MutableStateFlow(mediaWatcher.hasAllFilesAccess())
+    val allFilesAccess: StateFlow<Boolean> = _allFilesAccess.asStateFlow()
 
     private val _chatAnalysis = MutableStateFlow<WhatsAppChatAnalysis?>(null)
     val chatAnalysis: StateFlow<WhatsAppChatAnalysis?> = _chatAnalysis.asStateFlow()
@@ -79,6 +84,7 @@ class WhatsAppViewModel @Inject constructor(
     }
 
     fun refreshMediaFolderAccess() {
+        _allFilesAccess.value = mediaWatcher.hasAllFilesAccess()
         viewModelScope.launch {
             _mediaFolderState.value = mediaVault.mediaFolderState()
         }

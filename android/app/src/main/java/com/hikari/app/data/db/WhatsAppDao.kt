@@ -80,6 +80,16 @@ interface WhatsAppDao {
     @Query("SELECT COUNT(*) FROM whatsapp_messages WHERE isEdited = 1")
     fun observeEditedCount(): Flow<Int>
 
+    /** Mediennachrichten eines Typs ab [sinceTimestamp], deren Datei noch fehlt — älteste zuerst. */
+    @Query(
+        """
+        SELECT * FROM whatsapp_messages
+        WHERE mediaType = :mediaType AND mediaPreviewPath IS NULL AND timestamp >= :sinceTimestamp
+        ORDER BY timestamp ASC, id ASC
+        """,
+    )
+    suspend fun getMediaMessagesWithoutFile(mediaType: String, sinceTimestamp: Long): List<WhatsAppMessageEntity>
+
     @Query("SELECT mediaPreviewPath FROM whatsapp_messages WHERE mediaPreviewPath IS NOT NULL")
     suspend fun getActiveMediaPaths(): List<String>
 

@@ -66,6 +66,9 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
     @Inject
     lateinit var mediaVault: WhatsAppMediaVault
 
+    @Inject
+    lateinit var mediaWatcher: WhatsAppMediaWatcher
+
     private val alertScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     // Streng der Reihe nach, damit ein schneller Folge-Stapel den vorherigen nie überholt.
@@ -81,6 +84,9 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     override fun onCreate() {
         super.onCreate()
+        // Sichert jede Datei, die WhatsApp herunterlädt, sobald sie fertig ist (braucht
+        // „Zugriff auf alle Dateien“; ohne läuft die alte Suche über die Ordnerfreigabe).
+        mediaWatcher.start(mediaScope)
         alertScope.launch {
             repository.guardAlerts.collect { alert ->
                 showGuardNotification(alert)
@@ -103,6 +109,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
     }
 
     override fun onDestroy() {
+        mediaWatcher.stop()
         processingScope.cancel()
         mediaScope.cancel()
         alertScope.cancel()
@@ -180,7 +187,12 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
             for (pending in result.pendingMedia) {
                 mediaScope.launch {
-                    val path = mediaVault.captureForMessage(pending)
+                    // Mit Dateizugriff liefert der Medien-Wächter die Datei, sobald WhatsApp sie lädt.
+                    val path = if (mediaWatcher.hasAllFilesAccess()) {
+                        mediaVault.captureNotificationAttachment(pending) ?: return@launch
+                    } else {
+                        mediaVault.captureForMessage(pending)
+                    }
                     Log.d(TAG, "media type=${pending.mediaType} row=${pending.rowId} saved=${path != null}")
                     WhatsAppProbe.note(
                         "media type=${pending.mediaType} row=${pending.rowId} notifUri=${pending.dataUri != null} " +
