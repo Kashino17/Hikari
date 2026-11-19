@@ -57,3 +57,13 @@ export function mergeState(a: BookState, b: BookState): BookState {
   if (opened >= 0) out.lastOpenedAt = opened;
   return out;
 }
+
+/** Eingehendes JSON in einen gültigen Lesestand bringen (fehlende Listen → leer). */
+export function normalizeState(v: unknown): BookState {
+  const o = (v && typeof v === "object" ? v : {}) as Partial<BookState>;
+  return {
+    ...o,
+    bookmarks: Array.isArray(o.bookmarks) ? o.bookmarks : [],
+    highlights: Array.isArray(o.highlights) ? o.highlights : [],
+  };
+}

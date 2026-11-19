@@ -15,6 +15,7 @@ import { registerFeedRoutes } from "./api/feed.js";
 import { registerHealthRoute } from "./api/health.js";
 import { registerStatsRoutes } from "./api/stats.js";
 import { registerVideosRoutes } from "./api/videos.js";
+import { registerEbookRoutes } from "./api/ebooks.js";
 import { registerMangaRoutes } from "./api/manga.js";
 import { createPoliteHttp } from "./ebooks/http.js";
 import { sources as ebookSources } from "./ebooks/sources/index.js";
@@ -177,6 +178,15 @@ await registerStatsRoutes(app, { db });
 await registerVideosRoutes(app, { db, videoDir: cfg.videoDir, coverDir: cfg.coverDir, extractor });
 await registerDownloadsRoutes(app, { db, diskLimitBytes: cfg.diskLimitBytes });
 await registerMangaRoutes(app, { db, mangaDir: cfg.mangaDir, coverDir: cfg.coverDir });
+const ebookHttp = createPoliteHttp();
+registerEbookRoutes(app, {
+  db,
+  ebookDir: cfg.ebookDir,
+  coverDir: cfg.coverDir,
+  http: ebookHttp,
+  sources: ebookSources,
+  log: (msg) => app.log.info(msg),
+});
 await mkdir(join(cfg.dataDir, "music"), { recursive: true });
 await registerMusicRoutes(app, {
   streamCachePath: join(cfg.dataDir, "music-stream-cache.json"),
@@ -443,7 +453,6 @@ cron.schedule("0 4 * * *", () => {
 
 // E-Books: Kataloge aller Quellen nachts um 4:30 (nach dem Aufräumen um 4:00),
 // beim Start nur, wenn der Katalog leer ist oder der letzte Lauf über 24 h her ist.
-const ebookHttp = createPoliteHttp();
 const runEbooks = () =>
   runEbookSync({ db, sources: ebookSources, http: ebookHttp, log: (msg) => app.log.info(msg) }).catch((err) =>
     app.log.warn({ err }, "ebooks: Abgleich abgestürzt"),
