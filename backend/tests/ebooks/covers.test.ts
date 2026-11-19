@@ -67,6 +67,20 @@ describe("findOpenLibraryCover", () => {
       "https://covers.openlibrary.org/b/id/756212-L.jpg",
     );
   });
+  it("zweisprachige oder übersetzte Ausgaben zählen nicht", async () => {
+    const json = JSON.stringify({
+      docs: [
+        {
+          key: "/works/X",
+          language: ["ger", "eng"],
+          editions: { docs: [{ key: "/books/E", cover_i: 261247, language: ["eng", "ger"] }] },
+        },
+      ],
+    });
+    const http = fakeHttp([[(u) => u.includes("search.json"), 200, json]]);
+    expect(await findOpenLibraryCover(http, "Woyzeck", ["Georg Büchner"])).toBeNull();
+  });
+
   it("Fehler oder nichts gefunden → null", async () => {
     expect(await findOpenLibraryCover(fakeHttp([]), "X", [])).toBeNull();
   });

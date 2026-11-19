@@ -70,6 +70,9 @@ interface OlDoc extends OlEdition {
   editions?: { docs?: OlEdition[] };
 }
 
+/** Nur rein deutsche Ausgaben — zweisprachige oder übersetzte Ausgaben zeigen fremde Deckel. */
+const onlyGerman = (langs?: string[]) => !!langs?.length && langs.every((l) => l === "ger");
+
 const coverUrl = (id: number) => `https://covers.openlibrary.org/b/id/${id}-L.jpg`;
 
 /** Deckel einer deutschen Ausgabe aus Open Library — oder null. */
@@ -96,7 +99,7 @@ export async function findOpenLibraryCover(
     // 1. Eine deutsche Ausgabe mit Deckel.
     for (const d of docs)
       for (const e of d.editions?.docs ?? [])
-        if (e.cover_i && e.language?.includes("ger")) return coverUrl(e.cover_i);
+        if (e.cover_i && onlyGerman(e.language)) return coverUrl(e.cover_i);
     // 2. Der Deckel des Werks — nur, wenn die Ausgabe dahinter deutsch ist.
     for (const d of docs) {
       if (!d.cover_i || !d.cover_edition_key || !d.language?.includes("ger")) continue;
@@ -106,7 +109,8 @@ export async function findOpenLibraryCover(
       });
       if (e.status !== 200) continue;
       const ed = JSON.parse(e.body.toString("utf8")) as { languages?: { key: string }[] };
-      if (ed.languages?.some((l) => l.key === "/languages/ger")) return coverUrl(d.cover_i);
+      if (onlyGerman(ed.languages?.map((l) => l.key.replace("/languages/", ""))))
+        return coverUrl(d.cover_i);
     }
     return null;
   } catch {
