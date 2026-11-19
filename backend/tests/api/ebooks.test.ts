@@ -227,11 +227,24 @@ describe("/api/ebooks", () => {
       ["drama"],
       3003,
     );
+    upsertBook(
+      db,
+      raw("l1", { title: "Memoiren einer Sozialistin: Lehrjahre", authors: g, popularity: 500 }),
+      ["roman"],
+      3004,
+    );
+    upsertBook(
+      db,
+      raw("l2", { title: "Memoiren einer Sozialistin: Kampfjahre", authors: g, popularity: 400 }),
+      ["roman"],
+      3005,
+    );
     const { json } = await get("/api/ebooks/home");
     const all = json.shelves.flatMap((s: { books: { id: string }[] }) => s.books.map((b) => b.id));
     const count = (a: string, b: string) => all.filter((id: string) => id === a || id === b).length;
     expect(count("gutenberg:w1", "gutenberg:w2")).toBe(1);
     expect(count("gutenberg:f1", "gutenberg:f2")).toBe(1);
+    expect(count("gutenberg:l1", "gutenberg:l2")).toBe(1);
     expect(ids((await get("/api/ebooks/list?q=werther")).json.books).sort()).toEqual([
       "gutenberg:w1",
       "gutenberg:w2",

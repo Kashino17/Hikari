@@ -53,17 +53,13 @@ export function workKey(title: string, authors: string[]): string {
   return `${words.join(" ")}|${normalizeForSearch(authors[0] ?? "").trim()}`;
 }
 
-/** Werk ohne Band-/Teil-Angabe: „werther band 1“ und „werther band 2“ → eine Reihe. */
-export function seriesKey(key: string): string {
-  return key
-    .replace(
-      /\b(?:erst|zweit|dritt|viert|funft|sechst|siebt|acht|neunt|zehnt)\w{0,2} (?:teil|band)\b/g,
-      "",
-    )
-    .replace(/\b(?:teil|band|vol) \d+(?: \d+)?\b/g, "")
-    .replace(/\s+/g, " ")
-    .replace(/ \|/, "|")
-    .trim();
+/**
+ * Reihe = Haupttitel (vor „:“, „—“ oder „(Vol“) + erster Autor: „Werther — Band 1“ und „— Band 2“,
+ * „Memoiren einer Sozialistin: Lehrjahre“ und „: Kampfjahre“ gehören zusammen.
+ */
+export function seriesKey(title: string, authors: string[]): string {
+  const main = title.split(/: | — | - | \(Vol/)[0] ?? title;
+  return workKey(main, authors);
 }
 
 /** Für Index UND Suchanfrage gleich: klein, ä→a, ö→o, ü→u, ß→ss. */

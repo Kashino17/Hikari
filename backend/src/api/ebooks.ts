@@ -16,7 +16,7 @@ import { CATEGORIES } from "../ebooks/categories.js";
 import { resolveCover } from "../ebooks/covers.js";
 import { ensureBookFile } from "../ebooks/files.js";
 import type { PoliteHttp } from "../ebooks/http.js";
-import { normalizeForSearch, seriesKey, workKey } from "../ebooks/persist.js";
+import { normalizeForSearch, seriesKey } from "../ebooks/persist.js";
 import type { EbookSource } from "../ebooks/sources/types.js";
 import { type BookState, mergeState, normalizeState } from "../ebooks/state-merge.js";
 import { ebookSyncState, runEbookSync } from "../ebooks/sync.js";
@@ -218,8 +218,7 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
     // Von mehrbändigen Werken (Band 1/2, Teil 1/2) steht nur einer da — außer beim gerade gelesenen Werk.
     const shown = new Set<string>();
     const shownSeries = new Set<string>();
-    const seriesOf = (b: { title: string; authors: string[] }) =>
-      seriesKey(workKey(b.title, b.authors));
+    const seriesOf = (b: { title: string; authors: string[] }) => seriesKey(b.title, b.authors);
     const add = (
       key: string,
       title: string,
