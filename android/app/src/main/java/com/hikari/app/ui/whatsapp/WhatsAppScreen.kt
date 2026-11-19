@@ -107,6 +107,7 @@ fun WhatsAppScreen(
     val chatAnalysis by vm.chatAnalysis.collectAsState()
     val mediaFolderState by vm.mediaFolderState.collectAsState()
     val allFilesAccess by vm.allFilesAccess.collectAsState()
+    val usageAccess by vm.usageAccess.collectAsState()
     // Gemessen 20.11.: Die Ordnerfreigabe ist zu langsam und gibt zu früh auf — Medien werden
     // nur mit „Zugriff auf alle Dateien“ verlässlich gesichert. Die alte Freigabe läuft als
     // Notlösung weiter, gilt aber nicht mehr als „eingerichtet“.
@@ -128,7 +129,7 @@ fun WhatsAppScreen(
                     hasNotificationAccess =
                         WhatsAppNotificationListenerService.isNotificationAccessGranted(context)
                     WhatsAppNotificationListenerService.ensureServiceBound(context)
-                    vm.refreshMediaFolderAccess()
+                    vm.refreshMediaFolderAccess(context)
                     vm.pruneNow()
                 }
                 Lifecycle.Event.ON_STOP -> vm.markAllSeen()
@@ -156,6 +157,18 @@ fun WhatsAppScreen(
             vm.onMediaFolderGranted(uri)
             Toast.makeText(context, "Medienordner freigegeben", Toast.LENGTH_SHORT).show()
         }
+    }
+    val openUsageAccess = {
+        val forApp = Intent(
+            Settings.ACTION_USAGE_ACCESS_SETTINGS,
+            android.net.Uri.parse("package:${context.packageName}"),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        runCatching { context.startActivity(forApp) }.onFailure {
+            runCatching {
+                context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            }
+        }
+        Unit
     }
     val openMediaFolderPicker = {
         val forApp = Intent(
@@ -195,12 +208,14 @@ fun WhatsAppScreen(
                     messages = messages,
                     hasNotificationAccess = hasNotificationAccess,
                     hasMediaAccess = hasMediaAccess,
+                    hasUsageAccess = usageAccess,
                     mediaFolderWrong = mediaFolderWrong,
                     searchQuery = searchQuery,
                     onSearchQueryChange = vm::setSearchQuery,
                     decodeHistory = vm::decodeEditHistory,
                     onGrantNotificationAccess = openNotificationAccess,
                     onGrantMediaAccess = openMediaFolderPicker,
+                    onGrantUsageAccess = openUsageAccess,
                     onDeleteEntry = { vm.deleteMessage(it.id) },
                     onRunDemo = { vm.runDemoScenario(context) },
                 )

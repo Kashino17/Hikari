@@ -176,6 +176,41 @@ class WhatsAppRepository @Inject constructor(
         keysToRemove.forEach { activeSnapshots.remove(it) }
     }
 
+    /**
+     * WhatsApp hat eine Benachrichtigung entfernt, während WhatsApp NICHT offen war (das prüft der
+     * Aufrufer). Stand darin genau eine fremde Nachricht, wurde sie für alle gelöscht — so löscht
+     * WhatsApp Einzelnachrichten (gemessen 20.11.): ganze Benachrichtigung weg statt Neu-Post.
+     * Bei mehreren Nachrichten postet WhatsApp beim Löschen neu; verschwindet so ein Stapel ganz,
+     * ist das Lesen (z. B. „Als gelesen markieren“) und bleibt unberührt.
+     * Liefert eine kurze Begründung fürs Protokoll.
+     */
+    suspend fun onLoneMessageVanished(
+        notificationKey: String,
+        now: Long = System.currentTimeMillis(),
+    ): String = mutex.withLock {
+        val stack = activeSnapshots.values.firstOrNull { list -> list.any { it.notificationKey == notificationKey } }
+            ?: return@withLock "kein-stapel"
+        if (stack.size != 1) return@withLock "stapel=${stack.size}"
+        val message = stack.single()
+        if (message.isDeletionNotice) return@withLock "platzhalter"
+        if (now - message.timestamp > DELETE_FOR_EVERYONE_MS) return@withLock "zu-alt"
+        val row = dao.getMessagesForChatSince(message.chatKey, message.timestamp)
+            .firstOrNull { it.senderName == message.senderName && it.timestamp == message.timestamp }
+            ?: return@withLock "keine-zeile"
+        if (row.isDeleted) return@withLock "schon-geloescht"
+        val updated = row.copy(isDeleted = true, deletedAt = now, isReadInHikari = false)
+        dao.update(updated)
+        alert(
+            WhatsAppGuardAlert.MessageDeleted(
+                chatTitle = updated.chatTitle,
+                senderName = updated.senderName,
+                preservedText = updated.text,
+                isGroup = updated.isGroup,
+            ),
+        )
+        "geloescht row=${row.id}"
+    }
+
     suspend fun pruneExpiredData(nowMs: Long = System.currentTimeMillis()) = mutex.withLock {
         pruneInternal(nowMs)
     }
@@ -636,6 +671,8 @@ class WhatsAppRepository @Inject constructor(
         private const val PRUNE_INTERVAL_MS = 10L * 60L * 1000L
         private const val ORPHAN_MEDIA_GRACE_MS = 15L * 60L * 1000L
         private const val UNCLAIMED_FILE_TTL_MS = 5L * 60L * 1000L
+        /** WhatsApp erlaubt „Für alle löschen“ rund 60 Stunden lang. */
+        private const val DELETE_FOR_EVERYONE_MS = 60L * 60L * 60L * 1000L
         /** So nah müssen Datei-Eingang und Anhang-Signal beieinander liegen. */
         private const val PAIR_MS = 20_000L
         /** So lange wartet eine Datei auf ein exaktes Signal, bevor die Zeitregel greift. */

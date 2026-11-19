@@ -476,6 +476,32 @@ class WhatsAppGuardTest {
     }
 
     @Test
+    fun `a lone message whose notification vanishes while WhatsApp is closed was deleted`() = runTest {
+        // Messung 20.11.: „Löschen 1/2“ — WhatsApp entfernt die Benachrichtigung ganz.
+        val ts = sec(System.currentTimeMillis() - 5_000L, 0)
+        post("nia", "Nia", msg("Nia", "Löschen 1", ts))
+        val verdict = repository.onLoneMessageVanished("0|com.whatsapp|1|nia|10426")
+        assertTrue(verdict, verdict.startsWith("geloescht"))
+        assertEquals(listOf("Löschen 1"), deletedTexts())
+    }
+
+    @Test
+    fun `a whole stack vanishing is reading, never a deletion`() = runTest {
+        val ts = sec(System.currentTimeMillis() - 30_000L, 0)
+        post("tom", "Tom", msg("Tom", "eins", ts), msg("Tom", "zwei", ts + 5_000))
+        assertEquals("stapel=2", repository.onLoneMessageVanished("0|com.whatsapp|1|tom|10426"))
+        assertTrue(deletedTexts().isEmpty())
+    }
+
+    @Test
+    fun `a lone message older than the delete-for-everyone limit is not called deleted`() = runTest {
+        val ts = sec(System.currentTimeMillis() - 61L * 60 * 60 * 1000, 0)
+        post("uwe", "Uwe", msg("Uwe", "alt", ts))
+        assertEquals("zu-alt", repository.onLoneMessageVanished("0|com.whatsapp|1|uwe|10426"))
+        assertTrue(deletedTexts().isEmpty())
+    }
+
+    @Test
     fun `a file written before its notification is handed to the message once it arrives`() = runTest {
         val ts = sec(System.currentTimeMillis() - 30_000L, 0)
         val file = File.createTempFile("wa_in_early_", ".jpg").apply { writeText("x") }

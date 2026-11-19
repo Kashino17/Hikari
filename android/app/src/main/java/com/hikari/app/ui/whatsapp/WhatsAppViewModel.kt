@@ -61,6 +61,10 @@ class WhatsAppViewModel @Inject constructor(
     private val _allFilesAccess = MutableStateFlow(mediaWatcher.hasAllFilesAccess())
     val allFilesAccess: StateFlow<Boolean> = _allFilesAccess.asStateFlow()
 
+    /** Nutzungsdatenzugriff — nur damit erkennt der Wächter gelöschte Einzelnachrichten. */
+    private val _usageAccess = MutableStateFlow(false)
+    val usageAccess: StateFlow<Boolean> = _usageAccess.asStateFlow()
+
     private val _chatAnalysis = MutableStateFlow<WhatsAppChatAnalysis?>(null)
     val chatAnalysis: StateFlow<WhatsAppChatAnalysis?> = _chatAnalysis.asStateFlow()
 
@@ -83,8 +87,9 @@ class WhatsAppViewModel @Inject constructor(
         refreshMediaFolderAccess()
     }
 
-    fun refreshMediaFolderAccess() {
+    fun refreshMediaFolderAccess(context: Context? = null) {
         _allFilesAccess.value = mediaWatcher.hasAllFilesAccess()
+        context?.let { _usageAccess.value = com.hikari.app.whatsapp.WhatsAppForeground.hasAccess(it) }
         viewModelScope.launch {
             _mediaFolderState.value = mediaVault.mediaFolderState()
         }

@@ -102,12 +102,14 @@ internal fun WhatsAppGuardTab(
     messages: List<WhatsAppMessageEntity>?,
     hasNotificationAccess: Boolean,
     hasMediaAccess: Boolean,
+    hasUsageAccess: Boolean,
     mediaFolderWrong: Boolean,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     decodeHistory: (String?) -> List<WhatsAppEditVersion>,
     onGrantNotificationAccess: () -> Unit,
     onGrantMediaAccess: () -> Unit,
+    onGrantUsageAccess: () -> Unit,
     onDeleteEntry: (WhatsAppMessageEntity) -> Unit,
     onRunDemo: () -> Unit,
 ) {
@@ -140,14 +142,16 @@ internal fun WhatsAppGuardTab(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 40.dp),
     ) {
-        if (!hasNotificationAccess || !hasMediaAccess) {
+        if (!hasNotificationAccess || !hasMediaAccess || !hasUsageAccess) {
             item(key = "setup") {
                 SetupCard(
                     hasNotificationAccess = hasNotificationAccess,
                     hasMediaAccess = hasMediaAccess,
+                    hasUsageAccess = hasUsageAccess,
                     mediaFolderWrong = mediaFolderWrong,
                     onGrantNotificationAccess = onGrantNotificationAccess,
                     onGrantMediaAccess = onGrantMediaAccess,
+                    onGrantUsageAccess = onGrantUsageAccess,
                 )
                 Spacer(Modifier.height(18.dp))
             }
@@ -296,9 +300,11 @@ internal fun WhatsAppGuardTab(
 private fun SetupCard(
     hasNotificationAccess: Boolean,
     hasMediaAccess: Boolean,
+    hasUsageAccess: Boolean,
     mediaFolderWrong: Boolean,
     onGrantNotificationAccess: () -> Unit,
     onGrantMediaAccess: () -> Unit,
+    onGrantUsageAccess: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -308,7 +314,11 @@ private fun SetupCard(
             .padding(18.dp),
     ) {
         Text(
-            text = if (!hasNotificationAccess) "Wächter einrichten" else "Gelöschte Fotos retten",
+            text = when {
+                !hasNotificationAccess -> "Wächter einrichten"
+                !hasMediaAccess -> "Gelöschte Fotos retten"
+                else -> "Gelöschte Einzelnachrichten erkennen"
+            },
             color = HikariText,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
@@ -332,6 +342,16 @@ private fun SetupCard(
                 text = "Damit sichert Hikari jedes Foto, Video und jede Sprachnachricht in dem Moment, in dem WhatsApp sie lädt. Im nächsten Fenster den Schalter bei Hikari einschalten.",
                 action = "Erlauben",
                 onClick = onGrantMediaAccess,
+            )
+        }
+        if (!hasUsageAccess && (!hasNotificationAccess || !hasMediaAccess)) Spacer(Modifier.height(18.dp))
+        if (!hasUsageAccess) {
+            SetupStep(
+                icon = Icons.Outlined.Shield,
+                title = "Nutzungsdaten erlauben",
+                text = "Steht nur eine Nachricht in der Benachrichtigung, sieht Löschen für Android aus wie Lesen. Hikari unterscheidet es daran, ob WhatsApp gerade offen war. Im nächsten Fenster Hikari einschalten.",
+                action = "Erlauben",
+                onClick = onGrantUsageAccess,
             )
         }
     }

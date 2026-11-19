@@ -96,7 +96,10 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
-        WhatsAppProbe.note("listener connected sdk=${Build.VERSION.SDK_INT} mediaFolder=${mediaVault.hasMediaFolderAccess()}")
+        WhatsAppProbe.note(
+            "listener connected sdk=${Build.VERSION.SDK_INT} mediaFolder=${mediaVault.hasMediaFolderAccess()} " +
+                "usage=${WhatsAppForeground.hasAccess(applicationContext)}",
+        )
         // Bereits sichtbare WhatsApp-Benachrichtigungen einlesen, damit der Vergleichsstapel
         // nach einem Neustart sofort wieder steht.
         runCatching {
@@ -251,6 +254,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         }
 
         pendingClearJobs.remove(key)?.cancel()
+        val removedAt = System.currentTimeMillis()
         when (reason) {
             // Angetippt oder weggewischt: der Vergleichsstapel endet sofort.
             REASON_CLICK, REASON_CANCEL, REASON_CANCEL_ALL -> {
@@ -264,7 +268,24 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                 pendingClearJobs[key] = alertScope.launch {
                     delay(1_200L)
                     pendingClearJobs.remove(key)
-                    processingScope.launch { repository.onNotificationCleared(key) }
+                    // WhatsApp hat sie selbst entfernt und nicht neu gepostet. War WhatsApp dabei
+                    // nicht offen, kann es nur eine gelöschte Einzelnachricht sein (Lesen geht nur
+                    // in WhatsApp; WhatsApp Web nutzt Kadir nicht).
+                    val open = if (reason == REASON_APP_CANCEL) {
+                        WhatsAppForeground.wasOpenAround(applicationContext, pkg, removedAt)
+                    } else {
+                        null
+                    }
+                    processingScope.launch {
+                        if (open == false) {
+                            val verdict = runCatching { repository.onLoneMessageVanished(key, removedAt) }
+                                .getOrDefault("fehler")
+                            WhatsAppProbe.note("weg chat=${chatLogId(sbn)} whatsappOffen=false -> $verdict")
+                        } else if (reason == REASON_APP_CANCEL) {
+                            WhatsAppProbe.note("weg chat=${chatLogId(sbn)} whatsappOffen=$open -> gelesen")
+                        }
+                        repository.onNotificationCleared(key)
+                    }
                 }
             }
         }
