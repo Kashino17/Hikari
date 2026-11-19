@@ -51,7 +51,8 @@ export function Today() {
         <div class="tiles">
           <${FoodTile} food=${food} />
           <${SkillTile} skills=${skills} catalog=${catalog} />
-        </div>`}
+        </div>
+        <${MindTile} />`}
         ${state && !state.ai?.hasKey && html`<div class="card pad16 mt16 small muted">Kein Gemini-Schlüssel gefunden — der Coach plant mit festen Regeln, Foto-Tracker und Ernährungs-Coach brauchen den Schlüssel von »Lieder & Szenen«.</div>`}
         <div class="end" />
       </div>
@@ -152,6 +153,10 @@ function DayView({ day, today }) {
           : html`<div class="small muted">Nichts eingetragen.</div>`}
       </div>`}
 
+    ${d.mind?.length > 0 && html`<div class="sec"><h2 class="h2">Achtsamkeit</h2><span class="small muted">${Math.round(d.mind.reduce((a, x) => a + x.seconds, 0) / 60)} min</span></div>
+      <div class="card pad16 c-mind">${d.mind.map((x) => html`<div class="row small" style="padding:4px 0"><${Icon} n=${x.kind === 'yoga' ? 'self_improvement' : x.kind === 'atem' ? 'air' : 'spa'} style="font-size:18px;color:rgb(var(--mind))" />
+        <span class="grow">${x.kind === 'yoga' ? (x.ref?.startsWith('stufe-') ? `Yoga · Stufe ${x.ref.slice(6)}` : 'Yoga') : x.kind === 'atem' ? 'Atemübung' : 'Meditation'}${x.mood_before && x.mood_after ? ` · Stimmung ${x.mood_before} → ${x.mood_after}` : ''}</span>
+        <span class="num muted">${Math.round(x.seconds / 60)} min</span></div>`)}</div>`}
     ${d.skills.length > 0 && html`<div class="sec"><h2 class="h2">Skills</h2></div>
       <div class="card pad16 c-skill">${d.skills.map((k) => html`<div class="row small" style="padding:4px 0"><${Icon} n="sports_gymnastics" style="font-size:18px;color:rgb(var(--skill))" /><span class="grow">${k.skill} · ${k.step}</span><span class="num">${fmtNum(k.value)} ${k.unit}</span></div>`)}</div>`}
     ${d.weight && html`<div class="small muted mt16">Gewicht an diesem Tag: ${fmtNum(d.weight, 1)} kg</div>`}
@@ -228,6 +233,26 @@ function DoneCard({ s }) {
     <button class="btn mt12" onClick=${() => setExtra(true)}><${Icon} n="add_circle" />Noch ein Training heute</button>
     <button class="btn ghost mt8" onClick=${() => nav('training', { replace: true })}>Nächstes Training ansehen</button>
     ${extra && html`<${ExtraSheet} onClose=${() => setExtra(false)} />`}
+  </div>`;
+}
+
+function MindTile() {
+  const [m] = useData('/fitness/mind');
+  const st = m?.stats;
+  const breath = m?.atem?.[0];
+  return html`<div class="mindTile c-mind mt12">
+    <button class="row gap12" style="width:100%;text-align:left" onClick=${() => nav('achtsam', { replace: true })}>
+      <div class="orb sm"><i /></div>
+      <div class="grow"><div class="tt" style="color:rgb(var(--mind))">Achtsamkeit</div>
+        <div class="small muted mt4">${st?.todayMinutes ? `Heute ${st.todayMinutes} min` : 'Heute noch nichts'}${st?.streak > 1 ? ` · ${st.streak} Tage in Folge` : ''}</div></div>
+      <${Icon} n="chevron_right" style="color:var(--faint)" />
+    </button>
+    ${m?.affirmation && html`<p class="small mt12" style="line-height:1.45">»${m.affirmation.text}«</p>`}
+    <div class="row gap6 mt12">
+      ${breath && html`<button class="btn sm tint grow" style="height:36px" onClick=${() => nav(`achtsam/atem/${breath.id}`)}><${Icon} n="air" style="font-size:18px" />Atmen</button>`}
+      <button class="btn sm tint grow" style="height:36px" onClick=${() => nav('achtsam/zeit/5')}><${Icon} n="self_improvement" style="font-size:18px" />5 min</button>
+      <button class="btn sm tint grow" style="height:36px" onClick=${() => nav('achtsam/yoga')}><${Icon} n="route" style="font-size:18px" />Yoga</button>
+    </div>
   </div>`;
 }
 

@@ -121,6 +121,19 @@ CREATE TABLE IF NOT EXISTS coach_notes (
   at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS coach_notes_kind ON coach_notes(kind, day);
+-- Achtsamkeit: jede Meditation, Atemübung, Yoga-Einheit, jedes Video (siehe mind.ts).
+CREATE TABLE IF NOT EXISTS mind_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day TEXT NOT NULL,
+  kind TEXT NOT NULL,            -- meditation | atem | yoga | video
+  ref TEXT,                      -- id (gefuehrt/atem/video) oder 'stufe-N'
+  seconds INTEGER NOT NULL,
+  mood_before INTEGER,           -- 1 schlecht … 5 sehr gut
+  mood_after INTEGER,
+  note TEXT,
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS mind_log_day ON mind_log(day);
 `;
 
 export type FitDb = Database.Database;

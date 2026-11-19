@@ -1,0 +1,1780 @@
+[
+ {
+  "id": "entspannungslage",
+  "api": 11,
+  "de": "Entspannungslage",
+  "sanskrit": "Sivasana",
+  "en": "Corpse",
+  "stufe": 1,
+  "art": "entspannung",
+  "kurz": "Ruhige Rückenlage, in der der Körper vollständig loslässt und die Übungen nachwirken können.",
+  "schritte": [
+   "Lege dich auf den Rücken, die Beine etwa hüftbreit auseinander.",
+   "Lass die Füße locker nach außen fallen.",
+   "Lege die Arme etwas vom Körper entfernt ab, die Handflächen zeigen nach oben.",
+   "Schiebe den Hinterkopf sanft lang, damit der Nacken frei ist.",
+   "Schließe die Augen und gib mit jedem Ausatmen etwas mehr Gewicht an den Boden ab."
+  ],
+  "fehler": [
+   "Der untere Rücken zieht im Hohlkreuz – stelle die Füße auf oder lege eine Rolle unter die Knie.",
+   "Das Kinn zeigt zur Decke – ein flaches Kissen unter dem Kopf macht den Nacken lang.",
+   "Du frierst und spannst unbewusst an – deck dich zu, Wärme hilft beim Loslassen.",
+   "Die Gedanken planen schon den Tag – kehre ohne Ärger zum Atem zurück."
+  ],
+  "atem": "Natürlich und ungesteuert. Lass den Atem kommen und gehen, ohne ihn zu formen.",
+  "wirkung": [
+   "Gibt dem Nervensystem Zeit, vom Aktivsein in die Ruhe zu wechseln.",
+   "Löst Restspannung in Muskeln, Kiefer und Gesicht.",
+   "Übt, wach und zugleich entspannt zu sein."
+  ],
+  "achtsamkeit": "Wandere mit der Aufmerksamkeit langsam durch den Körper, von den Zehen bis zum Scheitel. Du musst nichts verändern, nur bemerken.",
+  "vorsicht": "Ab der zweiten Schwangerschaftshälfte lieber auf der linken Seite liegen. Bei Rückenbeschwerden die Knie unterlagern.",
+  "erleichterung": "Rolle oder Decke unter die Knie, flaches Kissen unter den Kopf, Decke über den Körper.",
+  "vorstufe": null,
+  "halten": {
+   "start": 180,
+   "ziel": 480
+  },
+  "seiten": false
+ },
+ {
+  "id": "kind",
+  "api": 10,
+  "de": "Stellung des Kindes",
+  "sanskrit": "Balasana",
+  "en": "Child's Pose",
+  "stufe": 1,
+  "art": "entspannung",
+  "kurz": "Kniende Ruhehaltung, in der du dich nach vorn über die Oberschenkel faltest.",
+  "schritte": [
+   "Knie dich hin, die großen Zehen berühren sich.",
+   "Öffne die Knie etwa hüftbreit oder etwas weiter.",
+   "Setze das Gesäß Richtung Fersen.",
+   "Lege den Oberkörper ab und die Stirn auf den Boden.",
+   "Lass die Arme neben dem Körper liegen oder strecke sie nach vorn aus."
+  ],
+  "fehler": [
+   "Das Gesäß schwebt hoch über den Fersen – lege eine gefaltete Decke dazwischen.",
+   "Die Stirn erreicht den Boden nicht und der Nacken spannt – lege einen Block oder die Fäuste unter die Stirn.",
+   "Die Schultern ziehen zu den Ohren – lass die Arme nach hinten neben die Füße sinken."
+  ],
+  "atem": "Atme bewusst in den Rücken. Spüre, wie sich die Rippen hinten bei jedem Einatmen weiten.",
+  "wirkung": [
+   "Dehnt sanft Rücken, Hüften und Fußgelenke.",
+   "Bietet eine Pause zwischen fordernden Haltungen.",
+   "Lenkt die Aufmerksamkeit nach innen."
+  ],
+  "achtsamkeit": "Hier darfst du dich zurückziehen. Spüre die Berührung der Stirn am Boden und lass die Gedanken dort ankommen.",
+  "vorsicht": "Bei Knieproblemen eine Decke in die Kniekehlen legen oder auslassen. In der Schwangerschaft die Knie weit öffnen.",
+  "erleichterung": "Kissen oder Bolster längs unter den Oberkörper, gerollte Decke unter die Fußgelenke.",
+  "vorstufe": null,
+  "halten": {
+   "start": 30,
+   "ziel": 120
+  },
+  "seiten": false
+ },
+ {
+  "id": "katze",
+  "api": 7,
+  "de": "Katze",
+  "sanskrit": "Marjaryasana",
+  "en": "Cat",
+  "stufe": 1,
+  "art": "vorbeuge",
+  "kurz": "Im Vierfüßlerstand rundest du den Rücken aktiv nach oben.",
+  "schritte": [
+   "Komm in den Vierfüßlerstand: Hände unter den Schultern, Knie unter den Hüften.",
+   "Spreize die Finger und drücke die ganze Hand in den Boden.",
+   "Ausatmend schiebst du den Boden weg und rundest den Rücken Wirbel für Wirbel.",
+   "Lass den Kopf locker sinken und ziehe den Bauchnabel sanft nach innen.",
+   "Meist im Wechsel mit der Kuh, im Rhythmus deines Atems."
+  ],
+  "fehler": [
+   "Die Bewegung passiert nur im Nacken – beginne die Rundung im Becken.",
+   "Die Ellbogen sind überstreckt – halte sie minimal weich.",
+   "Du bewegst dich zu schnell – jede Bewegung dauert genau einen Atemzug."
+  ],
+  "atem": "Ausatmend in die Rundung. Lass das Ausatmen die Bewegung führen.",
+  "wirkung": [
+   "Mobilisiert die Wirbelsäule und weckt die Rumpfmuskulatur.",
+   "Dehnt den oberen Rücken zwischen den Schulterblättern.",
+   "Verbindet Bewegung und Atem, ein guter Einstieg in jede Praxis."
+  ],
+  "achtsamkeit": "Spüre, wie sich jeder Wirbel einzeln bewegt. Wo fließt es leicht, wo ist es noch fest?",
+  "vorsicht": "Bei empfindlichen Handgelenken auf die Fäuste oder Unterarme gehen. Bei Knieschmerzen eine Decke unterlegen.",
+  "erleichterung": "Gefaltete Decke unter die Knie oder im Sitzen auf einem Stuhl üben.",
+  "vorstufe": null,
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "kuh",
+  "api": 8,
+  "de": "Kuh",
+  "sanskrit": "Bitilasana",
+  "en": "Cow",
+  "stufe": 1,
+  "art": "rueckbeuge",
+  "kurz": "Im Vierfüßlerstand lässt du den Bauch sinken und öffnest die Brust nach vorn.",
+  "schritte": [
+   "Beginne im Vierfüßlerstand, Hände unter den Schultern, Knie unter den Hüften.",
+   "Einatmend kippst du das Becken und lässt den Bauch Richtung Boden sinken.",
+   "Ziehe das Brustbein nach vorn und die Schultern weg von den Ohren.",
+   "Hebe den Blick leicht, ohne den Nacken einzuknicken.",
+   "Wechsle ausatmend in die Katze."
+  ],
+  "fehler": [
+   "Der Kopf wird in den Nacken geworfen – den Blick nur leicht nach vorn heben.",
+   "Du hängst in den Schultern – drücke die Hände aktiv in den Boden.",
+   "Das Hohlkreuz schmerzt – mach die Bewegung kleiner."
+  ],
+  "atem": "Einatmend in die Öffnung. Lass das Einatmen die Brust weit machen.",
+  "wirkung": [
+   "Mobilisiert die Wirbelsäule in die Streckung.",
+   "Öffnet Brustkorb und Vorderseite des Rumpfes.",
+   "Wirkt belebend, besonders am Morgen."
+  ],
+  "achtsamkeit": "Spüre die Weite im Brustraum beim Einatmen. Lass die Bewegung so groß sein, wie sie sich heute gut anfühlt.",
+  "vorsicht": "Bei Nackenproblemen den Kopf in Verlängerung der Wirbelsäule halten. Handgelenke wie bei der Katze schützen.",
+  "erleichterung": "Decke unter die Knie, Bewegung klein halten oder im Sitzen üben.",
+  "vorstufe": "katze",
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "sphinx",
+  "api": 35,
+  "de": "Sphinx",
+  "sanskrit": "Salamba Bhujangasana",
+  "en": "Sphinx",
+  "stufe": 1,
+  "art": "rueckbeuge",
+  "kurz": "Sanfte Rückbeuge in Bauchlage, gestützt auf die Unterarme.",
+  "schritte": [
+   "Lege dich auf den Bauch, die Beine lang und hüftbreit.",
+   "Stelle die Ellbogen unter die Schultern, die Unterarme liegen parallel.",
+   "Drücke die Unterarme in den Boden und ziehe die Brust nach vorn und oben.",
+   "Lass das Schambein schwer werden und das Gesäß weich.",
+   "Ziehe die Schultern von den Ohren weg, der Nacken bleibt lang."
+  ],
+  "fehler": [
+   "Die Schultern sacken zu den Ohren – drücke die Unterarme aktiv weg.",
+   "Es drückt im unteren Rücken – schiebe die Ellbogen etwas weiter nach vorn, das macht die Beuge flacher.",
+   "Das Gesäß ist fest angespannt – lass es weich und strecke die Beine aktiv nach hinten."
+  ],
+  "atem": "Ruhig durch die Nase. Spüre, wie der Bauch beim Einatmen sanft gegen den Boden drückt.",
+  "wirkung": [
+   "Kräftigt die Rückenstrecker auf sanfte Weise.",
+   "Öffnet Brust und Schultern als Ausgleich zum vielen Sitzen.",
+   "Macht wach, ohne aufzuregen."
+  ],
+  "achtsamkeit": "Lass den Blick weich nach vorn gehen. Spüre die Verbindung von Becken und Boden als ruhigen Anker.",
+  "vorsicht": "Bei akuten Rückenbeschwerden und in der Schwangerschaft auslassen. Bei Schmerz im unteren Rücken flacher werden.",
+  "erleichterung": "Ellbogen weiter nach vorn setzen oder eine gefaltete Decke unter das Becken legen.",
+  "vorstufe": null,
+  "halten": {
+   "start": 30,
+   "ziel": 120
+  },
+  "seiten": false
+ },
+ {
+  "id": "schmetterling",
+  "api": 5,
+  "de": "Schmetterling",
+  "sanskrit": "Baddha Konasana",
+  "en": "Butterfly",
+  "stufe": 1,
+  "art": "hueftoeffner",
+  "kurz": "Sitzhaltung mit aneinanderliegenden Fußsohlen, die sanft Leisten und Hüften öffnet.",
+  "schritte": [
+   "Setz dich aufrecht hin, gern auf eine gefaltete Decke.",
+   "Bring die Fußsohlen zusammen und lass die Knie zur Seite sinken.",
+   "Umfasse die Füße oder Fußgelenke.",
+   "Richte die Wirbelsäule auf, als zöge dich ein Faden am Scheitel nach oben.",
+   "Wenn du magst, neige dich mit langem Rücken leicht nach vorn."
+  ],
+  "fehler": [
+   "Der Rücken ist rund – setz dich höher auf eine Decke oder einen Block.",
+   "Die Knie werden nach unten gedrückt – lass die Schwerkraft arbeiten, nicht die Hände.",
+   "Es zieht im Knie – rücke die Füße weiter vom Becken weg."
+  ],
+  "atem": "Lang ausatmen. Mit jedem Ausatmen dürfen die Hüften ein wenig weicher werden.",
+  "wirkung": [
+   "Dehnt die Innenseiten der Oberschenkel und die Leisten.",
+   "Fördert einen aufrechten Sitz.",
+   "Wirkt erdend und beruhigend."
+  ],
+  "achtsamkeit": "Beobachte, ob du ungeduldig wirst. Öffnen geschieht durch Zulassen, nicht durch Druck.",
+  "vorsicht": "Bei Leisten- oder Knieverletzungen Blöcke unter die Knie legen.",
+  "erleichterung": "Decke unter das Gesäß, Blöcke oder Kissen unter die Knie, Rücken an die Wand.",
+  "vorstufe": null,
+  "halten": {
+   "start": 45,
+   "ziel": 180
+  },
+  "seiten": false
+ },
+ {
+  "id": "sitzende_vorbeuge",
+  "api": 30,
+  "de": "Sitzende Vorbeuge",
+  "sanskrit": "Paschimottanasana",
+  "en": "Seated Forward Bend",
+  "stufe": 1,
+  "art": "vorbeuge",
+  "kurz": "Sitzende Vorwärtsbeuge über die gestreckten Beine, die die gesamte Körperrückseite dehnt.",
+  "schritte": [
+   "Setz dich mit gestreckten Beinen hin, die Zehen zeigen nach oben.",
+   "Ziehe das Gewebe unter den Sitzbeinhöckern zur Seite, damit du aufrecht sitzt.",
+   "Einatmend wirst du lang und hebst die Arme.",
+   "Ausatmend neigst du dich aus der Hüfte nach vorn, der Rücken bleibt so lang wie möglich.",
+   "Lege die Hände dort ab, wo sie ankommen: Schienbeine, Füße oder Boden."
+  ],
+  "fehler": [
+   "Nur der obere Rücken rundet sich – beuge die Knie und kippe das Becken nach vorn.",
+   "Du ziehst dich mit den Armen tiefer – lass die Schwerkraft arbeiten.",
+   "Es zieht in den Kniekehlen – Knie leicht beugen oder eine Rolle darunter legen."
+  ],
+  "atem": "Einatmend den Rücken verlängern, ausatmend ein kleines Stück tiefer sinken.",
+  "wirkung": [
+   "Dehnt Beinrückseiten und Rücken.",
+   "Wirkt beruhigend und nach innen gekehrt.",
+   "Schult Geduld."
+  ],
+  "achtsamkeit": "Vorbeugen sind Haltungen des Loslassens. Bemerke, wo du festhältst, und atme dorthin.",
+  "vorsicht": "Bei Bandscheibenproblemen nur mit langem Rücken und gebeugten Knien. In der Schwangerschaft die Beine weit öffnen.",
+  "erleichterung": "Decke unter das Gesäß, Knie gebeugt, Gurt um die Füße.",
+  "vorstufe": null,
+  "halten": {
+   "start": 45,
+   "ziel": 180
+  },
+  "seiten": false
+ },
+ {
+  "id": "stehende_vorbeuge",
+  "api": 38,
+  "de": "Stehende Vorbeuge",
+  "sanskrit": "Uttanasana",
+  "en": "Standing Forward Bend",
+  "stufe": 1,
+  "art": "vorbeuge",
+  "kurz": "Aus dem Stand faltest du dich aus der Hüfte nach vorn und lässt den Oberkörper hängen.",
+  "schritte": [
+   "Stelle dich hüftbreit hin, das Gewicht gleichmäßig auf beiden Füßen.",
+   "Beuge die Knie weich.",
+   "Ausatmend faltest du dich aus den Hüftgelenken nach vorn.",
+   "Lass Kopf und Arme schwer hängen oder umfasse die Ellbogen.",
+   "Zum Aufkommen die Knie beugen und dich Wirbel für Wirbel aufrollen, der Kopf kommt zuletzt."
+  ],
+  "fehler": [
+   "Die Knie sind durchgedrückt – beuge sie, besonders am Anfang.",
+   "Das Gewicht hängt in den Fersen – verlagere es leicht nach vorn zu den Fußballen.",
+   "Dir wird beim Aufrichten schwindlig – langsam aufrollen, Kopf zuletzt."
+  ],
+  "atem": "Lass jedes Ausatmen den Oberkörper ein wenig schwerer werden.",
+  "wirkung": [
+   "Dehnt Beinrückseiten und Rücken.",
+   "Entlastet den Nacken, wenn der Kopf hängen darf.",
+   "Wirkt beruhigend."
+  ],
+  "achtsamkeit": "Hängenlassen heißt ablegen, was du gerade nicht tragen musst. Spüre die Schwerkraft als Helferin.",
+  "vorsicht": "Bei Bluthochdruck, Glaukom oder Schwindel nur halb vorbeugen, Hände auf die Oberschenkel. Bei Rückenproblemen die Knie deutlich beugen.",
+  "erleichterung": "Knie stark beugen, Hände auf Blöcke oder auf einen Stuhl.",
+  "vorstufe": null,
+  "halten": {
+   "start": 30,
+   "ziel": 90
+  },
+  "seiten": false
+ },
+ {
+  "id": "krieger_1",
+  "api": 44,
+  "de": "Krieger I",
+  "sanskrit": "Virabhadrasana One",
+  "en": "Warrior One",
+  "stufe": 2,
+  "art": "stehend",
+  "kurz": "Kraftvolle Standhaltung im Ausfallschritt mit nach vorn ausgerichtetem Becken und erhobenen Armen.",
+  "schritte": [
+   "Mach aus dem Stand einen großen Schritt nach hinten.",
+   "Drehe den hinteren Fuß etwa fünfundvierzig Grad nach außen, die Ferse bleibt am Boden.",
+   "Beuge das vordere Knie, bis es über dem Fußgelenk steht.",
+   "Richte das Becken so gut es geht nach vorn aus.",
+   "Einatmend hebst du die Arme, die Schultern bleiben weg von den Ohren."
+  ],
+  "fehler": [
+   "Das vordere Knie fällt nach innen – richte es über den zweiten Zeh aus.",
+   "Du sinkst ins Hohlkreuz – ziehe das Steißbein sanft nach unten und den Bauch leicht an.",
+   "Der Stand wackelt, weil die Füße auf einer Linie stehen – stelle sie hüftbreit wie auf zwei Schienen.",
+   "Die Schultern ziehen hoch – öffne die Arme etwas weiter."
+  ],
+  "atem": "Gleichmäßig und kräftig. Einatmend wachsen, ausatmend tiefer in die Beine sinken.",
+  "wirkung": [
+   "Kräftigt Beine und Gesäß.",
+   "Dehnt den Hüftbeuger des hinteren Beins.",
+   "Stärkt Standfestigkeit und Ausdauer."
+  ],
+  "achtsamkeit": "Spüre die Kraft deiner Beine und den Boden darunter. Der Krieger kämpft nicht gegen etwas, er steht für etwas ein.",
+  "vorsicht": "Bei Knieproblemen das vordere Knie weniger beugen. Bei Schulter- oder Nackenproblemen die Hände an die Hüften.",
+  "erleichterung": "Kürzerer Schritt, hintere Ferse anheben, Hände an die Hüften.",
+  "vorstufe": "tiefer_ausfallschritt",
+  "halten": {
+   "start": 30,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "krieger_2",
+  "api": 45,
+  "de": "Krieger II",
+  "sanskrit": "Virabhadrasana Two",
+  "en": "Warrior Two",
+  "stufe": 2,
+  "art": "stehend",
+  "kurz": "Breite Standhaltung mit gebeugtem vorderem Bein und seitlich ausgestreckten Armen.",
+  "schritte": [
+   "Stelle die Füße weit auseinander, etwa eine Beinlänge.",
+   "Drehe den vorderen Fuß nach außen und den hinteren leicht nach innen.",
+   "Beuge das vordere Knie, bis es über dem Fußgelenk steht.",
+   "Strecke die Arme auf Schulterhöhe zur Seite aus.",
+   "Schau über die vordere Hand, der Oberkörper bleibt mittig über dem Becken."
+  ],
+  "fehler": [
+   "Der Oberkörper kippt zum vorderen Bein – ziehe ihn zurück über die Mitte.",
+   "Das vordere Knie fällt nach innen – schiebe es Richtung kleiner Zeh.",
+   "Das hintere Bein ist schlaff – drücke die Außenkante des hinteren Fußes aktiv in den Boden."
+  ],
+  "atem": "Ruhig und tief. Mit jedem Ausatmen die Schultern sinken lassen.",
+  "wirkung": [
+   "Kräftigt die Beine und öffnet die Hüften.",
+   "Fördert Ausdauer und Konzentration.",
+   "Vermittelt ein Gefühl von Weite und Präsenz."
+  ],
+  "achtsamkeit": "Richte den Blick ruhig auf einen Punkt über der vorderen Hand. Bleib gesammelt, auch wenn die Beine brennen.",
+  "vorsicht": "Bei Knieproblemen weniger tief beugen. Bei Nackenproblemen geradeaus statt über die Hand schauen.",
+  "erleichterung": "Schritt verkürzen, weniger tief beugen, Hände an die Hüften.",
+  "vorstufe": null,
+  "halten": {
+   "start": 30,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "umgekehrter_krieger",
+  "api": 29,
+  "de": "Umgekehrter Krieger",
+  "sanskrit": "Parsva Virabhadrasana",
+  "en": "Reverse Warrior",
+  "stufe": 2,
+  "art": "stehend",
+  "kurz": "Aus dem Krieger II neigst du den Oberkörper zurück und öffnest die vordere Körperseite.",
+  "schritte": [
+   "Beginne im Krieger II.",
+   "Lass die hintere Hand am hinteren Bein hinabgleiten, ohne dich darauf abzustützen.",
+   "Hebe den vorderen Arm nach oben und leicht nach hinten.",
+   "Das vordere Knie bleibt gebeugt über dem Fußgelenk.",
+   "Schau zur oberen Hand oder geradeaus."
+  ],
+  "fehler": [
+   "Das vordere Knie streckt sich – halte es aktiv gebeugt.",
+   "Du stützt dich auf die hintere Hand – sie ruht nur leicht am Bein, nie auf dem Knie.",
+   "Die Flanke sackt zusammen – wachse über die obere Hand hinaus."
+  ],
+  "atem": "Atme in die geöffnete Flanke und spüre, wie sich die Rippen dort weiten.",
+  "wirkung": [
+   "Dehnt die Körperseite und die Zwischenrippenmuskulatur.",
+   "Kräftigt das vordere Bein.",
+   "Wirkt öffnend und leicht."
+  ],
+  "achtsamkeit": "Kraft unten, Weite oben. Spüre, wie beides zugleich da sein kann.",
+  "vorsicht": "Bei Nackenproblemen geradeaus schauen. Bei Knieproblemen weniger tief beugen.",
+  "erleichterung": "Kürzerer Stand, obere Hand an die Hüfte.",
+  "vorstufe": "krieger_2",
+  "halten": {
+   "start": 20,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "dreieck",
+  "api": 42,
+  "de": "Dreieck",
+  "sanskrit": "Trikonasana",
+  "en": "Triangle",
+  "stufe": 2,
+  "art": "stehend",
+  "kurz": "Seitliche Dehnhaltung mit gestreckten Beinen, bei der der Körper eine flache Ebene bildet.",
+  "schritte": [
+   "Stelle die Füße weit auseinander, der vordere Fuß zeigt nach außen.",
+   "Strecke die Arme auf Schulterhöhe aus.",
+   "Schiebe die Hüfte nach hinten und reiche mit dem Oberkörper weit über das vordere Bein.",
+   "Lege die vordere Hand an Schienbein, Block oder Boden, die andere Hand zeigt nach oben.",
+   "Öffne die Brust zur Seite, als stündest du zwischen zwei Glasscheiben."
+  ],
+  "fehler": [
+   "Der Oberkörper kippt nach vorn – bleib lieber höher und öffne die Brust.",
+   "Das vordere Knie ist überstreckt – Oberschenkel aktivieren, Knie minimal weich.",
+   "Die Hand drückt auf das Knie – lege sie höher am Schienbein oder auf einen Block."
+  ],
+  "atem": "Lang und gleichmäßig. Einatmend die Seiten verlängern, ausatmend die Brust weiter öffnen.",
+  "wirkung": [
+   "Dehnt Beinrückseiten, Leisten und Körperseite.",
+   "Kräftigt Beine und Rumpf.",
+   "Fördert Gleichgewicht und Körpergefühl im Raum."
+  ],
+  "achtsamkeit": "Spüre die drei Richtungen: Füße in den Boden, obere Hand zum Himmel, Scheitel nach vorn. Ruhe dazwischen.",
+  "vorsicht": "Bei niedrigem Blutdruck oder Nackenproblemen zum Boden schauen. Bei überstreckbaren Knien das Knie weich halten.",
+  "erleichterung": "Block unter die vordere Hand, mit dem Rücken an der Wand üben.",
+  "vorstufe": "krieger_2",
+  "halten": {
+   "start": 30,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "stuhl",
+  "api": 9,
+  "de": "Stuhl",
+  "sanskrit": "Utkatasana",
+  "en": "Chair",
+  "stufe": 2,
+  "art": "stehend",
+  "kurz": "Kraftvolle Haltung, als würdest du dich auf einen unsichtbaren Stuhl setzen.",
+  "schritte": [
+   "Stelle die Füße hüftbreit oder geschlossen.",
+   "Beuge die Knie und schiebe das Gesäß nach hinten.",
+   "Das Gewicht liegt in den Fersen, die Zehen könnten sich heben.",
+   "Hebe die Arme nach oben neben die Ohren.",
+   "Ziehe den Bauch leicht an, damit der untere Rücken lang bleibt."
+  ],
+  "fehler": [
+   "Die Knie schieben weit über die Zehen – das Gesäß weiter nach hinten.",
+   "Du sinkst ins Hohlkreuz – Steißbein sanft Richtung Boden.",
+   "Die Schultern sind hochgezogen – Arme schulterbreit oder Hände vor die Brust."
+  ],
+  "atem": "Gleichmäßig weiteratmen, gerade wenn es anstrengend wird. Nicht die Luft anhalten.",
+  "wirkung": [
+   "Kräftigt Oberschenkel, Gesäß und Rücken.",
+   "Baut innere Wärme auf.",
+   "Schult, unter Anstrengung ruhig zu bleiben."
+  ],
+  "achtsamkeit": "Bemerke den Moment, in dem der Kopf aufhören will. Bleib noch einen Atemzug, freundlich und ohne Zwang.",
+  "vorsicht": "Bei Knieschmerzen weniger tief gehen. Bei niedrigem Blutdruck nicht zu lange halten.",
+  "erleichterung": "Weniger tief beugen, Hände an die Oberschenkel oder mit dem Rücken an die Wand.",
+  "vorstufe": null,
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "tiefer_ausfallschritt",
+  "api": 23,
+  "de": "Tiefer Ausfallschritt",
+  "sanskrit": "Anjaneyasana",
+  "en": "Low Lunge",
+  "stufe": 2,
+  "art": "hueftoeffner",
+  "kurz": "Ausfallschritt mit abgelegtem hinterem Knie, der den Hüftbeuger dehnt.",
+  "schritte": [
+   "Stelle aus dem Vierfüßlerstand einen Fuß zwischen die Hände.",
+   "Lege das hintere Knie ab und schiebe es etwas zurück.",
+   "Richte den Oberkörper auf, die Hände ruhen auf dem vorderen Knie oder gehen nach oben.",
+   "Lass das Becken sanft nach vorn und unten sinken.",
+   "Ziehe das Schambein leicht Richtung Bauchnabel, das schützt den unteren Rücken."
+  ],
+  "fehler": [
+   "Das hintere Knie schmerzt – lege eine Decke darunter.",
+   "Du sinkst ins Hohlkreuz – richte das Becken auf, statt tiefer zu sinken.",
+   "Das vordere Knie schiebt weit über die Zehen – setze den Fuß weiter vorn auf."
+  ],
+  "atem": "Atme in die Vorderseite der Hüfte. Mit jedem Ausatmen darf sie ein wenig nachgeben.",
+  "wirkung": [
+   "Dehnt Hüftbeuger und Oberschenkelvorderseite.",
+   "Gleicht langes Sitzen aus.",
+   "Öffnet Brust und Atemraum."
+  ],
+  "achtsamkeit": "Hüften halten oft Spannung fest. Begegne dem, was du spürst, mit Neugier statt mit Druck.",
+  "vorsicht": "Bei Knieproblemen dick polstern. Bei Rückenschmerzen nicht ins Hohlkreuz sinken.",
+  "erleichterung": "Gefaltete Decke unter das hintere Knie, Blöcke unter die Hände.",
+  "vorstufe": null,
+  "halten": {
+   "start": 30,
+   "ziel": 90
+  },
+  "seiten": true
+ },
+ {
+  "id": "baum",
+  "api": 41,
+  "de": "Baum",
+  "sanskrit": "Vrksasana",
+  "en": "Tree",
+  "stufe": 2,
+  "art": "balance",
+  "kurz": "Einbeinige Gleichgewichtshaltung, bei der die Fußsohle am Standbein ruht.",
+  "schritte": [
+   "Stelle dich aufrecht hin und verlagere das Gewicht auf ein Bein.",
+   "Setze die andere Fußsohle an Knöchel, Wade oder Oberschenkelinnenseite, nie direkt an das Knie.",
+   "Öffne das gebeugte Knie zur Seite.",
+   "Drücke Fuß und Bein sanft gegeneinander.",
+   "Bring die Hände vor die Brust oder strecke sie nach oben."
+  ],
+  "fehler": [
+   "Der Fuß drückt gegen das Knie – setze ihn darüber oder darunter.",
+   "Die Hüfte schiebt zur Seite – richte das Becken gerade aus.",
+   "Der Blick wandert – suche einen festen Punkt auf Augenhöhe."
+  ],
+  "atem": "Ruhig und gleichmäßig. Ein ruhiger Atem ist ein ruhiger Stand.",
+  "wirkung": [
+   "Schult Gleichgewicht und Fußkraft.",
+   "Kräftigt Standbein und Rumpf.",
+   "Fördert Konzentration und innere Ruhe."
+  ],
+  "achtsamkeit": "Wackeln gehört dazu. Ein Baum bewegt sich im Wind und bleibt doch verwurzelt.",
+  "vorsicht": "Bei Schwindel oder Gleichgewichtsstörungen an der Wand üben.",
+  "erleichterung": "Fuß am Knöchel, Zehen am Boden, eine Hand an der Wand.",
+  "vorstufe": null,
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "mondsichel",
+  "api": 39,
+  "de": "Mondsichel",
+  "sanskrit": "Ashta Chandrasana",
+  "en": "Crescent Moon",
+  "stufe": 2,
+  "art": "stehend",
+  "kurz": "Stehende Seitbeuge, bei der du dich mit verschränkten Händen über dem Kopf wie eine Mondsichel zur Seite neigst.",
+  "schritte": [
+   "Stelle dich aufrecht hin, die Füße hüftbreit oder geschlossen.",
+   "Einatmend hebst du die Arme und verschränkst die Finger, die Zeigefinger zeigen nach oben.",
+   "Wachse aus der Taille nach oben.",
+   "Ausatmend neigst du dich zur Seite, ohne nach vorn oder hinten zu kippen.",
+   "Einatmend zurück zur Mitte, dann zur anderen Seite."
+  ],
+  "fehler": [
+   "Der Oberkörper dreht sich nach vorn – die Brust bleibt nach vorn offen.",
+   "Die Hüfte bleibt starr – schiebe sie leicht zur Gegenseite.",
+   "Die untere Flanke wird zusammengedrückt – erst länger werden, dann neigen."
+  ],
+  "atem": "Atme in die gedehnte Flanke. Spüre, wie sich die Rippen dort auffächern.",
+  "wirkung": [
+   "Dehnt die Körperseiten und den Rücken.",
+   "Schafft Raum für eine tiefere Atmung.",
+   "Wirkt erfrischend und aufrichtend."
+  ],
+  "achtsamkeit": "Spüre, wie unterschiedlich sich die beiden Seiten anfühlen. Unterschiede sind Information, kein Urteil.",
+  "vorsicht": "Bei Schulterproblemen eine Hand an die Hüfte. Bei Rückenschmerzen nur leicht neigen.",
+  "erleichterung": "Eine Hand an der Hüfte, nur ein Arm nach oben.",
+  "vorstufe": null,
+  "halten": {
+   "start": 20,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "bruecke",
+  "api": 4,
+  "de": "Brücke",
+  "sanskrit": "Setu Bandha Sarvangasana",
+  "en": "Bridge",
+  "stufe": 2,
+  "art": "rueckbeuge",
+  "kurz": "Aus der Rückenlage hebst du das Becken und öffnest die Vorderseite des Körpers.",
+  "schritte": [
+   "Lege dich auf den Rücken und stelle die Füße hüftbreit nah am Gesäß auf.",
+   "Die Arme liegen neben dem Körper, die Handflächen zeigen nach unten.",
+   "Einatmend drückst du die Füße in den Boden und hebst das Becken.",
+   "Verschränke die Hände unter dem Rücken oder lass die Arme liegen.",
+   "Ausatmend senkst du dich Wirbel für Wirbel wieder ab."
+  ],
+  "fehler": [
+   "Die Knie fallen auseinander – halte sie hüftbreit, ein Block zwischen den Knien hilft.",
+   "Du drehst den Kopf – der Blick bleibt gerade zur Decke.",
+   "Es drückt im unteren Rücken – Gesäß weniger anspannen, mehr aus den Oberschenkeln heben."
+  ],
+  "atem": "Einatmend heben, ausatmend sinken. In der Haltung ruhig in die Brust weiteratmen.",
+  "wirkung": [
+   "Kräftigt Gesäß, Beinrückseiten und Rücken.",
+   "Öffnet Brust und Hüftbeuger.",
+   "Wirkt belebend und zugleich stabilisierend."
+  ],
+  "achtsamkeit": "Spüre, wie sich das Herz Richtung Kinn hebt. Öffnen darf sich sicher anfühlen, getragen von den Füßen.",
+  "vorsicht": "Bei Nackenverletzungen auslassen oder nur niedrig halten. Den Kopf in der Haltung nie drehen.",
+  "erleichterung": "Einen Block unter das Kreuzbein legen und darauf ruhen.",
+  "vorstufe": null,
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "herabschauender_hund",
+  "api": 15,
+  "de": "Herabschauender Hund",
+  "sanskrit": "Adho Mukha Svanasana",
+  "en": "Downward-Facing Dog",
+  "stufe": 3,
+  "art": "umkehr",
+  "kurz": "Umgekehrtes V aus Händen und Füßen, eine Grundhaltung, die den ganzen Körper dehnt und kräftigt.",
+  "schritte": [
+   "Beginne im Vierfüßlerstand, die Hände etwas vor den Schultern.",
+   "Stelle die Zehen auf und hebe die Knie vom Boden.",
+   "Schiebe das Becken nach hinten oben.",
+   "Drücke die Hände fest in den Boden und mach den Rücken lang.",
+   "Lass die Fersen Richtung Boden sinken, die Knie dürfen gebeugt bleiben."
+  ],
+  "fehler": [
+   "Der Rücken ist rund, weil die Beine gestreckt sind – beuge die Knie, Rücken zuerst lang.",
+   "Die Schultern sacken zu den Ohren – drehe die Oberarme leicht nach außen.",
+   "Das Gewicht liegt nur auf den Handballen – drücke auch Fingerkuppen und Zeigefingerknöchel in den Boden."
+  ],
+  "atem": "Tief und gleichmäßig. Einatmend das Becken heben, ausatmend die Fersen sinken lassen.",
+  "wirkung": [
+   "Dehnt Beinrückseiten, Waden und Schultern.",
+   "Kräftigt Arme und Schultergürtel.",
+   "Wirkt belebend und klärend."
+  ],
+  "achtsamkeit": "Der Hund ist eine Haltung, zu der du immer wieder zurückkehrst. Spüre, wie er sich mit jeder Wiederholung verändert.",
+  "vorsicht": "Bei unbehandeltem Bluthochdruck, Glaukom oder in der späten Schwangerschaft nur kurz halten oder auslassen. Bei Handgelenkproblemen auf die Unterarme wechseln.",
+  "erleichterung": "Knie stark beugen, Hände auf Blöcke oder auf die Sitzfläche eines Stuhls.",
+  "vorstufe": "katze",
+  "halten": {
+   "start": 30,
+   "ziel": 90
+  },
+  "seiten": false
+ },
+ {
+  "id": "brett",
+  "api": 26,
+  "de": "Brett",
+  "sanskrit": "Phalakasana",
+  "en": "Plank",
+  "stufe": 3,
+  "art": "armbalance",
+  "kurz": "Stützhaltung, in der der Körper eine gerade Linie vom Kopf bis zu den Fersen bildet.",
+  "schritte": [
+   "Setze die Hände schulterbreit unter die Schultern.",
+   "Stelle die Beine nacheinander nach hinten, die Zehen sind aufgestellt.",
+   "Ziehe den Bauch sanft an und spanne die Beine an.",
+   "Der Körper bildet eine Linie, das Becken hängt nicht durch und ragt nicht hoch.",
+   "Drücke den Boden weg, damit die Schulterblätter breit werden."
+  ],
+  "fehler": [
+   "Das Becken hängt durch – Bauch und Gesäß anspannen.",
+   "Das Gesäß ragt hoch – senke das Becken, bis eine Linie entsteht.",
+   "Der Kopf hängt – Blick leicht vor die Hände, Nacken lang."
+  ],
+  "atem": "Ruhig weiteratmen. Wenn der Atem stockt, lege die Knie ab.",
+  "wirkung": [
+   "Kräftigt Rumpf, Arme und Schultern.",
+   "Bereitet auf Armbalancen vor.",
+   "Schult Körperspannung und Ausdauer."
+  ],
+  "achtsamkeit": "Stabilität entsteht aus vielen kleinen Kräften, die zusammenarbeiten. Spüre den ganzen Körper als eine Einheit.",
+  "vorsicht": "Bei Handgelenk- oder Schulterbeschwerden auf den Unterarmen üben. In der Schwangerschaft die Knie ablegen.",
+  "erleichterung": "Knie ablegen oder auf die Unterarme gehen.",
+  "vorstufe": "katze",
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "heraufschauender_hund",
+  "api": 43,
+  "de": "Heraufschauender Hund",
+  "sanskrit": "Urdhva Mukha Svanasana",
+  "en": "Upward-Facing Dog",
+  "stufe": 3,
+  "art": "rueckbeuge",
+  "kurz": "Rückbeuge mit gestreckten Armen, bei der nur Hände und Fußrücken den Boden berühren.",
+  "schritte": [
+   "Lege dich auf den Bauch, die Hände neben den unteren Rippen.",
+   "Die Fußrücken liegen am Boden, die Beine hüftbreit.",
+   "Einatmend streckst du die Arme und hebst Brust, Becken und Oberschenkel.",
+   "Ziehe die Schultern nach hinten unten und das Brustbein nach vorn.",
+   "Halte die Beine aktiv, der Blick geht geradeaus."
+  ],
+  "fehler": [
+   "Die Schultern hängen an den Ohren – drücke die Hände weg und ziehe die Schultern zurück.",
+   "Die Ellbogen sind überstreckt – halte sie minimal weich.",
+   "Es staucht im unteren Rücken – Beine aktiver, mehr Länge, die Beuge in den oberen Rücken verteilen."
+  ],
+  "atem": "Einatmend in die Haltung, die Brust weitet sich. Ein bis drei Atemzüge, dann ausatmend in den Hund.",
+  "wirkung": [
+   "Kräftigt Arme, Handgelenke und Rückenmuskulatur.",
+   "Öffnet Brust und Schultern.",
+   "Wirkt aufrichtend und belebend."
+  ],
+  "achtsamkeit": "Spüre die Bewegung nach vorn und oben, ohne zu drängen. Offenheit braucht Halt in den Händen.",
+  "vorsicht": "Bei Rücken- oder Handgelenkproblemen und in der Schwangerschaft durch die Sphinx ersetzen.",
+  "erleichterung": "Oberschenkel am Boden lassen und nur die Brust heben, oder die Sphinx üben.",
+  "vorstufe": "sphinx",
+  "halten": {
+   "start": 10,
+   "ziel": 30
+  },
+  "seiten": false
+ },
+ {
+  "id": "halbes_boot",
+  "api": 2,
+  "de": "Halbes Boot",
+  "sanskrit": "Ardha Navasana",
+  "en": "Half Boat",
+  "stufe": 3,
+  "art": "sitzend",
+  "kurz": "Sitzende Kräftigungshaltung mit angewinkelten Beinen, bei der du auf den Sitzbeinhöckern balancierst.",
+  "schritte": [
+   "Setz dich mit aufgestellten Füßen hin.",
+   "Fasse mit den Händen hinter die Oberschenkel.",
+   "Lehne dich mit langem Rücken leicht zurück.",
+   "Hebe die Füße, bis die Schienbeine parallel zum Boden sind.",
+   "Richte die Brust auf und ziehe den Bauch sanft an."
+  ],
+  "fehler": [
+   "Der Rücken rundet sich – weniger weit zurücklehnen, Brust heben.",
+   "Du hältst die Luft an – gleichmäßig weiteratmen.",
+   "Der Nacken verspannt – Kinn leicht senken, Blick nach vorn."
+  ],
+  "atem": "Ruhig in die Brust atmen, der Bauch bleibt sanft aktiv.",
+  "wirkung": [
+   "Kräftigt Bauch- und Hüftbeugemuskulatur.",
+   "Schult Haltung und Balance.",
+   "Baut innere Wärme auf."
+  ],
+  "achtsamkeit": "Finde die Mitte zwischen Anstrengung und Leichtigkeit. Wo kannst du loslassen, ohne zu kippen?",
+  "vorsicht": "Bei Rückenproblemen die Füße am Boden lassen. In der Schwangerschaft auslassen.",
+  "erleichterung": "Zehenspitzen am Boden lassen, die Hände halten die Oberschenkel.",
+  "vorstufe": null,
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": false
+ },
+ {
+  "id": "gestreckter_seitwinkel",
+  "api": 18,
+  "de": "Gestreckter Seitwinkel",
+  "sanskrit": "Utthita Parsvakonasana",
+  "en": "Extended Side Angle",
+  "stufe": 3,
+  "art": "stehend",
+  "kurz": "Seitliche Standhaltung aus dem Krieger II, bei der eine lange Linie von der hinteren Ferse bis zu den Fingerspitzen entsteht.",
+  "schritte": [
+   "Beginne im Krieger II.",
+   "Lege den vorderen Unterarm auf den Oberschenkel oder die Hand auf einen Block neben dem Fuß.",
+   "Strecke den oberen Arm schräg über das Ohr nach vorn.",
+   "Drehe die Brust zur Seite auf.",
+   "Drücke die Außenkante des hinteren Fußes in den Boden."
+  ],
+  "fehler": [
+   "Die Brust kippt nach unten – Unterarm auf das Bein, so entsteht Raum zum Aufdrehen.",
+   "Das vordere Knie fällt nach innen – schiebe es mit dem Oberarm sanft nach außen.",
+   "Du sackst auf den Unterarm – halte die untere Flanke aktiv lang."
+  ],
+  "atem": "Atme in die obere, gedehnte Seite. Lang ausatmen in die Beine.",
+  "wirkung": [
+   "Kräftigt Beine, Knie und Fußgelenke.",
+   "Dehnt Leisten und Körperseite.",
+   "Fördert Ausdauer."
+  ],
+  "achtsamkeit": "Spüre die durchgehende Linie von der Ferse bis zu den Fingern. Lass deine Aufmerksamkeit diese Linie entlangwandern.",
+  "vorsicht": "Bei Nackenproblemen nach vorn oder unten schauen. Bei Knieproblemen weniger tief beugen.",
+  "erleichterung": "Unterarm auf den Oberschenkel, Block unter die Hand.",
+  "vorstufe": "krieger_2",
+  "halten": {
+   "start": 30,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "pyramide",
+  "api": 28,
+  "de": "Pyramide",
+  "sanskrit": "Parsvottanasana",
+  "en": "Pyramid",
+  "stufe": 3,
+  "art": "vorbeuge",
+  "kurz": "Stehende Vorbeuge über das gestreckte vordere Bein, beide Hüften zeigen nach vorn.",
+  "schritte": [
+   "Mach aus dem Stand einen etwas kürzeren Schritt zurück als im Krieger.",
+   "Drehe den hinteren Fuß leicht nach außen, beide Hüften zeigen nach vorn.",
+   "Hände an die Hüften oder auf Blöcke neben dem vorderen Fuß.",
+   "Einatmend wirst du lang, ausatmend neigst du dich über das vordere Bein.",
+   "Strecke beide Beine, ohne die Knie zu überstrecken."
+  ],
+  "fehler": [
+   "Der Rücken rundet sich – Hände auf Blöcke, mit langem Rücken bleiben.",
+   "Die Hüfte des vorderen Beins schiebt nach vorn – ziehe sie zurück, das Becken bleibt gerade.",
+   "Du wackelst – stelle die Füße etwas breiter, wie auf zwei Schienen."
+  ],
+  "atem": "Einatmend verlängern, ausatmend sinken. Lass den Atem den Rhythmus vorgeben.",
+  "wirkung": [
+   "Dehnt die Beinrückseiten intensiv.",
+   "Schult Ausrichtung und Gleichgewicht.",
+   "Beruhigt durch die Vorbeuge."
+  ],
+  "achtsamkeit": "Richte den Blick auf den vorderen Fuß. Konzentration hat einen festen Ort.",
+  "vorsicht": "Bei Bluthochdruck oder Rückenproblemen nur halb vorbeugen, Hände auf Blöcke.",
+  "erleichterung": "Hände auf Blöcke, vorderes Knie leicht gebeugt, kürzerer Stand.",
+  "vorstufe": "stehende_vorbeuge",
+  "halten": {
+   "start": 30,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "aufrechter_ausfallschritt",
+  "api": 12,
+  "de": "Aufrechter Ausfallschritt",
+  "sanskrit": "Anjaneyasana",
+  "en": "Crescent Lunge",
+  "stufe": 3,
+  "art": "stehend",
+  "kurz": "Tiefer Ausfallschritt mit abgelegtem hinterem Knie, Oberkörper aufgerichtet, Arme über dem Kopf.",
+  "schritte": [
+   "Stelle aus dem Vierfüßlerstand einen Fuß zwischen die Hände.",
+   "Lege das hintere Knie ab, der Fußrücken liegt flach am Boden.",
+   "Schiebe das Becken langsam nach vorn und unten, bis du vorn an der Hüfte eine Dehnung spürst.",
+   "Richte den Oberkörper auf und hebe die Arme über den Kopf.",
+   "Halte das vordere Knie über dem Fußgelenk."
+  ],
+  "fehler": [
+   "Das vordere Knie schiebt weit über die Zehen – setze den Fuß weiter nach vorn.",
+   "Du sinkst ins Hohlkreuz – Steißbein sanft nach unten, Bauch leicht an.",
+   "Das hintere Knie drückt – lege eine gefaltete Decke darunter."
+  ],
+  "atem": "Einatmend wachsen und die Arme heben, ausatmend das Becken ein wenig tiefer sinken lassen.",
+  "wirkung": [
+   "Dehnt Hüftbeuger und Oberschenkelvorderseite des hinteren Beins.",
+   "Öffnet Brust und Schultern.",
+   "Wirkt aufrichtend und belebend."
+  ],
+  "achtsamkeit": "Spüre die Weite vorn an der Hüfte, wo wir oft lange sitzen. Atme in diese Stelle, ohne zu drücken.",
+  "vorsicht": "Bei Knieschmerzen das hintere Knie gut polstern. Bei Schulterproblemen die Hände an die Hüften legen.",
+  "erleichterung": "Hände auf dem vorderen Oberschenkel oder auf Blöcken neben dem Fuß lassen.",
+  "vorstufe": "tiefer_ausfallschritt",
+  "halten": {
+   "start": 30,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "girlande",
+  "api": 37,
+  "de": "Girlande",
+  "sanskrit": "Malasana",
+  "en": "Garland Pose",
+  "stufe": 3,
+  "art": "hueftoeffner",
+  "kurz": "Tiefe Hocke mit geöffneten Knien und Händen vor der Brust.",
+  "schritte": [
+   "Stelle die Füße etwas breiter als hüftbreit, die Zehen zeigen leicht nach außen.",
+   "Beuge die Knie und senke das Gesäß tief Richtung Boden.",
+   "Bring die Handflächen vor der Brust zusammen.",
+   "Drücke die Ellbogen sanft gegen die Innenseiten der Knie.",
+   "Richte die Wirbelsäule auf, so gut es geht."
+  ],
+  "fehler": [
+   "Die Fersen heben ab – lege eine gerollte Decke darunter.",
+   "Der Rücken ist rund – setz dich auf einen Block.",
+   "Die Knie fallen nach innen – richte sie über die Zehen aus."
+  ],
+  "atem": "Atme tief in den Beckenboden und den unteren Rücken.",
+  "wirkung": [
+   "Öffnet Hüften und Leisten.",
+   "Mobilisiert die Fußgelenke.",
+   "Wirkt erdend."
+  ],
+  "achtsamkeit": "Nah am Boden zu sein, kann beruhigen. Spüre, wie die Erde dich trägt.",
+  "vorsicht": "Bei Knieproblemen auf einen Block setzen oder auslassen.",
+  "erleichterung": "Block unter das Gesäß, Decke unter die Fersen.",
+  "vorstufe": "schmetterling",
+  "halten": {
+   "start": 30,
+   "ziel": 90
+  },
+  "seiten": false
+ },
+ {
+  "id": "taube",
+  "api": 24,
+  "de": "Taube",
+  "sanskrit": "Eka Pada Rajakapotasana, Vorstufe",
+  "en": "Pigeon",
+  "stufe": 3,
+  "art": "hueftoeffner",
+  "kurz": "Klassische Hüftöffnung: ein Bein angewinkelt vor dem Körper, das andere lang nach hinten gestreckt.",
+  "schritte": [
+   "Komm in den Vierfüßlerstand.",
+   "Bring ein Knie nach vorn hinter das gleichseitige Handgelenk, der Fuß liegt Richtung anderes Handgelenk.",
+   "Strecke das andere Bein lang nach hinten, der Fußrücken liegt am Boden.",
+   "Richte das Becken gerade nach vorn aus, stütze dich auf die Hände.",
+   "Bleib aufrecht oder lass den Oberkörper langsam über das vordere Bein sinken."
+  ],
+  "fehler": [
+   "Das Becken kippt zur Seite – schiebe ein Kissen oder einen Block unter die Hüfte des vorderen Beins.",
+   "Schmerz im vorderen Knie – den Fuß näher zum Körper holen und das Knie nie zwingen.",
+   "Du hältst die Luft an – geh so weit zurück, bis du ruhig ausatmen kannst."
+  ],
+  "atem": "Lang ausatmen in die äußere Hüfte und das Gesäß. Mit jedem Ausatmen ein klein wenig mehr loslassen.",
+  "wirkung": [
+   "Dehnt Gesäß, äußere Hüfte und die Hüftbeuger des hinteren Beins.",
+   "Kann Spannung im unteren Rücken lösen.",
+   "Wirkt beruhigend, besonders mit nach vorn gesenktem Oberkörper."
+  ],
+  "achtsamkeit": "Hüften speichern oft Anspannung. Beobachte, was auftaucht, und lass es da sein, ohne es wegzudrücken.",
+  "vorsicht": "Bei Knie- oder Iliosakralbeschwerden nur mit Kissen unter der Hüfte üben oder die Variante im Liegen wählen: auf dem Rücken einen Knöchel über das andere Knie legen.",
+  "erleichterung": "Kissen oder Block unter die Hüfte, Oberkörper aufrecht auf die Hände gestützt. Oder im Liegen als Knöchel-über-Knie-Dehnung.",
+  "vorstufe": "schmetterling",
+  "halten": {
+   "start": 45,
+   "ziel": 120
+  },
+  "seiten": true
+ },
+ {
+  "id": "adler",
+  "api": 16,
+  "de": "Adler",
+  "sanskrit": "Garudasana",
+  "en": "Eagle",
+  "stufe": 4,
+  "art": "balance",
+  "kurz": "Einbeinige Balance mit umeinander geschlungenen Armen und Beinen.",
+  "schritte": [
+   "Beuge die Knie leicht und verlagere das Gewicht auf ein Bein.",
+   "Kreuze das andere Bein darüber und hake den Fuß, wenn möglich, hinter der Wade ein.",
+   "Kreuze die Arme vor der Brust und bringe Handflächen oder Handrücken zueinander.",
+   "Hebe die Ellbogen auf Schulterhöhe und schiebe die Hände vom Gesicht weg.",
+   "Sinke tiefer ins Standbein und richte den Oberkörper auf."
+  ],
+  "fehler": [
+   "Der Fuß lässt sich nicht einhaken – stelle die Zehen neben dem Standfuß ab.",
+   "Die Schultern ziehen hoch – Ellbogen heben, Schultern senken.",
+   "Der Oberkörper kippt nach vorn – Becken tiefer, Brust aufrecht."
+  ],
+  "atem": "Atme in den Rücken zwischen die Schulterblätter, dort wird es weit.",
+  "wirkung": [
+   "Kräftigt Standbein und Fußgelenk.",
+   "Dehnt Schultern und oberen Rücken.",
+   "Fördert Konzentration und Gleichgewicht."
+  ],
+  "achtsamkeit": "Alles zieht zur Mitte. Lass auch die Gedanken sich sammeln, auf einen Punkt vor dir.",
+  "vorsicht": "Bei Knieproblemen das Bein nur überkreuzen, nicht einhaken. Bei Schulterproblemen die Hände auf die Gegenschultern legen.",
+  "erleichterung": "Zehen am Boden abstellen, Arme wie eine Umarmung um die Schultern legen.",
+  "vorstufe": "baum",
+  "halten": {
+   "start": 20,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "seitstuetz",
+  "api": 34,
+  "de": "Seitstütz",
+  "sanskrit": "Vasisthasana",
+  "en": "Side Plank",
+  "stufe": 4,
+  "art": "armbalance",
+  "kurz": "Seitliche Stützhaltung auf einer Hand, der Körper bildet eine schräge Linie.",
+  "schritte": [
+   "Beginne im Brett.",
+   "Drehe dich auf die Außenkante eines Fußes und lege die Füße übereinander.",
+   "Die untere Hand steht leicht vor der Schulter.",
+   "Hebe die Hüfte, bis der Körper eine Linie bildet.",
+   "Strecke den oberen Arm nach oben."
+  ],
+  "fehler": [
+   "Die Hüfte sackt ab – hebe die untere Rumpfseite aktiv an.",
+   "Die Schulter sinkt ein – drücke den Boden kraftvoll weg.",
+   "Du wackelst – stelle den oberen Fuß vor den unteren auf den Boden."
+  ],
+  "atem": "Gleichmäßig weiteratmen. Der Atem bleibt lang, auch wenn der Arm arbeitet.",
+  "wirkung": [
+   "Kräftigt Arme, Schultern und seitliche Rumpfmuskulatur.",
+   "Schult das Gleichgewicht.",
+   "Stärkt das Vertrauen in die eigene Kraft."
+  ],
+  "achtsamkeit": "Spüre die Verbindung von Hand und Fuß als tragende Achse. Bleib ruhig, auch in der Anstrengung.",
+  "vorsicht": "Bei Handgelenk-, Ellbogen- oder Schulterproblemen auf den Unterarm gehen.",
+  "erleichterung": "Unteres Knie ablegen oder auf dem Unterarm stützen.",
+  "vorstufe": "brett",
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "boot",
+  "api": 1,
+  "de": "Boot",
+  "sanskrit": "Navasana",
+  "en": "Boat",
+  "stufe": 4,
+  "art": "balance",
+  "kurz": "V-förmige Sitzbalance mit angehobenen Beinen, die die Körpermitte kräftigt.",
+  "schritte": [
+   "Beginne im halben Boot.",
+   "Strecke die Beine schräg nach oben, so weit es mit langem Rücken möglich ist.",
+   "Löse die Hände und strecke die Arme parallel zum Boden nach vorn.",
+   "Halte die Brust offen und den Rücken lang.",
+   "Zum Lösen die Füße langsam absetzen."
+  ],
+  "fehler": [
+   "Der Rücken rundet sich – Knie beugen, Brust heben.",
+   "Du hältst die Luft an – bewusst weiteratmen.",
+   "Die Hüftbeuger verkrampfen – Bauch aktiver nutzen, Beine tiefer halten."
+  ],
+  "atem": "Gleichmäßig in die Brust atmen. Der Bauch bleibt fest, aber nicht hart.",
+  "wirkung": [
+   "Kräftigt Bauch, Hüftbeuger und Rückenstrecker.",
+   "Schult die Balance.",
+   "Baut Durchhaltevermögen auf."
+  ],
+  "achtsamkeit": "Spüre deine Mitte als Kraftquelle. Was braucht es, um hier ruhig zu bleiben?",
+  "vorsicht": "Bei Rückenproblemen, unbehandeltem Bluthochdruck und in der Schwangerschaft auslassen.",
+  "erleichterung": "Knie gebeugt lassen, Hände an den Oberschenkeln.",
+  "vorstufe": "halbes_boot",
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": false
+ },
+ {
+  "id": "halbmond",
+  "api": 21,
+  "de": "Halbmond",
+  "sanskrit": "Ardha Chandrasana",
+  "en": "Half-Moon",
+  "stufe": 4,
+  "art": "balance",
+  "kurz": "Einbeinige Standbalance, bei der Oberkörper und angehobenes Bein parallel zum Boden eine Linie bilden.",
+  "schritte": [
+   "Beginne im Dreieck.",
+   "Beuge das vordere Knie und setze die vordere Hand etwa eine Fußlänge vor den Fuß, gern auf einen Block.",
+   "Verlagere das Gewicht auf das vordere Bein und hebe das hintere Bein auf Hüfthöhe.",
+   "Strecke das Standbein und öffne Hüfte und Brust zur Seite.",
+   "Der obere Arm zeigt nach oben."
+  ],
+  "fehler": [
+   "Der Oberkörper kippt zum Boden – lege einen Block unter die Hand.",
+   "Das gehobene Bein sinkt – schiebe aktiv durch die Ferse.",
+   "Das Standknie ist überstreckt – halte es minimal weich."
+  ],
+  "atem": "Ruhig und gleichmäßig. Ein ruhiger Atem hält dich in der Balance.",
+  "wirkung": [
+   "Kräftigt Standbein, Gesäß und Rumpf.",
+   "Schult Gleichgewicht und Koordination.",
+   "Öffnet Hüften und Brust."
+  ],
+  "achtsamkeit": "Leichtigkeit entsteht aus Stabilität. Spüre, wie der feste Fuß dich frei macht.",
+  "vorsicht": "Bei Schwindel, niedrigem Blutdruck oder Nackenproblemen zum Boden schauen und an der Wand üben.",
+  "erleichterung": "Block unter die Hand, mit dem Rücken an die Wand, Blick nach unten.",
+  "vorstufe": "dreieck",
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "krieger_3",
+  "api": 46,
+  "de": "Krieger III",
+  "sanskrit": "Virabhadrasana Three",
+  "en": "Warrior Three",
+  "stufe": 4,
+  "art": "balance",
+  "kurz": "Einbeinige Balance, bei der Oberkörper, Arme und hinteres Bein eine waagrechte Linie bilden.",
+  "schritte": [
+   "Beginne im hohen Ausfallschritt.",
+   "Neige den Oberkörper nach vorn und verlagere das Gewicht auf das vordere Bein.",
+   "Hebe das hintere Bein, bis es mit dem Oberkörper eine Linie bildet.",
+   "Strecke die Arme nach vorn oder halte die Hände vor der Brust.",
+   "Beide Hüftknochen zeigen zum Boden."
+  ],
+  "fehler": [
+   "Die Hüfte des gehobenen Beins dreht auf – drehe sie zurück Richtung Boden.",
+   "Das Standknie ist überstreckt – beuge es minimal.",
+   "Der Rücken rundet sich – Arme an die Seiten, Brustbein nach vorn."
+  ],
+  "atem": "Ruhig weiteratmen. Ein langes Ausatmen hilft gegen das Wackeln.",
+  "wirkung": [
+   "Kräftigt Standbein, Gesäß und Rückenmuskulatur.",
+   "Schult Gleichgewicht und Körperspannung.",
+   "Fördert Fokus und Entschlossenheit."
+  ],
+  "achtsamkeit": "Du strebst nach vorn und zugleich nach hinten. Spüre beide Richtungen gleichzeitig und ruhe in der Mitte.",
+  "vorsicht": "Bei Gleichgewichtsproblemen oder Bluthochdruck die Hände an Wand oder Stuhl.",
+  "erleichterung": "Hände auf Blöcke oder an die Wand, gehobenes Bein tiefer halten.",
+  "vorstufe": "krieger_1",
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "delfin",
+  "api": 14,
+  "de": "Delfin",
+  "sanskrit": "Ardha Pincha Mayurasana",
+  "en": "Dolphin",
+  "stufe": 4,
+  "art": "umkehr",
+  "kurz": "Ähnlich wie der Herabschauende Hund, jedoch auf den Unterarmen, kräftigend für Schultern und Rumpf.",
+  "schritte": [
+   "Beginne im Vierfüßlerstand und setze die Unterarme parallel auf, die Ellbogen unter den Schultern.",
+   "Stelle die Zehen auf und hebe die Knie.",
+   "Schiebe das Becken nach hinten oben.",
+   "Drücke die Unterarme fest in den Boden und schiebe die Brust Richtung Beine.",
+   "Der Kopf hängt frei, der Nacken bleibt lang."
+  ],
+  "fehler": [
+   "Die Ellbogen rutschen auseinander – lege einen Gurt um die Oberarme.",
+   "Die Brust sackt durch – drücke die Unterarme aktiver weg.",
+   "Der Rücken ist rund – beuge die Knie."
+  ],
+  "atem": "Gleichmäßig und tief, auch wenn die Schultern arbeiten.",
+  "wirkung": [
+   "Kräftigt Schultern, Arme und oberen Rücken.",
+   "Dehnt die Beinrückseiten.",
+   "Bereitet auf den Unterarmstand vor."
+  ],
+  "achtsamkeit": "Nimm wahr, wie viel Kraft du wirklich brauchst. Lass alles los, was nicht trägt.",
+  "vorsicht": "Bei Schulterverletzungen, unbehandeltem Bluthochdruck oder Glaukom auslassen.",
+  "erleichterung": "Knie gebeugt, Hände gefaltet statt parallel.",
+  "vorstufe": "herabschauender_hund",
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "hand_zum_zeh",
+  "api": 17,
+  "de": "Ausgestreckte Hand zum großen Zeh",
+  "sanskrit": "Utthita Hasta Padangusthasana",
+  "en": "Extended Hand to Toe",
+  "stufe": 4,
+  "art": "balance",
+  "kurz": "Stehende Balance, bei der du ein gestrecktes Bein am großen Zeh hältst und zur Seite öffnest.",
+  "schritte": [
+   "Stelle dich aufrecht hin, das Gewicht auf einem Bein.",
+   "Ziehe das andere Knie zur Brust und fasse mit Zeige- und Mittelfinger den großen Zeh.",
+   "Die andere Hand liegt an der Hüfte.",
+   "Strecke das Bein nach vorn, so weit es mit aufrechtem Rücken geht.",
+   "Wenn du stabil bist, öffne das Bein zur Seite."
+  ],
+  "fehler": [
+   "Der Rücken rundet sich – nimm einen Gurt um den Fuß oder lass das Knie gebeugt.",
+   "Die Hüfte des gehobenen Beins zieht hoch – senke sie auf die Höhe der anderen Hüfte.",
+   "Das Standbein knickt ein – Oberschenkel aktiv anspannen."
+  ],
+  "atem": "Ruhig und gleichmäßig. Ausatmend das Bein strecken.",
+  "wirkung": [
+   "Kräftigt Standbein und Fußgelenk.",
+   "Dehnt Beinrückseite und Leiste.",
+   "Schult intensive Konzentration."
+  ],
+  "achtsamkeit": "Diese Balance verlangt volle Präsenz. Einen abschweifenden Gedanken spürst du sofort im Fuß.",
+  "vorsicht": "Bei Rücken- oder Knieproblemen das Bein gebeugt halten. Bei Gleichgewichtsproblemen an der Wand üben.",
+  "erleichterung": "Gurt um den Fuß, Knie gebeugt halten oder den Fuß auf einen Stuhl legen.",
+  "vorstufe": "baum",
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "kraehe",
+  "api": 13,
+  "de": "Krähe",
+  "sanskrit": "Bakasana",
+  "en": "Crow",
+  "stufe": 4,
+  "art": "armbalance",
+  "kurz": "Armbalance, bei der die Knie auf den Oberarmen ruhen und die Füße vom Boden abheben.",
+  "schritte": [
+   "Geh in die tiefe Hocke und setze die Hände schulterbreit vor dir auf.",
+   "Spreize die Finger und beuge die Ellbogen leicht nach hinten.",
+   "Setze die Knie hoch an die Oberarme, möglichst nah an die Achseln.",
+   "Verlagere das Gewicht nach vorn, der Blick geht vor die Hände.",
+   "Hebe erst einen Fuß, dann den anderen."
+  ],
+  "fehler": [
+   "Du schaust nach unten und kippst – Blick nach vorn, ein Kissen vor das Gesicht legen.",
+   "Zu wenig Gewicht vorn – schiebe die Schultern mutig über die Hände.",
+   "Die Ellbogen weichen nach außen – halte sie parallel."
+  ],
+  "atem": "Ruhig weiteratmen. Viele halten hier unbewusst die Luft an, achte darauf.",
+  "wirkung": [
+   "Kräftigt Arme, Handgelenke und Rumpf.",
+   "Schult Balance und Koordination.",
+   "Stärkt Mut und Vertrauen."
+  ],
+  "achtsamkeit": "Die Angst vor dem Fallen ist oft größer als der Fall. Begegne ihr mit kleinen Schritten und einem Kissen vor dir.",
+  "vorsicht": "Bei Handgelenk- oder Schulterproblemen, unbehandeltem Bluthochdruck und in der Schwangerschaft auslassen.",
+  "erleichterung": "Block unter die Füße, nur einen Fuß abheben, Kissen vor das Gesicht.",
+  "vorstufe": "girlande",
+  "halten": {
+   "start": 5,
+   "ziel": 30
+  },
+  "seiten": false
+ },
+ {
+  "id": "kamel",
+  "api": 6,
+  "de": "Kamel",
+  "sanskrit": "Ustrasana",
+  "en": "Camel",
+  "stufe": 5,
+  "art": "rueckbeuge",
+  "kurz": "Kniende Rückbeuge, bei der sich die gesamte Körpervorderseite öffnet.",
+  "schritte": [
+   "Knie dich hüftbreit hin, die Oberschenkel stehen senkrecht.",
+   "Lege die Hände auf den unteren Rücken, die Finger zeigen nach unten.",
+   "Einatmend hebst du das Brustbein und schiebst die Hüften leicht nach vorn.",
+   "Wenn es sich gut anfühlt, greifen die Hände zu den Fersen.",
+   "Zum Lösen die Hände an den unteren Rücken und mit dem Brustbein voran aufrichten."
+  ],
+  "fehler": [
+   "Der Kopf fällt nach hinten und der Nacken knickt – Kinn leicht zur Brust.",
+   "Die Hüften weichen nach hinten – halte sie über den Knien.",
+   "Es drückt im unteren Rücken – Zehen aufstellen, mehr aus dem oberen Rücken öffnen."
+  ],
+  "atem": "Tief in den Brustkorb atmen. Nicht pressen, der Atem bleibt frei.",
+  "wirkung": [
+   "Öffnet Brust, Schultern und Hüftbeuger.",
+   "Kräftigt die Rückenmuskulatur.",
+   "Kann deutlich auf die Stimmung wirken, aufrichtend oder auch aufwühlend."
+  ],
+  "achtsamkeit": "Rückbeugen öffnen den Herzraum und können Gefühle hochholen. Was da ist, darf da sein.",
+  "vorsicht": "Bei Rücken- oder Nackenverletzungen, unbehandeltem Bluthochdruck oder Migräne nur sanft mit den Händen am Rücken.",
+  "erleichterung": "Zehen aufstellen, Hände bleiben am Rücken, Blöcke neben die Füße.",
+  "vorstufe": "bruecke",
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": false
+ },
+ {
+  "id": "bogen",
+  "api": 3,
+  "de": "Bogen",
+  "sanskrit": "Dhanurasana",
+  "en": "Bow",
+  "stufe": 5,
+  "art": "rueckbeuge",
+  "kurz": "Rückbeuge in Bauchlage, bei der du die Fußgelenke umfasst und den Körper wie einen gespannten Bogen hebst.",
+  "schritte": [
+   "Lege dich auf den Bauch, die Stirn am Boden.",
+   "Beuge die Knie und greife die Außenseiten der Fußgelenke.",
+   "Einatmend drückst du die Füße in die Hände und hebst Brust und Oberschenkel.",
+   "Die Knie bleiben etwa hüftbreit.",
+   "Schau geradeaus, der Nacken bleibt lang."
+  ],
+  "fehler": [
+   "Die Knie spreizen weit auseinander – halte sie hüftbreit.",
+   "Du ziehst mit den Armen – die Kraft kommt aus den Beinen, die nach hinten drücken.",
+   "Der Kopf fällt in den Nacken – Blick nach vorn."
+  ],
+  "atem": "Der Atem wird kürzer, das ist normal. Atme ruhig weiter, der Körper schaukelt leicht mit.",
+  "wirkung": [
+   "Kräftigt Rücken und Gesäß.",
+   "Öffnet Brust, Schultern und Hüftbeuger.",
+   "Wirkt stark belebend."
+  ],
+  "achtsamkeit": "Spannung und Weite zugleich, wie ein Bogen, der gespannt ist und ruhig bleibt.",
+  "vorsicht": "Bei Rücken- oder Nackenproblemen, unbehandeltem Bluthochdruck, nach Bauchoperationen und in der Schwangerschaft auslassen.",
+  "erleichterung": "Gurt um die Fußgelenke oder nur ein Bein greifen.",
+  "vorstufe": "heraufschauender_hund",
+  "halten": {
+   "start": 15,
+   "ziel": 30
+  },
+  "seiten": false
+ },
+ {
+  "id": "halber_drehsitz",
+  "api": 32,
+  "de": "Halber Drehsitz",
+  "sanskrit": "Ardha Matsyendrasana",
+  "en": "Half Lord of the Fishes",
+  "stufe": 5,
+  "art": "drehung",
+  "kurz": "Sitzende Drehhaltung, die die Wirbelsäule aus der Länge heraus dreht.",
+  "schritte": [
+   "Setz dich mit gestreckten Beinen hin.",
+   "Stelle einen Fuß außen neben das gegenüberliegende Knie.",
+   "Wenn du magst, beuge das untere Bein und lege die Ferse neben das Gesäß.",
+   "Einatmend wirst du lang, die hintere Hand stützt dich hinter dem Becken.",
+   "Ausatmend drehst du dich zum aufgestellten Knie, der Arm umarmt das Knie oder der Ellbogen liegt außen daran."
+  ],
+  "fehler": [
+   "Der Rücken ist rund – setz dich auf eine Decke.",
+   "Die Drehung passiert nur im Hals – der Kopf folgt zuletzt.",
+   "Der Arm erzwingt die Drehung als Hebel – drehe aus dem Bauch, der Arm hält nur."
+  ],
+  "atem": "Einatmend aufrichten, ausatmend ein wenig tiefer drehen.",
+  "wirkung": [
+   "Mobilisiert die Wirbelsäule in der Rotation.",
+   "Dehnt äußere Hüfte, Gesäß und Schultern.",
+   "Wirkt erfrischend und ordnend."
+  ],
+  "achtsamkeit": "Drehungen schenken dir einen anderen Blickwinkel. Erst die Länge, dann die Bewegung, das gilt auch innen.",
+  "vorsicht": "Bei Bandscheibenproblemen nur sanft drehen. In der Schwangerschaft auslassen oder offen zur anderen Seite drehen.",
+  "erleichterung": "Unteres Bein lang lassen, Decke unter das Gesäß, das Knie einfach umarmen.",
+  "vorstufe": null,
+  "halten": {
+   "start": 30,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "wild_thing",
+  "api": 48,
+  "de": "Wild Thing",
+  "sanskrit": "Camatkarasana",
+  "en": "Wild Thing",
+  "stufe": 5,
+  "art": "rueckbeuge",
+  "kurz": "Offene Rückbeuge aus dem Seitstütz, bei der ein Fuß hinter dir aufsetzt und sich die Brust zum Himmel öffnet.",
+  "schritte": [
+   "Beginne im Herabschauenden Hund und hebe ein Bein.",
+   "Beuge das gehobene Knie und öffne die Hüfte.",
+   "Verlagere das Gewicht auf die gegenüberliegende Hand und rolle auf die Außenkante des Standfußes.",
+   "Setze den Fuß des gehobenen Beins mit gebeugtem Knie hinter dir auf.",
+   "Hebe die Hüfte, öffne die Brust und strecke den freien Arm über den Kopf."
+  ],
+  "fehler": [
+   "Die Schulter der Stützhand sinkt ein – drücke den Boden kraftvoll weg.",
+   "Die Hüfte sackt ab – hebe sie aktiv.",
+   "Der Kopf fällt zurück – halte den Nacken lang."
+  ],
+  "atem": "Einatmend die Brust heben. Ruhig und tief atmen, die Haltung ist intensiv.",
+  "wirkung": [
+   "Öffnet Brust, Schultern und Hüftbeuger.",
+   "Kräftigt Arme und Schultern.",
+   "Wirkt befreiend und freudvoll."
+  ],
+  "achtsamkeit": "Der Sanskritname wird oft frei als begeistertes Aufblühen des Herzens übersetzt. Erlaube dir Freude, ohne dich darin zu verlieren.",
+  "vorsicht": "Bei Schulter-, Handgelenk- oder Rückenproblemen und in der Schwangerschaft auslassen.",
+  "erleichterung": "Aus dem Seitstütz mit abgelegtem unterem Knie üben, Hüfte nur leicht heben.",
+  "vorstufe": "seitstuetz",
+  "halten": {
+   "start": 10,
+   "ziel": 30
+  },
+  "seiten": true
+ },
+ {
+  "id": "lotus",
+  "api": 31,
+  "de": "Lotus",
+  "sanskrit": "Padmasana",
+  "en": "Lotus",
+  "stufe": 5,
+  "art": "sitzend",
+  "kurz": "Klassischer Meditationssitz, bei dem beide Füße auf den gegenüberliegenden Oberschenkeln ruhen.",
+  "schritte": [
+   "Setz dich auf eine gefaltete Decke, die Beine gekreuzt.",
+   "Lege zuerst einen Fuß in die gegenüberliegende Leiste, die Fußsohle zeigt nach oben.",
+   "Nur wenn Hüfte und Knie es frei erlauben, lege den zweiten Fuß auf den anderen Oberschenkel.",
+   "Richte die Wirbelsäule auf und lass die Hände auf den Knien ruhen.",
+   "Wechsle beim nächsten Mal die Kreuzung der Beine."
+  ],
+  "fehler": [
+   "Du ziehst am Fuß und spürst Druck im Knie – sofort lösen, die Bewegung muss aus der Hüfte kommen.",
+   "Der Rücken ist rund – setz dich höher.",
+   "Immer liegt dieselbe Seite oben – wechsle regelmäßig."
+  ],
+  "atem": "Ruhig und fein durch die Nase. Der Sitz dient dem Atem und der Stille.",
+  "wirkung": [
+   "Ermöglicht einen stabilen, aufrechten Sitz für die Meditation.",
+   "Öffnet die Hüften in der Außenrotation.",
+   "Wirkt sammelnd."
+  ],
+  "achtsamkeit": "Der Lotus wächst aus dem Schlamm zur Blüte. Auch das, was gerade schwer ist, kann Boden für Wachstum sein.",
+  "vorsicht": "Bei Knie- oder Fußgelenkproblemen nicht üben, halber Lotus oder Schneidersitz genügen völlig. Niemals in die Haltung zwingen.",
+  "erleichterung": "Halber Lotus oder einfacher Schneidersitz auf einer Decke.",
+  "vorstufe": "schmetterling",
+  "halten": {
+   "start": 30,
+   "ziel": 180
+  },
+  "seiten": true
+ },
+ {
+  "id": "vorbeuge_schulteroeffnung",
+  "api": 20,
+  "de": "Vorbeuge mit Schulteröffnung",
+  "sanskrit": "Uttanasana",
+  "en": "Forward Bend with Shoulder Opener",
+  "stufe": 5,
+  "art": "vorbeuge",
+  "kurz": "Stehende Vorbeuge mit hinter dem Rücken verschränkten Händen, die Schultern und Brust öffnet.",
+  "schritte": [
+   "Stelle dich hüftbreit hin und verschränke die Hände hinter dem Rücken.",
+   "Ziehe die Schulterblätter zueinander und öffne die Brust.",
+   "Ausatmend faltest du dich mit weichen Knien aus der Hüfte nach vorn.",
+   "Lass die gestreckten Arme über den Kopf Richtung Boden sinken.",
+   "Langsam aufrollen, die Hände löst du zuletzt."
+  ],
+  "fehler": [
+   "Die Arme sind gebeugt – nimm einen Gurt oder ein Tuch zwischen die Hände.",
+   "Dir wird beim Aufkommen schwindlig – langsam aufrollen, Kopf zuletzt.",
+   "Die Knie sind durchgedrückt – beuge sie leicht."
+  ],
+  "atem": "Ausatmend sinken, dann ruhig weiteratmen. Spüre den Zug in den Schultern.",
+  "wirkung": [
+   "Dehnt Schultern, Brust und Beinrückseiten.",
+   "Gleicht eine vornübergebeugte Haltung am Schreibtisch aus.",
+   "Wirkt beruhigend."
+  ],
+  "achtsamkeit": "Hände hinter dem Rücken, Herz zum Boden: eine Geste der Hingabe. Lass dich halten.",
+  "vorsicht": "Bei Schulterverletzungen, unbehandeltem Bluthochdruck oder Glaukom auslassen oder nur halb vorbeugen.",
+  "erleichterung": "Gurt zwischen den Händen, Knie stark gebeugt.",
+  "vorstufe": "stehende_vorbeuge",
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "schulterstand",
+  "api": 33,
+  "de": "Schulterstand",
+  "sanskrit": "Salamba Sarvangasana",
+  "en": "Shoulder Stand",
+  "stufe": 5,
+  "art": "umkehr",
+  "kurz": "Umkehrhaltung, bei der der Körper senkrecht auf den Schultern steht, gestützt von den Händen.",
+  "schritte": [
+   "Lege zwei gefaltete Decken so, dass die Schultern darauf liegen und der Kopf auf dem Boden.",
+   "Lege dich auf den Rücken, ziehe die Knie zur Brust und rolle das Becken hoch.",
+   "Stütze den Rücken mit den Händen, die Ellbogen bleiben schulterbreit.",
+   "Strecke die Beine nach oben, das Gewicht liegt auf den Schultern, nicht auf dem Nacken.",
+   "Zum Lösen langsam Wirbel für Wirbel abrollen."
+  ],
+  "fehler": [
+   "Du drehst den Kopf – niemals in der Haltung, das gefährdet die Halswirbelsäule.",
+   "Das Gewicht liegt auf dem Nacken – mehr Decken unter die Schultern, der Kopf bleibt am Boden.",
+   "Die Ellbogen rutschen auseinander – ziehe sie zur Mitte."
+  ],
+  "atem": "Der Atem wird flacher, weil das Kinn zur Brust zeigt. Atme ruhig und weich weiter.",
+  "wirkung": [
+   "Kräftigt Schultern und Rumpf.",
+   "Kehrt die gewohnte Schwerkraft um und entlastet die Beine.",
+   "Wird oft als beruhigend erlebt."
+  ],
+  "achtsamkeit": "Alles steht auf dem Kopf. Lass auch gewohnte Sichtweisen für einen Moment ruhen.",
+  "vorsicht": "Nicht bei Nackenproblemen, unbehandeltem Bluthochdruck, Glaukom oder Netzhautproblemen. In der Schwangerschaft nur mit Erfahrung, während der Menstruation nach eigenem Empfinden. Nur auf Decken üben.",
+  "erleichterung": "Beine an der Wand hochlegen oder halber Schulterstand mit Block unter dem Becken.",
+  "vorstufe": "bruecke",
+  "halten": {
+   "start": 30,
+   "ziel": 180
+  },
+  "seiten": false
+ },
+ {
+  "id": "pflug",
+  "api": 27,
+  "de": "Pflug",
+  "sanskrit": "Halasana",
+  "en": "Plow",
+  "stufe": 6,
+  "art": "umkehr",
+  "kurz": "Umkehrhaltung, bei der die Füße hinter dem Kopf den Boden berühren.",
+  "schritte": [
+   "Beginne im Schulterstand auf gefalteten Decken.",
+   "Senke die gestreckten Beine ausatmend über den Kopf.",
+   "Stelle die Zehen hinter dem Kopf auf den Boden oder auf einen Stuhl.",
+   "Stütze den Rücken mit den Händen oder verschränke die Hände am Boden.",
+   "Zum Lösen langsam abrollen, die Hände bremsen."
+  ],
+  "fehler": [
+   "Das Gewicht liegt auf dem Nacken – Decken unter die Schultern, Kopf nie drehen.",
+   "Der Rücken rundet sich unter Druck – Füße auf einen Stuhl oder Block.",
+   "Dir wird eng im Atem – Knie zur Stirn beugen und früher lösen."
+  ],
+  "atem": "Der Atem ist hier eingeschränkt. Atme ruhig und klein, ohne zu kämpfen.",
+  "wirkung": [
+   "Dehnt Rücken, Schultern und Beinrückseiten.",
+   "Wirkt nach innen gekehrt und beruhigend.",
+   "Fördert das Körperbewusstsein in ungewohnter Lage."
+  ],
+  "achtsamkeit": "Ein Pflug lockert den Boden für Neues. Spüre, wie es ist, ganz nach innen gefaltet zu sein.",
+  "vorsicht": "Nicht bei Nackenproblemen, unbehandeltem Bluthochdruck, Glaukom, Bandscheibenvorfall oder in der Schwangerschaft.",
+  "erleichterung": "Füße auf einen Stuhl, Knie gebeugt.",
+  "vorstufe": "schulterstand",
+  "halten": {
+   "start": 20,
+   "ziel": 120
+  },
+  "seiten": false
+ },
+ {
+  "id": "koenigstaube",
+  "api": 25,
+  "de": "Königstaube",
+  "sanskrit": "Eka Pada Rajakapotasana",
+  "en": "King Pigeon",
+  "stufe": 6,
+  "art": "rueckbeuge",
+  "kurz": "Tiefe Hüftöffnung mit Rückbeuge, bei der du den hinteren Fuß mit den Händen über dem Kopf greifst.",
+  "schritte": [
+   "Setz dich mit einem Bein angewinkelt vor dir, das andere Bein liegt lang nach hinten.",
+   "Richte das Becken gerade nach vorn aus.",
+   "Beuge das hintere Knie und hake den Fuß in die Armbeuge oder greife ihn mit einem Gurt.",
+   "Hebe den anderen Arm über den Kopf und verbinde die Hände.",
+   "Öffne die Brust nach oben, der Nacken bleibt lang."
+  ],
+  "fehler": [
+   "Das Becken kippt zur Seite – lege eine Decke unter die vordere Gesäßhälfte.",
+   "Es drückt im vorderen Knie – Fuß näher zum Becken und aktiv anziehen.",
+   "Du erzwingst die Rückbeuge – nimm lieber einen Gurt, statt zu ziehen."
+  ],
+  "atem": "Tief in die Brust atmen. Lange Ausatmungen helfen den Hüften loszulassen.",
+  "wirkung": [
+   "Öffnet Hüftbeuger, Brust und Schultern intensiv.",
+   "Fordert die Beweglichkeit der gesamten Wirbelsäule.",
+   "Wirkt aufrichtend und sammelnd."
+  ],
+  "achtsamkeit": "Diese Haltung braucht Zeit, oft Jahre. Übe ohne Eile, der Weg ist die Übung.",
+  "vorsicht": "Bei Knie-, Iliosakral-, Rücken- oder Schulterproblemen auslassen.",
+  "erleichterung": "Gurt um den hinteren Fuß, Decke unter die Hüfte oder nur die Taube ohne Rückbeuge.",
+  "vorstufe": "kamel",
+  "halten": {
+   "start": 15,
+   "ziel": 45
+  },
+  "seiten": true
+ },
+ {
+  "id": "rad",
+  "api": 47,
+  "de": "Rad",
+  "sanskrit": "Urdhva Dhanurasana",
+  "en": "Wheel",
+  "stufe": 6,
+  "art": "rueckbeuge",
+  "kurz": "Volle Rückbeuge aus der Rückenlage, gestützt auf Hände und Füße.",
+  "schritte": [
+   "Lege dich auf den Rücken, die Füße hüftbreit nah am Gesäß.",
+   "Setze die Hände neben die Ohren, die Finger zeigen zu den Schultern.",
+   "Hebe zuerst das Becken wie in der Brücke.",
+   "Setze den Scheitel kurz ab und richte die Ellbogen parallel aus.",
+   "Strecke die Arme und hebe den Kopf vom Boden."
+  ],
+  "fehler": [
+   "Ellbogen und Knie fallen nach außen – halte sie parallel.",
+   "Die Füße drehen nach außen – richte sie parallel aus.",
+   "Zu viel Gewicht auf dem Kopf beim Hochkommen – nur kurz absetzen, nie drehen."
+  ],
+  "atem": "Einatmend hochdrücken. Ruhig weiteratmen, auch wenn der Atem kurz wird.",
+  "wirkung": [
+   "Kräftigt Arme, Beine und Rücken.",
+   "Öffnet Brust, Schultern und Hüftbeuger umfassend.",
+   "Wirkt stark belebend."
+  ],
+  "achtsamkeit": "Ganz offen und zugleich ganz getragen. Spüre die Kraft, die es braucht, um weich zu sein.",
+  "vorsicht": "Bei Rücken-, Handgelenk- oder Schulterproblemen, Bluthochdruck, Herzerkrankungen und in der Schwangerschaft auslassen.",
+  "erleichterung": "Brücke oder Brücke mit Block unter dem Kreuzbein, Hände auf Blöcke an der Wand.",
+  "vorstufe": "bruecke",
+  "halten": {
+   "start": 10,
+   "ziel": 30
+  },
+  "seiten": false
+ },
+ {
+  "id": "spagat",
+  "api": 36,
+  "de": "Spagat",
+  "sanskrit": "Hanumanasana",
+  "en": "Splits",
+  "stufe": 6,
+  "art": "hueftoeffner",
+  "kurz": "Längsspagat, bei dem ein Bein nach vorn und das andere nach hinten gestreckt ist.",
+  "schritte": [
+   "Beginne im tiefen Ausfallschritt, Blöcke neben dem vorderen Fuß.",
+   "Schiebe das Becken zurück und strecke das vordere Bein.",
+   "Lass das vordere Bein langsam nach vorn gleiten und das hintere nach hinten.",
+   "Halte die Hüften gerade nach vorn ausgerichtet.",
+   "Stütze dich auf die Blöcke, ein Kissen unter dem vorderen Oberschenkel fängt dich auf."
+  ],
+  "fehler": [
+   "Die Hüfte dreht auf – Becken gerade, lieber höher bleiben.",
+   "Es drückt im vorderen Knie – Zehen aufrichten, die Kniescheibe zeigt nach oben.",
+   "Du wippst nach – halte ruhig, nie federn."
+  ],
+  "atem": "Lang ausatmen. Der Atem ist dein Maßstab: Wird er gepresst, bist du zu tief.",
+  "wirkung": [
+   "Dehnt Beinrückseiten und Hüftbeuger intensiv.",
+   "Fördert die Beweglichkeit der Hüftgelenke.",
+   "Schult Geduld und Hingabe."
+  ],
+  "achtsamkeit": "In der Legende springt Hanuman voller Vertrauen über das Meer. Vertraue dem Weg, nicht dem Ergebnis von heute.",
+  "vorsicht": "Bei Verletzungen der Beinrückseite oder Leiste auslassen. Nur gut aufgewärmt üben.",
+  "erleichterung": "Blöcke unter den Händen, Kissen unter dem Oberschenkel, hinteres Knie bleibt am Boden.",
+  "vorstufe": "pyramide",
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": true
+ },
+ {
+  "id": "seitlicher_spagat",
+  "api": 40,
+  "de": "Seitlicher Spagat",
+  "sanskrit": "Upavistha Konasana",
+  "en": "Side Splits",
+  "stufe": 6,
+  "art": "hueftoeffner",
+  "kurz": "Spagat zur Seite, bei dem die Beine nach links und rechts gestreckt sind und die Hände dich stützen.",
+  "schritte": [
+   "Stelle dich in einen sehr weiten Stand, die Füße parallel.",
+   "Setze die Hände vor dir auf den Boden oder auf Blöcke.",
+   "Lass die Füße langsam weiter nach außen gleiten.",
+   "Halte die Knie gestreckt, die Kniescheiben zeigen nach vorn.",
+   "Trage dein Gewicht mit den Händen, nicht mit den Knien."
+  ],
+  "fehler": [
+   "Das Gewicht hängt in den Knien – lass die Hände mehr tragen.",
+   "Du gehst zu schnell zu tief – arbeite in kleinen Schritten.",
+   "Die Füße rollen nach innen – halte die Fußaußenkanten aktiv."
+  ],
+  "atem": "Lang und ruhig. Mit jedem Ausatmen ein wenig loslassen, nie federn.",
+  "wirkung": [
+   "Dehnt die Innenseiten der Oberschenkel und die Leisten.",
+   "Fördert die Beweglichkeit der Hüften.",
+   "Fordert Geduld."
+  ],
+  "achtsamkeit": "Grenzen verschieben sich nicht durch Druck. Bleib an deiner Grenze und atme, bis sie sich von selbst bewegt.",
+  "vorsicht": "Bei Leisten-, Knie- oder Hüftverletzungen auslassen. Nur gut aufgewärmt üben.",
+  "erleichterung": "Hände auf Blöcke oder einen Stuhl, oder im Sitzen als gegrätschte Vorbeuge üben.",
+  "vorstufe": "schmetterling",
+  "halten": {
+   "start": 20,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "unterarmstand",
+  "api": 19,
+  "de": "Unterarmstand",
+  "sanskrit": "Pincha Mayurasana",
+  "en": "Forearm Stand",
+  "stufe": 6,
+  "art": "umkehr",
+  "kurz": "Umkehrhaltung auf den Unterarmen mit senkrecht nach oben gestreckten Beinen.",
+  "schritte": [
+   "Übe mit dem Gesicht zur Wand: Unterarme parallel, die Hände eine Handbreit vor der Wand.",
+   "Komm in den Delfin und laufe mit den Füßen nah heran.",
+   "Hebe ein Bein gestreckt nach oben.",
+   "Mit einem kleinen, kontrollierten Abdruck kommen beide Fersen an die Wand.",
+   "Drücke die Unterarme in den Boden, Bauch fest, Blick zwischen die Hände."
+  ],
+  "fehler": [
+   "Die Ellbogen rutschen auseinander – Gurt um die Oberarme oder Block zwischen die Hände.",
+   "Starkes Hohlkreuz – Rippen einziehen, Fersen nach oben schieben.",
+   "Zu viel Schwung – lieber viele kleine, kontrollierte Versuche."
+  ],
+  "atem": "Ruhig weiteratmen. Wenn der Atem stockt, komm kontrolliert herunter.",
+  "wirkung": [
+   "Kräftigt Schultern, Arme und Rumpf.",
+   "Schult die Balance in der Umkehr.",
+   "Fordert Mut und Präsenz."
+  ],
+  "achtsamkeit": "Beobachte die Angst, ohne sie wegzudrücken. Mut heißt, mit ihr freundlich weiterzuatmen.",
+  "vorsicht": "Nicht bei Schulter-, Nacken- oder Rückenverletzungen, Bluthochdruck, Glaukom, Herzerkrankungen oder in der Schwangerschaft. Immer an der Wand üben.",
+  "erleichterung": "Im Delfin bleiben oder im Delfin ein Bein heben.",
+  "vorstufe": "delfin",
+  "halten": {
+   "start": 10,
+   "ziel": 60
+  },
+  "seiten": false
+ },
+ {
+  "id": "handstand",
+  "api": 22,
+  "de": "Handstand",
+  "sanskrit": "Adho Mukha Vrksasana",
+  "en": "Handstand",
+  "stufe": 6,
+  "art": "umkehr",
+  "kurz": "Umkehrhaltung auf den Händen mit senkrecht gestrecktem Körper.",
+  "schritte": [
+   "Übe mit dem Gesicht zur Wand: Hände schulterbreit, eine Handbreit vor der Wand.",
+   "Komm in den Herabschauenden Hund und laufe mit den Füßen näher.",
+   "Hebe ein Bein gestreckt nach oben.",
+   "Mit einem kleinen, kontrollierten Abdruck kommen beide Fersen an die Wand.",
+   "Arme gestreckt, Bauch fest, Blick zwischen die Hände."
+  ],
+  "fehler": [
+   "Die Ellbogen knicken ein – strecke die Arme aktiv und drücke den Boden weg.",
+   "Starkes Hohlkreuz – Rippen einziehen, Körper lang machen.",
+   "Zu viel Schwung – lieber viele kleine, kontrollierte Versuche."
+  ],
+  "atem": "Ruhig weiteratmen. Wenn der Atem stockt, komm kontrolliert herunter.",
+  "wirkung": [
+   "Kräftigt Arme, Schultern und Rumpf.",
+   "Schult Balance und Körperspannung.",
+   "Fordert Mut und Leichtigkeit zugleich."
+  ],
+  "achtsamkeit": "Auf den Händen zu stehen, verändert den Blick auf die Welt. Lass Spiel und Leichtigkeit zu, ohne Ehrgeiz.",
+  "vorsicht": "Nicht bei Handgelenk-, Schulter- oder Nackenverletzungen, Bluthochdruck, Glaukom, Herzerkrankungen oder in der Schwangerschaft. Immer an der Wand üben.",
+  "erleichterung": "L-Form an der Wand: Hände am Boden, Füße auf Hüfthöhe an der Wand.",
+  "vorstufe": "herabschauender_hund",
+  "halten": {
+   "start": 10,
+   "ziel": 60
+  },
+  "seiten": false
+ }
+]

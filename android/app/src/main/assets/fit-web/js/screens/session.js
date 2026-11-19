@@ -284,7 +284,7 @@ function Run({ s }) {
       <p class="muted small">Dein Fortschritt ist gespeichert.</p>
       <button class="btn mt16" onClick=${done}>Beenden und Feedback geben</button>
       <button class="btn ghost mt8" onClick=${() => setQuit(false)}>Weitertrainieren</button>
-      <button class="btn ghost mt8" onClick=${() => { keepAwake(false); back('heute'); }}>Später fortsetzen</button>
+      <button class="btn ghost mt8" onClick=${() => back('heute')}>Später fortsetzen</button>
     <//>`}
   </div>`;
 }

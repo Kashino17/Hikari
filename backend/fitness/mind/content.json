@@ -1,0 +1,1565 @@
+{
+ "atem": [
+  {
+   "id": "box",
+   "name": "Box-Atmung",
+   "kurz": "Vier gleich lange Phasen – ein Quadrat aus Atem für einen klaren Kopf.",
+   "wofuer": [
+    "fokus",
+    "stress",
+    "ruhe"
+   ],
+   "phasen": [
+    {
+     "typ": "ein",
+     "sekunden": 4,
+     "sage": "Einatmen"
+    },
+    {
+     "typ": "halten",
+     "sekunden": 4,
+     "sage": "Halten"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 4,
+     "sage": "Ausatmen"
+    },
+    {
+     "typ": "halten_leer",
+     "sekunden": 4,
+     "sage": "Leer halten"
+    }
+   ],
+   "runden_standard": 8,
+   "anleitung": [
+    "Setz dich aufrecht hin, die Schultern sinken, die Hände liegen locker auf den Oberschenkeln.",
+    "Atme durch die Nase vier Sekunden lang ein und halte die Luft dann vier Sekunden ohne Druck.",
+    "Atme vier Sekunden lang ruhig aus und bleib danach vier Sekunden leer.",
+    "Stell dir dabei vor, du fährst die vier Seiten eines Quadrats ab.",
+    "Wenn das Halten anstrengt, verkürze alle Phasen auf drei Sekunden."
+   ],
+   "warum": "Der gleichmäßige, verlangsamte Rhythmus senkt die Atemfrequenz auf etwa vier Züge pro Minute und gibt dem Kopf eine einfache Zählaufgabe, die Grübeln unterbricht. Gut belegt ist vor allem der Effekt langsamen Atmens allgemein; spezifische Studien zur Box-Atmung sind klein. Sie ist eher ein Werkzeug zum Sammeln als zum Einschlafen.",
+   "vorsicht": "Die Pausen nie pressen. Bei Schwindel, in der Schwangerschaft oder bei Herz-Kreislauf-Erkrankungen die Haltephasen weglassen oder kürzen."
+  },
+  {
+   "id": "478",
+   "name": "4-7-8 zum Einschlafen",
+   "kurz": "Kurz ein, lang halten, sehr lang aus – ein ruhiges Signal für die Nacht.",
+   "wofuer": [
+    "schlaf",
+    "angst",
+    "ruhe"
+   ],
+   "phasen": [
+    {
+     "typ": "ein",
+     "sekunden": 4,
+     "sage": "Einatmen"
+    },
+    {
+     "typ": "halten",
+     "sekunden": 7,
+     "sage": "Halten"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 8,
+     "sage": "Langsam ausatmen"
+    }
+   ],
+   "runden_standard": 4,
+   "anleitung": [
+    "Leg dich bequem hin oder setz dich, die Zungenspitze ruht hinter den oberen Schneidezähnen.",
+    "Atme leise durch die Nase ein und zähle dabei innerlich bis vier.",
+    "Halte den Atem sanft, während du bis sieben zählst.",
+    "Atme durch den Mund hörbar und langsam aus, bis acht.",
+    "Beginne mit vier Runden; das Verhältnis ist wichtiger als die genaue Geschwindigkeit."
+   ],
+   "warum": "Das lange Ausatmen betont die Phase, in der der Herzschlag sich leicht verlangsamt, und die feste Zählung lenkt von kreisenden Gedanken ab. Die Methode stammt aus der Praxis, nicht aus großen Studien; kleinere Untersuchungen zeigen kurzfristig niedrigeren Puls und Blutdruck. Viele erleben sie als hilfreiches Einschlafritual – eine Garantie für Schlaf ist sie nicht.",
+   "vorsicht": "Anfangs kann leichter Schwindel auftreten; dann kürzer halten oder einfach normal weiteratmen. Nicht mehr als acht Runden am Stück."
+  },
+  {
+   "id": "kohaerent",
+   "name": "Kohärentes Atmen 5,5/5,5",
+   "kurz": "Gleichmäßig ein und aus, etwa fünfeinhalb Atemzüge pro Minute – der ruhige Grundrhythmus.",
+   "wofuer": [
+    "stress",
+    "angst",
+    "fokus",
+    "ruhe"
+   ],
+   "phasen": [
+    {
+     "typ": "ein",
+     "sekunden": 5.5,
+     "sage": "Einatmen"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 5.5,
+     "sage": "Ausatmen"
+    }
+   ],
+   "runden_standard": 30,
+   "anleitung": [
+    "Setz dich aufrecht oder leg dich hin, eine Hand ruht auf dem Bauch.",
+    "Atme durch die Nase fließend ein, ohne die Lunge ganz zu füllen.",
+    "Atme ebenso lange und weich wieder aus, ohne Pause dazwischen.",
+    "Der Atem soll leise und mühelos bleiben – lieber etwas weniger Luft als zu viel.",
+    "Übe fünf bis zehn Minuten, gern zweimal am Tag."
+   ],
+   "warum": "Bei etwa sechs Atemzügen pro Minute schwingen Atmung, Herzschlag und Blutdruckregulation bei vielen Menschen im Gleichtakt, die Herzratenvariabilität steigt deutlich. Dieser Effekt ist gut gemessen und wird im HRV-Biofeedback genutzt; Studien zeigen moderate Verbesserungen bei Stress und Angst. Der genaue Idealrhythmus ist individuell und liegt meist zwischen viereinhalb und sieben Zügen pro Minute.",
+   "vorsicht": "Nicht tiefer atmen als nötig, sonst kann Kribbeln oder Schwindel durch zu viel Ausatmen von Kohlendioxid entstehen."
+  },
+  {
+   "id": "langes-aus",
+   "name": "Verlängertes Ausatmen gegen Stress",
+   "kurz": "Der Ausatem wird länger als der Einatem – die einfachste Bremse für Anspannung.",
+   "wofuer": [
+    "stress",
+    "angst",
+    "schlaf"
+   ],
+   "phasen": [
+    {
+     "typ": "ein",
+     "sekunden": 4,
+     "sage": "Einatmen"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 7,
+     "sage": "Lang ausatmen"
+    }
+   ],
+   "runden_standard": 15,
+   "anleitung": [
+    "Lass die Schultern sinken und lockere den Kiefer.",
+    "Atme durch die Nase ruhig ein, etwa vier Sekunden.",
+    "Atme langsam aus, als würdest du durch einen Strohhalm pusten oder eine Kerze nur flackern lassen.",
+    "Wenn sieben Sekunden zu lang sind, beginne mit sechs – Hauptsache, das Ausatmen ist länger.",
+    "Nach einigen Runden darf der Atem wieder ganz von allein fließen."
+   ],
+   "warum": "Beim Ausatmen wird der Herzschlag über den Vagusnerv leicht gebremst, beim Einatmen etwas beschleunigt. Ein längerer Ausatem verschiebt dieses Verhältnis in Richtung Ruhe. Eine Studie aus Stanford fand, dass schon fünf Minuten ausatmungsbetontes Atmen täglich die Stimmung verbesserte – die Stichprobe war klein, aber das Prinzip ist physiologisch plausibel und risikoarm.",
+   "vorsicht": "Nicht bis zur Atemnot auspressen. Wenn dich der Fokus auf den Atem unruhig macht, richte die Aufmerksamkeit stattdessen auf die Füße."
+  },
+  {
+   "id": "wechselatmung",
+   "name": "Wechselatmung (Nadi Shodhana)",
+   "kurz": "Abwechselnd durch ein Nasenloch atmen – ausgleichend und sammelnd.",
+   "wofuer": [
+    "fokus",
+    "stress",
+    "ruhe"
+   ],
+   "phasen": [
+    {
+     "typ": "ein",
+     "sekunden": 4,
+     "sage": "Links ein"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 6,
+     "sage": "Rechts aus"
+    },
+    {
+     "typ": "ein",
+     "sekunden": 4,
+     "sage": "Rechts ein"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 6,
+     "sage": "Links aus"
+    }
+   ],
+   "runden_standard": 8,
+   "anleitung": [
+    "Setz dich aufrecht hin; Zeige- und Mittelfinger der rechten Hand ruhen zwischen den Augenbrauen oder sind eingeklappt.",
+    "Verschließe mit dem rechten Daumen das rechte Nasenloch und atme links ein.",
+    "Verschließe links mit dem Ringfinger, öffne rechts und atme rechts aus.",
+    "Atme rechts wieder ein, wechsle und atme links aus – das ist eine Runde.",
+    "Der Atem bleibt leise und weich; der Arm darf zwischendurch sinken, wenn er müde wird."
+   ],
+   "warum": "Das abwechselnde Atmen verlangsamt den Atem fast automatisch und verlangt so viel Aufmerksamkeit, dass der Kopf zur Ruhe kommt. Kleinere Studien zeigen nach regelmäßiger Übung etwas niedrigeren Puls und Blutdruck sowie weniger empfundene Anspannung. Die traditionelle Vorstellung, damit Energiekanäle zu reinigen, ist ein spirituelles Bild, kein messbarer Mechanismus.",
+   "vorsicht": "Nur bei freier Nase üben. Bei Erkältung oder verstopfter Nase lieber kohärentes Atmen wählen."
+  },
+  {
+   "id": "feueratem-sanft",
+   "name": "Feueratem sanft (Kapalabhati light)",
+   "kurz": "Kurze, aktive Ausatemstöße aus dem Bauch – wach machend, nicht beruhigend.",
+   "wofuer": [
+    "energie",
+    "fokus"
+   ],
+   "phasen": [
+    {
+     "typ": "ein",
+     "sekunden": 3,
+     "sage": "Tief einatmen"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 20,
+     "sage": "Kurze Stöße"
+    },
+    {
+     "typ": "ein",
+     "sekunden": 4,
+     "sage": "Tief einatmen"
+    },
+    {
+     "typ": "aus",
+     "sekunden": 8,
+     "sage": "Ruhig ausatmen"
+    },
+    {
+     "typ": "ein",
+     "sekunden": 5,
+     "sage": "Normal atmen"
+    }
+   ],
+   "runden_standard": 3,
+   "anleitung": [
+    "Setz dich aufrecht hin, beide Hände auf dem Bauch, und atme einmal tief ein.",
+    "Während der Phase »Kurze Stöße« ziehst du den Bauch etwa einmal pro Sekunde kurz nach innen und stößt so Luft durch die Nase aus.",
+    "Das Einatmen passiert dazwischen von allein, wenn der Bauch wieder locker wird – nicht aktiv einsaugen.",
+    "Beginne langsam und sanft; Tempo und Kraft sind zweitrangig, der Rhythmus zählt.",
+    "Nach jeder Runde tief einatmen, lang ausatmen und einige ruhige Atemzüge nachspüren."
+   ],
+   "warum": "Schnelles, aktives Atmen erhöht kurzfristig die Aktivität des sympathischen Nervensystems – Puls und Wachheit steigen, ähnlich wie bei kurzer Bewegung. Gleichzeitig wird mehr Kohlendioxid abgeatmet, was das Kribbeln oder leichte Schwindelgefühl erklärt. Studien dazu sind klein; der Effekt ist eher ein spürbarer Frischekick als ein langfristiges Training.",
+   "vorsicht": "Nicht üben bei Schwangerschaft, Bluthochdruck, Herzerkrankungen, Epilepsie, Panikattacken, nach Bauch-OPs, bei akuten Rückenschmerzen oder mit vollem Magen. Immer im Sitzen, nie im Wasser oder beim Autofahren. Bei Schwindel sofort aufhören und normal atmen."
+  }
+ ],
+ "affirmationen": [
+  {
+   "text": "Ich darf in meinem eigenen Tempo wachsen.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich bin genug, so wie ich heute bin.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Mein Wert hängt nicht von meiner Leistung ab.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich darf Fehler machen und daraus lernen.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich behandle mich so freundlich wie einen guten Freund.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich darf Raum einnehmen.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Meine Bedürfnisse sind wichtig.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich muss nicht perfekt sein, um gemocht zu werden.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich erkenne an, was ich schon geschafft habe.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich darf Nein sagen, ohne mich zu rechtfertigen.",
+   "thema": "selbstwert"
+  },
+  {
+   "text": "Ich habe Zeit für diesen einen Atemzug.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Ich muss jetzt nichts lösen.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Mit jedem Ausatmen werde ich etwas ruhiger.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Dieser Moment ist genug.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Ich darf langsamer werden.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Gedanken kommen und gehen. Ich bleibe hier.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Ich lasse los, was ich gerade nicht ändern kann.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "In mir gibt es einen ruhigen Ort.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Ich spüre den Boden, der mich trägt.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Ich darf eine Pause machen, bevor ich weitermache.",
+   "thema": "ruhe"
+  },
+  {
+   "text": "Ich darf Angst haben und trotzdem den ersten Schritt gehen.",
+   "thema": "mut"
+  },
+  {
+   "text": "Ich wachse an dem, was mich herausfordert.",
+   "thema": "mut"
+  },
+  {
+   "text": "Ein kleiner Schritt heute zählt.",
+   "thema": "mut"
+  },
+  {
+   "text": "Ich traue mir zu, Neues zu lernen.",
+   "thema": "mut"
+  },
+  {
+   "text": "Unsicherheit gehört zum Wachsen dazu.",
+   "thema": "mut"
+  },
+  {
+   "text": "Ich habe schon Schwieriges geschafft.",
+   "thema": "mut"
+  },
+  {
+   "text": "Ich darf um Hilfe bitten.",
+   "thema": "mut"
+  },
+  {
+   "text": "Ich stehe für das ein, was mir wichtig ist.",
+   "thema": "mut"
+  },
+  {
+   "text": "Ich muss nicht alles wissen, um anzufangen.",
+   "thema": "mut"
+  },
+  {
+   "text": "Auch wenn etwas schiefgeht, bleibe ich auf meiner Seite.",
+   "thema": "mut"
+  },
+  {
+   "text": "Heute gibt es etwas, wofür ich dankbar sein kann.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ich bemerke die kleinen guten Momente.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ich bin dankbar für meinen Atem.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ich schätze die Menschen, die mich begleiten.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ich bin dankbar für das, was mein Körper heute leistet.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Auch an schweren Tagen finde ich etwas Gutes.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ich nehme das Gute nicht als selbstverständlich.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ein warmes Getränk, ein Lächeln, ein Licht. Das zählt.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ich bin dankbar für alles, was ich lernen durfte.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Ich danke mir, dass ich mich heute um mich kümmere.",
+   "thema": "dankbarkeit"
+  },
+  {
+   "text": "Mein Körper trägt mich jeden Tag.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich höre auf die Signale meines Körpers.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich bewege mich, weil ich mich mag, nicht zur Strafe.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich gebe meinem Körper Ruhe, wenn er sie braucht.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Mein Körper darf sich verändern.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich spüre meine Füße und bin hier.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich atme sanft in die Stellen, die sich eng anfühlen.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich nähre meinen Körper mit Sorgfalt.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich respektiere heute meine Grenzen.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Mein Körper ist mein Zuhause, kein Projekt.",
+   "thema": "koerper"
+  },
+  {
+   "text": "Ich mache jetzt eine Sache nach der anderen.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Meine Aufmerksamkeit gehört dem, was vor mir liegt.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Wenn ich abschweife, kehre ich freundlich zurück.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Ich wähle, worauf ich meine Energie richte.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Ich darf Ablenkungen bemerken und loslassen.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Klarheit entsteht, wenn ich langsamer werde.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Ich beginne mit dem nächsten kleinen Schritt.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Ich bin ganz bei dieser Aufgabe.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Ich muss nicht alles gleichzeitig schaffen.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Ruhe ist die Grundlage meiner Konzentration.",
+   "thema": "fokus"
+  },
+  {
+   "text": "Der Tag ist vorbei. Ich darf loslassen.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Mein Körper weiß, wie Schlafen geht.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Ich muss heute nichts mehr erledigen.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Mit jedem Atemzug sinke ich tiefer in die Ruhe.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Ruhen tut mir gut, auch wenn der Schlaf noch wartet.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Meine Gedanken dürfen bis morgen warten.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Ich bin hier sicher und darf mich entspannen.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Mein Bett trägt mich ganz.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Ich lege den Tag sanft zur Seite.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Ich gönne mir diese Nacht der Erholung.",
+   "thema": "schlaf"
+  },
+  {
+   "text": "Heilung braucht Zeit, und ich gebe sie mir.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Ich darf traurig sein und trotzdem weitergehen.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Jeder Tag ist ein neuer Anfang.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Ich bin freundlich mit dem, was in mir verletzt ist.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Gefühle dürfen da sein. Sie ziehen auch wieder weiter.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Ich lasse alte Lasten Stück für Stück los.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Rückschritte gehören zum Weg dazu.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Ich darf mir Unterstützung holen.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Was war, prägt mich. Aber es bestimmt mich nicht.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Ich verzeihe mir, dass ich nicht alles wusste.",
+   "thema": "heilung"
+  },
+  {
+   "text": "Ich bin nicht allein mit dem, was ich fühle.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Viele Menschen atmen gerade genau wie ich.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Ich höre zu, um zu verstehen.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Ich begegne anderen mit Offenheit.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Ich bin Teil von etwas Größerem.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Ich darf Nähe zulassen.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Freundlichkeit, die ich gebe, kommt auch bei mir an.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Ich wünsche den Menschen um mich herum Gutes.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Ich bin verbunden mit der Natur um mich herum.",
+   "thema": "verbundenheit"
+  },
+  {
+   "text": "Auch kleine Begegnungen machen meinen Tag reicher.",
+   "thema": "verbundenheit"
+  }
+ ],
+ "impulse": [
+  {
+   "titel": "Drei Atemzüge vor dem Essen",
+   "text": "Bevor du heute den ersten Bissen nimmst, halte kurz inne und atme dreimal bewusst ein und aus. Schau dir an, was vor dir liegt, und rieche daran. So kommt der Körper aus dem Tempo des Tages beim Essen an."
+  },
+  {
+   "titel": "Gehmeditation zum Bus",
+   "text": "Geh heute einen kurzen Weg – zum Bus, zum Auto, zur Küche – etwas langsamer als sonst. Spür bei jedem Schritt, wie die Ferse aufsetzt und der Fuß abrollt. Wenn Gedanken kommen, kehr zum nächsten Schritt zurück."
+  },
+  {
+   "titel": "Fünf-vier-drei-zwei-eins",
+   "text": "Benenne still fünf Dinge, die du siehst, vier, die du hörst, drei, die du spürst, zwei, die du riechst, und eins, das du schmeckst. Die Übung holt dich in Sekunden aus dem Kopf in den Raum. Besonders hilfreich, wenn Gedanken rasen."
+  },
+  {
+   "titel": "Zähneputzen mit allen Sinnen",
+   "text": "Putz dir heute einmal die Zähne, als wäre es das erste Mal. Achte auf den Geschmack, das Geräusch, die Bewegung der Hand. Zwei Minuten Achtsamkeit, die ohnehin in deinem Tag stecken."
+  },
+  {
+   "titel": "Der erste Schluck",
+   "text": "Nimm den ersten Schluck Kaffee, Tee oder Wasser heute ganz bewusst. Spür die Wärme oder Kühle der Tasse, den Duft, den Geschmack auf der Zunge. Erst danach greifst du zum Handy."
+  },
+  {
+   "titel": "Die Türklinke als Erinnerung",
+   "text": "Mach heute jede Türklinke zu einem kleinen Signal: Bevor du sie drückst, ein bewusster Atemzug. Du betrittst einen neuen Raum – und kommst ganz darin an. Nach ein paar Tagen passiert es fast von allein."
+  },
+  {
+   "titel": "Der Morgen gehört dir",
+   "text": "Lass das Handy nach dem Aufwachen zwanzig Minuten liegen. Schau aus dem Fenster, streck dich, trink etwas. Der Tag beginnt mit deinen eigenen Gedanken statt mit denen anderer."
+  },
+  {
+   "titel": "Ganz zuhören",
+   "text": "Hör heute in einem Gespräch zu, ohne innerlich schon deine Antwort vorzubereiten. Achte auf Worte, Stimme und Gesicht deines Gegenübers. Du wirst merken, wie viel mehr bei dir ankommt."
+  },
+  {
+   "titel": "Drei gute Dinge",
+   "text": "Schreib heute Abend drei Dinge auf, die gut waren – auch ganz kleine. Notiere zu einem davon, warum es passiert ist. Diese Übung gehört zu den am besten untersuchten der positiven Psychologie."
+  },
+  {
+   "titel": "Wartezeit ist Übungszeit",
+   "text": "Wenn du heute warten musst – an der Ampel, in der Schlange, auf den Wasserkocher –, greif nicht zum Handy. Spür stattdessen deine Füße und drei Atemzüge. Aus verlorener Zeit wird eine kleine Pause."
+  },
+  {
+   "titel": "Schultern, Kiefer, Stirn",
+   "text": "Prüf heute dreimal: Sind die Schultern hochgezogen? Ist der Kiefer fest? Ist die Stirn gerunzelt? Lass bewusst los, was du findest – oft speichert der Körper Stress, bevor der Kopf es merkt."
+  },
+  {
+   "titel": "Einen Gegenstand neu sehen",
+   "text": "Nimm einen Alltagsgegenstand in die Hand – einen Stift, einen Löffel, ein Blatt. Betrachte ihn eine Minute lang, als hättest du so etwas noch nie gesehen. Farbe, Gewicht, Kanten, Spuren der Benutzung."
+  },
+  {
+   "titel": "Duschen statt Denken",
+   "text": "Wenn du heute duschst, sei wirklich unter der Dusche und nicht im nächsten Meeting. Spür die Temperatur, das Prasseln auf der Haut, den Duft der Seife. Jedes Mal, wenn du abschweifst, kehr zum Wasser zurück."
+  },
+  {
+   "titel": "Gefühle benennen",
+   "text": "Wenn heute ein starkes Gefühl auftaucht, gib ihm innerlich einen Namen: »Da ist Ärger.« oder »Da ist Unruhe.« Das Benennen schafft einen kleinen Abstand. Studien zeigen, dass es die Gefühlsreaktion messbar dämpfen kann."
+  },
+  {
+   "titel": "Die STOPP-Pause",
+   "text": "In einem angespannten Moment: Stopp – halte an. Tief atmen. Orientieren – was passiert gerade in mir und um mich? Dann Prüfen, was jetzt hilfreich wäre, und bewusst Weitermachen."
+  },
+  {
+   "titel": "Ein Fenster, eine Aufgabe",
+   "text": "Arbeite heute eine halbe Stunde lang mit nur einem offenen Fenster oder Tab. Wenn der Impuls kommt, etwas anderes zu öffnen, bemerke ihn und bleib. Multitasking fühlt sich produktiv an, kostet aber Konzentration."
+  },
+  {
+   "titel": "Die ersten fünf Bissen",
+   "text": "Iss die ersten fünf Bissen einer Mahlzeit langsam und ohne Ablenkung. Leg zwischen den Bissen das Besteck ab. Danach darfst du essen wie immer – aber vielleicht willst du es gar nicht mehr."
+  },
+  {
+   "titel": "Eine Nachricht des Dankes",
+   "text": "Schreib heute einem Menschen eine kurze Nachricht, warum du dankbar für ihn bist. Konkret und ehrlich, zwei Sätze reichen. Es tut beiden Seiten gut – oft mehr, als man erwartet."
+  },
+  {
+   "titel": "Himmel schauen",
+   "text": "Schau heute einmal eine Minute lang bewusst in den Himmel. Wolken, Licht, Farbe, vielleicht ein Vogel. Der weite Blick entspannt die Augen und oft auch den Kopf."
+  },
+  {
+   "titel": "Geräusche sammeln",
+   "text": "Schließ für eine Minute die Augen und lausche. Nimm Geräusche wahr, ohne sie zu bewerten – nah und fern, laut und leise. Auch Stille zwischen den Geräuschen gehört dazu."
+  },
+  {
+   "titel": "Bewusst Treppen steigen",
+   "text": "Nimm heute die Treppe und spür jede Stufe. Wie arbeiten die Beine, wie verändert sich der Atem? Bewegung wird so zu einer kleinen Meditation."
+  },
+  {
+   "titel": "Gute Wünsche im Vorbeigehen",
+   "text": "Wünsch heute drei fremden Menschen still etwas Gutes, während du an ihnen vorbeigehst: »Mögest du einen guten Tag haben.« Niemand merkt es, aber deine eigene Haltung verändert sich. So wird Freundlichkeit zur Gewohnheit."
+  },
+  {
+   "titel": "Feierabend-Ritual",
+   "text": "Schließ deinen Arbeitstag heute bewusst ab: Notiere, was erledigt ist und was morgen als Erstes dran ist. Dann sag innerlich »Feierabend« und atme dreimal aus. Der Kopf darf jetzt aufhören zu arbeiten."
+  },
+  {
+   "titel": "Hände spüren",
+   "text": "Leg die Hände auf die Oberschenkel und schließ die Augen. Spür, ohne hinzuschauen, wo sie warm, kribbelig oder schwer sind. Eine Minute reicht, um aus dem Denken ins Spüren zu wechseln."
+  },
+  {
+   "titel": "Achtsam abwaschen",
+   "text": "Mach aus dem Abwasch heute eine Übung. Spür das warme Wasser, den Schaum, das Gewicht der Teller. Es gibt nur diesen einen Teller, dann den nächsten."
+  },
+  {
+   "titel": "Gedanken etikettieren",
+   "text": "Wenn du heute ins Grübeln kommst, gib dem Gedanken ein kurzes Etikett: »Planen«, »Sorgen«, »Erinnern«, »Bewerten«. Dann kehr zu dem zurück, was du gerade tust. Gedanken sind Ereignisse im Kopf, keine Befehle."
+  },
+  {
+   "titel": "Benachrichtigungen pausieren",
+   "text": "Schalte heute für zwei Stunden alle Benachrichtigungen stumm. Beobachte, wie oft der Impuls kommt, trotzdem nachzusehen. Dieses Bemerken ist schon die ganze Übung."
+  },
+  {
+   "titel": "Ärger ausatmen",
+   "text": "Wenn heute Ärger hochkommt, atme bewusst länger aus als ein – zum Beispiel vier Sekunden ein, acht aus. Wiederhole das dreimal, bevor du antwortest. Der Ärger darf da sein, er muss nur nicht sofort sprechen."
+  },
+  {
+   "titel": "Einen Baum betrachten",
+   "text": "Such dir auf deinem Weg einen Baum und bleib eine Minute bei ihm stehen. Schau auf Rinde, Äste, Blätter oder kahle Zweige, je nach Jahreszeit. Natur lädt fast automatisch zum Langsamerwerden ein."
+  },
+  {
+   "titel": "Wasser bewusst trinken",
+   "text": "Trink heute ein Glas Wasser in kleinen Schlucken und ganz bewusst. Spür, wie es kühl durch den Hals läuft. Eine einfache Art, dem Körper Aufmerksamkeit zu schenken."
+  },
+  {
+   "titel": "Die Lücke zwischen Aufgaben",
+   "text": "Wenn du heute eine Aufgabe beendest, starte nicht sofort die nächste. Mach eine Pause von drei Atemzügen und spür nach. Diese kleinen Übergänge verhindern, dass der Tag zu einem einzigen Rauschen wird."
+  },
+  {
+   "titel": "Freundlich mit dir sprechen",
+   "text": "Achte heute darauf, wie du innerlich mit dir sprichst, wenn etwas schiefgeht. Frag dich: Würde ich so mit einer guten Freundin reden? Wenn nicht, formuliere den Satz einmal freundlicher um."
+  },
+  {
+   "titel": "Ein halbes Lächeln",
+   "text": "Lass für ein paar Atemzüge ein ganz leichtes Lächeln auf deinem Gesicht entstehen – kaum sichtbar. Spür, wie sich dabei Gesicht und Kiefer anfühlen. Es geht nicht darum, Freude vorzutäuschen, sondern Spannung loszulassen."
+  },
+  {
+   "titel": "Scrollen bemerken",
+   "text": "Wenn du heute merkst, dass du durch einen Feed scrollst, halte kurz an und frag dich: Will ich das gerade wirklich? Dann entscheide bewusst – weiter oder weg. Beides ist in Ordnung, wenn du es wählst."
+  },
+  {
+   "titel": "Licht dimmen am Abend",
+   "text": "Dimm heute eine Stunde vor dem Schlafengehen das Licht in der Wohnung. Wähle eine ruhige Tätigkeit: lesen, dehnen, Tee trinken. So bekommt dein Körper ein klares Signal, dass der Tag zu Ende geht."
+  },
+  {
+   "titel": "Fußsohlen im Stehen",
+   "text": "Wenn du heute irgendwo stehst, verteil das Gewicht bewusst auf beide Füße. Spür Fersen, Ballen und Zehen am Boden. Diese Erdung funktioniert unauffällig, auch mitten in einem Gespräch."
+  },
+  {
+   "titel": "Was gut gelaufen ist",
+   "text": "Bevor du heute die Arbeit oder einen Termin verlässt, nenne dir eine Sache, die gut gelaufen ist. Auch an zähen Tagen gibt es sie. Der Blick darauf ist kein Schönreden, sondern ein Ausgleich für den natürlichen Fokus auf Probleme."
+  },
+  {
+   "titel": "Langsam aufstehen",
+   "text": "Bleib morgen früh nach dem Aufwachen noch drei Atemzüge liegen. Spür das Gewicht deines Körpers und die Wärme der Decke. Dann steh bewusst auf, statt aus dem Bett zu springen."
+  },
+  {
+   "titel": "Ein Lied ganz hören",
+   "text": "Hör heute ein Lied von Anfang bis Ende, ohne etwas anderes zu tun. Folge einem Instrument oder der Stimme. Musik ist ein wunderbarer Anker für die Aufmerksamkeit."
+  },
+  {
+   "titel": "Gute Wünsche für dich",
+   "text": "Sag dir heute still drei Sätze: »Möge ich mich sicher fühlen. Möge ich freundlich zu mir sein. Möge ich mit Leichtigkeit leben.« Wenn es sich ungewohnt anfühlt, ist das normal. Freundlichkeit zu sich selbst ist eine Fähigkeit, die wächst."
+  }
+ ],
+ "deepdives": [
+  {
+   "id": "was-ist-meditation",
+   "titel": "Was Meditation wirklich ist",
+   "untertitel": "Und was sie nicht ist",
+   "minuten": 3,
+   "farbe": "teal",
+   "abschnitte": [
+    {
+     "h": "Kein leerer Kopf",
+     "text": "Der häufigste Satz von Anfängern lautet: »Ich kann nicht meditieren, mein Kopf ist nie still.« Dahinter steckt ein Missverständnis. Meditation bedeutet nicht, Gedanken abzustellen. Das gelingt auch erfahrenen Lehrerinnen und Lehrern kaum, und es ist nicht das Ziel.\n\nMeditation ist Training der Aufmerksamkeit. Du richtest sie auf etwas – den Atem, ein Geräusch, den Körper. Irgendwann schweifst du ab. Dann bemerkst du das und kehrst zurück. Genau dieser Moment des Bemerkens und Zurückkehrens ist die eigentliche Übung, vergleichbar mit einer Wiederholung im Krafttraining. Wer zwanzigmal abschweift und zwanzigmal zurückkommt, hat zwanzig Wiederholungen gemacht – und nicht zwanzigmal versagt."
+    },
+    {
+     "h": "Was dabei im Kopf passiert",
+     "text": "Unser Gehirn hat einen Modus, der aktiv wird, wenn wir nichts Bestimmtes tun: Es plant, erinnert, bewertet, erzählt Geschichten über uns selbst. Forschende nennen das Ruhezustandsnetzwerk. Es ist nützlich, kann aber auch in Grübelschleifen kippen.\n\nBildgebende Studien zeigen, dass Meditierende schneller bemerken, wenn sie in diesen Modus abdriften, und leichter wieder herausfinden. Gleichzeitig sollte man ehrlich sein: Viele Studien sind klein, und Effekte werden in Medien oft übertrieben. Eine große Übersichtsarbeit im Fachjournal JAMA Internal Medicine fand 2014 moderate Belege dafür, dass Achtsamkeitsprogramme Angst, depressive Symptome und Schmerz lindern können – ungefähr so stark wie andere aktive Maßnahmen, etwa Sport. Das ist ein guter Befund. Ein Wundermittel ist es nicht."
+    },
+    {
+     "h": "Viele Wege, ein Prinzip",
+     "text": "Es gibt nicht die eine Meditation. Bei der fokussierten Aufmerksamkeit bleibst du bei einem Anker, meist dem Atem. Beim offenen Gewahrsein beobachtest du alles, was auftaucht – Geräusche, Gedanken, Empfindungen –, ohne festzuhalten. Der Body-Scan wandert durch den Körper. In der Liebende-Güte-Meditation übst du bewusst wohlwollende Wünsche, für dich und andere.\n\nAuch Bewegung kann Meditation sein: langsames Gehen, Yoga, Tai Chi. Entscheidend ist nicht die Form, sondern die Haltung: absichtlich da sein, bemerken, freundlich zurückkehren. Probier verschiedene Formen aus. Manche Menschen finden über den Körper leichter Zugang als über den Atem, und das ist völlig in Ordnung."
+    },
+    {
+     "h": "Was Meditation nicht ist",
+     "text": "Meditation ist keine Flucht aus dem Leben, sondern eher ein Schritt hinein. Sie ist nicht automatisch entspannend – manchmal tauchen beim Stillsitzen unangenehme Gefühle auf, die im Alltag übertönt werden. Das ist kein Fehler, aber ein Grund, behutsam zu üben.\n\nMeditation ist auch keine Religion, auch wenn sie Wurzeln in buddhistischen, hinduistischen und anderen Traditionen hat. Du kannst sie ganz säkular üben oder ihre spirituelle Tiefe erkunden – beides ist legitim. Und sie ersetzt keine Therapie oder ärztliche Behandlung. Sie kann diese sinnvoll ergänzen, aber bei ernsten psychischen Belastungen braucht es professionelle Begleitung."
+    },
+    {
+     "h": "Eine einfache Definition",
+     "text": "Wenn du dir nur einen Satz merken willst: Meditation heißt, sich absichtlich einer Sache zuzuwenden, zu bemerken, wenn man abschweift, und freundlich zurückzukehren. Immer wieder.\n\nDas Wort »freundlich« ist dabei kein Beiwerk. Wer sich bei jedem Abschweifen innerlich beschimpft, trainiert vor allem Selbstkritik. Wer stattdessen gelassen sagt »Ah, Gedanken. Zurück zum Atem«, trainiert Geduld und Gelassenheit – Fähigkeiten, die weit über das Kissen hinaus wirken. Fang klein an, mit fünf Minuten am Tag, und sei nachsichtig mit dir. Der Rest ergibt sich aus der Wiederholung."
+    }
+   ]
+  },
+  {
+   "id": "die-ersten-30-tage",
+   "titel": "Richtig sitzen und anfangen",
+   "untertitel": "Dein Plan für die ersten 30 Tage",
+   "minuten": 4,
+   "farbe": "amber",
+   "abschnitte": [
+    {
+     "h": "Die Haltung: stabil und wach",
+     "text": "Es gibt keine einzig richtige Sitzhaltung. Wichtig sind zwei Eigenschaften: Stabilität und Wachheit. Du kannst auf einem Stuhl sitzen, die Füße flach am Boden, den Rücken frei von der Lehne. Du kannst auf einem Kissen im Schneidersitz sitzen oder auf einem Meditationsbänkchen knien. Hauptsache, die Knie liegen tiefer als die Hüften, dann richtet sich das Becken von allein auf.\n\nDie Wirbelsäule ist aufrecht, aber nicht steif – stell dir vor, ein Faden zieht deinen Kopf sanft nach oben. Die Schultern sinken, die Hände ruhen auf den Oberschenkeln, der Kiefer ist locker. Die Augen dürfen geschlossen oder halb offen mit gesenktem Blick sein. Liegen geht auch, besonders bei Schmerzen – nur schläft man dabei leichter ein."
+    },
+    {
+     "h": "Wie lange und wann?",
+     "text": "Fünf Minuten reichen für den Anfang. Regelmäßigkeit schlägt Dauer: Fünf Minuten täglich bringen mehr als eine Stunde am Sonntag. In Studien werden oft zehn bis zwanzig Minuten täglich geübt, doch welche Dosis ideal ist, weiß die Forschung schlicht noch nicht genau.\n\nKopple die Übung an etwas, das du ohnehin jeden Tag tust: nach dem ersten Kaffee, nach dem Zähneputzen, vor dem Mittagessen. Solche festen Anker machen aus einem guten Vorsatz eine Gewohnheit. Morgens ist der Kopf oft frischer, abends hilft Meditation beim Abschalten. Wähle die Zeit, die du realistisch halten kannst."
+    },
+    {
+     "h": "Tage 1 bis 7: Ankommen",
+     "text": "In der ersten Woche geht es nur ums Dasein. Setz dich jeden Tag fünf Minuten hin und richte die Aufmerksamkeit auf den Atem. Zähle, wenn es hilft: einatmen eins, ausatmen zwei, bis zehn, dann von vorn.\n\nDu wirst dich verzählen, abschweifen, ungeduldig werden. Alles normal. Notiere nach jeder Sitzung ein Wort, wie es war: »unruhig«, »müde«, »überraschend still«. Nach sieben Tagen siehst du, dass jede Sitzung anders ist – und dass es keine gute oder schlechte Meditation gibt, nur geübte."
+    },
+    {
+     "h": "Tage 8 bis 14: Der Körper",
+     "text": "Jetzt erweiterst du den Fokus. Übe an mindestens vier Tagen den Body-Scan aus dieser App, etwa zehn bis zwölf Minuten. Du wanderst mit der Aufmerksamkeit von den Füßen bis zum Kopf und bemerkst, was da ist: Wärme, Druck, Kribbeln, manchmal auch nichts.\n\nDer Körper ist ein besonders guter Anker, weil er immer im Jetzt ist. Gedanken springen in die Vergangenheit oder Zukunft, der Körper nie. Viele Menschen merken in dieser Woche zum ersten Mal, wo sie Spannung tragen – oft in Schultern, Kiefer oder Bauch. Dieses Wissen ist im Alltag Gold wert."
+    },
+    {
+     "h": "Tage 15 bis 21: Gedanken und Gefühle",
+     "text": "In der dritten Woche beobachtest du, was im Geist geschieht. Setz dich wie gewohnt hin, ankere dich im Atem. Wenn ein Gedanke kommt, gib ihm ein leises Etikett: »Planen«, »Erinnern«, »Sorgen«, »Bewerten«. Dann zurück zum Atem.\n\nMit der Zeit erkennst du Muster: Welche Gedanken kommen immer wieder? Welche Gefühle hängen daran? Du lernst, dass Gedanken kommen und gehen wie Wetter. Du bist nicht dein Gedanke, du bist der, der ihn bemerkt. Verlängere die Sitzungen auf zehn Minuten, wenn es sich gut anfühlt."
+    },
+    {
+     "h": "Tage 22 bis 30: Freundlichkeit und Alltag",
+     "text": "Die letzte Phase bringt zwei Dinge zusammen. Erstens: Übe zwei- bis dreimal eine Liebende-Güte-Meditation, in der du dir und anderen gute Wünsche schickst. Zweitens: Wähle jeden Tag einen Impuls aus der App für den Alltag, etwa bewusstes Essen oder Gehen.\n\nAm dreißigsten Tag schau zurück. Lies deine Notizen. Was hat sich verändert – im Schlaf, im Umgang mit Stress, in der Art, wie du mit dir sprichst? Vielleicht ist es wenig, vielleicht überraschend viel. Wichtig ist: Du hast eine Gewohnheit aufgebaut. Jetzt entscheidest du, wie es weitergeht."
+    },
+    {
+     "h": "Typische Hürden",
+     "text": "Müdigkeit: Setz dich aufrechter hin, öffne die Augen ein wenig oder übe zu einer anderen Tageszeit. Unruhe: Bewegung vorher hilft, ebenso eine kürzere Sitzung oder Gehmeditation. Zweifel – »Bringt das überhaupt etwas?« – sind ein Gedanke wie jeder andere. Bemerke ihn und übe trotzdem weiter.\n\nUnd wenn du einen Tag verpasst: kein Drama. Mach am nächsten Tag weiter, nicht ab Montag und nicht nach dem Urlaub. Eine einzige Minute zählt mehr als keine. Schuldgefühle sind der häufigste Grund, warum Menschen ganz aufhören – Freundlichkeit mit dir selbst ist hier schon ein Teil der Praxis."
+    }
+   ]
+  },
+  {
+   "id": "atem-nervensystem",
+   "titel": "Der Atem als Fernbedienung",
+   "untertitel": "Was Atmen mit deinem Nervensystem macht – ehrlich erklärt",
+   "minuten": 3,
+   "farbe": "sky",
+   "abschnitte": [
+    {
+     "h": "Zwei Systeme, ein Schalter",
+     "text": "Dein autonomes Nervensystem steuert, was ohne dein Zutun läuft: Herzschlag, Verdauung, Blutdruck. Grob vereinfacht gibt es zwei Seiten. Der Sympathikus macht dich bereit für Aktion – Puls hoch, Muskeln gespannt. Der Parasympathikus sorgt für Erholung, Verdauung und Reparatur.\n\nDie Atmung ist besonders: Sie läuft von selbst, du kannst sie aber auch bewusst steuern. Damit ist sie die einzige Tür zum autonomen System, die du jederzeit aufmachen kannst. Du kannst deinem Herzen nicht befehlen, langsamer zu schlagen. Aber du kannst langsamer atmen – und das Herz folgt ein Stück weit."
+    },
+    {
+     "h": "Der Vagusnerv",
+     "text": "Der Vagusnerv ist der wichtigste Nerv des Parasympathikus. Er verbindet das Gehirn mit Herz, Lunge und Verdauungsorganen und leitet Signale in beide Richtungen.\n\nEin messbarer Effekt: Beim Einatmen schlägt das Herz etwas schneller, beim Ausatmen etwas langsamer. Fachleute nennen das respiratorische Sinusarrhythmie. Sie ist ein Zeichen eines gesunden, anpassungsfähigen Herzens. Wenn du den Ausatem verlängerst, verlängerst du die Phase, in der der Vagus bremst. Darum fühlen sich langsames Ausatmen, Seufzen oder Summen so beruhigend an. Das ist kein Mythos, sondern gut gemessene Physiologie."
+    },
+    {
+     "h": "Herzratenvariabilität und Resonanz",
+     "text": "Die Herzratenvariabilität, kurz HRV, beschreibt, wie stark der Abstand zwischen Herzschlägen schwankt. Eine höhere HRV in Ruhe geht meist mit besserer Stressregulation einher.\n\nAtmen Menschen etwa fünf bis sechs Mal pro Minute, schwingen Atmung, Herzschlag und Blutdruckregulation bei vielen in einem gemeinsamen Takt. Die HRV steigt dann deutlich an. Dieses Phänomen nennt man Resonanzatmung oder kohärentes Atmen, und es wird im HRV-Biofeedback therapeutisch genutzt. Übersichtsarbeiten zeigen moderate Verbesserungen bei Stress und Angst. Der genaue Idealrhythmus ist individuell; fünfeinhalb Atemzüge pro Minute sind ein guter Durchschnittswert."
+    },
+    {
+     "h": "Was Studien zeigen – und was nicht",
+     "text": "Eine viel zitierte Studie der Stanford University verglich 2023 verschiedene fünfminütige Atemübungen mit Achtsamkeitsmeditation. Die Gruppe mit dem »zyklischen Seufzen« – doppeltes Einatmen, langes Ausatmen – zeigte über einen Monat die stärkste Verbesserung der Stimmung. Spannend, aber: Die Studie war klein und nicht mit großen klinischen Studien vergleichbar.\n\nInsgesamt ist die Lage so: Langsames Atmen senkt kurzfristig Puls und oft Blutdruck, und viele Menschen fühlen sich ruhiger. Langfristige Effekte sind weniger gut belegt. Sätze wie »Mit dieser Atemtechnik hackst du deinen Vagus« oder »heilt Angststörungen« sind Marketing, keine Wissenschaft."
+    },
+    {
+     "h": "Was der Atem nicht kann",
+     "text": "Atemübungen sind ein Werkzeug, keine Therapie. Sie ersetzen keine Behandlung bei Angststörungen, Depression oder Herzproblemen. Und sie haben Grenzen: Zu tiefes oder schnelles Atmen kann zu Hyperventilation führen – Kribbeln in Händen und Lippen, Schwindel, Herzklopfen.\n\nManche Menschen, gerade mit Panikerfahrung, reagieren auf die Aufmerksamkeit auf den Atem mit mehr Unruhe. Das ist kein Versagen. Dann ist ein anderer Anker besser: die Füße am Boden, die Hände, Geräusche im Raum. Gute Praxis passt sich dir an, nicht umgekehrt. Und bei Atemwegs- oder Herzerkrankungen sprich vorher mit deiner Ärztin oder deinem Arzt."
+    },
+    {
+     "h": "Drei Werkzeuge für den Alltag",
+     "text": "Erstens: verlängertes Ausatmen. Vier Sekunden ein, sechs bis acht aus. Funktioniert überall und unauffällig, ideal vor schwierigen Gesprächen.\n\nZweitens: der physiologische Seufzer. Zweimal kurz hintereinander durch die Nase einatmen, dann lang durch den Mund aus. Ein bis drei Wiederholungen reichen oft, um akute Anspannung zu senken.\n\nDrittens: kohärentes Atmen. Fünf bis zehn Minuten im Rhythmus von gut fünf Sekunden ein und fünf aus. Das ist eher ein Training als eine Notbremse, am besten täglich zur gleichen Zeit. Alle drei Übungen findest du im Atem-Bereich dieser App."
+    }
+   ]
+  },
+  {
+   "id": "acht-glieder",
+   "titel": "Yoga ist mehr als Dehnen",
+   "untertitel": "Die acht Glieder nach Patanjali",
+   "minuten": 4,
+   "farbe": "violet",
+   "abschnitte": [
+    {
+     "h": "Woher Yoga kommt",
+     "text": "Wenn wir heute »Yoga« hören, denken die meisten an Matten, Leggings und Dehnhaltungen. Das ist ein kleiner Ausschnitt. Einer der wichtigsten klassischen Texte, die Yoga-Sutras des Patanjali, entstand vermutlich vor rund zweitausend Jahren – die genaue Datierung ist umstritten. Von Körperhaltungen ist darin kaum die Rede.\n\nGleich zu Beginn steht die berühmte Definition: Yoga ist das Zur-Ruhe-Kommen der Bewegungen des Geistes. Es geht also um innere Klarheit. Die dynamischen Haltungsabfolgen, die heute in Studios geübt werden, sind größtenteils eine Entwicklung des zwanzigsten Jahrhunderts. Das macht sie nicht falsch – aber es lohnt sich, den größeren Rahmen zu kennen."
+    },
+    {
+     "h": "Die acht Glieder im Überblick",
+     "text": "Patanjali beschreibt einen Weg in acht Gliedern, auf Sanskrit Ashtanga. Gemeint sind keine Stufen, die man nacheinander abhakt, sondern Aspekte, die sich gegenseitig stützen – wie Äste eines Baumes.\n\nDie acht sind: Yama, der Umgang mit anderen. Niyama, der Umgang mit sich selbst. Asana, die Körperhaltung. Pranayama, die Lenkung des Atems. Pratyahara, das Zurückziehen der Sinne. Dharana, die Konzentration. Dhyana, die Meditation. Und Samadhi, das völlige Aufgehen im Moment. Die ersten vier sind eher äußerlich und praktisch, die letzten vier führen immer weiter nach innen."
+    },
+    {
+     "h": "Yama und Niyama: das Fundament",
+     "text": "Bevor Patanjali über Haltung oder Atem spricht, spricht er über Ethik. Die Yamas beschreiben, wie wir mit der Welt umgehen: nicht verletzen, wahrhaftig sein, nicht nehmen, was uns nicht gehört, maßvoll leben, nicht anhaften. Die Niyamas beschreiben die innere Disziplin: Klarheit, Zufriedenheit, Hingabe an die Übung, Selbsterforschung und Vertrauen in etwas Größeres.\n\nDiese Reihenfolge ist kein Zufall. Ein Geist, der ständig in Konflikte verstrickt ist oder sich selbst bekämpft, kommt auch auf der Matte nicht zur Ruhe. Mehr dazu findest du im Artikel über Yamas und Niyamas im Alltag."
+    },
+    {
+     "h": "Asana und Pranayama: Körper und Atem",
+     "text": "Das Wort Asana bedeutet ursprünglich »Sitz«. Patanjali widmet ihm nur wenige Zeilen, die zentrale lautet sinngemäß: Die Haltung soll fest und angenehm sein. Stabilität und Leichtigkeit zugleich – das ist ein wunderbarer Maßstab für jede Pose, auch heute. Wenn du in einer Haltung verkrampfst oder den Atem anhältst, fehlt die Leichtigkeit.\n\nPranayama ist die bewusste Lenkung des Atems. Der Atem gilt im Yoga als Brücke zwischen Körper und Geist – eine Idee, die gut zu dem passt, was wir heute über Atmung und Nervensystem wissen. Haltung und Atem bereiten den Körper darauf vor, still zu sitzen, ohne dass er ständig stört."
+    },
+    {
+     "h": "Pratyahara: die Sinne nach innen",
+     "text": "Das fünfte Glied ist das am wenigsten bekannte und vielleicht das aktuellste. Pratyahara bedeutet, die Sinne von den äußeren Reizen zurückzuziehen – so wie eine Schildkröte ihre Glieder einzieht.\n\nIn einer Welt voller Benachrichtigungen, Bildschirme und Werbung ist das eine echte Fähigkeit. Es geht nicht darum, die Welt abzulehnen, sondern darum, nicht von jedem Reiz mitgerissen zu werden. Im Alltag kann Pratyahara bedeuten: die Augen in der Endentspannung wirklich schließen, das Handy aus dem Schlafzimmer verbannen, einmal am Tag eine Viertelstunde ohne Input sein. Es ist das Scharnier zwischen äußerer und innerer Praxis."
+    },
+    {
+     "h": "Dharana, Dhyana, Samadhi: nach innen",
+     "text": "Die letzten drei Glieder bilden eine Bewegung. Dharana ist Konzentration: Die Aufmerksamkeit wird an einen Punkt gebunden, etwa den Atem, und kehrt immer wieder dorthin zurück. Das ist es, was die meisten von uns »Meditation üben« nennen.\n\nDhyana ist der Zustand, in dem diese Aufmerksamkeit ohne Anstrengung fließt, wie Öl, das gleichmäßig aus einem Gefäß gegossen wird. Samadhi schließlich beschreibt ein völliges Einswerden mit dem Objekt der Betrachtung, in dem das Gefühl eines getrennten Ichs zurücktritt. Man kann Samadhi nicht erzwingen. Aber auch kleine Momente des Ganz-Daseins – beim Musizieren, in der Natur, auf der Matte – geben eine Ahnung davon."
+    },
+    {
+     "h": "Was das für deine Praxis heißt",
+     "text": "Du musst nicht spirituell sein, um Yoga zu üben, und du musst keine Philosophie übernehmen. Aber die acht Glieder können deine Praxis vertiefen. Frag dich auf der Matte nicht nur: Komme ich tiefer in die Dehnung? Sondern auch: Bin ich freundlich zu meinem Körper? Fließt mein Atem? Wo ist meine Aufmerksamkeit?\n\nSo wird die Matte zu einem kleinen Übungsfeld für das Leben. Die Geduld, die du in einer schwierigen Haltung übst, steht dir auch im Stau zur Verfügung. Die Ehrlichkeit, mit der du deine Grenzen anerkennst, hilft dir in Beziehungen. Das meint Yoga im ursprünglichen Sinn: Verbindung."
+    }
+   ]
+  },
+  {
+   "id": "yamas-niyamas",
+   "titel": "Yamas und Niyamas im Alltag",
+   "untertitel": "Zehn Prinzipien für ein klares Leben",
+   "minuten": 3,
+   "farbe": "rose",
+   "abschnitte": [
+    {
+     "h": "Kompass statt Gebote",
+     "text": "Yamas und Niyamas sind die ersten beiden der acht Glieder des Yoga. Man könnte sie für eine Liste von Verboten halten, aber das trifft es nicht. Sie sind eher ein Kompass: Orientierungspunkte, an denen du dein Verhalten prüfen kannst, ohne dich zu verurteilen.\n\nDie fünf Yamas betreffen den Umgang mit anderen und der Welt. Die fünf Niyamas betreffen den Umgang mit dir selbst. Keines davon verlangt Perfektion. Es geht um Richtung, nicht um Ankunft. Und das Schöne: Du kannst sie überall üben – in der Küche, im Büro, auf der Matte."
+    },
+    {
+     "h": "Ahimsa und Satya",
+     "text": "Ahimsa bedeutet Nicht-Verletzen. Es ist das Grundprinzip, an dem sich alle anderen messen. Ahimsa gilt nicht nur für andere, sondern auch für dich: in der Yogahaltung nicht über Schmerzgrenzen gehen, innerlich nicht auf dich einprügeln, wenn etwas misslingt.\n\nSatya bedeutet Wahrhaftigkeit. Ehrlich sein – zu anderen und zu dir selbst. Satya steht aber immer unter Ahimsa: Die Wahrheit soll nicht als Waffe dienen. Die Frage lautet also nicht nur »Ist es wahr?«, sondern auch »Ist es hilfreich, und kann ich es freundlich sagen?« Auf der Matte heißt Satya: ehrlich anerkennen, wo dein Körper heute steht, statt dich zu vergleichen."
+    },
+    {
+     "h": "Asteya, Brahmacharya, Aparigraha",
+     "text": "Asteya heißt Nicht-Stehlen. Das betrifft nicht nur Gegenstände, sondern auch die Zeit anderer, ihre Ideen, ihre Aufmerksamkeit. Wer ständig zu spät kommt oder Gespräche an sich reißt, nimmt etwas, das ihm nicht gehört.\n\nBrahmacharya wurde traditionell als Enthaltsamkeit verstanden. Heute wird es meist als maßvoller Umgang mit der eigenen Energie gelesen: nicht alles verausgaben, nicht in jedem Genuss versinken. Aparigraha schließlich bedeutet Nicht-Anhaften oder Nicht-Horten. Halte locker, was du hast – Dinge, Erwartungen, Bilder davon, wie das Leben sein sollte. Auf der Matte heißt das: Die Haltung von gestern ist kein Anspruch für heute."
+    },
+    {
+     "h": "Saucha und Santosha",
+     "text": "Mit den Niyamas wendet sich der Blick nach innen. Saucha bedeutet Reinheit oder Klarheit. Damit ist nicht moralische Reinheit gemeint, sondern Ordnung im Außen und Innen: ein aufgeräumter Übungsplatz, bewusstes Essen, eine Pause vom Informationsstrom, ein klarer Kopf.\n\nSantosha ist Zufriedenheit. Nicht als Gleichgültigkeit oder Stillstand, sondern als die Fähigkeit, das Gute in diesem Moment zu sehen, auch wenn nicht alles perfekt ist. Santosha ist ein starkes Gegenmittel zum ständigen »Erst wenn ich … dann bin ich glücklich«. Eine einfache Übung: Nenne dir am Ende der Yogaeinheit eine Sache, die heute gut war."
+    },
+    {
+     "h": "Tapas, Svadhyaya, Ishvara Pranidhana",
+     "text": "Tapas bedeutet wörtlich Hitze oder Glut – gemeint ist Disziplin und Ausdauer. Die Bereitschaft, auch an trägen Tagen auf die Matte zu gehen. Wichtig ist das Gleichgewicht mit Ahimsa: Tapas ohne Freundlichkeit wird zu Selbstquälerei.\n\nSvadhyaya ist Selbststudium: das Lesen inspirierender Texte, aber auch das ehrliche Beobachten der eigenen Muster. Ishvara Pranidhana wird oft als Hingabe an das Göttliche übersetzt. Du kannst es religiös verstehen oder säkular: als Vertrauen, dass du nicht alles kontrollieren musst, und als Bereitschaft, deine Praxis einer größeren Sache zu widmen – etwa der Gesundheit, den Menschen, die du liebst, oder dem Leben selbst."
+    },
+    {
+     "h": "Eine Woche, ein Prinzip",
+     "text": "Zehn Prinzipien auf einmal überfordern. Wähle lieber eines pro Woche und mach es zu deinem stillen Begleiter. Schreib es auf einen Zettel am Spiegel oder als Hintergrund aufs Handy.\n\nIn der Ahimsa-Woche achtest du darauf, wie du mit dir sprichst. In der Satya-Woche bemerkst du kleine Unwahrheiten aus Bequemlichkeit. In der Santosha-Woche sammelst du jeden Abend einen zufriedenen Moment. Am Ende der Woche fragst du dich: Was habe ich bemerkt? Nach zehn Wochen hast du jedes Prinzip einmal gelebt, und vermutlich merkst du, dass sie alle zusammenhängen. Das ist die eigentliche Erkenntnis."
+    }
+   ]
+  },
+  {
+   "id": "achtsamkeit-alltag",
+   "titel": "Achtsamkeit im Alltag",
+   "untertitel": "Autopilot, Gewohnheiten und das Beobachten von Gedanken",
+   "minuten": 3,
+   "farbe": "teal",
+   "abschnitte": [
+    {
+     "h": "Der Autopilot",
+     "text": "Du fährst eine bekannte Strecke und weißt danach nicht mehr, wie du angekommen bist. Du isst einen Teller leer und hast kaum etwas geschmeckt. Das ist der Autopilot – ein nützlicher Mechanismus, der Energie spart. Aber er hat einen Preis.\n\nIn einer großen Studie aus Harvard, veröffentlicht 2010, wurden Menschen per Smartphone zu zufälligen Zeiten gefragt, was sie gerade tun und woran sie denken. Ergebnis: In fast der Hälfte der Zeit waren sie mit den Gedanken woanders. Und in diesen Momenten fühlten sie sich im Durchschnitt weniger glücklich – auch wenn sie an angenehme Dinge dachten. Ein Geist, der ständig wandert, ist oft ein unruhiger Geist."
+    },
+    {
+     "h": "Was Achtsamkeit bedeutet",
+     "text": "Der Mediziner Jon Kabat-Zinn, der Achtsamkeit in die westliche Medizin brachte, beschreibt sie so: absichtlich aufmerksam sein, im gegenwärtigen Moment, ohne zu bewerten. Drei Teile also – Absicht, Gegenwart, Offenheit.\n\nAchtsamkeit heißt nicht, alles langsam zu tun oder ständig positiv zu sein. Du kannst achtsam gestresst sein, achtsam traurig, achtsam gelangweilt. Der Unterschied ist, dass du es bemerkst. Und in diesem Bemerken entsteht ein kleiner Raum zwischen Reiz und Reaktion. In diesem Raum liegt deine Wahlfreiheit: Willst du jetzt wirklich die scharfe Nachricht schicken, oder erst einmal ausatmen?"
+    },
+    {
+     "h": "Anker im Alltag",
+     "text": "Achtsamkeit wird zur Gewohnheit, wenn du sie an Dinge koppelst, die ohnehin passieren. Die Türklinke, der erste Schluck Kaffee, das Händewaschen, das Warten an der Ampel, das Klingeln des Telefons. Jeder dieser Momente kann eine Erinnerung sein: einmal bewusst atmen, kurz spüren, wo du bist.\n\nVerhaltensforschung zeigt, dass neue Gewohnheiten besser halten, wenn sie klein sind und an eine bestehende Routine angehängt werden. »Nach dem Zähneputzen drei Atemzüge« ist realistischer als »ab jetzt jeden Tag achtsam sein«. Fang mit einem einzigen Anker an. Wenn er nach zwei, drei Wochen sitzt, nimm einen zweiten dazu."
+    },
+    {
+     "h": "Gedanken beobachten",
+     "text": "Einer der wichtigsten Schritte ist die Erkenntnis: Gedanken sind Ereignisse im Kopf, keine Tatsachen. Der Gedanke »Das schaffe ich nie« ist ein Gedanke – keine Prognose. Psychologen nennen diesen Abstand Dezentrierung.\n\nEine hilfreiche Vorstellung: Du sitzt am Ufer eines Flusses, und jeder Gedanke ist ein Blatt, das vorbeitreibt. Du musst keines herausfischen und keines aufhalten. Manchmal merkst du, dass du auf ein Blatt gesprungen und mitgetrieben bist. Dann steigst du wieder ans Ufer. Eine andere Technik ist das Etikettieren: »Planen«, »Sorgen«, »Bewerten«. Das Etikett erinnert dich, dass du den Gedanken hast – und nicht der Gedanke dich."
+    },
+    {
+     "h": "Gefühle benennen",
+     "text": "Gefühle zu benennen klingt banal, wirkt aber erstaunlich gut. In Studien der University of California zeigte sich, dass das Benennen eines Gefühls – also »Ich spüre Angst« statt nur Angst zu haben – die Aktivität in der Amygdala, einer Art Alarmzentrale des Gehirns, dämpfen kann.\n\nJe genauer das Wort, desto besser. Statt »schlecht« vielleicht »enttäuscht«, »überfordert« oder »einsam«. Das schafft Klarheit, und Klarheit zeigt, was du brauchst: Bei Erschöpfung hilft Ruhe, bei Einsamkeit Kontakt, bei Ärger vielleicht ein klärendes Gespräch. Achte auch darauf, wo du das Gefühl im Körper spürst. Gefühle haben fast immer eine körperliche Seite."
+    },
+    {
+     "h": "Klein anfangen, freundlich bleiben",
+     "text": "Achtsamkeit im Alltag ist kein weiteres Projekt zur Selbstoptimierung. Wenn du merkst, dass du sie zur Leistung machst – »Heute war ich nur dreimal achtsam, schlecht!« –, ist genau das ein Moment für Achtsamkeit: Ah, da ist der innere Kritiker.\n\nDie App schlägt dir jeden Tag einen kleinen Impuls vor. Nimm ihn als Einladung, nicht als Pflicht. Manche Tage gelingt viel, manche fast nichts. Beides ist Teil der Übung. Wer über Monate immer wieder zurückkehrt, verändert langsam die Grundfarbe seines Alltags: etwas wacher, etwas ruhiger, etwas freundlicher. Das ist kein spektakulärer Effekt, aber ein tiefer."
+    }
+   ]
+  },
+  {
+   "id": "besser-schlafen",
+   "titel": "Besser schlafen",
+   "untertitel": "Schlafhygiene und ein Abendritual, das wirklich hilft",
+   "minuten": 3,
+   "farbe": "violet",
+   "abschnitte": [
+    {
+     "h": "Wie Schlaf entsteht",
+     "text": "Zwei Kräfte bestimmen, wann du müde wirst. Die erste ist der Schlafdruck: Je länger du wach bist, desto mehr sammelt sich im Gehirn der Botenstoff Adenosin an, und desto müder wirst du. Schlaf baut ihn wieder ab. Die zweite ist deine innere Uhr, der zirkadiane Rhythmus. Sie wird vor allem durch Licht gestellt und sorgt dafür, dass du abends müde und morgens wach wirst.\n\nGuter Schlaf entsteht, wenn beide Kräfte zusammenpassen: genug Schlafdruck, und die innere Uhr signalisiert Nacht. Fast alle Tipps zur Schlafhygiene zielen auf eine dieser beiden Kräfte. Wer das versteht, kann die Tipps besser auf sein eigenes Leben anpassen."
+    },
+    {
+     "h": "Rhythmus und Licht",
+     "text": "Der wirksamste einzelne Hebel ist eine feste Aufstehzeit – auch am Wochenende, mit höchstens einer Stunde Abweichung. Sie stabilisiert die innere Uhr stärker als eine feste Zubettgehzeit. Ins Bett gehst du, wenn du wirklich müde bist.\n\nLicht am Morgen, am besten draußen, stellt die Uhr. Selbst ein bewölkter Himmel ist viel heller als eine Bürolampe. Abends hilft gedimmtes, warmes Licht. Und Bildschirme? Der Effekt des blauen Lichts wird oft überschätzt. Wichtiger ist, was du schaust: Spannende Serien, Nachrichten oder Diskussionen in sozialen Netzwerken halten das Gehirn wach. Ein ruhiges Buch oder Hörbuch ist meist die bessere Wahl."
+    },
+    {
+     "h": "Koffein, Alkohol und Essen",
+     "text": "Koffein blockiert die Rezeptoren für Adenosin und damit den Schlafdruck. Seine Halbwertszeit liegt bei durchschnittlich etwa fünf Stunden, bei manchen deutlich länger. Ein Kaffee um sechzehn Uhr ist um einundzwanzig Uhr also noch zur Hälfte aktiv. Eine gute Faustregel: ab dem frühen Nachmittag kein Koffein mehr, auch nicht in Cola, Energydrinks oder starkem Tee.\n\nAlkohol macht zwar schläfrig, verschlechtert aber den Schlaf in der zweiten Nachthälfte – er wird unruhiger und weniger erholsam. Schwere, späte Mahlzeiten können ebenfalls stören. Leichter Hunger dagegen auch. Ein kleiner Snack am Abend ist in Ordnung, ein großes Essen kurz vor dem Schlafen eher nicht."
+    },
+    {
+     "h": "Das Abendritual",
+     "text": "Der Körper braucht einen Übergang vom Tag zur Nacht. Plane dafür dreißig bis sechzig Minuten ein. Ein gutes Ritual ist jeden Abend ähnlich, damit der Körper es als Signal lernt: Licht dimmen, Handy weglegen, etwas Ruhiges tun – lesen, sanftes Dehnen, eine warme Dusche, Tee.\n\nEin besonderer Tipp gegen kreisende Gedanken: Schreib vor dem Schlafen auf, was morgen zu tun ist. Eine Studie aus dem Jahr 2018 fand, dass Menschen, die fünf Minuten lang eine konkrete To-do-Liste schrieben, schneller einschliefen als jene, die über Erledigtes schrieben. Was auf dem Papier steht, muss der Kopf nicht mehr festhalten. Anschließend passt eine Einschlafmeditation oder die 4-7-8-Atmung."
+    },
+    {
+     "h": "Wenn der Schlaf nicht kommt",
+     "text": "Das Bett soll ein Ort für Schlaf sein, nicht für Grübeln. Wenn du nach etwa zwanzig Minuten noch hellwach bist, steh auf, geh in einen anderen Raum und tu etwas Ruhiges bei gedämpftem Licht. Kehre zurück, wenn du müde wirst. Das klingt paradox, ist aber ein Kernelement der wirksamsten Therapie gegen Schlafstörungen.\n\nSchau nicht auf die Uhr. Jeder Blick startet das Rechnen: »Noch fünf Stunden … noch vier …« – und das macht wach. Und erinnere dich: Auch ruhiges Liegen ist erholsam. Eine schlechte Nacht ist unangenehm, aber dein Körper kommt damit zurecht. Der Druck, unbedingt schlafen zu müssen, ist oft der größte Wachmacher."
+    },
+    {
+     "h": "Wann du Hilfe suchen solltest",
+     "text": "Wenn du über drei Monate hinweg an mindestens drei Nächten pro Woche schlecht ein- oder durchschläfst und dich tagsüber beeinträchtigt fühlst, spricht man von einer chronischen Insomnie. Dann lohnt sich ein Gespräch mit deiner Hausärztin oder deinem Hausarzt.\n\nDie erste Wahl in der Behandlung ist nach den Leitlinien die kognitive Verhaltenstherapie für Insomnie, abgekürzt KVT-I – wirksamer und nachhaltiger als Schlafmittel. Es gibt sie inzwischen auch als digitale Programme, teils auf Rezept. Lautes Schnarchen mit Atemaussetzern, starke Tagesmüdigkeit oder unruhige Beine am Abend sollten ebenfalls ärztlich abgeklärt werden. Meditation kann den Weg begleiten, ersetzt aber keine Diagnose."
+    }
+   ]
+  },
+  {
+   "id": "gruebeln-angst",
+   "titel": "Umgang mit Grübeln und Angst",
+   "untertitel": "Was Meditation kann – und wo Hilfe nötig ist",
+   "minuten": 3,
+   "farbe": "rose",
+   "abschnitte": [
+    {
+     "h": "Grübeln verstehen",
+     "text": "Grübeln fühlt sich an wie Nachdenken, ist aber etwas anderes. Beim Problemlösen bewegst du dich auf eine Entscheidung zu. Beim Grübeln drehst du dich im Kreis: »Warum ist das passiert? Was, wenn …? Warum bin ich so?« Die Fragen werden wiederholt, aber nicht beantwortet.\n\nDer Kopf grübelt, weil er glaubt, damit Kontrolle zu gewinnen. Tatsächlich verstärkt Grübeln oft Angst und Niedergeschlagenheit und hält den Körper im Alarmmodus. Ein erster Schritt ist, den Unterschied zu bemerken. Frag dich: Bringt mich dieser Gedanke einem nächsten Schritt näher? Wenn nicht, ist es wahrscheinlich Grübeln. Und Grübeln darfst du freundlich unterbrechen."
+    },
+    {
+     "h": "Was Achtsamkeit beitragen kann",
+     "text": "Achtsamkeit verändert die Beziehung zu Gedanken. Statt mit jedem Sorgengedanken mitzugehen, lernst du, ihn als Gedanken zu erkennen und zum Atem, zu den Füßen, zum Moment zurückzukehren. Das ist kein Wegdrücken, sondern ein bewusstes Nicht-Einsteigen.\n\nDie Forschung dazu ist ermutigend, aber nuanciert. Die achtsamkeitsbasierte kognitive Therapie, kurz MBCT, wurde für Menschen mit wiederkehrender Depression entwickelt. Eine große Auswertung im Jahr 2016 zeigte, dass sie das Rückfallrisiko um etwa ein Drittel senkt – ähnlich wie Medikamente zur Erhaltung. Auch bei Angst zeigen Achtsamkeitsprogramme moderate Effekte. Wichtig: Das gilt für strukturierte Kurse über Wochen, oft mit Begleitung, nicht für eine einzelne App-Session."
+    },
+    {
+     "h": "Angst im Körper",
+     "text": "Angst ist kein Feind, sondern ein Schutzsystem. Wenn es anspringt, schlägt das Herz schneller, der Atem wird flach, die Muskeln spannen sich. Der Körper bereitet sich auf Kampf oder Flucht vor – auch wenn die Bedrohung nur eine E-Mail ist.\n\nIn solchen Momenten helfen Methoden, die über den Körper wirken: Füße bewusst auf den Boden drücken, länger aus- als einatmen, die Fünf-Vier-Drei-Zwei-Eins-Übung mit den Sinnen, kaltes Wasser über die Handgelenke. Sie lösen die Angst nicht auf, aber sie geben dem Nervensystem ein Signal von Sicherheit. Die Übung »Notfall bei Stress« in dieser App ist genau dafür gemacht."
+    },
+    {
+     "h": "Wenn Meditation es schlimmer macht",
+     "text": "Meditation ist für die meisten Menschen gut verträglich, aber nicht für alle und nicht in jeder Lebensphase. Manche erleben beim Stillsitzen mehr Unruhe, Panik, belastende Erinnerungen oder ein Gefühl von Unwirklichkeit. Forschende nehmen diese Erfahrungen inzwischen ernst; sie sind nicht häufig, kommen aber vor – besonders bei langen, intensiven Übungen oder nach traumatischen Erlebnissen.\n\nWenn dir das passiert: Öffne die Augen, bewege dich, richte die Aufmerksamkeit nach außen. Übe kürzer, lieber in Bewegung oder mit offenen Augen. Wenn die Beschwerden anhalten, sprich mit einer Fachperson. Traumasensible Lehrende und Therapeutinnen wissen, wie man behutsam vorgeht. Aufhören oder pausieren ist kein Scheitern, sondern Selbstfürsorge."
+    },
+    {
+     "h": "Wann du professionelle Hilfe brauchst",
+     "text": "Such dir Unterstützung, wenn Angst, Niedergeschlagenheit oder Grübeln über Wochen anhalten und deinen Alltag einschränken – bei der Arbeit, im Schlaf, in Beziehungen. Ebenso bei wiederkehrenden Panikattacken oder wenn du dich von allem zurückziehst. Erste Anlaufstelle kann deine Hausarztpraxis sein. Einen Termin für ein psychotherapeutisches Erstgespräch vermittelt in Deutschland die Terminservicestelle unter der Nummer 116 117.\n\nWenn du in einer akuten Krise bist oder Gedanken hast, dir das Leben zu nehmen: Ruf die Telefonseelsorge an, kostenlos, anonym und rund um die Uhr unter 0800 111 0 111 oder 0800 111 0 222. In akuter Gefahr wähle den Notruf 112. Du musst damit nicht allein bleiben. Hilfe zu holen ist ein Zeichen von Stärke."
+    },
+    {
+     "h": "Meditation als Begleiterin",
+     "text": "Am hilfreichsten ist Meditation als Teil eines größeren Ganzen: zusammen mit Bewegung, Schlaf, Beziehungen und – wenn nötig – Therapie. Viele Psychotherapeutinnen und Psychotherapeuten integrieren Achtsamkeit heute selbst in die Behandlung.\n\nErwarte nicht, dass Meditation Sorgen verschwinden lässt. Erwarte eher, dass du mit der Zeit eine etwas andere Haltung zu ihnen findest: Sie dürfen da sein, aber sie müssen nicht das Steuer übernehmen. Das ist eine leise, aber bedeutsame Veränderung. Und sie gelingt am besten mit Geduld und Freundlichkeit mit dir selbst – besonders an den Tagen, an denen es schwer ist."
+    }
+   ]
+  },
+  {
+   "id": "selbstmitgefuehl",
+   "titel": "Selbstmitgefühl",
+   "untertitel": "Freundlich zu dir sein, gerade wenn es schwer ist",
+   "minuten": 3,
+   "farbe": "amber",
+   "abschnitte": [
+    {
+     "h": "Was Selbstmitgefühl ist",
+     "text": "Stell dir vor, eine gute Freundin erzählt dir von einem Fehler, der ihr peinlich ist. Du würdest ihr wahrscheinlich zuhören, sie trösten, ihr sagen, dass das jedem passieren kann. Und jetzt stell dir vor, dir passiert derselbe Fehler. Wie sprichst du mit dir?\n\nDie Psychologin Kristin Neff, die das Thema wissenschaftlich geprägt hat, beschreibt Selbstmitgefühl mit drei Bestandteilen. Erstens Freundlichkeit mit dir selbst statt harter Selbstkritik. Zweitens das Gefühl gemeinsamen Menschseins: Leiden und Scheitern gehören zum Leben aller, nicht nur zu deinem. Drittens Achtsamkeit: den Schmerz wahrnehmen, ohne ihn zu verdrängen oder zu dramatisieren."
+    },
+    {
+     "h": "Was es nicht ist",
+     "text": "Viele fürchten, Selbstmitgefühl mache bequem oder sei eine Ausrede. Die Forschung deutet eher auf das Gegenteil. In Experimenten der University of California wurden Studierende nach einem schlechten Testergebnis entweder zu Selbstmitgefühl oder zu Selbstwertstärkung angeleitet. Die Gruppe mit Selbstmitgefühl lernte danach länger für den nächsten Test.\n\nDer Grund: Wer sich nicht für jeden Fehler verurteilt, kann Fehler ehrlicher anschauen und daraus lernen. Selbstmitgefühl ist auch kein Selbstmitleid. Selbstmitleid kreist um »Warum immer ich?«, Selbstmitgefühl sagt: »Das ist schwer, und ich bin nicht allein damit.« Und es ist kein Selbstwert, der auf Vergleichen beruht. Es braucht keine Leistung."
+    },
+    {
+     "h": "Der innere Kritiker",
+     "text": "Fast alle Menschen haben eine innere Stimme, die streng urteilt: »Wie dumm.« »Du hättest es wissen müssen.« Diese Stimme will dich oft schützen – vor Ablehnung, vor Fehlern. Aber sie nutzt die Mittel eines Bedrohungssystems: Druck, Angst, Scham.\n\nDauerhafte Selbstkritik hält den Körper in Alarmbereitschaft und kann Ängste und Niedergeschlagenheit verstärken. Selbstmitgefühl aktiviert ein anderes System, das mit Fürsorge, Wärme und Bindung verbunden ist. Du musst den Kritiker nicht bekämpfen. Du kannst ihn bemerken – »Ah, da ist er wieder« – und ihm eine zweite Stimme an die Seite stellen, die freundlicher ist. Mit der Zeit wird diese Stimme lauter."
+    },
+    {
+     "h": "Die Selbstmitgefühlspause",
+     "text": "Diese kurze Übung stammt von Kristin Neff und passt in jeden schwierigen Moment. Leg eine Hand auf dein Herz oder an eine andere Stelle, die sich tröstlich anfühlt. Sprich innerlich drei Sätze.\n\nErstens: »Das ist ein Moment des Leidens.« Oder einfacher: »Das tut weh.« »Das ist gerade schwer.« Zweitens: »Leiden gehört zum Leben.« Oder: »Anderen geht es auch so.« »Ich bin nicht allein.« Drittens: »Möge ich freundlich zu mir sein.« Oder: »Was brauche ich jetzt?«\n\nFinde Worte, die sich für dich stimmig anfühlen. Die körperliche Geste ist wichtiger, als sie klingt: Berührung kann das Nervensystem beruhigen, auch die eigene."
+    },
+    {
+     "h": "Liebende Güte",
+     "text": "Die Liebende-Güte-Meditation, in der Tradition Metta genannt, ist eine der ältesten Übungen für Mitgefühl. Du wiederholst still gute Wünsche, zuerst für dich: »Möge ich sicher sein. Möge ich gesund sein. Möge ich glücklich sein. Möge ich mit Leichtigkeit leben.« Dann für einen Menschen, den du magst, dann für einen neutralen Menschen, später für schwierige Menschen und schließlich für alle Wesen.\n\nAm Anfang kann sich das hölzern anfühlen, besonders die Wünsche für dich selbst. Das ist normal. Es geht nicht darum, ein bestimmtes Gefühl zu erzeugen, sondern darum, eine Absicht zu üben. Studien deuten darauf hin, dass regelmäßige Praxis positive Gefühle und soziale Verbundenheit stärkt."
+    },
+    {
+     "h": "Selbstmitgefühl im Alltag",
+     "text": "Selbstmitgefühl zeigt sich in kleinen Momenten. Wenn du nach einem harten Tag eine Pause machst, statt dich weiter anzutreiben. Wenn du nach einem Fehler sagst: »Okay, das war nicht gut. Was lerne ich daraus?« Wenn du beim Yoga eine leichtere Variante wählst, weil dein Körper heute müde ist.\n\nEine einfache Übung: Schreib dir nach einem schwierigen Erlebnis einen kurzen Brief, so wie eine weise, liebevolle Freundin ihn schreiben würde. Was würde sie sagen? Was würde sie dir wünschen? Lies ihn am nächsten Tag noch einmal. Selbstmitgefühl ist eine Fähigkeit, keine Charaktereigenschaft. Sie wächst mit Übung."
+    }
+   ]
+  },
+  {
+   "id": "fortschritt-yoga",
+   "titel": "Fortschritt im Yoga",
+   "untertitel": "Beweglichkeit, Geduld, Abhyasa und Vairagya",
+   "minuten": 4,
+   "farbe": "sky",
+   "abschnitte": [
+    {
+     "h": "Wie Beweglichkeit wächst",
+     "text": "Wenn du regelmäßig dehnst, wirst du beweglicher – aber anders, als die meisten denken. In den ersten Wochen verändern sich vor allem nicht die Muskeln, sondern das Nervensystem. Es lernt, die Dehnung besser zu tolerieren, und gibt mehr Bewegungsraum frei. Fachleute nennen das Dehntoleranz.\n\nVeränderungen im Gewebe selbst brauchen deutlich länger, eher Monate als Wochen. Was hilft: Regelmäßigkeit, etwa drei bis fünf Mal pro Woche, ruhiges Atmen in der Dehnung und kein Erzwingen. Ein entspannter, gut atmender Körper gibt mehr nach als ein angespannter. Darum ist der Atem im Yoga nicht nur Beiwerk, sondern ein Werkzeug für Beweglichkeit."
+    },
+    {
+     "h": "Warum Vergleich nicht hilft",
+     "text": "Menschen sind anatomisch sehr unterschiedlich. Die Form und Ausrichtung der Hüftgelenkspfanne, die Länge der Oberschenkelknochen, die Struktur der Wirbel – all das bestimmt mit, welche Haltungen dir leichtfallen. Manche Körper werden den vollen Lotussitz nie bequem einnehmen, egal wie lange sie üben. Das ist keine Frage der Disziplin, sondern der Knochen.\n\nDarum ist der Blick auf die Matte nebenan oder auf Bilder in sozialen Medien so wenig hilfreich. Die richtige Frage lautet nicht: Sieht meine Haltung so aus wie ihre? Sondern: Spüre ich in dieser Haltung, was sie bewirken soll – Dehnung, Kraft, Stabilität, Ruhe? Hilfsmittel wie Blöcke und Gurte sind kein Zeichen von Schwäche, sondern von Klugheit."
+    },
+    {
+     "h": "Abhyasa: die beständige Übung",
+     "text": "In den Yoga-Sutras beschreibt Patanjali zwei Kräfte, die zusammen zur Ruhe des Geistes führen. Die erste ist Abhyasa: beständige Übung. Er beschreibt sie sinngemäß als Übung, die über lange Zeit, ohne Unterbrechung und mit Hingabe ausgeführt wird. Dann wird sie zu einem festen Fundament.\n\nDas ist eine bemerkenswert moderne Einsicht. Auch die Trainingswissenschaft weiß: Regelmäßigkeit schlägt Intensität. Zwanzig Minuten an fünf Tagen bewirken mehr als eine zweistündige Einheit pro Woche. Und »mit Hingabe« bedeutet: nicht mechanisch abhaken, sondern mit Aufmerksamkeit und Wertschätzung üben. Auch eine kurze Praxis an einem vollen Tag zählt."
+    },
+    {
+     "h": "Vairagya: Loslassen",
+     "text": "Die zweite Kraft heißt Vairagya, meist übersetzt als Nicht-Anhaften oder Gelassenheit. Gemeint ist, nicht an Ergebnissen zu kleben. Du übst, aber du klammerst dich nicht daran, ob der Kopf heute die Knie berührt.\n\nDas klingt zunächst widersprüchlich: Wie kann ich engagiert üben, ohne ein Ziel zu verfolgen? Die Antwort liegt im Wie. Du darfst Ziele haben, aber du machst dein Wohlbefinden nicht davon abhängig. Ein Tag, an dem du steifer bist als gestern, ist kein Rückschritt, sondern ein Tag. Vairagya schützt dich vor Frust, Überehrgeiz und Verletzungen – und macht die Übung leichter."
+    },
+    {
+     "h": "Zwei Flügel eines Vogels",
+     "text": "Abhyasa und Vairagya werden oft mit den zwei Flügeln eines Vogels verglichen. Nur mit beiden zusammen kommt er voran. Übung ohne Loslassen wird verbissen und führt zu Überlastung. Loslassen ohne Übung wird zu Gleichgültigkeit.\n\nIm Alltag heißt das: Du rollst die Matte aus, auch wenn du keine Lust hast – das ist Abhyasa. Und du nimmst an, wie die Einheit dann verläuft, auch wenn sie anders ist als geplant – das ist Vairagya. Diese Balance gilt weit über das Yoga hinaus: beim Lernen einer Sprache, im Beruf, in Beziehungen. Dranbleiben und gleichzeitig nicht festhalten."
+    },
+    {
+     "h": "Schmerz oder Dehnung?",
+     "text": "Eine gute Dehnung fühlt sich intensiv an, vielleicht unangenehm, aber gleichmäßig und erträglich. Du kannst dabei ruhig atmen. Ein Warnsignal ist dagegen stechender, ziehender oder einschießender Schmerz, besonders in Gelenken, im unteren Rücken oder im Nacken. Ebenso Taubheit oder Kribbeln, das in Arme oder Beine ausstrahlt.\n\nIn diesem Fall gilt Ahimsa, das Prinzip des Nicht-Verletzens: sofort zurückgehen, die Haltung anpassen oder auslassen. Mehr Schmerz bringt nicht mehr Fortschritt. Wenn ein Schmerz auch nach der Übung bleibt oder immer wiederkommt, lass ihn ärztlich oder physiotherapeutisch abklären."
+    },
+    {
+     "h": "Woran du echten Fortschritt erkennst",
+     "text": "Fortschritt im Yoga lässt sich nicht nur in Zentimetern messen. Achte auf andere Zeichen: Dein Atem bleibt auch in fordernden Haltungen ruhig. Du bemerkst früher, wenn du dich verspannst. Du gehst freundlicher mit deinem Körper um, auch an steifen Tagen. Du findest schneller zur Ruhe in der Endentspannung.\n\nUnd vielleicht merkst du die Veränderung auch außerhalb der Matte: Du sitzt aufrechter am Schreibtisch, atmest in stressigen Momenten bewusster, schläfst etwas besser. Das ist der Fortschritt, den Patanjali meinte. Die Haltungen sind ein Mittel, kein Ziel. Wenn du nach Monaten der Übung etwas gelassener lebst, bist du auf dem richtigen Weg – ganz gleich, wie weit du dich nach vorn beugen kannst."
+    }
+   ]
+  }
+ ],
+ "gefuehrt": [
+  {
+   "id": "ankommen",
+   "titel": "Ankommen in fünf Minuten",
+   "untertitel": "Mit dem Atem im Moment landen",
+   "minuten": 5,
+   "themen": [
+    "stress",
+    "fokus",
+    "ruhe"
+   ],
+   "schritte": [
+    {
+     "sage": "Willkommen. Nimm dir die nächsten fünf Minuten nur für dich.",
+     "pause": 5
+    },
+    {
+     "sage": "Setz dich bequem hin. Der Rücken ist aufrecht, aber nicht steif. Die Hände ruhen locker.",
+     "pause": 8
+    },
+    {
+     "sage": "Wenn es sich gut anfühlt, schließe die Augen. Oder lass den Blick weich zu Boden sinken.",
+     "pause": 8
+    },
+    {
+     "sage": "Spüre, wo dein Körper Kontakt hat. Die Füße am Boden. Das Gewicht auf der Sitzfläche.",
+     "pause": 10
+    },
+    {
+     "sage": "Atme einmal tief ein. Und lang wieder aus.",
+     "pause": 8
+    },
+    {
+     "sage": "Noch einmal. Tief ein. Und mit einem Seufzer aus.",
+     "pause": 8
+    },
+    {
+     "sage": "Jetzt lass den Atem wieder von allein fließen. Du musst nichts verändern.",
+     "pause": 10
+    },
+    {
+     "sage": "Finde die Stelle, an der du den Atem am deutlichsten spürst. Vielleicht an der Nase. Vielleicht im Bauch.",
+     "pause": 15
+    },
+    {
+     "sage": "Bleib mit deiner Aufmerksamkeit dort. Ein Atemzug nach dem anderen.",
+     "pause": 20
+    },
+    {
+     "sage": "Wahrscheinlich wandern deine Gedanken. Das ist ganz normal. Bemerke es einfach und kehre freundlich zum Atem zurück.",
+     "pause": 25
+    },
+    {
+     "sage": "Wenn es hilft, zähle leise mit. Einatmen, eins. Ausatmen, zwei. Bis zehn, und dann wieder von vorn.",
+     "pause": 30
+    },
+    {
+     "sage": "Wenn du dich verzählst, beginne einfach neu. Es gibt hier nichts falsch zu machen.",
+     "pause": 22
+    },
+    {
+     "sage": "Lass den Ausatem ganz von selbst ein wenig länger werden.",
+     "pause": 15
+    },
+    {
+     "sage": "Nimm wahr, wie es dir in diesem Moment geht. Ohne etwas zu bewerten.",
+     "pause": 12
+    },
+    {
+     "sage": "Langsam kommst du zurück. Spüre wieder deine Füße und deine Hände.",
+     "pause": 8
+    },
+    {
+     "sage": "Bewege sanft die Finger. Vielleicht möchtest du dich strecken.",
+     "pause": 6
+    },
+    {
+     "sage": "Wenn du bereit bist, öffne die Augen. Nimm diese Ruhe mit in deinen Tag.",
+     "pause": 3
+    }
+   ]
+  },
+  {
+   "id": "body-scan",
+   "titel": "Body-Scan",
+   "untertitel": "Mit freundlicher Aufmerksamkeit durch den ganzen Körper",
+   "minuten": 12,
+   "themen": [
+    "koerper",
+    "stress",
+    "schlaf",
+    "ruhe"
+   ],
+   "schritte": [
+    {
+     "sage": "Willkommen zum Body-Scan. Leg dich bequem auf den Rücken oder setz dich in eine stabile Haltung.",
+     "pause": 6
+    },
+    {
+     "sage": "Die Arme liegen locker neben dem Körper. Wenn du magst, schließe die Augen.",
+     "pause": 8
+    },
+    {
+     "sage": "Spüre, wie dein Körper von der Unterlage getragen wird. Du musst dich nicht selbst halten.",
+     "pause": 10
+    },
+    {
+     "sage": "Atme ein paar Mal etwas tiefer ein und lang aus. Mit jedem Ausatmen darfst du ein wenig schwerer werden.",
+     "pause": 12
+    },
+    {
+     "sage": "In dieser Übung wanderst du mit der Aufmerksamkeit durch den Körper. Du musst nichts verändern. Nur wahrnehmen, was da ist.",
+     "pause": 8
+    },
+    {
+     "sage": "Vielleicht spürst du Wärme, Kribbeln oder Druck. Vielleicht auch gar nichts. Alles ist in Ordnung.",
+     "pause": 8
+    },
+    {
+     "sage": "Richte deine Aufmerksamkeit jetzt auf die Zehen des linken Fußes. Spüre die einzelnen Zehen. Die Zwischenräume.",
+     "pause": 17
+    },
+    {
+     "sage": "Dann die Fußsohle, die Ferse, den Fußrücken. Den ganzen linken Fuß.",
+     "pause": 17
+    },
+    {
+     "sage": "Wandere weiter zum linken Unterschenkel. Zum Knie. Zum Oberschenkel.",
+     "pause": 22
+    },
+    {
+     "sage": "Lass das linke Bein los und wechsle zum rechten Fuß. Die Zehen. Die Sohle. Die Ferse.",
+     "pause": 17
+    },
+    {
+     "sage": "Dann der rechte Unterschenkel. Das Knie. Der Oberschenkel. Spüre das ganze rechte Bein.",
+     "pause": 22
+    },
+    {
+     "sage": "Nimm jetzt beide Beine gleichzeitig wahr. Schwer und ruhig.",
+     "pause": 15
+    },
+    {
+     "sage": "Wandere zum Becken. Spüre die Hüften, das Gesäß, die Auflagefläche.",
+     "pause": 22
+    },
+    {
+     "sage": "Wenn deine Gedanken abschweifen, ist das kein Problem. Kehre einfach zu der Stelle zurück, an der du warst.",
+     "pause": 17
+    },
+    {
+     "sage": "Komm zum Bauch. Spüre, wie er sich mit dem Atem hebt und senkt.",
+     "pause": 26
+    },
+    {
+     "sage": "Weiter zum unteren Rücken. Dann zum mittleren und oberen Rücken. Die Schulterblätter.",
+     "pause": 26
+    },
+    {
+     "sage": "Wenn du irgendwo Spannung bemerkst, atme sanft dorthin. Du musst sie nicht wegmachen. Lass sie einfach da sein.",
+     "pause": 22
+    },
+    {
+     "sage": "Spüre deinen Brustkorb. Das Heben und Senken. Vielleicht den Herzschlag.",
+     "pause": 26
+    },
+    {
+     "sage": "Wandere zu den Händen. Zu den Fingerspitzen beider Hände. Zu den Handflächen.",
+     "pause": 22
+    },
+    {
+     "sage": "Dann die Unterarme. Die Ellbogen. Die Oberarme. Bis hinauf zu den Schultern.",
+     "pause": 22
+    },
+    {
+     "sage": "Viele Menschen tragen in den Schultern viel Last. Lass sie mit dem nächsten Ausatmen ein wenig sinken.",
+     "pause": 22
+    },
+    {
+     "sage": "Spüre den Nacken. Den Hals. Die Stelle, an der dein Kopf aufliegt.",
+     "pause": 22
+    },
+    {
+     "sage": "Komm zum Gesicht. Das Kinn. Der Kiefer. Lass die Zähne sich leicht voneinander lösen.",
+     "pause": 20
+    },
+    {
+     "sage": "Die Lippen. Die Wangen. Die Nase, durch die der Atem strömt.",
+     "pause": 17
+    },
+    {
+     "sage": "Die Augen. Die Augenlider. Die Stirn. Lass die Stirn ganz weit und glatt werden.",
+     "pause": 20
+    },
+    {
+     "sage": "Und schließlich der ganze Kopf. Der Hinterkopf. Der Scheitel.",
+     "pause": 15
+    },
+    {
+     "sage": "Weite deine Aufmerksamkeit jetzt aus. Spüre den ganzen Körper auf einmal. Von den Füßen bis zum Kopf.",
+     "pause": 30
+    },
+    {
+     "sage": "Ein Körper, der atmet. Der hier liegt. Der genau so sein darf, wie er gerade ist.",
+     "pause": 30
+    },
+    {
+     "sage": "Langsam kehrst du zurück. Vertiefe den Atem ein wenig.",
+     "pause": 8
+    },
+    {
+     "sage": "Bewege sanft die Finger und die Zehen. Vielleicht möchtest du dich strecken.",
+     "pause": 8
+    },
+    {
+     "sage": "Wenn du bereit bist, öffne die Augen. Nimm dir einen Moment, bevor du aufstehst.",
+     "pause": 4
+    }
+   ]
+  },
+  {
+   "id": "einschlafen",
+   "titel": "Einschlafen",
+   "untertitel": "Den Tag loslassen und in die Nacht sinken",
+   "minuten": 10,
+   "themen": [
+    "schlaf",
+    "ruhe"
+   ],
+   "schritte": [
+    {
+     "sage": "Willkommen. Leg dich bequem in dein Bett. Das Licht ist aus oder ganz gedämpft.",
+     "pause": 8
+    },
+    {
+     "sage": "Schließe die Augen. Du musst jetzt nichts mehr tun. Nur zuhören, wenn du magst.",
+     "pause": 10
+    },
+    {
+     "sage": "Atme einmal tief ein. Und ganz langsam wieder aus.",
+     "pause": 8
+    },
+    {
+     "sage": "Noch einmal. Ein. Und lang aus. Als würdest du den Tag ausatmen.",
+     "pause": 10
+    },
+    {
+     "sage": "Spüre, wie die Matratze dich trägt. Den Kopf auf dem Kissen. Die Decke auf deiner Haut.",
+     "pause": 15
+    },
+    {
+     "sage": "Lass deinen Atem jetzt ganz von allein fließen. Ruhig und langsam.",
+     "pause": 18
+    },
+    {
+     "sage": "Der Tag ist vorbei. Alles, was noch offen ist, darf bis morgen warten.",
+     "pause": 20
+    },
+    {
+     "sage": "Wenn Gedanken kommen, lass sie wie Wolken vorbeiziehen. Du musst keinem folgen.",
+     "pause": 25
+    },
+    {
+     "sage": "Spüre deine Füße. Lass sie schwer werden. Ganz schwer.",
+     "pause": 20
+    },
+    {
+     "sage": "Die Schwere breitet sich aus. In die Beine. Die Knie. Die Oberschenkel.",
+     "pause": 22
+    },
+    {
+     "sage": "Das Becken sinkt in die Matratze. Der Bauch wird weich.",
+     "pause": 22
+    },
+    {
+     "sage": "Der Rücken darf loslassen. Wirbel für Wirbel.",
+     "pause": 22
+    },
+    {
+     "sage": "Die Schultern sinken. Die Arme liegen schwer. Die Hände sind ganz ruhig.",
+     "pause": 25
+    },
+    {
+     "sage": "Dein Gesicht entspannt sich. Der Kiefer ist locker. Die Augen ruhen.",
+     "pause": 25
+    },
+    {
+     "sage": "Dein ganzer Körper ist jetzt schwer und warm.",
+     "pause": 30
+    },
+    {
+     "sage": "Stell dir einen ruhigen Ort vor. Einen Strand am Abend. Eine Wiese. Oder ein warmes Zimmer.",
+     "pause": 20
+    },
+    {
+     "sage": "Hör die leisen Geräusche dort. Spüre die angenehme Temperatur. Du bist sicher.",
+     "pause": 35
+    },
+    {
+     "sage": "Mit jedem Ausatmen sinkst du ein wenig tiefer.",
+     "pause": 35
+    },
+    {
+     "sage": "Du kannst jetzt langsam rückwärts zählen. Bei jedem Ausatmen eine Zahl. Zehn. Neun. Acht.",
+     "pause": 30
+    },
+    {
+     "sage": "Wenn du dich verzählst, ist das gut. Dann ist der Schlaf schon nah.",
+     "pause": 40
+    },
+    {
+     "sage": "Es gibt nichts mehr zu tun. Nur ruhen.",
+     "pause": 40
+    },
+    {
+     "sage": "Du darfst jetzt einschlafen.",
+     "pause": 40
+    }
+   ]
+  },
+  {
+   "id": "notfall-stress",
+   "titel": "Notfall bei Stress",
+   "untertitel": "Drei Minuten, um wieder Boden unter den Füßen zu spüren",
+   "minuten": 3,
+   "themen": [
+    "stress",
+    "angst"
+   ],
+   "schritte": [
+    {
+     "sage": "Halt kurz an. Du musst jetzt nichts lösen. Nur die nächsten drei Minuten atmen.",
+     "pause": 3
+    },
+    {
+     "sage": "Stell beide Füße fest auf den Boden. Drück sie leicht hinein.",
+     "pause": 5
+    },
+    {
+     "sage": "Atme zweimal kurz durch die Nase ein. Und dann lang durch den Mund aus.",
+     "pause": 6
+    },
+    {
+     "sage": "Noch einmal. Zweimal ein. Und lang aus.",
+     "pause": 6
+    },
+    {
+     "sage": "Ein drittes Mal. Zweimal ein. Langer Seufzer aus.",
+     "pause": 8
+    },
+    {
+     "sage": "Jetzt atme ruhig weiter. Das Ausatmen darf länger sein als das Einatmen.",
+     "pause": 12
+    },
+    {
+     "sage": "Schau dich um. Finde drei Dinge, die du sehen kannst. Benenne sie leise.",
+     "pause": 12
+    },
+    {
+     "sage": "Lausche. Welche zwei Geräusche kannst du hören?",
+     "pause": 10
+    },
+    {
+     "sage": "Spüre eine Sache, die du berührst. Den Stuhl. Deine Kleidung. Deine Hände.",
+     "pause": 10
+    },
+    {
+     "sage": "Was du fühlst, ist eine Stressreaktion. Sie ist unangenehm. Aber sie geht vorbei.",
+     "pause": 10
+    },
+    {
+     "sage": "Gib dem Gefühl einen Namen. Vielleicht Angst. Vielleicht Ärger. Vielleicht Überforderung.",
+     "pause": 10
+    },
+    {
+     "sage": "Leg eine Hand auf deine Brust oder deinen Bauch. Spüre die Wärme.",
+     "pause": 12
+    },
+    {
+     "sage": "Du hast schon viele schwierige Momente überstanden. Auch dieser wird vorübergehen.",
+     "pause": 8
+    },
+    {
+     "sage": "Frag dich jetzt: Was ist der nächste kleine Schritt? Nur einer.",
+     "pause": 6
+    }
+   ]
+  },
+  {
+   "id": "fokus-arbeit",
+   "titel": "Fokus vor der Arbeit",
+   "untertitel": "Klar werden, bevor du anfängst",
+   "minuten": 6,
+   "themen": [
+    "fokus",
+    "stress"
+   ],
+   "schritte": [
+    {
+     "sage": "Willkommen. Bevor du mit der Arbeit beginnst, nimmst du dir sechs Minuten, um klar zu werden.",
+     "pause": 5
+    },
+    {
+     "sage": "Setz dich aufrecht hin. Beide Füße am Boden. Leg das Handy außer Reichweite oder schalte es stumm.",
+     "pause": 8
+    },
+    {
+     "sage": "Schließe die Augen oder richte den Blick auf einen ruhigen Punkt vor dir.",
+     "pause": 6
+    },
+    {
+     "sage": "Atme dreimal bewusst ein und aus. Mit jedem Ausatmen lässt du ein wenig von der Hektik los.",
+     "pause": 15
+    },
+    {
+     "sage": "Jetzt lass den Atem natürlich fließen. Spüre ihn an der Nasenspitze. Kühl beim Einatmen. Etwas wärmer beim Ausatmen.",
+     "pause": 22
+    },
+    {
+     "sage": "Bleib dort. Zähle zehn Atemzüge. Wenn du abschweifst, beginne einfach wieder bei eins.",
+     "pause": 40
+    },
+    {
+     "sage": "Bemerke, was dir gerade durch den Kopf geht. E-Mails. Termine. Offene Dinge.",
+     "pause": 10
+    },
+    {
+     "sage": "Stell dir vor, du legst jeden dieser Gedanken in eine Kiste neben dir. Sie sind nicht weg. Sie warten nur.",
+     "pause": 22
+    },
+    {
+     "sage": "Frag dich jetzt: Was ist die eine Aufgabe, die heute am wichtigsten ist?",
+     "pause": 20
+    },
+    {
+     "sage": "Nimm dir Zeit für die Antwort. Wenn mehrere kommen, wähle die, die den größten Unterschied macht.",
+     "pause": 20
+    },
+    {
+     "sage": "Stell dir vor, wie du mit dieser Aufgabe beginnst. Der erste konkrete Schritt. Ganz klein und klar.",
+     "pause": 22
+    },
+    {
+     "sage": "Stell dir vor, wie du konzentriert arbeitest. Ruhig und wach. Eine Sache nach der anderen.",
+     "pause": 22
+    },
+    {
+     "sage": "Wenn später Ablenkungen kommen, kannst du jederzeit zu einem Atemzug zurückkehren. So wie jetzt.",
+     "pause": 20
+    },
+    {
+     "sage": "Kehre noch einmal für einige Atemzüge zum Atem zurück. Einfach da sein.",
+     "pause": 30
+    },
+    {
+     "sage": "Vertiefe jetzt den Atem. Spüre deine Füße und die Hände.",
+     "pause": 6
+    },
+    {
+     "sage": "Öffne die Augen. Beginne mit dem ersten kleinen Schritt.",
+     "pause": 3
+    }
+   ]
+  }
+ ]
+}

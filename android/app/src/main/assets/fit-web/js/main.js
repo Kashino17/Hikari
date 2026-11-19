@@ -12,11 +12,13 @@ import { Skills, SkillDetail, SkillPractice } from './screens/skills.js';
 import { Food, PhotoFlow, AddMeal, EntryDetail, DayReport, Shopping, BarcodeFlow } from './screens/food.js';
 import { RecipeDetail, RecipeList } from './screens/recipes.js';
 import { Me, ProfileEdit, Onboarding } from './screens/me.js';
+import { Mind, MindList, Breath, Guided, YogaPath, YogaLevel, YogaFlow, Poses, AsanaDetail, Deep, Affirmations } from './screens/mind.js';
 
 const TAB_META = {
   heute: ['Heute', 'today', Today, 'c-train'],
   training: ['Training', 'fitness_center', Training, 'c-train'],
   skills: ['Skills', 'sports_gymnastics', Skills, 'c-skill'],
+  achtsam: ['Achtsam', 'self_improvement', Mind, 'c-mind'],
   ernaehrung: ['Ernährung', 'restaurant', Food, 'c-food'],
   ich: ['Ich', 'person', Me, 'c-train'],
 };
@@ -40,6 +42,16 @@ const ROUTES = [
   [/^rezepte(?:\/(\w+))?$/, (m) => html`<${RecipeList} filter=${m[1]} />`],
   [/^rezept\/(.+)$/, (m) => html`<${RecipeDetail} id=${m[1]} />`],
   [/^profil$/, () => html`<${ProfileEdit} />`],
+  [/^achtsam\/(thema|zeit|fuer)\/(\w+)$/, (m) => html`<${MindList} by=${m[1]} k=${m[2]} key=${m[0]} />`],
+  [/^achtsam\/atem\/(.+)$/, (m) => html`<${Breath} id=${m[1]} />`],
+  [/^achtsam\/gefuehrt\/(.+)$/, (m) => html`<${Guided} id=${m[1]} />`],
+  [/^achtsam\/yoga$/, () => html`<${YogaPath} />`],
+  [/^achtsam\/yoga\/(\d+)$/, (m) => html`<${YogaLevel} n=${m[1]} key=${m[1]} />`],
+  [/^achtsam\/flow\/(\d+)$/, (m) => html`<${YogaFlow} n=${m[1]} />`],
+  [/^achtsam\/haltungen$/, () => html`<${Poses} />`],
+  [/^achtsam\/haltung\/(.+)$/, (m) => html`<${AsanaDetail} id=${m[1]} key=${m[1]} />`],
+  [/^achtsam\/wissen\/(.+)$/, (m) => html`<${Deep} id=${m[1]} />`],
+  [/^achtsam\/affirmationen(?:\/(\w+))?$/, (m) => html`<${Affirmations} theme=${m[1]} />`],
   [/^start$/, () => html`<${Onboarding} />`],
 ];
 

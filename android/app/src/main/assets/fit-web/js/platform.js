@@ -130,24 +130,63 @@ export async function scanBarcode() {
 // Vorab erzeugte Clips (tools/fit_voice) in assets/fit-web/voice, Index: Schlüssel → Datei.
 // Ansagen werden aus Bausteinen zusammengesetzt (Übung, Menge, »je Seite«). Fehlt ein Clip, bleibt
 // es still — bewusst KEINE Gerätestimme (Kadir mag die Computerstimme nicht).
+//
+// Abgespielt wird über WebAudio, NICHT über <audio>: Ein Audio-Element holt sich in der WebView den
+// vollen Audio-Fokus, und jede Musik im Hintergrund bleibt stehen. WebAudio fordert keinen Fokus an;
+// während Rem spricht (oder ein Ton kommt), wird die Musik nur leiser gedreht (duck) und danach
+// wieder laut.
 let voiceOn = local.get('voice', true);
 let voiceIndex = null;
 const voiceIndexReady = fetch('/voice/index.json').then((r) => (r.ok ? r.json() : {})).then((j) => { voiceIndex = j; }).catch(() => { voiceIndex = {}; });
-let queue = [];
+
+function audioCtx() {
+  const ctx = beep.ctx ?? (beep.ctx = new (window.AudioContext || window.webkitAudioContext)());
+  if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+  return ctx;
+}
+
+// Musik leiser: gezählt, mit kurzem Nachlauf — zwischen zwei Bausteinen soll sie nicht hochpumpen.
+let ducks = 0;
+let duckOffTimer = null;
+function duckOn() {
+  ducks++;
+  clearTimeout(duckOffTimer);
+  if (ducks === 1) native?.duck?.(true);
+}
+function duckOff(after = 450) {
+  ducks = Math.max(0, ducks - 1);
+  if (ducks > 0) return;
+  clearTimeout(duckOffTimer);
+  duckOffTimer = setTimeout(() => { if (ducks === 0) native?.duck?.(false); }, after);
+}
+
+const clipCache = new Map();
+function loadClip(id) {
+  if (!clipCache.has(id)) {
+    clipCache.set(id, fetch(`/voice/${id}.ogg`).then((r) => r.arrayBuffer()).then((b) => audioCtx().decodeAudioData(b)).catch((e) => { clipCache.delete(id); throw e; }));
+    if (clipCache.size > 120) clipCache.delete(clipCache.keys().next().value);
+  }
+  return clipCache.get(id);
+}
+/** Einen Clip abspielen → Promise (true = zu Ende gespielt). Abbrechbar über voice.stop(). */
 let current = null;
 let token = 0;
-function playNext(t) {
-  if (t !== token) return;
-  const key = queue.shift();
-  if (!key) { current = null; return; }
-  const id = voiceIndex?.[key];
-  if (!id) { playNext(t); return; }
-  const a = new Audio(`/voice/${id}.ogg`);
-  current = a;
-  a.onended = () => setTimeout(() => playNext(t), 90);
-  a.onerror = () => playNext(t);
-  a.play().catch(() => playNext(t));
+function playClip(id, t) {
+  return loadClip(id).then((buf) => new Promise((resolve) => {
+    if (t !== token) { resolve(false); return; }
+    const ctx = audioCtx();
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    let settled = false;
+    const done = (ok) => { if (settled) return; settled = true; if (current === src) current = null; resolve(ok && t === token); };
+    src.onended = () => done(true);
+    src.__done = () => { try { src.stop(); } catch { /* */ } done(false); };
+    current = src;
+    src.start();
+  })).catch(() => false);
 }
+
 export const voice = {
   get on() { return voiceOn; },
   set(on) { voiceOn = on; local.set('voice', on); if (!on) this.stop(); },
@@ -158,14 +197,40 @@ export const voice = {
     if (!list.length) return;
     if (!voiceIndex) await voiceIndexReady;
     this.stop();
-    queue = list;
-    playNext(token);
+    const t = token;
+    const ids = list.map((k) => voiceIndex?.[k]).filter(Boolean);
+    if (!ids.length) return;
+    ids.forEach((id) => loadClip(id).catch(() => {})); // vorab dekodieren — keine Lücken
+    duckOn();
+    try {
+      for (const id of ids) {
+        if (t !== token) break;
+        await playClip(id, t);
+        await new Promise((r) => setTimeout(r, 90));
+      }
+    } finally { duckOff(); }
   },
   stop() {
     token++;
-    queue = [];
-    try { current?.pause(); } catch { /* */ }
+    current?.__done?.();
     current = null;
+  },
+  /** Gibt es diesen Satz in Rems Stimme? (Achtsamkeit: Schlüssel »t:<Satz>«) */
+  has(text) { return !!voiceIndex?.[`t:${text}`]; },
+  ready: () => voiceIndexReady,
+  /**
+   * Einen Satz sprechen und warten, bis er zu Ende ist (Meditation, Yoga, Affirmation) — unabhängig
+   * vom Ansagen-Schalter des Trainings. → true, wenn zu Ende gesprochen; false, wenn kein Clip da
+   * ist oder abgebrochen wurde.
+   */
+  async speak(text) {
+    await voiceIndexReady;
+    const id = voiceIndex?.[`t:${text}`];
+    this.stop();
+    if (!id) return false;
+    const t = token;
+    duckOn();
+    try { return await playClip(id, t); } finally { duckOff(); }
   },
   /** Mengen-Baustein: »12 Wdh« bzw. »45 s« (auf 5 s gerundet, wie die Clips). */
   amount(amount, unit) {
@@ -177,7 +242,7 @@ export const voice = {
 export function beep(kind = 'tick') {
   if (native?.haptic) native.haptic(kind);
   try {
-    const ctx = beep.ctx ?? (beep.ctx = new (window.AudioContext || window.webkitAudioContext)());
+    const ctx = audioCtx();
     const o = ctx.createOscillator();
     const g = ctx.createGain();
     o.frequency.value = kind === 'go' ? 880 : kind === 'end' ? 660 : 520;
@@ -185,19 +250,59 @@ export function beep(kind = 'tick') {
     g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + (kind === 'go' ? 0.35 : 0.14));
     o.connect(g).connect(ctx.destination);
+    duckOn();
     o.start(); o.stop(ctx.currentTime + 0.4);
+    o.onended = () => duckOff(700);
   } catch { /* stumm */ }
 }
 
-export function keepAwake(on) {
-  if (native?.keepAwake) { native.keepAwake(!!on); return; }
+/** Klangschale: weicher Gong aus mehreren Teiltönen mit langem Ausklang (Meditation, Yoga). */
+export function bell(strength = 1) {
+  if (native?.haptic) native.haptic('tick');
   try {
-    if (on && navigator.wakeLock) navigator.wakeLock.request('screen').then((l) => { keepAwake.lock = l; }).catch(() => {});
-    else keepAwake.lock?.release?.();
-  } catch { /* */ }
+    const ctx = audioCtx();
+    const now = ctx.currentTime;
+    const out = ctx.createGain();
+    out.gain.value = 0.22 * strength;
+    out.connect(ctx.destination);
+    duckOn();
+    setTimeout(() => duckOff(300), 4500);
+    for (const [f, g, d] of [[432, 1, 7], [864.5, 0.45, 5], [1296.8, 0.22, 3.5], [1735, 0.12, 2.4], [2160, 0.06, 1.6]]) {
+      const o = ctx.createOscillator();
+      const v = ctx.createGain();
+      o.type = 'sine';
+      o.frequency.value = f;
+      v.gain.setValueAtTime(0.0001, now);
+      v.gain.exponentialRampToValueAtTime(g, now + 0.015);
+      v.gain.exponentialRampToValueAtTime(0.0001, now + d);
+      o.connect(v).connect(out);
+      o.start(now); o.stop(now + d + 0.1);
+    }
+  } catch { /* stumm */ }
 }
 
-/** YouTube-Video im Player der App öffnen (im Browser: neuer Tab). */
+export function haptic(kind = 'tick') { if (native?.haptic) native.haptic(kind); else navigator.vibrate?.(kind === 'tick' ? 12 : 30); }
+
+/**
+ * Display wach halten, solange irgendeine Übung läuft (Training, Skill, Yoga, Atem, Meditation).
+ * Gezählt statt An/Aus: Beim Wechsel zwischen zwei Übungsbildschirmen darf das Aufräumen des alten
+ * das »an« des neuen nicht wieder löschen. Nach dem Zurückkehren in die App wird es neu gesetzt.
+ */
+let awake = 0;
+function applyAwake() {
+  const on = awake > 0;
+  if (native?.keepAwake) { native.keepAwake(on); return; }
+  try {
+    if (on && navigator.wakeLock && !keepAwake.lock) navigator.wakeLock.request('screen').then((l) => { keepAwake.lock = l; l.addEventListener?.('release', () => { keepAwake.lock = null; }); }).catch(() => {});
+    else if (!on) { keepAwake.lock?.release?.(); keepAwake.lock = null; }
+  } catch { /* */ }
+}
+export function keepAwake(on) {
+  awake = Math.max(0, awake + (on ? 1 : -1));
+  applyAwake();
+}
+if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && awake > 0) applyAwake(); });
+
 export function openVideo(id, title = '') {
   if (native?.openVideo) { native.openVideo(id, title); return; }
   window.open(`https://www.youtube.com/watch?v=${id}`, '_blank');

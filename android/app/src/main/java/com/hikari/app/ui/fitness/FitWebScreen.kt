@@ -81,7 +81,7 @@ fun FitWebScreen(
     vm: FitWebViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
-    val bridge = remember { FitWebBridge(context.applicationContext, vm.okHttp, onClose, onOpenVideo) }
+    val bridge = remember { FitWebBridge(context.applicationContext, vm.okHttp, onClose, onOpenVideo, vm.music) }
     bridge.activity = context
 
     val photoFile = remember { File(context.cacheDir, "fit_photo.jpg") }
@@ -102,8 +102,8 @@ fun FitWebScreen(
             )
         }
     }
-    // Musik pausieren — sonst läuft sie unter Ansagen und Pieptönen weiter.
-    LaunchedEffect(Unit) { if (vm.music.isPlaying.value) vm.music.toggle() }
+    // Musik läuft im Fitness-Bereich weiter (früher wurde sie hier pausiert) — Rems Ansagen drehen
+    // sie nur kurz leiser (bridge.duck).
 
     AndroidView(
         modifier = Modifier.fillMaxSize(),
@@ -207,6 +207,7 @@ class FitWebBridge(
     private val okHttp: OkHttpClient,
     private val onClose: () -> Unit,
     private val onOpenVideo: (String, String) -> Unit,
+    private val music: com.hikari.app.player.MusicPlayerController? = null,
 ) {
     var webView: WebView? = null
     var launchCamera: () -> Unit = {}
@@ -227,7 +228,8 @@ class FitWebBridge(
         main.removeCallbacksAndMessages(null)
         runCatching { tts?.stop(); tts?.shutdown() }
         tts = null
-        webView?.keepScreenOn = false
+        setAwake(false)
+        setDuck(false)
         webView = null
     }
 
@@ -365,7 +367,67 @@ class FitWebBridge(
         }
     }
 
-    @JavascriptInterface fun keepAwake(on: Boolean) { main.post { webView?.keepScreenOn = on } }
+    /**
+     * Musik kurz leiser, solange Rem spricht oder ein Ton kommt — und danach wieder normal.
+     * Rems Stimme läuft über WebAudio (fordert KEINEN Audio-Fokus an, die Musik läuft also weiter);
+     * hier nur eine »darf ducken«-Anfrage: Musik-Apps und Hikaris eigene Musik (ExoPlayer) werden
+     * leiser statt zu pausieren. Früher holte sich die WebView für jeden Clip den vollen Fokus
+     * (Medien) — jede Musik blieb stehen.
+     */
+    @JavascriptInterface fun duck(on: Boolean) { main.post { if (!closed) setDuck(on) } }
+
+    private val audio by lazy { app.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager }
+    private var duckRequest: android.media.AudioFocusRequest? = null
+
+    private var duckingOwnMusic = false
+
+    private fun setDuck(on: Boolean) {
+        // Hikaris eigene Musik: sanft auf etwa 45 % statt der 20 %, auf die ExoPlayer beim Ducken fest geht.
+        val own = music
+        if (on && own != null && own.isPlaying.value) {
+            if (!duckingOwnMusic) { duckingOwnMusic = true; own.rampVolume(0.45f, 250) }
+            return
+        }
+        if (!on && duckingOwnMusic) { duckingOwnMusic = false; own?.rampVolume(1f, 600) }
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) return
+        if (on) {
+            if (duckRequest != null) return
+            val req = android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                .setAudioAttributes(
+                    android.media.AudioAttributes.Builder()
+                        .setUsage(android.media.AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .build(),
+                )
+                .setWillPauseWhenDucked(false)
+                .setOnAudioFocusChangeListener { }
+                .build()
+            if (audio.requestAudioFocus(req) == android.media.AudioManager.AUDIOFOCUS_REQUEST_GRANTED) duckRequest = req
+        } else {
+            duckRequest?.let { audio.abandonAudioFocusRequest(it) }
+            duckRequest = null
+        }
+    }
+
+    /**
+     * Bildschirm wach halten (Training, Yoga, Meditation). Über das FENSTER, nicht nur die WebView:
+     * Chromium setzt keepScreenOn der WebView beim Starten/Stoppen der Übungsvideos selbst um und
+     * löschte so unser »an« — dann dunkelte das Display mitten in der Einheit ab.
+     */
+    @JavascriptInterface fun keepAwake(on: Boolean) { main.post { if (!closed) setAwake(on) } }
+
+    private fun setAwake(on: Boolean) {
+        val window = (activity?.findActivity())?.window
+        if (on) window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        webView?.keepScreenOn = on
+    }
+
+    private tailrec fun Context.findActivity(): android.app.Activity? = when (this) {
+        is android.app.Activity -> this
+        is android.content.ContextWrapper -> baseContext.findActivity()
+        else -> null
+    }
 
     @JavascriptInterface
     fun openVideo(id: String, title: String) {

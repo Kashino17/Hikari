@@ -3,7 +3,7 @@ import { useEffect, useState, useRef } from '../vendor/preact-htm.js';
 import { api, local } from './platform.js';
 
 // ── Routen (#/heute, #/einheit/<id>, …) ──
-export const TABS = ['heute', 'training', 'skills', 'ernaehrung', 'ich'];
+export const TABS = ['heute', 'training', 'skills', 'achtsam', 'ernaehrung', 'ich'];
 export const route = () => decodeURIComponent(location.hash.replace(/^#\/?/, '')) || 'heute';
 let depth = 0;
 export function nav(r, { replace = false } = {}) {

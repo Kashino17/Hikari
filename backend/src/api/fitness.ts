@@ -2,6 +2,7 @@
  * Fitness-Bereich: Training mit KI-Coach, Calisthenics-Skills, Ernährung (Foto-Tracker, Rezepte,
  * Ernährungs-Coach). Alle Daten in ~/.hikari/fitness (eigene Datenbank, Medien, Fotos).
  */
+import { registerMindRoutes } from "./fitness-mind.js";
 import { createHash, randomUUID } from "node:crypto";
 import {
   createReadStream,
@@ -130,6 +131,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     join(deps.dataDir, "skills.json"),
   );
   const ndb = new BlsDb(join(deps.dataDir, "bls.json.gz"));
+  registerMindRoutes(app, db, join(deps.dataDir, "mind"));
   const ai = new FitnessAi({
     key: deps.geminiKey,
     usageFile: join(deps.dir, "ai-usage.json"),
@@ -652,6 +654,9 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const food = new Map(
       (db.prepare("SELECT day, COUNT(*) AS n FROM food_log WHERE day >= ? AND day <= ? GROUP BY day").all(from, to) as { day: string; n: number }[]).map((r) => [r.day, r.n]),
     );
+    const mindMin = new Map(
+      (db.prepare("SELECT day, SUM(seconds) AS s FROM mind_log WHERE day >= ? AND day <= ? GROUP BY day").all(from, to) as { day: string; s: number }[]).map((r) => [r.day, Math.round(r.s / 60)]),
+    );
     const out = [];
     for (let d = from; d <= to; d = addDays(d, 1)) {
       const s = sessions.filter((x) => x.day === d);
@@ -662,6 +667,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         plan: s.some((x) => x.status === "planned" || x.status === "active"),
         minutes: s.filter((x) => x.status === "done").reduce((a, x) => a + Math.round((x.result?.seconds ?? 0) / 60), 0),
         meals: food.get(d) ?? 0,
+        mind: mindMin.get(d) ?? 0,
       });
     }
     const first = db.prepare("SELECT MIN(day) AS d FROM (SELECT day FROM sessions WHERE status = 'done' UNION SELECT day FROM food_log)").get() as { d: string | null };
@@ -703,9 +709,11 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       return { skill: sk?.name ?? r.skill_id, step: sk?.steps[r.step]?.name ?? `Stufe ${r.step + 1}`, value: r.value, unit: sk?.steps[r.step]?.goal.type === "hold" ? "s" : "Wdh" };
     });
     const body = db.prepare("SELECT weight FROM body_log WHERE day = ?").get(day) as { weight: number | null } | undefined;
+    const mind = db.prepare("SELECT kind, ref, seconds, mood_before, mood_after, note, at FROM mind_log WHERE day = ? ORDER BY at").all(day);
     return {
       day,
       today,
+      mind,
       trainingDay: profile.trainingDays.includes(weekday(day)),
       sessions,
       food: {
@@ -1378,7 +1386,9 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       /^https:\/\/images\.openfoodfacts\.(org|net)\/images\/products\/[\w./-]+\.(jpg|png|webp)$/i.test(
         u,
       );
-    if (!mealdb && !lecker && !spoon && !off) return reply.code(400).send({ error: "url" });
+    // Vorschaubilder der Achtsamkeits-Videos (YouTube).
+    const yt = /^https:\/\/i\.ytimg\.com\/vi\/[\w-]{11}\/(mq|hq|sd|maxres)default\.jpg$/i.test(u);
+    if (!mealdb && !lecker && !spoon && !off && !yt) return reply.code(400).send({ error: "url" });
     const base = join(imgDir, createHash("sha1").update(u).digest("hex"));
     const TYPES: Record<string, string> = {
       jpg: "image/jpeg",

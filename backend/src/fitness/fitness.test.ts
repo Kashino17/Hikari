@@ -16,6 +16,7 @@ import { buildRulesPlan, planSeconds, usable } from "./planner.js";
 import { computeTargets, normalizeProfile, saveProfile } from "./profile.js";
 import { recipeTags, youtubeId } from "./recipes.js";
 import { goalMet, logSkill, setSkill, skillStates } from "./skills.js";
+import { mindStats, setManualUnlock, yogaProgress } from "./mind.js";
 
 const DATA = new URL("../../fitness", import.meta.url).pathname;
 const catalog = loadCatalog(join(DATA, "exercises.json"), join(DATA, "skills.json"));
@@ -279,5 +280,45 @@ describe("Zweites Training am selben Tag", () => {
     expect(second.plan.coach.why.join(" ")).toContain("Heute schon erledigt");
     expect((await todaySession(null, db, catalog, { day })).id).toBe(second.id);
     expect(getSession(db, first.id)?.status).toBe("done");
+  });
+});
+
+describe("Achtsamkeit: Yoga-Pfad und Statistik", () => {
+  const levels = [1, 2, 3].map((stufe) => ({
+    stufe, name: `S${stufe}`, untertitel: "", minuten: 10, ziel: "", intention: "", philosophie: "",
+    freischalten: { einheiten: 2, tage: 2 }, flow: [],
+  }));
+  const log = (db: ReturnType<typeof freshDb>, day: string, ref: string, kind = "yoga") =>
+    db.prepare("INSERT INTO mind_log(day, kind, ref, seconds, at) VALUES(?, ?, ?, 600, ?)").run(day, kind, ref, Date.now());
+
+  it("öffnet die nächste Stufe erst nach genug Einheiten an genug Tagen", () => {
+    const db = freshDb();
+    expect(yogaProgress(db, levels).open).toBe(1);
+    log(db, "2026-11-01", "stufe-1");
+    log(db, "2026-11-01", "stufe-1");
+    expect(yogaProgress(db, levels).open).toBe(1); // zwei Einheiten, aber nur ein Tag
+    log(db, "2026-11-02", "stufe-1");
+    const p = yogaProgress(db, levels);
+    expect(p.open).toBe(2);
+    expect(p.levels[0].met).toBe(true);
+    expect(p.levels[1].current).toBe(true);
+    expect(p.levels[2].unlocked).toBe(false);
+  });
+
+  it("Überspringen öffnet genau eine Stufe, Meditationen zählen nicht für Yoga", () => {
+    const db = freshDb();
+    log(db, "2026-11-01", "stufe-1", "meditation");
+    log(db, "2026-11-02", "stufe-1", "meditation");
+    expect(yogaProgress(db, levels).open).toBe(1);
+    setManualUnlock(db, 2);
+    expect(yogaProgress(db, levels).open).toBe(2);
+  });
+
+  it("Serie zählt Tage in Folge bis heute oder gestern", () => {
+    const db = freshDb();
+    for (const d of ["2026-11-17", "2026-11-18", "2026-11-19"]) log(db, d, "x", "meditation");
+    expect(mindStats(db, "2026-11-20").streak).toBe(3);
+    expect(mindStats(db, "2026-11-22").streak).toBe(0);
+    expect(mindStats(db, "2026-11-19").todayMinutes).toBe(10);
   });
 });
