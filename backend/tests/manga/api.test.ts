@@ -1,9 +1,9 @@
-import { test, expect, beforeEach } from "vitest";
-import Fastify, { type FastifyInstance } from "fastify";
 import Database from "better-sqlite3";
-import { applyMigrations } from "../../src/db/migrations.js";
-import { upsertSeries, upsertChapter, upsertPage } from "../../src/manga/persist.js";
+import Fastify, { type FastifyInstance } from "fastify";
+import { beforeEach, expect, test } from "vitest";
 import { registerMangaRoutes } from "../../src/api/manga.js";
+import { applyMigrations } from "../../src/db/migrations.js";
+import { upsertChapter, upsertPage, upsertSeries } from "../../src/manga/persist.js";
 
 function buildApp(): { app: FastifyInstance; db: Database.Database } {
   const db = new Database(":memory:");
@@ -84,7 +84,9 @@ test("GET /api/manga/chapters/:id/pages returns 404 when chapter has no pages", 
   const { app, db } = buildApp();
   // Add a chapter without any pages
   upsertChapter(db, {
-    source: "fake", seriesSlug: "x", number: 999,
+    source: "fake",
+    seriesSlug: "x",
+    number: 999,
     sourceUrl: "https://fake.test/x/999",
   });
   const r = await app.inject({ method: "GET", url: "/api/manga/chapters/fake:x:999/pages" });
@@ -94,11 +96,16 @@ test("GET /api/manga/chapters/:id/pages returns 404 when chapter has no pages", 
 test("GET /api/manga/chapters/:id/pages reports ready: false when local_path is NULL", async () => {
   const { app, db } = buildApp();
   upsertChapter(db, {
-    source: "fake", seriesSlug: "x", number: 2,
+    source: "fake",
+    seriesSlug: "x",
+    number: 2,
     sourceUrl: "https://fake.test/x/2",
   });
   upsertPage(db, {
-    source: "fake", seriesSlug: "x", chapterNumber: 2, pageNumber: 1,
+    source: "fake",
+    seriesSlug: "x",
+    chapterNumber: 2,
+    pageNumber: 1,
     sourceUrl: "https://fake.test/p.png",
     // localPath omitted → stays NULL
   });
@@ -108,7 +115,7 @@ test("GET /api/manga/chapters/:id/pages reports ready: false when local_path is 
   expect(body[0].ready).toBe(false);
 });
 
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -124,16 +131,22 @@ test("GET /api/manga/page/:id streams image bytes when local_path set", async ()
     db.pragma("foreign_keys = ON");
     applyMigrations(db);
     upsertSeries(db, {
-      source: "fake", sourceSlug: "x",
-      title: "X", sourceUrl: "https://fake.test/x",
+      source: "fake",
+      sourceSlug: "x",
+      title: "X",
+      sourceUrl: "https://fake.test/x",
     });
     upsertChapter(db, {
-      source: "fake", seriesSlug: "x",
-      number: 1, sourceUrl: "https://fake.test/x/1",
+      source: "fake",
+      seriesSlug: "x",
+      number: 1,
+      sourceUrl: "https://fake.test/x/1",
     });
     upsertPage(db, {
-      source: "fake", seriesSlug: "x",
-      chapterNumber: 1, pageNumber: 1,
+      source: "fake",
+      seriesSlug: "x",
+      chapterNumber: 1,
+      pageNumber: 1,
       sourceUrl: "https://fake.test/p.png",
       localPath: "fake/x/1/01.png",
     });
@@ -162,8 +175,10 @@ test("GET /api/manga/page/:id sets long-lived Cache-Control", async () => {
     upsertSeries(db, { source: "fake", sourceSlug: "x", title: "X", sourceUrl: "https://x" });
     upsertChapter(db, { source: "fake", seriesSlug: "x", number: 1, sourceUrl: "https://x" });
     upsertPage(db, {
-      source: "fake", seriesSlug: "x",
-      chapterNumber: 1, pageNumber: 1,
+      source: "fake",
+      seriesSlug: "x",
+      chapterNumber: 1,
+      pageNumber: 1,
       sourceUrl: "https://x/p.png",
       localPath: "fake/x/1/01.png",
     });
@@ -230,8 +245,10 @@ test("GET /api/manga/page/:id returns 404 when local_path is NULL (pending)", as
     upsertSeries(db, { source: "fake", sourceSlug: "x", title: "X", sourceUrl: "https://x" });
     upsertChapter(db, { source: "fake", seriesSlug: "x", number: 1, sourceUrl: "https://x" });
     upsertPage(db, {
-      source: "fake", seriesSlug: "x",
-      chapterNumber: 1, pageNumber: 1,
+      source: "fake",
+      seriesSlug: "x",
+      chapterNumber: 1,
+      pageNumber: 1,
       sourceUrl: "https://x/p.png",
       // localPath omitted → NULL
     });
@@ -263,21 +280,15 @@ test("POST and DELETE /api/manga/library/:seriesId toggles membership", async ()
   const { app, db } = buildApp();
   const r1 = await app.inject({ method: "POST", url: "/api/manga/library/fake:x" });
   expect(r1.statusCode).toBe(200);
-  expect(
-    (db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c,
-  ).toBe(1);
+  expect((db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c).toBe(1);
 
   // Idempotent — POST again, still 1 row
   await app.inject({ method: "POST", url: "/api/manga/library/fake:x" });
-  expect(
-    (db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c,
-  ).toBe(1);
+  expect((db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c).toBe(1);
 
   const r2 = await app.inject({ method: "DELETE", url: "/api/manga/library/fake:x" });
   expect(r2.statusCode).toBe(200);
-  expect(
-    (db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c,
-  ).toBe(0);
+  expect((db.prepare("SELECT COUNT(*) as c FROM manga_library").get() as { c: number }).c).toBe(0);
 });
 
 test("PUT /api/manga/progress/:seriesId stores chapter+page", async () => {
@@ -308,11 +319,13 @@ test("PUT /api/manga/progress/:seriesId rejects missing fields with 400", async 
 test("PUT /api/manga/progress/:seriesId is idempotent — second call updates same row", async () => {
   const { app, db } = buildApp();
   await app.inject({
-    method: "PUT", url: "/api/manga/progress/fake:x",
+    method: "PUT",
+    url: "/api/manga/progress/fake:x",
     payload: { chapterId: "fake:x:1", pageNumber: 5 },
   });
   await app.inject({
-    method: "PUT", url: "/api/manga/progress/fake:x",
+    method: "PUT",
+    url: "/api/manga/progress/fake:x",
     payload: { chapterId: "fake:x:1", pageNumber: 8 },
   });
   const c = db.prepare("SELECT COUNT(*) as c FROM manga_progress").get() as { c: number };
@@ -337,7 +350,10 @@ test("PUT /api/manga/chapters/:id/read marks chapter as read", async () => {
 test("GET /api/manga/continue returns library series with progress, sorted recent first", async () => {
   const { app, db } = buildApp();
   // Setup: add to library and create progress
-  db.prepare("INSERT INTO manga_library (series_id, added_at) VALUES (?, ?)").run("fake:x", Date.now());
+  db.prepare("INSERT INTO manga_library (series_id, added_at) VALUES (?, ?)").run(
+    "fake:x",
+    Date.now(),
+  );
   db.prepare(
     "INSERT INTO manga_progress (series_id, chapter_id, page_number, updated_at) VALUES (?, ?, ?, ?)",
   ).run("fake:x", "fake:x:1", 3, Date.now());
@@ -439,10 +455,12 @@ test("GET /api/manga/sync/jobs/:id returns 404 for unknown id", async () => {
 test("POST /api/manga/chapters/:id/sync returns 202 when chapter exists", async () => {
   const { app, db } = buildApp();
   // Use a source that has a real registered adapter so the endpoint can resolve it
-  db.prepare("INSERT INTO manga_series (id, source, source_url, title, added_at) VALUES (?, ?, ?, ?, ?)")
-    .run("onepiecetube:x", "onepiecetube", "https://onepiece.test/x", "X2", Date.now());
-  db.prepare("INSERT INTO manga_chapters (id, series_id, number, source_url, added_at) VALUES (?, ?, ?, ?, ?)")
-    .run("onepiecetube:x:1", "onepiecetube:x", 1, "https://onepiece.test/x/1", Date.now());
+  db.prepare(
+    "INSERT INTO manga_series (id, source, source_url, title, added_at) VALUES (?, ?, ?, ?, ?)",
+  ).run("onepiecetube:x", "onepiecetube", "https://onepiece.test/x", "X2", Date.now());
+  db.prepare(
+    "INSERT INTO manga_chapters (id, series_id, number, source_url, added_at) VALUES (?, ?, ?, ?, ?)",
+  ).run("onepiecetube:x:1", "onepiecetube:x", 1, "https://onepiece.test/x/1", Date.now());
   const r = await app.inject({ method: "POST", url: "/api/manga/chapters/onepiecetube:x:1/sync" });
   expect(r.statusCode).toBe(202);
 });
@@ -456,10 +474,12 @@ test("POST /api/manga/chapters/:id/sync returns 404 when chapter unknown", async
 test("POST /api/manga/chapters/:id/sync returns 400 when adapter for source is unknown", async () => {
   const { app, db } = buildApp();
   // Insert a chapter for a series whose source has no adapter
-  db.prepare("INSERT INTO manga_series (id, source, source_url, title, added_at) VALUES (?, ?, ?, ?, ?)")
-    .run("zzz:x", "zzz", "https://x", "X", Date.now());
-  db.prepare("INSERT INTO manga_chapters (id, series_id, number, source_url, added_at) VALUES (?, ?, ?, ?, ?)")
-    .run("zzz:x:1", "zzz:x", 1, "https://x", Date.now());
+  db.prepare(
+    "INSERT INTO manga_series (id, source, source_url, title, added_at) VALUES (?, ?, ?, ?, ?)",
+  ).run("zzz:x", "zzz", "https://x", "X", Date.now());
+  db.prepare(
+    "INSERT INTO manga_chapters (id, series_id, number, source_url, added_at) VALUES (?, ?, ?, ?, ?)",
+  ).run("zzz:x:1", "zzz:x", 1, "https://x", Date.now());
   const r = await app.inject({ method: "POST", url: "/api/manga/chapters/zzz:x:1/sync" });
   expect(r.statusCode).toBe(400);
 });
@@ -528,11 +548,31 @@ test("PUT /api/manga/progress nimmt die Reihe in die Bibliothek auf (Lesen = fol
 
 test("GET /api/manga/series/:id liefert coverPath und totalChapters so, wie die App sie liest", async () => {
   const { app, db } = buildApp();
-  db.prepare("UPDATE manga_series SET cover_path = 'c.jpg', total_chapters = 3 WHERE id = 'fake:x'").run();
+  db.prepare(
+    "UPDATE manga_series SET cover_path = 'c.jpg', total_chapters = 3 WHERE id = 'fake:x'",
+  ).run();
   const body = (await app.inject({ method: "GET", url: "/api/manga/series/fake%3Ax" })).json() as {
     coverPath?: string;
     totalChapters?: number;
   };
   expect(body.coverPath).toBe("c.jpg");
   expect(body.totalChapters).toBe(3);
+});
+
+test("GET /api/manga/series/:id legt fehlende Download-Blöcke für MangaDex-Reihen an", async () => {
+  const { app, db } = buildApp();
+  db.prepare(
+    "INSERT INTO manga_series (id, source, source_url, title, added_at) VALUES ('mangadex:u9', 'mangadex', 'x', 'Y', 1)",
+  ).run();
+  db.prepare(
+    "INSERT INTO manga_chapters (id, series_id, number, source_url, is_available, added_at, lang) VALUES ('mangadex:u9:en:3', 'mangadex:u9', 3, 'c', 1, 1, 'en')",
+  ).run();
+  const body = (
+    await app.inject({ method: "GET", url: "/api/manga/series/mangadex%3Au9" })
+  ).json() as {
+    arcs: { id: string }[];
+    chapters: { arcId: string | null }[];
+  };
+  expect(body.arcs.map((a) => a.id)).toEqual(["mangadex:u9:en:arc-1"]);
+  expect(body.chapters[0]?.arcId).toBe("mangadex:u9:en:arc-1");
 });

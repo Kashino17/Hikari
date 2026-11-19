@@ -10,6 +10,7 @@ import {
 } from "../manga/arc-download.js";
 import { isMangaCoverFile } from "../manga/cover.js";
 import { adapters, getAdapter } from "../manga/sources/index.js";
+import { writeBlocks } from "../manga/mangadex/open.js";
 import type { MangaSourceAdapter } from "../manga/sources/types.js";
 import { runChapterSync, runFullSync } from "../manga/sync.js";
 
@@ -66,6 +67,13 @@ export function registerMangaRoutes(app: FastifyInstance, deps: MangaDeps): void
       | Record<string, unknown>
       | undefined;
     if (!series) return reply.code(404).send({ error: "not found" });
+    // MangaDex-Reihen ohne Download-Blöcke (vor deren Einführung geöffnet): jetzt anlegen.
+    if (
+      series.source === "mangadex" &&
+      db.prepare("SELECT 1 FROM manga_chapters WHERE series_id = ? AND arc_id IS NULL LIMIT 1").get(id)
+    ) {
+      writeBlocks(db, id);
+    }
 
     const arcs = db
       .prepare(
