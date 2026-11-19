@@ -1,6 +1,9 @@
 /**
  * KI für den Fitness-Bereich (Coach, Ernährungs-Coach, Foto-Tracker, Übersetzungen).
  *
+ * Eigener Schlüssel (~/.hikari/fitness/keys.env, eigenes Google-Projekt) — getrennt von Russisch,
+ * damit sich die Bereiche die Tageskontingente nicht gegenseitig wegnehmen.
+ *
  * Nur Google Gemini, kostenlose Stufe. Jedes Modell hat ein eigenes Tageskontingent je Projekt —
  * der Fitness-Bereich nimmt deshalb bewusst Modelle, die Russisch (Lieder & Szenen, Anja) NICHT
  * benutzt, damit sich die Bereiche nicht gegenseitig das Kontingent wegessen. Reihenfolge = Vorrang;
@@ -32,16 +35,17 @@ export const CHAINS: Record<AiTask, [string, number][]> = {
   ],
   // Kurze Texte (Ernährungs-Coach, Lebensmittel zuordnen).
   text: [
+    ["gemini-flash-lite-latest", 300],
     ["gemini-3.1-flash-lite-preview", 120],
     ["gemma-4-31b-it", 5000],
     ["gemini-3.1-flash-lite", 120],
   ],
-  // Viele gleichartige Anfragen (Rezepte aufbereiten). NIE gemini-flash-lite-latest: das ist
-  // 3.5 Flash-Lite und teilt sich das Kontingent mit Anja.
+  // Viele gleichartige Anfragen (Rezepte aufbereiten).
   bulk: [
     ["gemma-4-26b-a4b-it", 5000],
     ["gemma-4-31b-it", 5000],
     ["gemini-3.1-flash-lite", 220],
+    ["gemini-flash-lite-latest", 150],
   ],
 };
 
