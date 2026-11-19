@@ -385,10 +385,10 @@ class FitWebBridge(
         // Hikaris eigene Musik: sanft auf etwa 45 % statt der 20 %, auf die ExoPlayer beim Ducken fest geht.
         val own = music
         if (on && own != null && own.isPlaying.value) {
-            if (!duckingOwnMusic) { duckingOwnMusic = true; own.rampVolume(0.45f, 250) }
+            if (!duckingOwnMusic) { duckingOwnMusic = true; own.rampVolume(0.45f, 250); com.hikari.app.player.PlayerTrace.log("fitness: Musik leiser (45 %)") }
             return
         }
-        if (!on && duckingOwnMusic) { duckingOwnMusic = false; own?.rampVolume(1f, 600) }
+        if (!on && duckingOwnMusic) { duckingOwnMusic = false; own?.rampVolume(1f, 600); com.hikari.app.player.PlayerTrace.log("fitness: Musik wieder voll") }
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) return
         if (on) {
             if (duckRequest != null) return

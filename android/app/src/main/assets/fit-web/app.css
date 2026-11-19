@@ -787,3 +787,5 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:none}
 .brOrb i{background:radial-gradient(circle,rgba(186,230,253,.95) 0%,rgba(56,189,248,.7) 22%,rgba(45,212,191,.28) 48%,rgba(45,212,191,.06) 64%,rgba(45,212,191,0) 71%);box-shadow:none}
 .brOrb::after{content:"";position:absolute;inset:6%;border-radius:50%;border:1px solid rgba(125,211,252,.28)}
 .mood button span{text-align:center;line-height:1.2}
+.pc-img .p1,.pc-img .p2{display:none}
+.pc-img .p0{position:static;width:100%;height:100%;padding:12px;object-fit:contain}
