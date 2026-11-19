@@ -89,15 +89,9 @@ Kadir hat am 19.11. **Weg A** gewählt: Der Mac sammelt die Kataloge, die App ze
 
 **Quellen-Adapter-Muster:** Wie bei `manga/sources`: eine Schnittstelle je Quelle (`listCatalog()`, `fetchBook()`), damit weitere Quellen ohne Umbau dazukommen. Zeno.org und das Deutsche Textarchiv bieten nur HTML oder TEI und kommen später mit eigener EPUB-Umwandlung.
 
-### Nur in Deutschland gemeinfrei (*Rems Entscheidung, folgt aus „nur legal“*)
+### Keine Filter nach Autor oder Todesjahr (Kadirs Entscheidung, 19.11.)
 
-- **Warum:** Gutenberg richtet sich nach US-Recht. Manche deutschen Titel dort sind in Deutschland noch geschützt (Schutzfrist: 70 Jahre nach dem Tod; deshalb war Gutenberg 2018–2020 in Deutschland gesperrt).
-- **Regel:** Alle beteiligten Personen müssen spätestens **1955** gestorben sein. Das gilt für Autor, Übersetzer, Herausgeber und Illustrator. Die Grenze rückt jedes Jahr am 1. Januar um ein Jahr weiter.
-- **Bei Gutenberg:** Die Lebensdaten stehen im Feld Authors (`Name, Vorname, 1821-1881 [Translator]`).
-- **Unbekanntes Todesjahr:** Das Werk wird ausgeschlossen.
-- **Ausnahmen:** bpb und Open Access (freie Lizenzen wie CC-BY) und Wikisource (prüft selbst auf deutsche Gemeinfreiheit).
-- **Folge:** Übersetzte Krimis (Doyle, Poe) kommen nur mit Übersetzungen, deren Übersetzer früh genug gestorben sind.
-- **Tests** mit echten Katalogzeilen.
+Was die Quellen frei anbieten, kommt in den Katalog. Es gibt keinen Filter nach Lebensdaten von Autoren oder Übersetzern.
 
 ### Ganze Bücher statt Bruchstücke
 
@@ -147,7 +141,9 @@ Ein Buch kann mehrere Kategorien haben. Was sich nicht zuordnen lässt, landet u
   - Dauer-Einstellungen: Lesefarben Papier/Sepia/Nacht mit Kindle-artiger Schrift (Serifen, Literata o. ä., eingebettet), Größe, Zeilenabstand, Rand.
   - Aufgeklappter Fold: zwei Spalten. Lautstärketasten blättern (abschaltbar).
   - Statusleiste aus, ruhiger Rand.
-- **PDF-Bücher** (Open Access, bpb ohne EPUB): einfache Seitenansicht mit Android `PdfRenderer` (Zoom, Blättern, Stelle merken). Ein Kindle-Umbruch ist bei PDF nicht möglich; die Detailseite zeigt das als „PDF“ an.
+- **PDF-Bücher** (Open Access, bpb ohne EPUB): einfache Seitenansicht mit Android `PdfRenderer` (Zoom, Blättern, Stelle merken). Ein Kindle-Umbruch ist bei PDF nicht möglich.
+  - **Deutlich gekennzeichnet (Kadirs Wunsch):** gut sichtbares „PDF“-Schild auf dem Titelbild überall (Reihen, Listen, Suche, Meine Bücher) und auf der Detailseite. Dort steht der Hinweis „PDF — feste Seiten, kein Umbruch wie im Kindle-Leser“.
+  - **Filter-Chip „Format“:** EPUB oder PDF.
 - **Offline:** Geladene Bücher liegen im App-Speicher; Liste und Leser funktionieren ohne Mac. Ist der Mac nicht erreichbar, zeigt der Katalog einen klaren Hinweis statt leer zu sein.
 - **Bereichsfarbe:** eigene Farbe für „Lesen/Bücher“ im AreaColors-System.
 
