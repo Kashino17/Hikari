@@ -4,6 +4,7 @@ import { api } from '../platform.js';
 import { nav, useData, useCatalog, setData, refresh, relDay, today, toast, parseDay, INTENSITY } from '../app.js';
 import { Icon, Loop, Top, Columns, cls, Spinner, Empty } from '../ui.js';
 import { PATTERN } from './exercise.js';
+import { TrainingStats } from './stats.js';
 
 const FREE = [
   ['ganzkoerper', 'Ganzkörper', 'accessibility_new'],
@@ -31,29 +32,13 @@ export function Training() {
     } catch { toast('Server nicht erreichbar'); }
     setBusy(null);
   };
-  // Minuten je Woche (letzte 8 Wochen)
-  const weeks = [];
-  if (hist) {
-    const t = parseDay(today());
-    const monday = new Date(t); monday.setDate(t.getDate() - ((t.getDay() + 6) % 7));
-    for (let w = 7; w >= 0; w--) {
-      const from = new Date(monday); from.setDate(monday.getDate() - w * 7);
-      const to = new Date(from); to.setDate(from.getDate() + 7);
-      const v = hist.sessions.filter((s) => { const d = parseDay(s.day); return d >= from && d < to; }).reduce((a, s) => a + Math.round(s.seconds / 60), 0);
-      weeks.push({ v, l: w === 0 ? 'jetzt' : `${from.getDate()}.${from.getMonth() + 1}.`, dim: w !== 0 });
-    }
-  }
   const total = state?.totals;
   return html`<div class="screen tab c-train">
     <div class="scroll">
       <header class="top big"><div class="tt"><h1>Training</h1><div class="t2">${total ? `${total.sessions} Einheiten · ${Math.round(total.seconds / 3600)} Stunden insgesamt` : ' '}</div></div>
         <button class="ib" onClick=${() => nav('bibliothek')} aria-label="Übungen"><${Icon} n="search" /></button></header>
       <div class="pad">
-        <div class="card pad16 tinted">
-          <div class="row"><div class="grow"><div class="eyebrow">Diese Woche</div><div style="font-size:26px;font-weight:700;letter-spacing:-.4px;margin-top:2px">${weeks.at(-1)?.v ?? 0} <span class="small muted" style="font-weight:500">Minuten</span></div></div>
-            <div style="text-align:right"><div class="eyebrow">Serie</div><div class="row gap6" style="justify-content:flex-end;font-size:22px;font-weight:700;color:rgb(var(--amber))"><${Icon} n="local_fire_department" fill />${state?.streak ?? 0}</div></div></div>
-          <div class="mt16">${hist ? html`<${Columns} items=${weeks} height=${110} />` : html`<div class="skel" style="height:110px" />`}</div>
-        </div>
+        <${TrainingStats} />
 
         <div class="sec"><h2 class="h2">Freies Training</h2><span class="small muted">plant der Coach</span></div>
         <div class="chips">${[15, 20, 30, 45, 60].map((m) => html`<button class=${cls('chip', mins === m && 'on')} onClick=${() => setMinutes(m)}>${m} min</button>`)}</div>

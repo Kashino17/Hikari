@@ -547,3 +547,25 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:none}
 .actionBar .act.main{background:rgb(var(--food));border-color:transparent;color:var(--ink)}
 .actionBar .act.main .ms{color:var(--ink)}
 .actionBar .act:active{transform:scale(.98)}
+
+/* ═══ Verlauf (T/W/M/J) ═══ */
+.pnav{display:flex;align-items:center;gap:4px}
+.pnav .plabel{flex:1;text-align:center;font-weight:600;font-size:15px}
+.bigNum{font-size:32px;font-weight:700;letter-spacing:-.6px;line-height:1.1;margin-top:2px}
+.bigNum small{font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:2px}
+.delta{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:500}
+.delta.up{color:rgb(var(--good))}.delta.down{color:rgb(var(--bad))}
+.bars{position:relative;display:flex;align-items:stretch;gap:2px}
+.bcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0}
+.bcol .bwrap{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}
+.bcol .bwrap i{display:block;width:72%;max-width:26px;border-radius:4px 4px 2px 2px;background:rgb(var(--c));transition:height .45s var(--ease)}
+.bcol.none .bwrap i{background:rgba(255,255,255,.08);height:3px!important}
+.bcol.sel .bwrap i{background:#fff}
+.bcol .bl{height:18px;margin-top:4px;font-size:11px;color:var(--faint);white-space:nowrap}
+.goalLine{position:absolute;left:0;right:0;border-top:1.5px dashed rgba(255,255,255,.35);pointer-events:none;z-index:1}
+.goalLine span{position:absolute;right:0;top:-18px;font-size:10.5px;color:var(--muted);background:var(--surface);padding:0 4px;border-radius:4px}
+.metricPick{display:inline-flex;align-items:center;gap:4px;height:34px;padding:0 10px 0 13px;border-radius:9px;background:rgba(var(--c),.16);color:rgb(var(--c));font-weight:600;font-size:14px}
+.nrow{display:block;width:100%;padding:10px 0;text-align:left;font-size:14.5px}
+.nrow+.nrow{border-top:1px solid var(--border)}
+.nrow.on span:first-child{color:rgb(var(--c));font-weight:600}
+.nrow b.bad{color:rgb(var(--bad))}.nrow b.ok{color:rgb(var(--good))}

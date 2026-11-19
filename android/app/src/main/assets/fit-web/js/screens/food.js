@@ -4,6 +4,7 @@ import { api, pickPhoto, scanBarcode } from '../platform.js';
 import { back, nav, useData, setData, refresh, today as todayStr, relDay, toast, fmtNum, SLOT_NAMES, SLOT_ICONS, slotNow, img, recipeImg, parseDay } from '../app.js';
 import { Icon, Ring, Bar, Sheet, Top, Seg, cls, Spinner, Empty } from '../ui.js';
 import { RecipeBrowse, IngImg } from './recipes.js';
+import { FoodStats } from './stats.js';
 
 const SLOTS = ['fruehstueck', 'mittag', 'abend', 'snack'];
 const shift = (d, n) => { const x = parseDay(d); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
@@ -17,14 +18,15 @@ export function Food() {
   const isToday = day === todayStr();
   return html`<div class="screen tab c-food">
     <div class="scroll">
-      <header class="top big"><div class="tt"><h1>Ernährung</h1><div class="t2">${tab === 'rezepte' ? 'Rezepte passend zu deinem Ziel' : relDay(day, todayStr())}</div></div>
-        ${tab !== 'rezepte' && html`<button class="ib" onClick=${() => setDay(shift(day, -1))} aria-label="Vortag"><${Icon} n="chevron_left" /></button>
+      <header class="top big"><div class="tt"><h1>Ernährung</h1><div class="t2">${tab === 'rezepte' ? 'Rezepte passend zu deinem Ziel' : tab === 'verlauf' ? 'Nährstoffe über die Zeit' : relDay(day, todayStr())}</div></div>
+        ${tab !== 'rezepte' && tab !== 'verlauf' && html`<button class="ib" onClick=${() => setDay(shift(day, -1))} aria-label="Vortag"><${Icon} n="chevron_left" /></button>
         <button class="ib" disabled=${isToday} onClick=${() => setDay(shift(day, 1))} aria-label="Folgetag"><${Icon} n="chevron_right" /></button>`}</header>
-      <div class="pad"><${Seg} items=${[['tagebuch', 'Tagebuch'], ['plan', 'Tagesplan'], ['rezepte', 'Rezepte']]} value=${tab} onChange=${setTab} /></div>
+      <div class="pad"><${Seg} items=${[['tagebuch', 'Tagebuch'], ['plan', 'Plan'], ['verlauf', 'Verlauf'], ['rezepte', 'Rezepte']]} value=${tab} onChange=${setTab} /></div>
       <div class="pad mt16">
         ${tab === 'tagebuch' && html`<${Diary} day=${day} />`}
         ${tab === 'plan' && html`<${DayPlan} day=${day} />`}
         ${tab === 'rezepte' && html`<${RecipeBrowse} />`}
+        ${tab === 'verlauf' && html`<${FoodStats} />`}
       </div>
       <div style="height:90px" />
     </div>
