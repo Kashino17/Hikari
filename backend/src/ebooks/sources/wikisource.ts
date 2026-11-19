@@ -1,5 +1,5 @@
 import type { RawBook } from "../persist.js";
-import type { EbookSource, SourceContext } from "./types.js";
+import { type EbookSource, SourceBlocked, type SourceContext } from "./types.js";
 
 const API = "https://de.wikisource.org/w/api.php";
 
@@ -59,7 +59,15 @@ interface WsResponse {
 }
 
 async function json(ctx: SourceContext, u: string): Promise<WsResponse> {
-  const r = await ctx.http.get(u, { accept: "application/json" });
+  // Wikimedia drosselt Abrufe ohne Kontaktangabe hart (429, x-envoy-ratelimited). Dann diesen Lauf
+  // überspringen statt stundenlang zu warten — der nächste Abgleich versucht es wieder.
+  let r: { status: number; body: Buffer };
+  try {
+    r = await ctx.http.get(u, { accept: "application/json", tries: 1 });
+  } catch (err) {
+    if (/HTTP 429/.test((err as Error).message)) throw new SourceBlocked("wikisource", 429);
+    throw err;
+  }
   if (r.status !== 200) throw new Error(`wikisource: HTTP ${r.status}`);
   return JSON.parse(r.body.toString("utf8"));
 }
@@ -154,6 +162,7 @@ export const wikisourceSource: EbookSource = {
           );
         }
       } catch (err) {
+        if (err instanceof SourceBlocked) throw err;
         ctx.log(`wikisource: Kategorie ${cat} — ${(err as Error).message}`);
       }
     }
@@ -187,6 +196,7 @@ export const wikisourceSource: EbookSource = {
           ctx.cache.set(key(info), { touched: info.touched, parsed: parseWork(p.title, text) });
         }
       } catch (err) {
+        if (err instanceof SourceBlocked) throw err;
         ctx.log(`wikisource: Inhalte — ${(err as Error).message}`);
       }
     }

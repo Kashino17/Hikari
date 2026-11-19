@@ -147,6 +147,18 @@ describe("Wikisource", () => {
     expect(pfad?.wordCount).toBeGreaterThan(8000);
   });
 
+  it("Drosselung (429) heißt: diesen Lauf überspringen, nicht stundenlang warten", async () => {
+    const tries: number[] = [];
+    const http: PoliteHttp = {
+      async get(_u, o) {
+        tries.push(o?.tries ?? 3);
+        throw new Error("HTTP 429 nach 1 Versuchen: x");
+      },
+    };
+    await expect(wikisourceSource.listCatalog(ctx(http))).rejects.toBeInstanceOf(SourceBlocked);
+    expect(tries).toEqual([1]);
+  });
+
   it("fragt unveränderte Seiten beim zweiten Lauf nicht noch einmal ab", async () => {
     const c = ctx(http());
     await wikisourceSource.listCatalog(c);
@@ -241,6 +253,20 @@ describe("createPoliteHttp", () => {
     });
     await http.get("https://x.test/a");
     expect(Math.max(...sleeps)).toBe(15 * 60 * 1000);
+  });
+
+  it("versucht es nur so oft wie verlangt", async () => {
+    let n = 0;
+    const http = createPoliteHttp({
+      perSecond: 1000,
+      sleep: async () => {},
+      fetchImpl: async () => {
+        n++;
+        return new Response("", { status: 429 });
+      },
+    });
+    await expect(http.get("https://x.test/a", { tries: 1 })).rejects.toThrow(/429/);
+    expect(n).toBe(1);
   });
 
   it("gibt nach drei Fehlschlägen auf", async () => {

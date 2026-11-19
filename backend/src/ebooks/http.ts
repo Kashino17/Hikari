@@ -4,7 +4,10 @@
  * persönliche Daten (Repo und APK sind öffentlich).
  */
 export interface PoliteHttp {
-  get(url: string, opts?: { accept?: string }): Promise<{ status: number; body: Buffer }>;
+  get(
+    url: string,
+    opts?: { accept?: string; tries?: number },
+  ): Promise<{ status: number; body: Buffer }>;
 }
 
 export const USER_AGENT = "Hikari-Ebooks/1.0 (private reader)";
@@ -37,7 +40,8 @@ export function createPoliteHttp(
   return {
     async get(url, o) {
       let last = 0;
-      for (let attempt = 1; attempt <= TRIES; attempt++) {
+      const tries = Math.max(1, o?.tries ?? TRIES);
+      for (let attempt = 1; attempt <= tries; attempt++) {
         await slot();
         const res = await fetchImpl(url, {
           headers: { "user-agent": USER_AGENT, accept: o?.accept ?? "*/*" },
@@ -47,7 +51,7 @@ export function createPoliteHttp(
         if (res.status === 429 || res.status === 503) {
           last = res.status;
           await res.arrayBuffer().catch(() => undefined);
-          if (attempt === TRIES) break;
+          if (attempt === tries) break;
           const ra = Number(res.headers.get("retry-after"));
           await sleep(
             Math.min(Number.isFinite(ra) && ra > 0 ? ra * 1000 : DEFAULT_WAIT_MS, MAX_WAIT_MS),
@@ -56,7 +60,7 @@ export function createPoliteHttp(
         }
         return { status: res.status, body: Buffer.from(await res.arrayBuffer()) };
       }
-      throw new Error(`HTTP ${last} nach ${TRIES} Versuchen: ${url}`);
+      throw new Error(`HTTP ${last} nach ${tries} Versuchen: ${url}`);
     },
   };
 }
