@@ -372,12 +372,12 @@ private fun GenresTab(s: MangaHomeState, cover: (String) -> String?, onList: (Ma
                 val covers = g.covers.take(3)
                 covers.forEachIndexed { i, path ->
                     val rot = listOf(-9f, 4f, 15f)[i + (3 - covers.size)]
-                    val end = listOf(58.dp, 30.dp, 4.dp)[i + (3 - covers.size)]
+                    val end = listOf(46.dp, 24.dp, 4.dp)[i + (3 - covers.size)]
                     AsyncImage(
                         model = cover(path), contentDescription = null, contentScale = ContentScale.Crop,
                         modifier = Modifier.align(Alignment.BottomEnd).padding(end = end)
-                            .graphicsLayer { rotationZ = rot; translationY = 26f * density; shadowElevation = 8f * density; shape = RoundedCornerShape(5.dp); clip = true }
-                            .size(width = 48.dp, height = 72.dp).background(HikariSurface),
+                            .graphicsLayer { rotationZ = rot; translationY = 18f * density; shadowElevation = 8f * density; shape = RoundedCornerShape(5.dp); clip = true }
+                            .size(width = 42.dp, height = 63.dp).background(HikariSurface),
                     )
                 }
                 Column(Modifier.padding(12.dp).fillMaxWidth(0.62f).fillMaxHeight()) {
