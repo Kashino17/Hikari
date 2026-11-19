@@ -105,6 +105,8 @@ data class MangaCatalogCardDto(
     @SerialName("lastChapter") val lastChapter: String? = null,
     @SerialName("coverUrl") val coverUrl: String? = null,
     val source: String = "mangadex",
+    /** Lesbare Kapitel je Sprache (vom Mac gezählt). */
+    val chapters: MangaChapterCountsDto = MangaChapterCountsDto(),
 ) {
     /** Deutscher Titel, wenn es einen gibt — ohne langen Zusatz nach „ - “. */
     val displayTitle: String get() = titleDe?.substringBefore(" - ")?.trim()?.takeIf { it.isNotBlank() } ?: title
@@ -128,3 +130,6 @@ data class MangaCatalogListDto(val total: Int = 0, val items: List<MangaCatalogC
 
 @Serializable
 data class MangaOpenDto(@SerialName("seriesId") val seriesId: String)
+
+@Serializable
+data class MangaChapterCountsDto(val de: Int = 0, val en: Int = 0)

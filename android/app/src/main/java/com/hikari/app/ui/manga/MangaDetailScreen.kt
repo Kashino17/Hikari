@@ -139,11 +139,12 @@ fun MangaDetailScreen(
             }
             is MangaDetailUiState.Success -> {
                 val ctx = androidx.compose.ui.platform.LocalContext.current
-                val langs = s.detail.langs.ifEmpty { listOf("de") }
+                // Sprachen mit Kapiteln; ältere Reihen (onepiece.tube) haben immer Deutsch.
+                val langs = s.detail.langs.ifEmpty { if (s.detail.chapters.isNotEmpty()) listOf("de") else emptyList() }
                 var lang by remember(seriesId, langs) {
                     val pref = ctx.getSharedPreferences("hikari_manga_catalog", android.content.Context.MODE_PRIVATE).getString("lang", "all")
                     val fromContinue = s.continueItem?.chapterId?.let { com.hikari.app.ui.manga.catalog.langOfChapter(it) }
-                    mutableStateOf(fromContinue?.takeIf { it in langs } ?: pref?.takeIf { it in langs } ?: langs.first())
+                    mutableStateOf(fromContinue?.takeIf { it in langs } ?: pref?.takeIf { it in langs } ?: langs.firstOrNull() ?: "de")
                 }
                 val chapters = s.detail.chapters.filter { (it.lang ?: "de") == lang }
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -173,6 +174,15 @@ fun MangaDetailScreen(
                             groups = chapters.mapNotNull { it.scanlationGroup }.distinct().take(3),
                             onLang = { lang = it },
                         )
+                    }
+                    if (s.detail.chapters.isEmpty()) item {
+                        Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Hier gibt es gerade keine lesbaren Kapitel", color = HikariText, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center)
+                            Text(
+                                "MangaDex führt die Reihe, aber die Kapitel liegen nur beim Verlag (lizenziert). Offiziell lesen kannst du viele große Reihen bei Shueisha, oben unter „Offiziell reinlesen“.",
+                                color = HikariTextFaint, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 6.dp),
+                            )
+                        }
                     }
                     if (hasSync) item {
                         SyncCard(

@@ -115,6 +115,10 @@ export function applyMigrations(db: Database.Database): void {
   // da war, kam von onepiece.tube und ist deutsch — idempotent bei jedem Start.
   addColumnIfMissing(db, "manga_chapters", "lang", "TEXT");
   addColumnIfMissing(db, "manga_chapters", "scanlation_group", "TEXT");
+  // Wirklich lesbare Kapitel je Sprache (MangaDex meldet Sprachen auch für lizenzierte Reihen ohne Kapitel).
+  addColumnIfMissing(db, "manga_catalog", "readable_de", "INTEGER");
+  addColumnIfMissing(db, "manga_catalog", "readable_en", "INTEGER");
+  addColumnIfMissing(db, "manga_catalog", "readable_at", "INTEGER");
   db.exec("UPDATE manga_chapters SET lang = 'de' WHERE lang IS NULL AND id NOT LIKE 'mangadex:%'");
 
   // Channel banner art (16:7-ish wide image), extracted from yt-dlp.

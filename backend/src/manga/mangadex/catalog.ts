@@ -235,6 +235,8 @@ export interface CatalogDbRow {
   description: string | null;
   popularity: number | null;
   content_rating: string | null;
+  readable_de: number | null;
+  readable_en: number | null;
 }
 
 export interface CatalogCard {
@@ -249,6 +251,8 @@ export interface CatalogCard {
   lastChapter?: string | undefined;
   coverUrl?: string | undefined;
   source: string;
+  /** Lesbare Kapitel je Sprache. */
+  chapters: { de: number; en: number };
 }
 
 export function toCard(r: CatalogDbRow): CatalogCard {
@@ -260,15 +264,23 @@ export function toCard(r: CatalogDbRow): CatalogCard {
     tags: JSON.parse(r.tags_json) as string[],
     status: r.status ?? undefined,
     kind: r.kind,
-    langs: JSON.parse(r.langs_json) as string[],
+    // Nur Sprachen mit wirklich lesbaren Kapiteln — nicht MangaDex' Angabe (die zählt auch Links zu Verlagen).
+    langs: [
+      ...((r.readable_de ?? 0) > 0 ? ["de"] : []),
+      ...((r.readable_en ?? 0) > 0 ? ["en"] : []),
+    ],
     lastChapter: r.last_chapter ?? undefined,
     coverUrl: r.cover_url ? `/api/manga/catalog/${encodeURIComponent(r.id)}/cover` : undefined,
     source: r.source,
+    chapters: { de: r.readable_de ?? 0, en: r.readable_en ?? 0 },
   };
 }
 
 const COLS =
-  "c.id, c.source, c.title, c.title_de, c.authors_json, c.tags_json, c.status, c.year, c.kind, c.langs_json, c.last_chapter, c.cover_url, c.description, c.popularity, c.content_rating";
+  "c.id, c.source, c.title, c.title_de, c.authors_json, c.tags_json, c.status, c.year, c.kind, c.langs_json, c.last_chapter, c.cover_url, c.description, c.popularity, c.content_rating, c.readable_de, c.readable_en";
+/** Nur geprüfte Reihen mit mindestens einem lesbaren Kapitel. */
+const READABLE =
+  "c.readable_at IS NOT NULL AND (COALESCE(c.readable_de, 0) > 0 OR COALESCE(c.readable_en, 0) > 0)";
 
 const SORT: Record<string, string> = {
   pop: "c.popularity IS NULL, c.popularity DESC, c.title COLLATE NOCASE",
@@ -287,8 +299,7 @@ interface Where {
 
 function langWhere(w: Where, lang: LangFilter): void {
   if (lang === "all") return;
-  w.sql.push("EXISTS (SELECT 1 FROM json_each(c.langs_json) WHERE value = ?)");
-  w.params.push(lang);
+  w.sql.push(lang === "de" ? "COALESCE(c.readable_de, 0) > 0" : "COALESCE(c.readable_en, 0) > 0");
 }
 
 export interface ListFilter {
@@ -307,7 +318,7 @@ export function listCatalog(
   db: Database.Database,
   f: ListFilter,
 ): { total: number; items: CatalogCard[] } {
-  const w: Where = { sql: ["1 = 1"], params: [] };
+  const w: Where = { sql: [READABLE], params: [] };
   langWhere(w, f.lang ?? "all");
   if (f.genre) {
     const genres = f.genre.split(",").filter(Boolean);
@@ -411,7 +422,7 @@ export function catalogHome(
     }))
     .filter((s) => s.items.length > 0);
 
-  const w: Where = { sql: ["1 = 1"], params: [] };
+  const w: Where = { sql: [READABLE], params: [] };
   langWhere(w, lang);
   const genres = db
     .prepare(
@@ -428,4 +439,73 @@ export function getCatalogRow(db: Database.Database, id: string): CatalogDbRow |
   return db.prepare(`SELECT ${COLS} FROM manga_catalog c WHERE c.id = ?`).get(id) as
     | CatalogDbRow
     | undefined;
+}
+
+// ── Lesbare Kapitel zählen ───────────────────────────────────────────────────
+
+const RECHECK_MS = 7 * DAY_MS;
+let checking: Promise<number> | null = null;
+
+/**
+ * Zählt je Reihe und Sprache die Kapitel, die man bei MangaDex wirklich lesen kann (ohne Links zu
+ * Verlagen, ohne leere). Beliebteste zuerst; geprüfte Reihen erst nach einer Woche wieder.
+ * Gibt die Zahl geprüfter Reihen zurück.
+ */
+export function checkReadableChapters(deps: {
+  db: Database.Database;
+  client: MangadexClient;
+  limit?: number;
+  now?: () => number;
+  log?: (msg: string) => void;
+}): Promise<number> {
+  if (checking) return checking;
+  checking = (async () => {
+    const { db, client } = deps;
+    const now = deps.now ?? Date.now;
+    const due = db
+      .prepare(
+        `SELECT id, langs_json FROM manga_catalog
+          WHERE source = 'mangadex' AND (readable_at IS NULL OR readable_at < ?)
+          ORDER BY readable_at IS NOT NULL, popularity IS NULL, popularity DESC LIMIT ?`,
+      )
+      .all(now() - RECHECK_MS, deps.limit ?? 4000) as { id: string; langs_json: string }[];
+    const save = db.prepare(
+      "UPDATE manga_catalog SET readable_de = ?, readable_en = ?, readable_at = ? WHERE id = ?",
+    );
+    let done = 0;
+    for (const row of due) {
+      const uuid = row.id.slice("mangadex:".length);
+      const langs = JSON.parse(row.langs_json) as string[];
+      const count: Record<string, number> = { de: 0, en: 0 };
+      try {
+        for (const lang of ["de", "en"]) {
+          if (!langs.includes(lang)) continue;
+          const r = await client.api<{ total?: number }>("/chapter", {
+            manga: uuid,
+            "translatedLanguage[]": [lang],
+            limit: 1,
+            includeExternalUrl: 0,
+            includeEmptyPages: 0,
+            includeFuturePublishAt: 0,
+          });
+          count[lang] = r.total ?? 0;
+        }
+      } catch (err) {
+        deps.log?.(`manga-katalog: Kapitel-Prüfung abgebrochen — ${(err as Error).message}`);
+        break;
+      }
+      save.run(count.de, count.en, now(), row.id);
+      done++;
+    }
+    if (done > 0) deps.log?.(`manga-katalog: lesbare Kapitel für ${done} Reihen gezählt`);
+    return done;
+  })().finally(() => {
+    checking = null;
+  });
+  return checking;
+}
+
+/** Gibt es Reihen, deren Kapitel noch nie gezählt wurden? */
+export function hasUncheckedCatalog(db: Database.Database): boolean {
+  return !!db.prepare("SELECT 1 FROM manga_catalog WHERE readable_at IS NULL LIMIT 1").get();
 }

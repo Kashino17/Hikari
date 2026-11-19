@@ -8,6 +8,8 @@ import { registerMangaCatalogRoutes } from "../../src/api/manga-catalog.js";
 import { applyMigrations } from "../../src/db/migrations.js";
 import {
   catalogLastRun,
+  checkReadableChapters,
+  listCatalog,
   normalizeSearch,
   runMangaCatalogSync,
   shouldSyncCatalogOnStart,
@@ -200,6 +202,10 @@ describe("/api/manga/catalog", () => {
       upsertCatalog(db, { ...row, popularity: 1000 - i });
     });
     upsertCatalog(db, { ...catalogFromManga(englishOnly(), 1), popularity: 5 });
+    // Wie nach der Kapitel-Prüfung: jede gemeldete Sprache hat lesbare Kapitel.
+    db.exec(`UPDATE manga_catalog SET readable_at = 1,
+      readable_de = CASE WHEN langs_json LIKE '%"de"%' THEN 3 ELSE 0 END,
+      readable_en = CASE WHEN langs_json LIKE '%"en"%' THEN 3 ELSE 0 END`);
     coverDir = mkdtempSync(join(tmpdir(), "mdcv-"));
     client = fakeClient({});
     app = Fastify();
@@ -342,5 +348,61 @@ describe("/api/manga/catalog", () => {
     expect(existsSync(join(coverDir, "manga-catalog"))).toBe(true);
     expect(readdirSync(join(coverDir, "manga-catalog"))).toHaveLength(1);
     expect((await app.inject("/api/manga/catalog/mangadex:nope/cover")).statusCode).toBe(404);
+  });
+});
+
+describe("checkReadableChapters — nur wirklich lesbare Kapitel zählen", () => {
+  it("zählt je Sprache ohne externe/leere Kapitel, versteckt Reihen ohne lesbare Kapitel", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const rows = LIST.data.slice(0, 3).map((m, i) => {
+      const row = catalogFromManga(m, 1);
+      upsertCatalog(db, { ...row, langs: ["de", "en"], popularity: 100 - i });
+      return row.id;
+    });
+    // Erste Reihe: nur 4 englische lesbar; zweite: nichts (lizenziert); dritte: 2 deutsche, 7 englische.
+    const counts: Record<string, Record<string, number>> = {
+      [rows[0]!]: { de: 0, en: 4 },
+      [rows[1]!]: { de: 0, en: 0 },
+      [rows[2]!]: { de: 2, en: 7 },
+    };
+    const client = fakeClient({
+      routes: [
+        [
+          "/chapter",
+          (q) => {
+            expect(q?.includeExternalUrl).toBe(0);
+            expect(q?.includeEmptyPages).toBe(0);
+            const id = `mangadex:${q?.manga}`;
+            const lang = (q?.["translatedLanguage[]"] as string[])[0]!;
+            return { result: "ok", data: [], total: counts[id]?.[lang] ?? 0 };
+          },
+        ],
+      ],
+    });
+    const n = await checkReadableChapters({ db, client, limit: 10 });
+    expect(n).toBe(3);
+    const list = listCatalog(db, {});
+    expect(list.items.map((c) => c.id).sort()).toEqual([rows[0], rows[2]].sort());
+    const first = list.items.find((c) => c.id === rows[0])!;
+    expect(first.langs).toEqual(["en"]);
+    expect(first.chapters).toEqual({ de: 0, en: 4 });
+    expect(listCatalog(db, { lang: "de" }).items.map((c) => c.id)).toEqual([rows[2]]);
+  });
+
+  it("ungeprüfte Reihen erscheinen nicht; geprüfte werden erst nach einer Woche neu gezählt", async () => {
+    const db = new Database(":memory:");
+    applyMigrations(db);
+    const row = catalogFromManga(LIST.data[0]!, 1);
+    upsertCatalog(db, { ...row, langs: ["en"], popularity: 1 });
+    expect(listCatalog(db, {}).total).toBe(0);
+    const client = fakeClient({
+      routes: [["/chapter", () => ({ result: "ok", data: [], total: 5 })]],
+    });
+    await checkReadableChapters({ db, client, limit: 10, now: () => 1_000 });
+    expect(listCatalog(db, {}).total).toBe(1);
+    const before = client.calls.length;
+    await checkReadableChapters({ db, client, limit: 10, now: () => 2_000 });
+    expect(client.calls.length).toBe(before);
   });
 });
