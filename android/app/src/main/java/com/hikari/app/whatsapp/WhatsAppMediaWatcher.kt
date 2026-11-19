@@ -114,9 +114,14 @@ class WhatsAppMediaWatcher @Inject constructor(
             val type = dirs[file.parent.orEmpty()] ?: continue
             val copy = copyToVault(file, type) ?: continue
             val row = repository.onIncomingMedia(type, copy.absolutePath, file.lastModified())
-            WhatsAppProbe.note("watcher datei type=$type name=${file.name} ${size / 1024}k nachricht=${row ?: "wartet"}")
+            WhatsAppProbe.note("watcher datei type=$type name=${file.name} ${size / 1024}k nachricht=${row?.let { "$it (signal)" } ?: "wartet"}")
         }
         done.forEach { growing.remove(it) }
+
+        // Dateien ohne exaktes Signal aus der Benachrichtigung: nach kurzer Wartezeit per Zeitregel.
+        for ((path, row) in repository.settleUnclaimed(now)) {
+            WhatsAppProbe.note("watcher zeitregel ${File(path).name.substringAfter("_in_")} nachricht=$row")
+        }
     }
 
     private fun copyToVault(file: File, type: String): File? = runCatching {

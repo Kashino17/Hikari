@@ -47,14 +47,14 @@ object WhatsAppProbe {
         historic.forEachIndexed { i, m -> PlayerTrace.log("wa   h$i ${message(m)}") }
     }
 
-    fun removed(sbn: StatusBarNotification, reason: Int) = runCatching {
+    fun removed(sbn: StatusBarNotification, reason: Int, context: String = "") = runCatching {
         val n = sbn.notification
         val extras = n?.extras ?: Bundle.EMPTY
         val msgs = messages(extras, Notification.EXTRA_MESSAGES)
         val summary = n != null && (n.flags and Notification.FLAG_GROUP_SUMMARY) != 0
         PlayerTrace.log(
             "wa removed ${head(sbn)} reason=$reason(${reasonName(reason)}) summary=$summary n=${msgs.size} " +
-                "last=${msgs.lastOrNull()?.let(::message)}",
+                "last=${msgs.lastOrNull()?.let(::message)} $context",
         )
     }
 

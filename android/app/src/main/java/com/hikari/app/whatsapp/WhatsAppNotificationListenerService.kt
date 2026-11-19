@@ -185,11 +185,25 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                     "placeholders=$placeholderCount lastRow=$lastRowId ${result.summary} media=${result.pendingMedia.size}",
             )
 
+            // Bild-Anhang erschien an einer bekannten Nachricht: direkt aus der Benachrichtigung kopieren.
+            for (ready in result.readyMedia) {
+                mediaScope.launch {
+                    val path = mediaVault.captureNotificationAttachment(ready)
+                    WhatsAppProbe.note("anhang row=${ready.rowId} type=${ready.mediaType} kopiert=${path != null}")
+                    if (path != null) repository.attachExact(ready.rowId, ready.mediaType, path, ready.seenAt)
+                }
+            }
+
             for (pending in result.pendingMedia) {
                 mediaScope.launch {
                     // Mit Dateizugriff liefert der Medien-Wächter die Datei, sobald WhatsApp sie lädt.
                     val path = if (mediaWatcher.hasAllFilesAccess()) {
-                        mediaVault.captureNotificationAttachment(pending) ?: return@launch
+                        val direct = mediaVault.captureNotificationAttachment(pending)
+                        if (pending.dataUri != null) {
+                            WhatsAppProbe.note("anhang row=${pending.rowId} type=${pending.mediaType} kopiert=${direct != null}")
+                        }
+                        if (direct != null) repository.attachExact(pending.rowId, pending.mediaType, direct, pending.seenAt)
+                        return@launch
                     } else {
                         mediaVault.captureForMessage(pending)
                     }
@@ -216,7 +230,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         if (sbn == null) return
         val pkg = sbn.packageName.orEmpty()
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
-        WhatsAppProbe.removed(sbn, reason)
+        WhatsAppProbe.removed(sbn, reason, deviceState())
         val key = sbn.key ?: return
         val notification = sbn.notification
         if (notification != null && (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
@@ -255,6 +269,13 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
             }
         }
     }
+
+    /** Bildschirm an / gesperrt — fürs Protokoll: gelesen am Handy geht nur entsperrt. */
+    private fun deviceState(): String = runCatching {
+        val screenOn = getSystemService(PowerManager::class.java)?.isInteractive
+        val locked = getSystemService(KeyguardManager::class.java)?.isKeyguardLocked
+        "screen=$screenOn locked=$locked"
+    }.getOrDefault("")
 
     /** Kurze, nicht rückrechenbare Kennung eines Chats fürs Protokoll. */
     private fun chatLogId(sbn: StatusBarNotification): String =

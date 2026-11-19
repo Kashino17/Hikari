@@ -8,7 +8,8 @@ package com.hikari.app.domain.whatsapp
  * Gemessen am 20.11. (Kadirs Fold): WhatsApp lädt Bilder teils Minuten nach der Benachrichtigung
  * und mehrere wartende Bilder dann in der Reihenfolge ihres Eintreffens. Daraus die Regeln:
  *  - Eine Datei gehört zu einer Nachricht, die *vor* ihr geschrieben wurde (kleiner Spielraum für
- *    Uhrabweichungen), höchstens [WINDOW_MS] vorher.
+ *    Uhrabweichungen), höchstens [WINDOW_MS] vorher (gemessen: bis zu 3 min Verzug; eine
+ *    20 min alte Nachricht ohne Datei schnappte sich sonst ein frisches Bild).
  *  - Mehrere Kandidaten: die älteste zuerst — so wie WhatsApp sie lädt.
  *  - Wurde die Nachricht schon vor dem Eintreffen der Datei gelöscht, lädt WhatsApp sie nie
  *    mehr; eine später eintreffende Datei gehört also zu einer anderen Nachricht.
@@ -21,7 +22,7 @@ object WhatsAppMediaMatcher {
 
     data class IncomingFile(val path: String, val arrivedAt: Long)
 
-    const val WINDOW_MS = 30L * 60L * 1000L
+    const val WINDOW_MS = 10L * 60L * 1000L
     const val CLOCK_SLACK_MS = 5_000L
 
     /** Die Nachricht, zu der eine gerade angekommene Datei gehört, oder null. */

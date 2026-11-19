@@ -422,18 +422,57 @@ class WhatsAppGuardTest {
 
         val fileA = File.createTempFile("wa_in_a_", ".jpg").apply { writeText("a") }
         val fileC = File.createTempFile("wa_in_c_", ".jpg").apply { writeText("c") }
+        // Ohne Anhang-Signal warten die Dateien und gehen nach der Zeitregel weg.
         val arrival = System.currentTimeMillis() + 30_000
-        val rowA = repository.onIncomingMedia("photo", fileA.absolutePath, arrival)
-        val rowC = repository.onIncomingMedia("photo", fileC.absolutePath, arrival + 1_000)
+        assertEquals(null, repository.onIncomingMedia("photo", fileA.absolutePath, arrival))
+        assertEquals(null, repository.onIncomingMedia("photo", fileC.absolutePath, arrival + 1_000))
+        val settled = repository.settleUnclaimed(arrival + 32_000).toMap()
 
         val rows = fakeDao.all().sortedBy { it.timestamp }
         assertEquals(listOf(base, base + 28_000, base + 189_000), rows.map { it.timestamp })
         assertTrue(rows[1].isDeleted)
-        assertEquals(rows[0].id, rowA)
-        assertEquals(rows[2].id, rowC)
+        assertEquals(rows[0].id, settled[fileA.absolutePath])
+        assertEquals(rows[2].id, settled[fileC.absolutePath])
         assertEquals(null, rows[1].mediaPreviewPath)
         assertEquals(fileC.absolutePath, rows[2].mediaPreviewPath)
         fileA.delete(); fileC.delete()
+    }
+
+    @Test
+    fun `the attachment appearing in the notification pins the file to exactly that message`() = runTest {
+        // Messung 20.11. 06:40: ein 20 min altes Foto ohne Datei wartete noch; das frische Bild
+        // landete nach „älteste zuerst“ dort. Mit dem Anhang-Signal geht es an die richtige Nachricht.
+        val now = System.currentTimeMillis()
+        val stale = sec(now - 8 * 60_000L, 0)
+        val fresh = sec(now - 2_000L, 0)
+        post("ida", "Ida", msg("Ida", "📷 Foto", stale))
+        post("kai", "Kai", msg("Kai", "📷 Foto", fresh))
+        val withAttachment = RawMessagingItem(
+            sender = "Kai", text = "📷 Foto", timestamp = fresh,
+            dataUri = "content://com.whatsapp.provider.media/item/1", dataMimeType = "image/jpeg",
+        )
+        val result = repository.processNotification(payload("kai", "Kai", listOf(withAttachment)))
+        assertEquals(1, result.readyMedia.size)
+
+        val file = File.createTempFile("wa_in_sig_", ".jpg").apply { writeText("k") }
+        val row = repository.onIncomingMedia("photo", file.absolutePath, System.currentTimeMillis())
+        val kai = fakeDao.all().single { it.senderName == "Kai" }
+        assertEquals(kai.id, row)
+        assertEquals(null, fakeDao.all().single { it.senderName == "Ida" }.mediaPreviewPath)
+        file.delete()
+    }
+
+    @Test
+    fun `an attachment already present after a restart is no fresh signal`() = runTest {
+        val ts = sec(System.currentTimeMillis() - 60_000L, 0)
+        val item = RawMessagingItem(
+            sender = "Lou", text = "📷 Foto", timestamp = ts,
+            dataUri = "content://com.whatsapp.provider.media/item/2", dataMimeType = "image/jpeg",
+        )
+        repository.processNotification(payload("lou", "Lou", listOf(item))) // neu: Signal für die neue Zeile
+        clear("lou")
+        val again = repository.processNotification(payload("lou", "Lou", listOf(item)))
+        assertTrue(again.readyMedia.isEmpty())
     }
 
     @Test

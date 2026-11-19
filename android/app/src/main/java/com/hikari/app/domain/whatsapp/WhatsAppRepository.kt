@@ -73,6 +73,8 @@ data class GuardResult(
     val stackSize: Int = 0,
     val summary: String = "",
     val pendingMedia: List<PendingMedia> = emptyList(),
+    /** Bestehende Mediennachrichten, deren Bild-Anhang eben in der Benachrichtigung erschien. */
+    val readyMedia: List<PendingMedia> = emptyList(),
 )
 
 /**
@@ -256,6 +258,7 @@ class WhatsAppRepository @Inject constructor(
         )
 
         val pendingMedia = mutableListOf<PendingMedia>()
+        val insertedIds = HashMap<Pair<String, Long>, Long>()
         var newCount = 0
         var deletedCount = 0
         var editedCount = 0
@@ -282,6 +285,7 @@ class WhatsAppRepository @Inject constructor(
                         ),
                     )
                     newCount++
+                    insertedIds[message.senderName to message.timestamp] = id
                     if (message.mediaType != null && claimedFile == null) {
                         pendingMedia += PendingMedia(id, message.mediaType, message.dataUri, message.dataMimeType, now)
                     }
@@ -356,43 +360,125 @@ class WhatsAppRepository @Inject constructor(
             }
         }
 
+        // Erscheint an einer Nachricht der Bild-Anhang, hat WhatsApp ihre Datei eben fertig geladen.
+        val readyMedia = mutableListOf<PendingMedia>()
+        var readyCount = 0
+        for (message in parsed) {
+            val type = message.mediaType ?: continue
+            if (message.dataUri == null) continue
+            val key = message.senderName to message.timestamp
+            val newId = insertedIds[key]
+            val before = previous?.firstOrNull { it.senderName == message.senderName && it.timestamp == message.timestamp }
+            val rowId = when {
+                newId != null -> newId
+                before != null && before.dataUri == null -> rows.values.firstOrNull {
+                    it.senderName == message.senderName && it.timestamp == message.timestamp && it.mediaPreviewPath == null
+                }?.id
+                else -> null // schon bekannt (auch nach einem Neustart): kein frisches Signal
+            } ?: continue
+            onMediaReadySignal(rowId, type, now)
+            readyCount++
+            if (newId == null) readyMedia += PendingMedia(rowId, type, message.dataUri, message.dataMimeType, now)
+        }
+
         activeSnapshots[chatKey] = parsed
         GuardResult(
             stackSize = parsed.size,
             summary = "stack=${parsed.size} fresh=${previous == null} new=$newCount " +
-                "deleted=$deletedCount edited=$editedCount other=$otherCount",
+                "deleted=$deletedCount edited=$editedCount other=$otherCount mediaReady=$readyCount",
             pendingMedia = pendingMedia,
+            readyMedia = readyMedia,
         )
     }
 
-    /** Gesicherte Dateien, für die (noch) keine Nachricht protokolliert ist — je Medientyp. */
+    /** Gesicherte Dateien, für die (noch) keine Nachricht feststeht — je Medientyp. */
     private val unclaimedFiles = HashMap<String, MutableList<WhatsAppMediaMatcher.IncomingFile>>()
 
+    /** Nachrichten, an deren Benachrichtigung gerade der Bild-Anhang erschien (Zeilen-ID, Zeitpunkt). */
+    private val readyRows = HashMap<String, MutableList<Pair<Long, Long>>>()
+
     /**
-     * Eine Datei, die WhatsApp gerade heruntergeladen hat und die der Medien-Wächter schon in
-     * Hikaris Speicher kopiert hat. Sie geht an die passende wartende Nachricht
-     * ([WhatsAppMediaMatcher]); gibt es keine, wartet sie kurz auf eine — WhatsApp kann die Datei
-     * auch vor der Benachrichtigung schreiben. Gibt die Zeilen-ID zurück, an der sie hängt.
+     * Eine Datei, die WhatsApp gerade heruntergeladen und der Medien-Wächter schon kopiert hat.
+     *
+     * Exakt zuordnen lässt sie sich, wenn WhatsApp im selben Augenblick den Bild-Anhang an eine
+     * Nachricht in der Benachrichtigung hängt (gemessen 20.11.: das passiert genau, wenn der
+     * Download fertig ist). Ohne dieses Signal wartet die Datei; [settleUnclaimed] ordnet sie
+     * später nach der Zeitregel zu. Gibt die Zeilen-ID zurück, falls sofort zugeordnet.
      */
     suspend fun onIncomingMedia(mediaType: String, path: String, arrivedAt: Long): Long? = mutex.withLock {
-        val waiting = dao.getMediaMessagesWithoutFile(mediaType, arrivedAt - WhatsAppMediaMatcher.WINDOW_MS)
-        val match = WhatsAppMediaMatcher.messageFor(
-            arrivedAt,
-            waiting.map { WhatsAppMediaMatcher.Message(it.id, it.timestamp, it.deletedAt) },
-        )
-        val row = match?.let { m -> waiting.first { it.id == m.id } }
-        if (row != null) {
-            dao.update(row.copy(mediaPreviewPath = path))
-            return@withLock row.id
+        val ready = readyRows[mediaType]
+            ?.filter { kotlin.math.abs(it.second - arrivedAt) <= PAIR_MS }
+            ?.minByOrNull { kotlin.math.abs(it.second - arrivedAt) }
+        if (ready != null) {
+            readyRows[mediaType]?.remove(ready)
+            if (attachIfFree(ready.first, path)) return@withLock ready.first
         }
         val list = unclaimedFiles.getOrPut(mediaType) { mutableListOf() }
         list += WhatsAppMediaMatcher.IncomingFile(path, arrivedAt)
-        // Was nach ein paar Minuten keiner Nachricht gehört (Chat war offen, eigene Weiterleitung),
-        // fliegt wieder raus.
-        val stale = list.filter { it.arrivedAt < arrivedAt - UNCLAIMED_FILE_TTL_MS }
-        stale.forEach { runCatching { File(it.path).delete() } }
-        list.removeAll(stale)
         null
+    }
+
+    /**
+     * Ordnet Dateien, die [SETTLE_MS] lang kein exaktes Signal bekamen, nach der Zeitregel zu
+     * ([WhatsAppMediaMatcher]) und wirft liegen gebliebene weg (Chat war offen, eigene Weiterleitung).
+     * Liefert (Dateipfad, Zeilen-ID) jeder Zuordnung fürs Protokoll.
+     */
+    suspend fun settleUnclaimed(now: Long = System.currentTimeMillis()): List<Pair<String, Long>> = mutex.withLock {
+        val assigned = mutableListOf<Pair<String, Long>>()
+        for ((type, list) in unclaimedFiles) {
+            for (file in list.filter { now - it.arrivedAt >= SETTLE_MS }.sortedBy { it.arrivedAt }) {
+                val waiting = dao.getMediaMessagesWithoutFile(type, file.arrivedAt - WhatsAppMediaMatcher.WINDOW_MS)
+                val match = WhatsAppMediaMatcher.messageFor(
+                    file.arrivedAt,
+                    waiting.map { WhatsAppMediaMatcher.Message(it.id, it.timestamp, it.deletedAt) },
+                )
+                if (match != null && attachIfFree(match.id, file.path)) {
+                    list.remove(file)
+                    assigned += file.path to match.id
+                }
+            }
+            val stale = list.filter { now - it.arrivedAt > UNCLAIMED_FILE_TTL_MS }
+            stale.forEach { runCatching { File(it.path).delete() } }
+            list.removeAll(stale)
+        }
+        readyRows.values.forEach { rows -> rows.removeAll { now - it.second > UNCLAIMED_FILE_TTL_MS } }
+        assigned
+    }
+
+    /**
+     * Der Bild-Anhang einer Nachricht ließ sich direkt aus der Benachrichtigung kopieren — das ist
+     * sicher ihre Datei. Eine per Signal/Zeitregel angehängte Kopie wird ersetzt, eine noch freie
+     * Kopie desselben Downloads verworfen.
+     */
+    suspend fun attachExact(rowId: Long, mediaType: String, path: String, at: Long) = mutex.withLock {
+        val row = dao.getById(rowId) ?: run { runCatching { File(path).delete() }; return@withLock }
+        row.mediaPreviewPath?.takeIf { it != path }?.let { runCatching { File(it).delete() } }
+        dao.update(row.copy(mediaPreviewPath = path))
+        unclaimedFiles[mediaType]?.let { list ->
+            list.filter { kotlin.math.abs(it.arrivedAt - at) <= PAIR_MS }
+                .minByOrNull { kotlin.math.abs(it.arrivedAt - at) }
+                ?.let { dup -> list.remove(dup); runCatching { File(dup.path).delete() } }
+        }
+    }
+
+    /** WhatsApp hat den Download dieser Nachricht gerade gemeldet: passende freie Datei nehmen oder vormerken. */
+    private suspend fun onMediaReadySignal(rowId: Long, mediaType: String, at: Long) {
+        val list = unclaimedFiles[mediaType]
+        val file = list
+            ?.filter { kotlin.math.abs(it.arrivedAt - at) <= PAIR_MS }
+            ?.minByOrNull { kotlin.math.abs(it.arrivedAt - at) }
+        if (file != null && attachIfFree(rowId, file.path)) {
+            list.remove(file)
+            return
+        }
+        readyRows.getOrPut(mediaType) { mutableListOf() } += rowId to at
+    }
+
+    private suspend fun attachIfFree(rowId: Long, path: String): Boolean {
+        val row = dao.getById(rowId) ?: return false
+        if (row.mediaPreviewPath != null) return false
+        dao.update(row.copy(mediaPreviewPath = path))
+        return true
     }
 
     /** Nimmt eine schon angekommene freie Datei für eine eben protokollierte Mediennachricht. */
@@ -550,6 +636,10 @@ class WhatsAppRepository @Inject constructor(
         private const val PRUNE_INTERVAL_MS = 10L * 60L * 1000L
         private const val ORPHAN_MEDIA_GRACE_MS = 15L * 60L * 1000L
         private const val UNCLAIMED_FILE_TTL_MS = 5L * 60L * 1000L
+        /** So nah müssen Datei-Eingang und Anhang-Signal beieinander liegen. */
+        private const val PAIR_MS = 20_000L
+        /** So lange wartet eine Datei auf ein exaktes Signal, bevor die Zeitregel greift. */
+        private const val SETTLE_MS = 30_000L
 
         /** Obergrenze für vorsorglich gesicherte Medien, deren Nachricht (noch) nicht gelöscht wurde. */
         private const val MAX_STAGED_MEDIA_BYTES = 300L * 1024L * 1024L
