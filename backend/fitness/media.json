@@ -1,0 +1,699 @@
+{
+ "media": {
+  "adv_tuck_front_lever": {
+   "video": "adv_tuck_front_lever.mp4",
+   "image": "adv_tuck_front_lever.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "adv_tuck_planche": {
+   "video": "adv_tuck_planche.mp4",
+   "image": "adv_tuck_planche.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "ankle_rocks": {
+   "video": "ankle_rocks.mp4",
+   "image": "ankle_rocks.jpg",
+   "credit": "Sworkit"
+  },
+  "arch_hold": {
+   "video": "arch_hold.mp4",
+   "image": "arch_hold.jpg",
+   "credit": "Sworkit"
+  },
+  "archer_pullup": {
+   "video": "archer_pullup.mp4",
+   "image": "archer_pullup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "archer_pushup": {
+   "video": "archer_pushup.mp4",
+   "image": "archer_pushup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "arm_circles": {
+   "video": "arm_circles.mp4",
+   "image": "arm_circles.jpg",
+   "credit": "Sworkit"
+  },
+  "assisted_pistol": {
+   "video": "assisted_pistol.mp4",
+   "image": "assisted_pistol.jpg",
+   "credit": "Sworkit"
+  },
+  "band_row": {
+   "video": "band_row.mp4",
+   "image": "band_row.jpg",
+   "credit": "Sworkit"
+  },
+  "bench_dip": {
+   "video": "bench_dip.mp4",
+   "image": "bench_dip.jpg",
+   "credit": "Sworkit"
+  },
+  "bicycle_crunch": {
+   "video": "bicycle_crunch.mp4",
+   "image": "bicycle_crunch.jpg",
+   "credit": "Sworkit"
+  },
+  "bird_dog": {
+   "video": "bird_dog.mp4",
+   "image": "bird_dog.jpg",
+   "credit": "Sworkit"
+  },
+  "bulgarian_split_squat": {
+   "video": "bulgarian_split_squat.mp4",
+   "image": "bulgarian_split_squat.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "burpee": {
+   "video": "burpee.mp4",
+   "image": "burpee.jpg",
+   "credit": "Sworkit"
+  },
+  "butt_kicks": {
+   "video": "butt_kicks.mp4",
+   "image": "butt_kicks.jpg",
+   "credit": "Sworkit"
+  },
+  "butterfly": {
+   "video": "butterfly.mp4",
+   "image": "butterfly.jpg",
+   "credit": "Sworkit"
+  },
+  "calf_stretch": {
+   "video": "calf_stretch.mp4",
+   "image": "calf_stretch.jpg",
+   "credit": "Sworkit"
+  },
+  "cat_cow": {
+   "video": "cat_cow.mp4",
+   "image": "cat_cow.jpg",
+   "credit": "Sworkit"
+  },
+  "chest_stretch": {
+   "video": "chest_stretch.mp4",
+   "image": "chest_stretch.jpg",
+   "credit": "Sworkit"
+  },
+  "chest_to_bar": {
+   "video": "chest_to_bar.mp4",
+   "image": "chest_to_bar.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "childs_pose": {
+   "video": "childs_pose.mp4",
+   "image": "childs_pose.jpg",
+   "credit": "Sworkit"
+  },
+  "chinup": {
+   "video": "chinup.mp4",
+   "image": "chinup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "clap_pushup": {
+   "video": "clap_pushup.mp4",
+   "image": "clap_pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "cobra": {
+   "video": "cobra.mp4",
+   "image": "cobra.jpg",
+   "credit": "Sworkit"
+  },
+  "cossack_squat": {
+   "video": "cossack_squat.mp4",
+   "image": "cossack_squat.jpg",
+   "credit": "Freeletics"
+  },
+  "cross_body_shoulder": {
+   "video": "cross_body_shoulder.mp4",
+   "image": "cross_body_shoulder.jpg",
+   "credit": "Sworkit"
+  },
+  "crunch": {
+   "video": "crunch.mp4",
+   "image": "crunch.jpg",
+   "credit": "Sworkit"
+  },
+  "curtsy_lunge": {
+   "video": "curtsy_lunge.mp4",
+   "image": "curtsy_lunge.jpg",
+   "credit": "Sworkit"
+  },
+  "dead_bug": {
+   "video": "dead_bug.mp4",
+   "image": "dead_bug.jpg",
+   "credit": "Sworkit"
+  },
+  "dead_hang": {
+   "video": "dead_hang.mp4",
+   "image": "dead_hang.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "decline_pushup": {
+   "video": "decline_pushup.mp4",
+   "image": "decline_pushup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "deep_squat_hold": {
+   "video": "deep_squat_hold.mp4",
+   "image": "deep_squat_hold.jpg",
+   "credit": "Sworkit"
+  },
+  "diamond_pushup": {
+   "video": "diamond_pushup.mp4",
+   "image": "diamond_pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "dip": {
+   "video": "dip.mp4",
+   "image": "dip.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "down_dog": {
+   "video": "down_dog.mp4",
+   "image": "down_dog.jpg",
+   "credit": "Sworkit"
+  },
+  "dragon_flag_neg": {
+   "video": "dragon_flag_neg.mp4",
+   "image": "dragon_flag_neg.jpg",
+   "credit": "Freeletics"
+  },
+  "elevated_pike_pushup": {
+   "video": "elevated_pike_pushup.mp4",
+   "image": "elevated_pike_pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "false_grip_hang": {
+   "video": "false_grip_hang.mp4",
+   "image": "false_grip_hang.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "fast_feet": {
+   "video": "fast_feet.mp4",
+   "image": "fast_feet.jpg",
+   "credit": "Sworkit"
+  },
+  "figure_four": {
+   "video": "figure_four.mp4",
+   "image": "figure_four.jpg",
+   "credit": "Sworkit"
+  },
+  "flutter_kicks": {
+   "video": "flutter_kicks.mp4",
+   "image": "flutter_kicks.jpg",
+   "credit": "Sworkit"
+  },
+  "forward_lunge": {
+   "video": "forward_lunge.mp4",
+   "image": "forward_lunge.jpg",
+   "credit": "Sworkit"
+  },
+  "freestanding_handstand": {
+   "video": "freestanding_handstand.mp4",
+   "image": "freestanding_handstand.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "frog_stand": {
+   "video": "frog_stand.mp4",
+   "image": "frog_stand.jpg",
+   "credit": "Sworkit"
+  },
+  "german_hang": {
+   "video": "german_hang.mp4",
+   "image": "german_hang.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "glute_bridge": {
+   "video": "glute_bridge.mp4",
+   "image": "glute_bridge.jpg",
+   "credit": "Sworkit"
+  },
+  "good_morning": {
+   "video": "good_morning.mp4",
+   "image": "good_morning.jpg",
+   "credit": "Sworkit"
+  },
+  "half_burpee": {
+   "video": "half_burpee.mp4",
+   "image": "half_burpee.jpg",
+   "credit": "Sworkit"
+  },
+  "hamstring_stretch": {
+   "video": "hamstring_stretch.mp4",
+   "image": "hamstring_stretch.jpg",
+   "credit": "Sworkit"
+  },
+  "handstand_kickup": {
+   "video": "handstand_kickup.mp4",
+   "image": "handstand_kickup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "hanging_knee_raise": {
+   "video": "hanging_knee_raise.mp4",
+   "image": "hanging_knee_raise.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "hanging_leg_raise": {
+   "video": "hanging_leg_raise.mp4",
+   "image": "hanging_leg_raise.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "high_knees": {
+   "video": "high_knees.mp4",
+   "image": "high_knees.jpg",
+   "credit": "Sworkit"
+  },
+  "hindu_pushup": {
+   "video": "hindu_pushup.mp4",
+   "image": "hindu_pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "hip_circles": {
+   "video": "hip_circles.mp4",
+   "image": "hip_circles.jpg",
+   "credit": "Sworkit"
+  },
+  "hip_flexor_stretch": {
+   "video": "hip_flexor_stretch.mp4",
+   "image": "hip_flexor_stretch.jpg",
+   "credit": "Sworkit"
+  },
+  "hip_thrust": {
+   "video": "hip_thrust.mp4",
+   "image": "hip_thrust.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "hollow_hold": {
+   "video": "hollow_hold.mp4",
+   "image": "hollow_hold.jpg",
+   "credit": "Sworkit"
+  },
+  "hollow_rock": {
+   "video": "hollow_rock.mp4",
+   "image": "hollow_rock.jpg",
+   "credit": "Sworkit"
+  },
+  "inchworm": {
+   "video": "inchworm.mp4",
+   "image": "inchworm.jpg",
+   "credit": "Sworkit"
+  },
+  "incline_pushup": {
+   "video": "incline_pushup.mp4",
+   "image": "incline_pushup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "inverted_row": {
+   "video": "inverted_row.mp4",
+   "image": "inverted_row.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "jog_in_place": {
+   "video": "jog_in_place.mp4",
+   "image": "jog_in_place.jpg",
+   "credit": "Sworkit"
+  },
+  "jump_lunge": {
+   "video": "jump_lunge.mp4",
+   "image": "jump_lunge.jpg",
+   "credit": "Sworkit"
+  },
+  "jump_rope": {
+   "video": "jump_rope.mp4",
+   "image": "jump_rope.jpg",
+   "credit": "Sworkit"
+  },
+  "jump_squat": {
+   "video": "jump_squat.mp4",
+   "image": "jump_squat.jpg",
+   "credit": "Sworkit"
+  },
+  "jumping_jack": {
+   "video": "jumping_jack.mp4",
+   "image": "jumping_jack.jpg",
+   "credit": "Sworkit"
+  },
+  "kb_swing": {
+   "video": "kb_swing.mp4",
+   "image": "kb_swing.jpg",
+   "credit": "Sworkit"
+  },
+  "knee_pushup": {
+   "video": "knee_pushup.mp4",
+   "image": "knee_pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "lateral_lunge": {
+   "video": "lateral_lunge.mp4",
+   "image": "lateral_lunge.jpg",
+   "credit": "Sworkit"
+  },
+  "leg_raise": {
+   "video": "leg_raise.mp4",
+   "image": "leg_raise.jpg",
+   "credit": "Sworkit"
+  },
+  "leg_swings": {
+   "video": "leg_swings.mp4",
+   "image": "leg_swings.jpg",
+   "credit": "Sworkit"
+  },
+  "lsit": {
+   "video": "lsit.mp4",
+   "image": "lsit.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "mountain_climber": {
+   "video": "mountain_climber.mp4",
+   "image": "mountain_climber.jpg",
+   "credit": "Sworkit"
+  },
+  "muscle_up": {
+   "video": "muscle_up.mp4",
+   "image": "muscle_up.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "negative_pullup": {
+   "video": "negative_pullup.mp4",
+   "image": "negative_pullup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "nordic_curl": {
+   "video": "nordic_curl.mp4",
+   "image": "nordic_curl.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "pigeon": {
+   "video": "pigeon.mp4",
+   "image": "pigeon.jpg",
+   "credit": "Sworkit"
+  },
+  "pike_hold": {
+   "video": "pike_hold.mp4",
+   "image": "pike_hold.jpg",
+   "credit": "Sworkit"
+  },
+  "pike_pushup": {
+   "video": "pike_pushup.mp4",
+   "image": "pike_pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "pistol_squat": {
+   "video": "pistol_squat.mp4",
+   "image": "pistol_squat.jpg",
+   "credit": "Freeletics"
+  },
+  "planche_lean": {
+   "video": "planche_lean.mp4",
+   "image": "planche_lean.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "plank": {
+   "video": "plank.mp4",
+   "image": "plank.jpg",
+   "credit": "Sworkit"
+  },
+  "plank_shoulder_tap": {
+   "video": "plank_shoulder_tap.mp4",
+   "image": "plank_shoulder_tap.jpg",
+   "credit": "Freeletics"
+  },
+  "pseudo_planche_pushup": {
+   "video": "pseudo_planche_pushup.mp4",
+   "image": "pseudo_planche_pushup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "pullup": {
+   "video": "pullup.mp4",
+   "image": "pullup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "pushup": {
+   "video": "pushup.mp4",
+   "image": "pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "quad_stretch": {
+   "video": "quad_stretch.mp4",
+   "image": "quad_stretch.jpg",
+   "credit": "Sworkit"
+  },
+  "reverse_lunge": {
+   "video": "reverse_lunge.mp4",
+   "image": "reverse_lunge.jpg",
+   "credit": "Sworkit"
+  },
+  "reverse_snow_angel": {
+   "video": "reverse_snow_angel.mp4",
+   "image": "reverse_snow_angel.jpg",
+   "credit": "Sworkit"
+  },
+  "ring_dip": {
+   "video": "ring_dip.mp4",
+   "image": "ring_dip.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "ring_row": {
+   "video": "ring_row.mp4",
+   "image": "ring_row.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "russian_twist": {
+   "video": "russian_twist.mp4",
+   "image": "russian_twist.jpg",
+   "credit": "Sworkit"
+  },
+  "scap_pullup": {
+   "video": "scap_pullup.mp4",
+   "image": "scap_pullup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "scap_pushup": {
+   "video": "scap_pushup.mp4",
+   "image": "scap_pushup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "shadow_boxing": {
+   "video": "shadow_boxing.mp4",
+   "image": "shadow_boxing.jpg",
+   "credit": "Sworkit"
+  },
+  "shoulder_dislocate": {
+   "video": "shoulder_dislocate.mp4",
+   "image": "shoulder_dislocate.jpg",
+   "credit": "Sworkit"
+  },
+  "shrimp_squat": {
+   "video": "shrimp_squat.mp4",
+   "image": "shrimp_squat.jpg",
+   "credit": "Sworkit"
+  },
+  "side_plank": {
+   "video": "side_plank.mp4",
+   "image": "side_plank.jpg",
+   "credit": "Sworkit"
+  },
+  "single_leg_bridge": {
+   "video": "single_leg_bridge.mp4",
+   "image": "single_leg_bridge.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "single_leg_rdl": {
+   "video": "single_leg_rdl.mp4",
+   "image": "single_leg_rdl.jpg",
+   "credit": "Sworkit"
+  },
+  "situp": {
+   "video": "situp.mp4",
+   "image": "situp.jpg",
+   "credit": "Sworkit"
+  },
+  "skater_jump": {
+   "video": "skater_jump.mp4",
+   "image": "skater_jump.jpg",
+   "credit": "Sworkit"
+  },
+  "skin_the_cat": {
+   "video": "skin_the_cat.mp4",
+   "image": "skin_the_cat.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "spinal_twist": {
+   "video": "spinal_twist.mp4",
+   "image": "spinal_twist.jpg",
+   "credit": "Sworkit"
+  },
+  "split_squat": {
+   "video": "split_squat.mp4",
+   "image": "split_squat.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "sprawl": {
+   "video": "sprawl.mp4",
+   "image": "sprawl.jpg",
+   "credit": "Freeletics"
+  },
+  "squat": {
+   "video": "squat.mp4",
+   "image": "squat.jpg",
+   "credit": "Sworkit"
+  },
+  "star_jump": {
+   "video": "star_jump.mp4",
+   "image": "star_jump.jpg",
+   "credit": "Sworkit"
+  },
+  "step_jack": {
+   "video": "step_jack.mp4",
+   "image": "step_jack.jpg",
+   "credit": "Sworkit"
+  },
+  "step_up": {
+   "video": "step_up.mp4",
+   "image": "step_up.jpg",
+   "credit": "Sworkit"
+  },
+  "sumo_squat": {
+   "video": "sumo_squat.mp4",
+   "image": "sumo_squat.jpg",
+   "credit": "Sworkit"
+  },
+  "superman": {
+   "video": "superman.mp4",
+   "image": "superman.jpg",
+   "credit": "Sworkit"
+  },
+  "support_hold": {
+   "video": "support_hold.mp4",
+   "image": "support_hold.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "tempo_squat": {
+   "video": "tempo_squat.mp4",
+   "image": "tempo_squat.jpg",
+   "credit": "Sworkit"
+  },
+  "thoracic_rotation": {
+   "video": "thoracic_rotation.mp4",
+   "image": "thoracic_rotation.jpg",
+   "credit": "Sworkit"
+  },
+  "thread_needle": {
+   "video": "thread_needle.mp4",
+   "image": "thread_needle.jpg",
+   "credit": "Sworkit"
+  },
+  "toes_to_bar": {
+   "video": "toes_to_bar.mp4",
+   "image": "toes_to_bar.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "triceps_stretch": {
+   "video": "triceps_stretch.mp4",
+   "image": "triceps_stretch.jpg",
+   "credit": "Sworkit"
+  },
+  "tuck_back_lever": {
+   "video": "tuck_back_lever.mp4",
+   "image": "tuck_back_lever.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "tuck_dragon_flag": {
+   "video": "tuck_dragon_flag.mp4",
+   "image": "tuck_dragon_flag.jpg",
+   "credit": "Freeletics"
+  },
+  "tuck_flag": {
+   "video": "tuck_flag.mp4",
+   "image": "tuck_flag.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "tuck_front_lever": {
+   "video": "tuck_front_lever.mp4",
+   "image": "tuck_front_lever.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "tuck_jump": {
+   "video": "tuck_jump.mp4",
+   "image": "tuck_jump.jpg",
+   "credit": "Sworkit"
+  },
+  "tuck_lsit": {
+   "video": "tuck_lsit.mp4",
+   "image": "tuck_lsit.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "tuck_planche": {
+   "video": "tuck_planche.mp4",
+   "image": "tuck_planche.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "typewriter_pullup": {
+   "video": "typewriter_pullup.mp4",
+   "image": "typewriter_pullup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "v_up": {
+   "video": "v_up.mp4",
+   "image": "v_up.jpg",
+   "credit": "Sworkit"
+  },
+  "vertical_flag": {
+   "video": "vertical_flag.mp4",
+   "image": "vertical_flag.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "walking_lunge": {
+   "video": "walking_lunge.mp4",
+   "image": "walking_lunge.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "wall_handstand": {
+   "video": "wall_handstand.mp4",
+   "image": "wall_handstand.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "wall_handstand_tap": {
+   "video": "wall_handstand_tap.mp4",
+   "image": "wall_handstand_tap.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "wall_hspu": {
+   "video": "wall_hspu.mp4",
+   "image": "wall_hspu.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "wall_sit": {
+   "video": "wall_sit.mp4",
+   "image": "wall_sit.jpg",
+   "credit": "Sworkit"
+  },
+  "wide_pullup": {
+   "video": "wide_pullup.mp4",
+   "image": "wide_pullup.jpg",
+   "credit": "ExerciseDB (AscendAPI)"
+  },
+  "wide_pushup": {
+   "video": "wide_pushup.mp4",
+   "image": "wide_pushup.jpg",
+   "credit": "Sworkit"
+  },
+  "worlds_greatest": {
+   "video": "worlds_greatest.mp4",
+   "image": "worlds_greatest.jpg",
+   "credit": "Sworkit"
+  },
+  "wrist_prep": {
+   "video": "wrist_prep.mp4",
+   "image": "wrist_prep.jpg",
+   "credit": "Sworkit"
+  },
+  "wrist_stretch": {
+   "video": "wrist_stretch.mp4",
+   "image": "wrist_stretch.jpg",
+   "credit": "Sworkit"
+  }
+ }
+}

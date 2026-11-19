@@ -36,6 +36,7 @@ import { AnjaLive } from "./russian/anja-live.js";
 import { LocalConversationProvider } from "./russian/conversation.js";
 import { registerRussianErlebenRoutes } from "./api/russian-erleben.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
+import { registerFitnessRoutes } from "./api/fitness.js";
 import { registerCastRoutes } from "./api/cast.js";
 import { KeepAwake, registerKeepAwake } from "./system/keep-awake.js";
 import { registerVoiceRoutes } from "./api/voice.js";
@@ -182,6 +183,13 @@ await registerRussianAnjaLiveRoutes(app, {
   dir: join(cfg.dataDir, "erleben"),
   log: (msg) => app.log.info(msg),
   live: anjaLive,
+});
+// Fitness: Training mit KI-Coach, Calisthenics-Skills, Ernährung (eigene Datenbank in ~/.hikari/fitness).
+registerFitnessRoutes(app, {
+  dir: join(cfg.dataDir, "fitness"),
+  dataDir: new URL("../fitness", import.meta.url).pathname,
+  geminiKey: () => readGeminiKey(join(cfg.dataDir, "erleben")),
+  log: (msg) => app.log.info(msg),
 });
 await registerHealthRoute(app, { db, videoDir: cfg.videoDir });
 await registerStatsRoutes(app, { db });

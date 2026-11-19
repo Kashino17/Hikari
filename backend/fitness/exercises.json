@@ -1,0 +1,6012 @@
+{
+ "version": 1,
+ "exercises": [
+  {
+   "id": "incline_pushup",
+   "name": "Liegestütz erhöht",
+   "en": "Incline Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 1,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 2.5,
+   "progress": "knee_pushup",
+   "steps": [
+    "Hände schulterbreit auf eine Bank, Tisch oder Stuhlkante.",
+    "Füße nach hinten, bis der Körper eine gerade Linie bildet.",
+    "Brust kontrolliert zur Kante senken, Ellbogen etwa 45° vom Körper.",
+    "Kräftig zurückdrücken, bis die Arme gestreckt sind."
+   ],
+   "mistakes": [
+    "Hüfte hängt durch — Po und Bauch fest anspannen.",
+    "Ellbogen zeigen ganz zur Seite — das belastet die Schulter.",
+    "Nur halbe Bewegung — Brust wirklich bis zur Kante."
+   ],
+   "tips": [
+    "Je höher die Ablage, desto leichter."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "incline_pushup.mp4",
+    "image": "incline_pushup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "knee_pushup",
+   "name": "Liegestütz auf Knien",
+   "en": "Knee Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Vordere Schulter"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 2.5,
+   "regress": "incline_pushup",
+   "progress": "pushup",
+   "steps": [
+    "Hände etwas breiter als schulterbreit, Knie auf dem Boden, Füße angehoben.",
+    "Von den Knien bis zum Kopf eine Linie bilden.",
+    "Brust bis knapp über den Boden senken.",
+    "Gleichmäßig nach oben drücken."
+   ],
+   "mistakes": [
+    "Po ragt nach oben — die Hüfte bleibt in Linie.",
+    "Kopf fällt nach vorn — Blick leicht vor die Hände.",
+    "Zu nah an den Knien abgestützt — dann wird es zu leicht."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "knee_pushup.mp4",
+    "image": "knee_pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "pushup",
+   "name": "Liegestütz",
+   "en": "Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 2.5,
+   "regress": "knee_pushup",
+   "progress": "diamond_pushup",
+   "steps": [
+    "Hände etwas breiter als schulterbreit unter den Schultern, Finger nach vorn.",
+    "Körper gestreckt: Fersen, Po und Kopf auf einer Linie, Bauch und Po fest.",
+    "Senken, bis die Brust fast den Boden berührt; Ellbogen etwa 45° zum Körper.",
+    "Mit dem ganzen Körper gleichzeitig hochdrücken, oben Arme ganz strecken."
+   ],
+   "mistakes": [
+    "Durchhängende Hüfte oder Hohlkreuz.",
+    "Ellbogen im 90°-Winkel nach außen — Schulter wird gereizt.",
+    "Kopf nickt zum Boden statt die Brust.",
+    "Nicht tief genug — volle Bewegung zählt."
+   ],
+   "tips": [
+    "Stell dir vor, du schraubst die Hände in den Boden — das stabilisiert die Schultern."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "pushup.mp4",
+    "image": "pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "wide_pushup",
+   "name": "Breiter Liegestütz",
+   "en": "Wide Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust"
+   ],
+   "secondary": [
+    "Vordere Schulter",
+    "Trizeps"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.5,
+   "regress": "knee_pushup",
+   "steps": [
+    "Hände deutlich breiter als die Schultern.",
+    "Körper gestreckt, Rumpf fest.",
+    "Kontrolliert tief senken, bis die Brust zwischen die Hände kommt.",
+    "Hochdrücken."
+   ],
+   "mistakes": [
+    "Zu breit — Schmerz vorn in der Schulter ist ein Warnsignal.",
+    "Hohlkreuz.",
+    "Schnelles Fallenlassen nach unten."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "wide_pushup.mp4",
+    "image": "wide_pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "diamond_pushup",
+   "name": "Diamant-Liegestütz",
+   "en": "Diamond Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Trizeps",
+    "Brust"
+   ],
+   "secondary": [
+    "Vordere Schulter"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 2.8,
+   "regress": "pushup",
+   "progress": "pseudo_planche_pushup",
+   "steps": [
+    "Daumen und Zeigefinger unter der Brust zu einer Raute zusammenlegen.",
+    "Körper gestreckt, Füße etwa hüftbreit.",
+    "Brust zu den Händen senken, Ellbogen eng am Körper nach hinten.",
+    "Mit den Trizeps hochdrücken."
+   ],
+   "mistakes": [
+    "Ellbogen klappen nach außen.",
+    "Hände unter dem Gesicht statt unter der Brust.",
+    "Hüfte kommt zuerst hoch."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "diamond_pushup.mp4",
+    "image": "diamond_pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "decline_pushup",
+   "name": "Liegestütz Füße erhöht",
+   "en": "Decline Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Obere Brust",
+    "Vordere Schulter"
+   ],
+   "secondary": [
+    "Trizeps"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 2.8,
+   "regress": "pushup",
+   "progress": "pike_pushup",
+   "steps": [
+    "Füße auf eine Bank oder einen Stuhl, Hände am Boden.",
+    "Rumpf fest, Körper gerade.",
+    "Kopf vor die Hände senken.",
+    "Hochdrücken, ohne in die Hüfte zu knicken."
+   ],
+   "mistakes": [
+    "Hüfte knickt ab — der Körper bleibt ein Brett.",
+    "Zu hohe Ablage am Anfang.",
+    "Halswirbel überstreckt."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "decline_pushup.mp4",
+    "image": "decline_pushup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "pike_pushup",
+   "name": "Pike-Liegestütz",
+   "en": "Pike Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Schultern",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Oberer Rücken"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 3,
+   "regress": "decline_pushup",
+   "progress": "elevated_pike_pushup",
+   "steps": [
+    "Aus dem Liegestütz die Hüfte hoch schieben — umgedrehtes V.",
+    "Hände schulterbreit, Kopf zwischen den Armen.",
+    "Kopf vor die Hände Richtung Boden senken (Dreieck mit den Händen).",
+    "Zurückdrücken, bis die Arme gestreckt sind."
+   ],
+   "mistakes": [
+    "Kopf senkt sich hinter die Hände — dann arbeitet die Brust statt der Schulter.",
+    "Hüfte sinkt während der Bewegung.",
+    "Ellbogen weit nach außen."
+   ],
+   "tips": [
+    "Vorstufe für den Handstand-Liegestütz."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "pike_pushup.mp4",
+    "image": "pike_pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "elevated_pike_pushup",
+   "name": "Pike-Liegestütz erhöht",
+   "en": "Elevated Pike Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Schultern",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Oberer Rücken"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 6,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 3.2,
+   "regress": "pike_pushup",
+   "progress": "wall_hspu",
+   "steps": [
+    "Füße auf eine Bank, Hüfte über die Schultern bringen.",
+    "Oberkörper möglichst senkrecht.",
+    "Kopf kontrolliert vor die Hände senken.",
+    "Senkrecht nach oben drücken."
+   ],
+   "mistakes": [
+    "Hüfte nicht über den Schultern.",
+    "Fallenlassen im unteren Teil.",
+    "Kopf landet auf dem Boden."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "elevated_pike_pushup.mp4",
+    "image": "elevated_pike_pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "wall_hspu",
+   "name": "Handstand-Liegestütz an der Wand",
+   "en": "Wall Handstand Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Schultern",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Oberer Rücken",
+    "Rumpf"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 8,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter",
+    "nacken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 4,
+   "secPerRep": 3.5,
+   "regress": "elevated_pike_pushup",
+   "steps": [
+    "Mit dem Rücken zur Wand in den Handstand schwingen, Hände ~20 cm von der Wand.",
+    "Rumpf fest, Rippen unten.",
+    "Langsam senken, bis der Kopf leicht den Boden (Kissen) berührt.",
+    "Kraftvoll hochdrücken."
+   ],
+   "mistakes": [
+    "Starkes Hohlkreuz an der Wand.",
+    "Kopf landet hart.",
+    "Ellbogen kippen zur Seite weg."
+   ],
+   "tips": [
+    "Ein gefaltetes Handtuch unter den Kopf legen."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "wall_hspu.mp4",
+    "image": "wall_hspu.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "archer_pushup",
+   "name": "Archer-Liegestütz",
+   "en": "Archer Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Schultern",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 7,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 5,
+   "secPerRep": 3.2,
+   "regress": "wide_pushup",
+   "steps": [
+    "Hände sehr breit aufsetzen, Finger leicht nach außen.",
+    "Zu einer Seite senken; der andere Arm bleibt gestreckt.",
+    "Die Brust kommt zur beugenden Hand.",
+    "Zurück in die Mitte drücken, Seite wechseln."
+   ],
+   "mistakes": [
+    "Der gestreckte Arm beugt sich mit — dann ist es nur ein breiter Liegestütz.",
+    "Hüfte dreht sich.",
+    "Zu wenig Tiefe."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "archer_pushup.mp4",
+    "image": "archer_pushup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "pseudo_planche_pushup",
+   "name": "Pseudo-Planche-Liegestütz",
+   "en": "Pseudo Planche Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Vordere Schulter",
+    "Brust"
+   ],
+   "secondary": [
+    "Trizeps",
+    "Bizeps",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 7,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 3.2,
+   "regress": "diamond_pushup",
+   "steps": [
+    "Hände auf Hüfthöhe, Finger zur Seite oder nach hinten.",
+    "Schultern weit vor die Hände lehnen.",
+    "In dieser Vorlage senken, Ellbogen eng.",
+    "Hochdrücken, ohne die Vorlage zu verlieren; oben Schultern weit nach vorn schieben."
+   ],
+   "mistakes": [
+    "Vorlage geht beim Senken verloren.",
+    "Zu schnell gesteigert — die Handgelenke brauchen Zeit.",
+    "Hohler, eingesunkener oberer Rücken."
+   ],
+   "tips": [
+    "Handgelenke vorher gut aufwärmen."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "pseudo_planche_pushup.mp4",
+    "image": "pseudo_planche_pushup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "clap_pushup",
+   "name": "Explosiver Liegestütz",
+   "en": "Explosive Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 6,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 2.5,
+   "regress": "pushup",
+   "steps": [
+    "Saubere Liegestütz-Position.",
+    "Kontrolliert senken.",
+    "So explosiv hochdrücken, dass die Hände kurz abheben.",
+    "Weich mit leicht gebeugten Armen landen und direkt in die nächste Wiederholung."
+   ],
+   "mistakes": [
+    "Harte Landung mit gestreckten Armen.",
+    "Hüfte hängt beim Abdrücken.",
+    "Ermüdet weitermachen — Qualität vor Menge."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "clap_pushup.mp4",
+    "image": "clap_pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "hindu_pushup",
+   "name": "Hindu-Liegestütz",
+   "en": "Hindu Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Schultern",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Rückenstrecker",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter",
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 3.5,
+   "regress": "pike_pushup",
+   "steps": [
+    "Start im umgedrehten V (Hüfte hoch).",
+    "Brust in einem Bogen dicht über den Boden nach vorn führen.",
+    "Oben in die Kobra strecken, Blick nach vorn.",
+    "Hüfte wieder zurück nach oben schieben."
+   ],
+   "mistakes": [
+    "Bogen zu hoch — die Brust soll knapp über dem Boden gleiten.",
+    "Schultern ziehen zu den Ohren.",
+    "Zu schnell, ohne Kontrolle."
+   ],
+   "breathing": "Beim Vorschwingen ausatmen, beim Zurückschieben einatmen.",
+   "media": {
+    "video": "hindu_pushup.mp4",
+    "image": "hindu_pushup.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "bench_dip",
+   "name": "Dips an der Bank",
+   "en": "Bench Dip",
+   "pattern": "push",
+   "muscles": [
+    "Trizeps"
+   ],
+   "secondary": [
+    "Brust",
+    "Vordere Schulter"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "handgelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 2.5,
+   "progress": "dip",
+   "steps": [
+    "Hände hinter dem Körper schulterbreit auf die Kante, Finger nach vorn.",
+    "Beine gebeugt (leichter) oder gestreckt (schwerer).",
+    "Ellbogen nach hinten beugen, bis die Oberarme etwa waagerecht sind.",
+    "Hochdrücken, Schultern weg von den Ohren."
+   ],
+   "mistakes": [
+    "Zu tief — Schmerz vorn in der Schulter.",
+    "Po weit von der Bank weg.",
+    "Ellbogen gehen zur Seite."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "bench_dip.mp4",
+    "image": "bench_dip.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "dip",
+   "name": "Dips am Barren",
+   "en": "Parallel Bar Dip",
+   "pattern": "push",
+   "muscles": [
+    "Trizeps",
+    "Untere Brust"
+   ],
+   "secondary": [
+    "Vordere Schulter"
+   ],
+   "equipment": [
+    "barren"
+   ],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 3,
+   "regress": "bench_dip",
+   "progress": "ring_dip",
+   "steps": [
+    "Im Stütz auf dem Barren, Arme gestreckt, Schultern tief.",
+    "Oberkörper leicht nach vorn, Beine angewinkelt oder gestreckt.",
+    "Senken, bis die Schultern knapp unter den Ellbogen sind.",
+    "Kräftig nach oben drücken, oben Arme ganz strecken."
+   ],
+   "mistakes": [
+    "Schultern rutschen zu den Ohren.",
+    "Zu tief bei fehlender Beweglichkeit.",
+    "Schwung mit den Beinen."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "dip.mp4",
+    "image": "dip.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "ring_dip",
+   "name": "Dips an den Ringen",
+   "en": "Ring Dip",
+   "pattern": "push",
+   "muscles": [
+    "Trizeps",
+    "Brust"
+   ],
+   "secondary": [
+    "Schultern",
+    "Rumpf"
+   ],
+   "equipment": [
+    "ringe"
+   ],
+   "level": 7,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 3.2,
+   "regress": "dip",
+   "steps": [
+    "Stütz an den Ringen, Ringe eng am Körper, leicht nach außen gedreht.",
+    "Kontrolliert senken, Ringe bleiben nah am Körper.",
+    "Unten Oberarme etwa waagerecht.",
+    "Hochdrücken und oben die Ringe ausdrehen."
+   ],
+   "mistakes": [
+    "Ringe wandern auseinander.",
+    "Instabiler Stütz oben — erst 30 s Stütz üben.",
+    "Zu schnell senken."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "ring_dip.mp4",
+    "image": "ring_dip.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "support_hold",
+   "name": "Stütz halten",
+   "en": "Support Hold",
+   "pattern": "push",
+   "muscles": [
+    "Trizeps",
+    "Schulterblatt-Stabilisatoren"
+   ],
+   "secondary": [
+    "Rumpf"
+   ],
+   "equipment": [
+    "barren"
+   ],
+   "level": 3,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "handgelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 25,
+   "progress": "dip",
+   "steps": [
+    "In den Stütz springen, Arme gestreckt.",
+    "Schultern aktiv nach unten drücken — weit weg von den Ohren.",
+    "Körper ruhig, Beine geschlossen.",
+    "Position halten."
+   ],
+   "mistakes": [
+    "Eingesackte Schultern.",
+    "Gebeugte Ellbogen.",
+    "Pendeln."
+   ],
+   "breathing": "Ruhig weiteratmen.",
+   "media": {
+    "video": "support_hold.mp4",
+    "image": "support_hold.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "dead_hang",
+   "name": "Hängen an der Stange",
+   "en": "Dead Hang",
+   "pattern": "pull",
+   "muscles": [
+    "Unterarme",
+    "Griffkraft"
+   ],
+   "secondary": [
+    "Latissimus",
+    "Schultern"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 2,
+   "unit": "sec",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 30,
+   "progress": "scap_pullup",
+   "steps": [
+    "Stange schulterbreit im Obergriff fassen.",
+    "Füße vom Boden lösen, Körper hängt ruhig.",
+    "Schultern leicht aktiv — nicht komplett in die Gelenke sacken.",
+    "Halten und ruhig atmen."
+   ],
+   "mistakes": [
+    "Schwingen.",
+    "Komplett passive Schultern über lange Zeit.",
+    "Daumen nicht um die Stange."
+   ],
+   "breathing": "Ruhig weiteratmen.",
+   "media": {
+    "video": "dead_hang.mp4",
+    "image": "dead_hang.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "scap_pullup",
+   "name": "Schulterblatt-Klimmzug",
+   "en": "Scapular Pull-up",
+   "pattern": "pull",
+   "muscles": [
+    "Unterer Trapezius",
+    "Latissimus"
+   ],
+   "secondary": [
+    "Griffkraft"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2,
+   "regress": "dead_hang",
+   "progress": "negative_pullup",
+   "steps": [
+    "Im Hang mit gestreckten Armen.",
+    "Nur die Schulterblätter nach unten und zusammenziehen — der Körper hebt sich ein paar Zentimeter.",
+    "Kurz halten.",
+    "Kontrolliert zurück in den Hang."
+   ],
+   "mistakes": [
+    "Arme beugen sich mit.",
+    "Schwung aus den Beinen.",
+    "Zu schnell, ohne Halt oben."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "scap_pullup.mp4",
+    "image": "scap_pullup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "band_row",
+   "name": "Rudern mit Band",
+   "en": "Band Row",
+   "pattern": "pull",
+   "muscles": [
+    "Oberer Rücken",
+    "Latissimus"
+   ],
+   "secondary": [
+    "Bizeps",
+    "Hintere Schulter"
+   ],
+   "equipment": [
+    "band"
+   ],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 15,
+   "secPerRep": 2.5,
+   "steps": [
+    "Band an einem festen Punkt auf Brusthöhe befestigen oder um die Füße legen.",
+    "Aufrecht, Brust raus, Schultern tief.",
+    "Ellbogen eng nach hinten ziehen, Schulterblätter zusammen.",
+    "Kontrolliert nach vorn lassen."
+   ],
+   "mistakes": [
+    "Oberkörper lehnt sich zurück.",
+    "Schultern ziehen zu den Ohren.",
+    "Band schnalzt zurück — langsam nachgeben."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "band_row.mp4",
+    "image": "band_row.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "inverted_row",
+   "name": "Australische Klimmzüge",
+   "en": "Inverted Row",
+   "pattern": "pull",
+   "muscles": [
+    "Oberer Rücken",
+    "Latissimus"
+   ],
+   "secondary": [
+    "Bizeps",
+    "Hintere Schulter",
+    "Rumpf"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 4,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "regress": "band_row",
+   "progress": "negative_pullup",
+   "steps": [
+    "Unter eine hüfthohe Stange (oder Ringe) legen, schulterbreit greifen.",
+    "Körper gestreckt, Fersen am Boden.",
+    "Brust zur Stange ziehen, Schulterblätter zusammen.",
+    "Kontrolliert ablassen, bis die Arme gestreckt sind."
+   ],
+   "mistakes": [
+    "Hüfte hängt durch.",
+    "Kinn statt Brust zur Stange.",
+    "Nur halbe Bewegung."
+   ],
+   "tips": [
+    "Je aufrechter der Körper, desto leichter."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "inverted_row.mp4",
+    "image": "inverted_row.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "ring_row",
+   "name": "Rudern an den Ringen",
+   "en": "Ring Row",
+   "pattern": "pull",
+   "muscles": [
+    "Oberer Rücken",
+    "Latissimus"
+   ],
+   "secondary": [
+    "Bizeps",
+    "Rumpf"
+   ],
+   "equipment": [
+    "ringe"
+   ],
+   "level": 4,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "regress": "band_row",
+   "progress": "negative_pullup",
+   "steps": [
+    "Ringe hüfthoch, Körper schräg nach hinten gelehnt.",
+    "Körper gerade, Rumpf fest.",
+    "Ringe zur unteren Brust ziehen und dabei leicht ausdrehen.",
+    "Langsam zurück."
+   ],
+   "mistakes": [
+    "Hüfte knickt ab.",
+    "Ellbogen weit nach außen.",
+    "Ringe schwanken — langsamer werden."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "ring_row.mp4",
+    "image": "ring_row.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "negative_pullup",
+   "name": "Negativer Klimmzug",
+   "en": "Negative Pull-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Bizeps"
+   ],
+   "secondary": [
+    "Oberer Rücken",
+    "Griffkraft"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 4,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 5,
+   "secPerRep": 6,
+   "regress": "inverted_row",
+   "progress": "pullup",
+   "steps": [
+    "Mit Sprung oder von einem Stuhl in die obere Position: Kinn über der Stange.",
+    "Schultern tief, Brust zur Stange.",
+    "3–5 Sekunden langsam ablassen.",
+    "Unten kurz lösen, wieder hochsteigen."
+   ],
+   "mistakes": [
+    "Unten einfach fallen lassen.",
+    "Zu schnell — unter 3 Sekunden bringt wenig.",
+    "Schultern ziehen zu den Ohren."
+   ],
+   "breathing": "Gleichmäßig ausatmen beim Ablassen.",
+   "media": {
+    "video": "negative_pullup.mp4",
+    "image": "negative_pullup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "chinup",
+   "name": "Klimmzug im Untergriff",
+   "en": "Chin-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Bizeps"
+   ],
+   "secondary": [
+    "Oberer Rücken",
+    "Rumpf"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 3,
+   "regress": "negative_pullup",
+   "progress": "pullup",
+   "steps": [
+    "Stange schulterbreit im Untergriff (Handflächen zu dir).",
+    "Schulterblätter nach unten ziehen.",
+    "Hochziehen, bis das Kinn über der Stange ist.",
+    "Kontrolliert in den gestreckten Hang."
+   ],
+   "mistakes": [
+    "Schwung aus den Beinen.",
+    "Kinn reckt sich über die Stange statt der Körper.",
+    "Unten nicht ganz strecken."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "chinup.mp4",
+    "image": "chinup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "pullup",
+   "name": "Klimmzug",
+   "en": "Pull-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Oberer Rücken"
+   ],
+   "secondary": [
+    "Bizeps",
+    "Griffkraft",
+    "Rumpf"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 6,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 3,
+   "regress": "negative_pullup",
+   "progress": "chest_to_bar",
+   "steps": [
+    "Obergriff, etwas breiter als schulterbreit.",
+    "Aus dem gestreckten Hang zuerst die Schulterblätter nach unten.",
+    "Ellbogen Richtung Hüfte ziehen, bis das Kinn über der Stange ist.",
+    "Langsam ablassen bis zum vollen Hang."
+   ],
+   "mistakes": [
+    "Halbe Wiederholungen.",
+    "Kippen und Schwingen.",
+    "Kopf reckt sich nach vorn.",
+    "Rundrücken oben."
+   ],
+   "tips": [
+    "Leichter Hohlkörper (Beine leicht vor dem Körper) hält dich ruhig."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "pullup.mp4",
+    "image": "pullup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "chest_to_bar",
+   "name": "Klimmzug Brust zur Stange",
+   "en": "Chest-to-bar Pull-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Oberer Rücken"
+   ],
+   "secondary": [
+    "Bizeps",
+    "Rumpf"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 7,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 5,
+   "secPerRep": 3.2,
+   "regress": "pullup",
+   "progress": "muscle_up",
+   "steps": [
+    "Obergriff, schulterbreit.",
+    "Explosiv ziehen, Ellbogen weit nach unten und hinten.",
+    "Brust berührt die Stange, Oberkörper leicht zurückgelehnt.",
+    "Kontrolliert ablassen."
+   ],
+   "mistakes": [
+    "Nur das Kinn kommt hoch.",
+    "Schwung statt Zug.",
+    "Ellbogen bleiben vorn."
+   ],
+   "tips": [
+    "Vorstufe für den Muscle-up."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "chest_to_bar.mp4",
+    "image": "chest_to_bar.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "wide_pullup",
+   "name": "Breiter Klimmzug",
+   "en": "Wide Pull-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus"
+   ],
+   "secondary": [
+    "Oberer Rücken",
+    "Bizeps"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 7,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 5,
+   "secPerRep": 3,
+   "regress": "pullup",
+   "steps": [
+    "Griff deutlich breiter als die Schultern.",
+    "Schulterblätter nach unten.",
+    "Brust zur Stange ziehen.",
+    "Langsam ablassen."
+   ],
+   "mistakes": [
+    "Zu breit — Schulter schmerzt.",
+    "Halbe Bewegung.",
+    "Schwung."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "wide_pullup.mp4",
+    "image": "wide_pullup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "archer_pullup",
+   "name": "Archer-Klimmzug",
+   "en": "Archer Pull-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Bizeps"
+   ],
+   "secondary": [
+    "Oberer Rücken",
+    "Griffkraft"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 8,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 3,
+   "secPerRep": 3.5,
+   "regress": "wide_pullup",
+   "progress": "typewriter_pullup",
+   "steps": [
+    "Sehr breiter Griff.",
+    "Zu einer Hand ziehen; der andere Arm streckt sich seitlich.",
+    "Kinn über die ziehende Hand.",
+    "Kontrolliert ablassen, Seite wechseln."
+   ],
+   "mistakes": [
+    "Der Hilfsarm zieht mit.",
+    "Drehen des Körpers.",
+    "Ruckartig."
+   ],
+   "tips": [
+    "Wichtiger Schritt zum einarmigen Klimmzug."
+   ],
+   "breathing": "Unten einatmen, beim Hochziehen ausatmen.",
+   "media": {
+    "video": "archer_pullup.mp4",
+    "image": "archer_pullup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "typewriter_pullup",
+   "name": "Typewriter-Klimmzug",
+   "en": "Typewriter Pull-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Bizeps"
+   ],
+   "secondary": [
+    "Oberer Rücken",
+    "Rumpf"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 9,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 3,
+   "secPerRep": 6,
+   "regress": "archer_pullup",
+   "steps": [
+    "Breiter Griff, hochziehen bis zur Stange.",
+    "Oben seitlich zu einer Hand schieben, Kinn über der Hand.",
+    "Auf Stangenhöhe zur anderen Seite schieben.",
+    "In der Mitte kontrolliert ablassen."
+   ],
+   "mistakes": [
+    "Absinken beim Seitwärtsschieben.",
+    "Zu wenig Weg zur Seite.",
+    "Körper schwingt."
+   ],
+   "breathing": "Oben kurz Luft anhalten erlaubt, unten atmen.",
+   "media": {
+    "video": "typewriter_pullup.mp4",
+    "image": "typewriter_pullup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "muscle_up",
+   "name": "Muscle-up",
+   "en": "Muscle-up",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Trizeps",
+    "Brust"
+   ],
+   "secondary": [
+    "Bizeps",
+    "Rumpf",
+    "Griffkraft"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 9,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen",
+    "handgelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 3,
+   "secPerRep": 4,
+   "regress": "chest_to_bar",
+   "steps": [
+    "Fester Griff, leicht falscher Griff hilft (Handgelenk über der Stange).",
+    "Explosiv hoch zur Hüfte ziehen, Ellbogen weit nach hinten.",
+    "Oberkörper schnell über die Stange bringen (Übergang), Ellbogen nach vorn drehen.",
+    "In den Stütz drücken, kontrolliert zurück."
+   ],
+   "mistakes": [
+    "Ein Arm kommt vor dem anderen über die Stange (Chicken Wing).",
+    "Zu flacher Zug — die Stange muss Richtung Hüfte.",
+    "Unkontrolliertes Fallenlassen."
+   ],
+   "tips": [
+    "Erst 10 saubere Klimmzüge und 15 Dips, dann üben."
+   ],
+   "breathing": "Kraftvoll ausatmen im Übergang.",
+   "media": {
+    "video": "muscle_up.mp4",
+    "image": "muscle_up.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "squat",
+   "name": "Kniebeuge",
+   "en": "Bodyweight Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Oberschenkel hinten",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 20,
+   "secPerRep": 2.2,
+   "progress": "split_squat",
+   "steps": [
+    "Füße etwa schulterbreit, Zehen leicht nach außen.",
+    "Hüfte nach hinten unten setzen, Knie in Richtung der Zehen.",
+    "So tief wie möglich mit geradem Rücken, Fersen bleiben am Boden.",
+    "Über die ganze Fußsohle aufstehen, oben Hüfte strecken."
+   ],
+   "mistakes": [
+    "Knie fallen nach innen.",
+    "Fersen heben ab.",
+    "Rundrücken unten.",
+    "Zu flach."
+   ],
+   "tips": [
+    "Arme nach vorn strecken hilft bei der Balance."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "squat.mp4",
+    "image": "squat.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "sumo_squat",
+   "name": "Sumo-Kniebeuge",
+   "en": "Sumo Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Innere Oberschenkel",
+    "Po"
+   ],
+   "secondary": [
+    "Oberschenkel vorn"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 18,
+   "secPerRep": 2.4,
+   "steps": [
+    "Sehr breiter Stand, Zehen deutlich nach außen.",
+    "Oberkörper aufrecht.",
+    "Knie über die Zehen nach außen schieben und tief sinken.",
+    "Aufrichten und oben den Po anspannen."
+   ],
+   "mistakes": [
+    "Knie fallen nach innen.",
+    "Oberkörper kippt nach vorn.",
+    "Fersen heben ab."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "sumo_squat.mp4",
+    "image": "sumo_squat.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "wall_sit",
+   "name": "Wandsitzen",
+   "en": "Wall Sit",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn"
+   ],
+   "secondary": [
+    "Po"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 2,
+   "unit": "sec",
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 40,
+   "steps": [
+    "Rücken an die Wand, Füße etwa einen halben Meter vor der Wand.",
+    "Herunterrutschen, bis die Knie etwa 90° gebeugt sind.",
+    "Knie über den Knöcheln, Rücken flach an der Wand.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Knie weit vor den Zehen.",
+    "Hände auf den Oberschenkeln abstützen.",
+    "Zu hoch gesessen."
+   ],
+   "breathing": "Ruhig weiteratmen.",
+   "media": {
+    "video": "wall_sit.mp4",
+    "image": "wall_sit.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "tempo_squat",
+   "name": "Langsame Kniebeuge",
+   "en": "Tempo Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 6,
+   "regress": "squat",
+   "steps": [
+    "Stand wie bei der Kniebeuge.",
+    "4 Sekunden absenken.",
+    "Unten 1 Sekunde halten.",
+    "Zügig aufstehen."
+   ],
+   "mistakes": [
+    "Tempo wird schneller, je müder du bist.",
+    "Unten entspannen statt halten.",
+    "Knie fallen nach innen."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "tempo_squat.mp4",
+    "image": "tempo_squat.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "jump_squat",
+   "name": "Sprung-Kniebeuge",
+   "en": "Jump Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Waden"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "knie",
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 2.2,
+   "regress": "squat",
+   "steps": [
+    "Kniebeuge bis etwa parallel.",
+    "Explosiv nach oben abspringen, Arme schwingen mit.",
+    "Weich auf dem Vorfuß landen, Knie über den Zehen.",
+    "Landung direkt in die nächste Beuge abfedern."
+   ],
+   "mistakes": [
+    "Harte Landung mit gestreckten Beinen.",
+    "Knie fallen bei der Landung nach innen.",
+    "Zu flache Beuge."
+   ],
+   "breathing": "Beim Absprung ausatmen.",
+   "media": {
+    "video": "jump_squat.mp4",
+    "image": "jump_squat.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "cossack_squat",
+   "name": "Kosaken-Kniebeuge",
+   "en": "Cossack Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel",
+    "Po",
+    "Adduktoren"
+   ],
+   "secondary": [
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 3,
+   "regress": "sumo_squat",
+   "steps": [
+    "Sehr breiter Stand.",
+    "Gewicht zu einer Seite verlagern und auf diesem Bein tief beugen.",
+    "Das andere Bein bleibt gestreckt, Zehen zeigen nach oben.",
+    "Zurück in die Mitte, Seite wechseln."
+   ],
+   "mistakes": [
+    "Ferse des Beugebeins hebt ab.",
+    "Oberkörper fällt nach vorn.",
+    "Knie kippt nach innen."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "cossack_squat.mp4",
+    "image": "cossack_squat.jpg",
+    "credit": "Freeletics"
+   }
+  },
+  {
+   "id": "split_squat",
+   "name": "Split Squat",
+   "en": "Split Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.6,
+   "regress": "squat",
+   "progress": "bulgarian_split_squat",
+   "steps": [
+    "Großer Schritt nach vorn, hinterer Fuß auf dem Ballen.",
+    "Senkrecht nach unten sinken, bis das hintere Knie fast den Boden berührt.",
+    "Vorderes Knie über dem Fuß.",
+    "Hochdrücken über die vordere Ferse."
+   ],
+   "mistakes": [
+    "Schritt zu kurz — das Knie schiebt weit über die Zehen.",
+    "Oberkörper kippt.",
+    "Hinteres Knie knallt auf den Boden."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "split_squat.mp4",
+    "image": "split_squat.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "bulgarian_split_squat",
+   "name": "Bulgarische Kniebeuge",
+   "en": "Bulgarian Split Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Adduktoren"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 5,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 3,
+   "regress": "split_squat",
+   "progress": "assisted_pistol",
+   "steps": [
+    "Hinteren Fußrücken auf eine Bank legen.",
+    "Vorderer Fuß weit genug vorn, damit das Knie über dem Fuß bleibt.",
+    "Senkrecht absinken, bis der vordere Oberschenkel waagerecht ist.",
+    "Über die ganze vordere Fußsohle hochdrücken."
+   ],
+   "mistakes": [
+    "Vorderes Knie fällt nach innen.",
+    "Abdruck mit dem hinteren Bein.",
+    "Wackliger Stand — Fuß etwas breiter setzen."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "bulgarian_split_squat.mp4",
+    "image": "bulgarian_split_squat.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "assisted_pistol",
+   "name": "Pistol Squat mit Halt",
+   "en": "Assisted Pistol Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Waden"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 6,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie",
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 5,
+   "secPerRep": 4,
+   "regress": "bulgarian_split_squat",
+   "progress": "pistol_squat",
+   "steps": [
+    "Seitlich an einen Türrahmen oder eine Stange stellen, leicht festhalten.",
+    "Ein Bein gestreckt nach vorn heben.",
+    "Auf dem Standbein tief absinken, Ferse bleibt am Boden.",
+    "Mit möglichst wenig Hilfe der Hand hochdrücken."
+   ],
+   "mistakes": [
+    "Ziehen mit dem Arm statt Hilfe.",
+    "Knie kippt nach innen.",
+    "Ferse hebt ab."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "assisted_pistol.mp4",
+    "image": "assisted_pistol.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "pistol_squat",
+   "name": "Pistol Squat",
+   "en": "Pistol Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Waden",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 8,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie",
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 4,
+   "secPerRep": 4,
+   "regress": "assisted_pistol",
+   "progress": "shrimp_squat",
+   "steps": [
+    "Auf einem Bein stehen, das andere gestreckt vor dem Körper.",
+    "Arme nach vorn als Gegengewicht.",
+    "Kontrolliert ganz nach unten sinken, Ferse am Boden.",
+    "Ohne Schwung wieder hochdrücken."
+   ],
+   "mistakes": [
+    "Unten zusammensacken und Schwung holen.",
+    "Knie fällt nach innen.",
+    "Freies Bein berührt den Boden."
+   ],
+   "tips": [
+    "Fehlt Sprunggelenk-Beweglichkeit, hilft anfangs eine kleine Erhöhung unter der Ferse."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "pistol_squat.mp4",
+    "image": "pistol_squat.jpg",
+    "credit": "Freeletics"
+   }
+  },
+  {
+   "id": "shrimp_squat",
+   "name": "Shrimp Squat",
+   "en": "Shrimp Squat",
+   "pattern": "squat",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 8,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 4,
+   "secPerRep": 4,
+   "regress": "bulgarian_split_squat",
+   "steps": [
+    "Auf einem Bein stehen, den anderen Fuß hinter dem Körper greifen.",
+    "Oberkörper leicht nach vorn.",
+    "Absinken, bis das hintere Knie den Boden berührt.",
+    "Hochdrücken."
+   ],
+   "mistakes": [
+    "Knie knallt auf den Boden.",
+    "Oberkörper fällt nach vorn.",
+    "Kniebewegung nach innen."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "shrimp_squat.mp4",
+    "image": "shrimp_squat.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "reverse_lunge",
+   "name": "Ausfallschritt rückwärts",
+   "en": "Reverse Lunge",
+   "pattern": "lunge",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Oberschenkel hinten",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.6,
+   "progress": "walking_lunge",
+   "steps": [
+    "Aufrecht, Füße hüftbreit.",
+    "Großer Schritt nach hinten.",
+    "Senken, bis beide Knie etwa 90° haben.",
+    "Über die vordere Ferse zurück in den Stand."
+   ],
+   "mistakes": [
+    "Vorderes Knie kippt nach innen.",
+    "Oberkörper fällt nach vorn.",
+    "Zu kurzer Schritt."
+   ],
+   "tips": [
+    "Knieschonender als der Ausfallschritt nach vorn."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "reverse_lunge.mp4",
+    "image": "reverse_lunge.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "forward_lunge",
+   "name": "Ausfallschritt",
+   "en": "Forward Lunge",
+   "pattern": "lunge",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.6,
+   "regress": "reverse_lunge",
+   "steps": [
+    "Großer Schritt nach vorn.",
+    "Senkrecht sinken, hinteres Knie knapp über dem Boden.",
+    "Vorderes Knie über dem Fuß.",
+    "Kräftig zurück in den Stand drücken."
+   ],
+   "mistakes": [
+    "Knie schiebt weit über die Zehen.",
+    "Wackeln — Füße hüftbreit, nicht auf einer Linie.",
+    "Hohlkreuz."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "forward_lunge.mp4",
+    "image": "forward_lunge.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "walking_lunge",
+   "name": "Ausfallschritt gehend",
+   "en": "Walking Lunge",
+   "pattern": "lunge",
+   "muscles": [
+    "Oberschenkel",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Waden"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 2.6,
+   "regress": "reverse_lunge",
+   "progress": "jump_lunge",
+   "steps": [
+    "Ausfallschritt nach vorn.",
+    "Hinteres Knie knapp über dem Boden.",
+    "Hinteres Bein nach vorn holen und direkt in den nächsten Schritt.",
+    "Aufrecht bleiben."
+   ],
+   "mistakes": [
+    "Schritte werden kürzer.",
+    "Oberkörper pendelt.",
+    "Knie kippt."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "walking_lunge.mp4",
+    "image": "walking_lunge.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "lateral_lunge",
+   "name": "Seitlicher Ausfallschritt",
+   "en": "Lateral Lunge",
+   "pattern": "lunge",
+   "muscles": [
+    "Po",
+    "Innere Oberschenkel"
+   ],
+   "secondary": [
+    "Oberschenkel vorn"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "steps": [
+    "Großer Schritt zur Seite.",
+    "Hüfte nach hinten in das Schrittbein setzen, das andere Bein bleibt gestreckt.",
+    "Fußsohlen bleiben am Boden.",
+    "Abdrücken zurück zur Mitte."
+   ],
+   "mistakes": [
+    "Knie fällt nach innen.",
+    "Rundrücken.",
+    "Ferse hebt ab."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "lateral_lunge.mp4",
+    "image": "lateral_lunge.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "curtsy_lunge",
+   "name": "Curtsy Lunge",
+   "en": "Curtsy Lunge",
+   "pattern": "lunge",
+   "muscles": [
+    "Po",
+    "Oberschenkel"
+   ],
+   "secondary": [
+    "Adduktoren"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "steps": [
+    "Aufrecht stehen.",
+    "Ein Bein diagonal hinter das Standbein setzen (wie ein Knicks).",
+    "Senken, Hüfte zeigt nach vorn.",
+    "Zurück in den Stand."
+   ],
+   "mistakes": [
+    "Hüfte dreht sich mit.",
+    "Vorderes Knie knickt ein.",
+    "Zu wenig Tiefe."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "curtsy_lunge.mp4",
+    "image": "curtsy_lunge.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "jump_lunge",
+   "name": "Sprung-Ausfallschritt",
+   "en": "Jumping Lunge",
+   "pattern": "lunge",
+   "muscles": [
+    "Oberschenkel",
+    "Po"
+   ],
+   "secondary": [
+    "Waden",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 6,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "knie",
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.2,
+   "regress": "walking_lunge",
+   "steps": [
+    "Ausfallschritt-Position.",
+    "Explosiv abspringen und in der Luft die Beine wechseln.",
+    "Weich im Ausfallschritt landen.",
+    "Direkt weiter."
+   ],
+   "mistakes": [
+    "Harte Landung.",
+    "Hinteres Knie knallt auf.",
+    "Zu kleine Schritte."
+   ],
+   "breathing": "Beim Absprung ausatmen.",
+   "media": {
+    "video": "jump_lunge.mp4",
+    "image": "jump_lunge.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "step_up",
+   "name": "Step-up",
+   "en": "Step-up",
+   "pattern": "lunge",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Po"
+   ],
+   "secondary": [
+    "Waden",
+    "Rumpf"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 3,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 3,
+   "steps": [
+    "Vor eine stabile Bank oder Stufe stellen.",
+    "Ganzen Fuß auf die Bank setzen.",
+    "Über dieses Bein hochdrücken, ohne mit dem hinteren Fuß abzustoßen.",
+    "Kontrolliert wieder herunter."
+   ],
+   "mistakes": [
+    "Abstoßen mit dem hinteren Bein.",
+    "Knie fällt nach innen.",
+    "Nur Vorfuß auf der Bank."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Aufrichten ausatmen.",
+   "media": {
+    "video": "step_up.mp4",
+    "image": "step_up.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "glute_bridge",
+   "name": "Hüftheben",
+   "en": "Glute Bridge",
+   "pattern": "hinge",
+   "muscles": [
+    "Po"
+   ],
+   "secondary": [
+    "Oberschenkel hinten",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 15,
+   "secPerRep": 2.5,
+   "progress": "single_leg_bridge",
+   "steps": [
+    "Auf den Rücken legen, Füße hüftbreit nah am Po.",
+    "Fersen in den Boden drücken.",
+    "Hüfte anheben, bis Knie, Hüfte und Schultern eine Linie bilden.",
+    "Oben Po fest anspannen, langsam ablegen."
+   ],
+   "mistakes": [
+    "Hohlkreuz statt Hüftstreckung.",
+    "Knie fallen nach außen.",
+    "Drücken über die Zehen statt die Fersen."
+   ],
+   "breathing": "Beim Anheben ausatmen.",
+   "media": {
+    "video": "glute_bridge.mp4",
+    "image": "glute_bridge.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "single_leg_bridge",
+   "name": "Hüftheben einbeinig",
+   "en": "Single-leg Glute Bridge",
+   "pattern": "hinge",
+   "muscles": [
+    "Po"
+   ],
+   "secondary": [
+    "Oberschenkel hinten",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.6,
+   "regress": "glute_bridge",
+   "progress": "hip_thrust",
+   "steps": [
+    "Rückenlage, ein Fuß aufgestellt, das andere Bein gestreckt in die Luft.",
+    "Über die Ferse des Standbeins hochdrücken.",
+    "Becken bleibt waagerecht.",
+    "Langsam senken."
+   ],
+   "mistakes": [
+    "Becken kippt zur Seite.",
+    "Hohlkreuz.",
+    "Zu schnell."
+   ],
+   "breathing": "Beim Anheben ausatmen.",
+   "media": {
+    "video": "single_leg_bridge.mp4",
+    "image": "single_leg_bridge.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "hip_thrust",
+   "name": "Hip Thrust an der Bank",
+   "en": "Hip Thrust",
+   "pattern": "hinge",
+   "muscles": [
+    "Po"
+   ],
+   "secondary": [
+    "Oberschenkel hinten"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 2.8,
+   "regress": "glute_bridge",
+   "steps": [
+    "Schulterblätter an die Bankkante lehnen, Füße hüftbreit aufgestellt.",
+    "Kinn leicht zur Brust.",
+    "Hüfte hoch drücken, bis der Oberkörper waagerecht ist.",
+    "Oben halten, Po anspannen, langsam senken."
+   ],
+   "mistakes": [
+    "Überstreckung im unteren Rücken.",
+    "Füße zu weit weg — dann arbeitet nur die Oberschenkelrückseite.",
+    "Kopf in den Nacken."
+   ],
+   "breathing": "Beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "hip_thrust.mp4",
+    "image": "hip_thrust.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "good_morning",
+   "name": "Good Morning",
+   "en": "Bodyweight Good Morning",
+   "pattern": "hinge",
+   "muscles": [
+    "Oberschenkel hinten",
+    "Rückenstrecker"
+   ],
+   "secondary": [
+    "Po"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 15,
+   "secPerRep": 2.6,
+   "progress": "single_leg_rdl",
+   "steps": [
+    "Hüftbreiter Stand, Hände an den Kopf.",
+    "Knie leicht gebeugt.",
+    "Hüfte nach hinten schieben, Oberkörper mit geradem Rücken nach vorn neigen.",
+    "Bei Zug hinten im Oberschenkel zurück aufrichten."
+   ],
+   "mistakes": [
+    "Rundrücken.",
+    "Knie beugen statt Hüfte schieben.",
+    "Zu tief ohne Spannung."
+   ],
+   "breathing": "Beim Aufrichten ausatmen.",
+   "media": {
+    "video": "good_morning.mp4",
+    "image": "good_morning.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "single_leg_rdl",
+   "name": "Einbeiniges Kreuzheben",
+   "en": "Single-leg Romanian Deadlift",
+   "pattern": "hinge",
+   "muscles": [
+    "Oberschenkel hinten",
+    "Po"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Sprunggelenk-Stabilität"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 3.4,
+   "regress": "good_morning",
+   "progress": "nordic_curl",
+   "steps": [
+    "Auf einem Bein stehen, Knie leicht gebeugt.",
+    "Oberkörper nach vorn neigen, freies Bein streckt sich nach hinten.",
+    "Körper bildet eine Linie wie eine Wippe.",
+    "Über die Po-Muskeln zurück aufrichten."
+   ],
+   "mistakes": [
+    "Hüfte dreht auf.",
+    "Rundrücken.",
+    "Wackeln — langsamer und Blick auf einen Punkt."
+   ],
+   "breathing": "Beim Aufrichten ausatmen.",
+   "media": {
+    "video": "single_leg_rdl.mp4",
+    "image": "single_leg_rdl.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "nordic_curl",
+   "name": "Nordic Curl (negativ)",
+   "en": "Nordic Hamstring Curl",
+   "pattern": "hinge",
+   "muscles": [
+    "Oberschenkel hinten"
+   ],
+   "secondary": [
+    "Po",
+    "Waden"
+   ],
+   "equipment": [],
+   "level": 8,
+   "unit": "reps",
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 4,
+   "secPerRep": 6,
+   "regress": "single_leg_rdl",
+   "steps": [
+    "Kniend, Fersen unter einem Sofa oder von einem Partner fixiert.",
+    "Körper von Knie bis Kopf gerade.",
+    "So langsam wie möglich nach vorn sinken.",
+    "Mit den Händen abfangen und zurückdrücken."
+   ],
+   "mistakes": [
+    "Knick in der Hüfte.",
+    "Fallen statt bremsen.",
+    "Zu viele Wiederholungen am Anfang — starker Muskelkater."
+   ],
+   "breathing": "Gleichmäßig ausatmen beim Absinken.",
+   "media": {
+    "video": "nordic_curl.mp4",
+    "image": "nordic_curl.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "kb_swing",
+   "name": "Kettlebell Swing",
+   "en": "Kettlebell Swing",
+   "pattern": "hinge",
+   "muscles": [
+    "Po",
+    "Oberschenkel hinten"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Schultern",
+    "Griffkraft"
+   ],
+   "equipment": [
+    "kettlebell"
+   ],
+   "level": 4,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 15,
+   "secPerRep": 1.8,
+   "steps": [
+    "Kettlebell vor den Füßen, schulterbreiter Stand.",
+    "Hüfte zurück, Kettlebell zwischen die Beine schwingen.",
+    "Explosiv die Hüfte strecken — die Kettlebell schwingt bis Brusthöhe.",
+    "Mit der Bewegung zurück in die Hüftbeuge."
+   ],
+   "mistakes": [
+    "Kniebeuge statt Hüftbeuge.",
+    "Mit den Armen heben.",
+    "Rundrücken unten."
+   ],
+   "breathing": "Oben kräftig ausatmen.",
+   "media": {
+    "video": "kb_swing.mp4",
+    "image": "kb_swing.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "plank",
+   "name": "Unterarmstütz",
+   "en": "Plank",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch",
+    "Tiefe Bauchmuskeln"
+   ],
+   "secondary": [
+    "Schultern",
+    "Po"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "ruecken"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 40,
+   "progress": "plank_shoulder_tap",
+   "steps": [
+    "Unterarme schulterbreit, Ellbogen unter den Schultern.",
+    "Beine gestreckt, auf den Zehen.",
+    "Po und Bauch anspannen, Becken leicht einrollen.",
+    "Körper als gerades Brett halten."
+   ],
+   "mistakes": [
+    "Hüfte hängt durch (Hohlkreuz).",
+    "Po ragt nach oben.",
+    "Kopf hängt — Blick zum Boden zwischen die Hände."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "plank.mp4",
+    "image": "plank.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "side_plank",
+   "name": "Seitstütz",
+   "en": "Side Plank",
+   "pattern": "core",
+   "muscles": [
+    "Seitliche Bauchmuskeln"
+   ],
+   "secondary": [
+    "Po",
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 30,
+   "regress": "plank",
+   "steps": [
+    "Seitlich auf einen Unterarm, Ellbogen unter der Schulter.",
+    "Beine gestreckt übereinander.",
+    "Hüfte anheben, bis der Körper eine Linie bildet.",
+    "Halten, Hüfte nicht absinken lassen."
+   ],
+   "mistakes": [
+    "Hüfte sackt ab.",
+    "Oberkörper kippt nach vorn.",
+    "Schulter rutscht zum Ohr."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "side_plank.mp4",
+    "image": "side_plank.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "plank_shoulder_tap",
+   "name": "Stütz mit Schulter-Tippen",
+   "en": "Plank Shoulder Tap",
+   "pattern": "core",
+   "muscles": [
+    "Tiefe Bauchmuskeln",
+    "Seitliche Bauchmuskeln"
+   ],
+   "secondary": [
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "secPerRep": 1.5,
+   "regress": "plank",
+   "steps": [
+    "Hoher Stütz auf gestreckten Armen, Füße etwas breiter.",
+    "Eine Hand tippt die gegenüberliegende Schulter.",
+    "Die Hüfte bleibt ruhig — kein Schaukeln.",
+    "Abwechselnd weiter."
+   ],
+   "mistakes": [
+    "Hüfte schwingt von Seite zu Seite.",
+    "Füße zu eng.",
+    "Zu schnell."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "plank_shoulder_tap.mp4",
+    "image": "plank_shoulder_tap.jpg",
+    "credit": "Freeletics"
+   }
+  },
+  {
+   "id": "dead_bug",
+   "name": "Dead Bug",
+   "en": "Dead Bug",
+   "pattern": "core",
+   "muscles": [
+    "Tiefe Bauchmuskeln"
+   ],
+   "secondary": [
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 3,
+   "progress": "hollow_hold",
+   "steps": [
+    "Rückenlage, Arme zur Decke, Knie 90° über der Hüfte.",
+    "Unteren Rücken fest an den Boden drücken.",
+    "Gegenüberliegenden Arm und Bein langsam strecken, knapp über dem Boden.",
+    "Zurück und Seite wechseln."
+   ],
+   "mistakes": [
+    "Unterer Rücken hebt vom Boden ab.",
+    "Zu schnell.",
+    "Luft anhalten."
+   ],
+   "breathing": "Beim Strecken ausatmen.",
+   "media": {
+    "video": "dead_bug.mp4",
+    "image": "dead_bug.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "bird_dog",
+   "name": "Bird Dog",
+   "en": "Bird Dog",
+   "pattern": "core",
+   "muscles": [
+    "Rückenstrecker",
+    "Tiefe Bauchmuskeln"
+   ],
+   "secondary": [
+    "Po",
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 3,
+   "steps": [
+    "Vierfüßlerstand, Hände unter den Schultern, Knie unter der Hüfte.",
+    "Gegenüberliegenden Arm und Bein lang strecken.",
+    "Becken bleibt waagerecht.",
+    "Kurz halten, zurück, Seite wechseln."
+   ],
+   "mistakes": [
+    "Becken dreht sich auf.",
+    "Bein zu hoch — Hohlkreuz.",
+    "Kopf in den Nacken."
+   ],
+   "breathing": "Beim Strecken ausatmen.",
+   "media": {
+    "video": "bird_dog.mp4",
+    "image": "bird_dog.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "hollow_hold",
+   "name": "Hollow Hold",
+   "en": "Hollow Body Hold",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch",
+    "Tiefe Bauchmuskeln"
+   ],
+   "secondary": [
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "sec",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 25,
+   "regress": "dead_bug",
+   "progress": "hollow_rock",
+   "steps": [
+    "Rückenlage, unteren Rücken fest an den Boden.",
+    "Schultern und Beine wenige Zentimeter anheben.",
+    "Arme gestreckt neben den Ohren, Körper wie eine flache Banane.",
+    "Halten, ohne dass der untere Rücken abhebt."
+   ],
+   "mistakes": [
+    "Hohlkreuz — dann Beine höher oder Knie beugen.",
+    "Kinn auf der Brust verkrampft.",
+    "Arme sinken nach vorn."
+   ],
+   "tips": [
+    "Grundposition für fast alle Calisthenics-Skills."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "hollow_hold.mp4",
+    "image": "hollow_hold.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "hollow_rock",
+   "name": "Hollow Rocks",
+   "en": "Hollow Rock",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch"
+   ],
+   "secondary": [
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 15,
+   "secPerRep": 1.5,
+   "regress": "hollow_hold",
+   "steps": [
+    "In der Hollow-Position.",
+    "Als Ganzes vor und zurück schaukeln.",
+    "Die Form bleibt fest — nur der Körper rollt.",
+    "Gleichmäßiger Rhythmus."
+   ],
+   "mistakes": [
+    "Form bricht beim Schaukeln.",
+    "Schwung aus den Armen.",
+    "Hohlkreuz."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "hollow_rock.mp4",
+    "image": "hollow_rock.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "crunch",
+   "name": "Crunch",
+   "en": "Crunch",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "stress": [
+    "nacken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "secPerRep": 2,
+   "progress": "situp",
+   "steps": [
+    "Rückenlage, Beine aufgestellt, Hände an den Schläfen.",
+    "Schulterblätter mit dem Bauch vom Boden heben.",
+    "Kurz halten.",
+    "Langsam zurück."
+   ],
+   "mistakes": [
+    "Am Kopf ziehen.",
+    "Schwung holen.",
+    "Zu hoch kommen — der untere Rücken bleibt liegen."
+   ],
+   "breathing": "Beim Hochrollen ausatmen.",
+   "media": {
+    "video": "crunch.mp4",
+    "image": "crunch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "situp",
+   "name": "Sit-up",
+   "en": "Sit-up",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 15,
+   "secPerRep": 2.5,
+   "regress": "crunch",
+   "progress": "v_up",
+   "steps": [
+    "Rückenlage, Beine aufgestellt oder gestreckt, Arme über dem Kopf.",
+    "Wirbel für Wirbel hochrollen bis zum Sitz.",
+    "Arme nach vorn zu den Füßen.",
+    "Kontrolliert zurückrollen."
+   ],
+   "mistakes": [
+    "Ruckartiger Schwung aus den Armen.",
+    "Fallenlassen nach hinten.",
+    "Füße heben ab."
+   ],
+   "breathing": "Beim Hochrollen ausatmen.",
+   "media": {
+    "video": "situp.mp4",
+    "image": "situp.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "bicycle_crunch",
+   "name": "Fahrrad-Crunch",
+   "en": "Bicycle Crunch",
+   "pattern": "core",
+   "muscles": [
+    "Seitliche Bauchmuskeln",
+    "Gerader Bauch"
+   ],
+   "secondary": [
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "nacken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "secPerRep": 1.6,
+   "steps": [
+    "Rückenlage, Hände an den Schläfen, Schultern leicht abgehoben.",
+    "Ein Knie zur Brust, das andere Bein streckt sich.",
+    "Gegenüberliegenden Ellbogen zum Knie drehen.",
+    "Fließend wechseln."
+   ],
+   "mistakes": [
+    "Am Kopf ziehen.",
+    "Nur Ellbogen bewegen statt Oberkörper drehen.",
+    "Zu hektisch."
+   ],
+   "breathing": "Bei jeder Drehung ausatmen.",
+   "media": {
+    "video": "bicycle_crunch.mp4",
+    "image": "bicycle_crunch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "russian_twist",
+   "name": "Russian Twist",
+   "en": "Russian Twist",
+   "pattern": "core",
+   "muscles": [
+    "Seitliche Bauchmuskeln"
+   ],
+   "secondary": [
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "secPerRep": 1.4,
+   "steps": [
+    "Sitzen, Oberkörper leicht zurück, Füße leicht angehoben (leichter: am Boden).",
+    "Hände vor der Brust.",
+    "Oberkörper zu einer Seite drehen.",
+    "Zur anderen Seite wechseln."
+   ],
+   "mistakes": [
+    "Rundrücken.",
+    "Nur die Arme bewegen sich.",
+    "Zu weit zurückgelehnt."
+   ],
+   "breathing": "Bei jeder Drehung ausatmen.",
+   "media": {
+    "video": "russian_twist.mp4",
+    "image": "russian_twist.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "leg_raise",
+   "name": "Beinheben liegend",
+   "en": "Lying Leg Raise",
+   "pattern": "core",
+   "muscles": [
+    "Unterer Bauch",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 3,
+   "regress": "dead_bug",
+   "progress": "hanging_knee_raise",
+   "steps": [
+    "Rückenlage, Hände neben dem Po oder darunter.",
+    "Beine gestreckt zur Decke heben.",
+    "Langsam senken, bis kurz über dem Boden.",
+    "Unterer Rücken bleibt am Boden."
+   ],
+   "mistakes": [
+    "Hohlkreuz beim Senken.",
+    "Beine fallen lassen.",
+    "Schwung."
+   ],
+   "breathing": "Beim Heben ausatmen.",
+   "media": {
+    "video": "leg_raise.mp4",
+    "image": "leg_raise.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "flutter_kicks",
+   "name": "Flutter Kicks",
+   "en": "Flutter Kicks",
+   "pattern": "core",
+   "muscles": [
+    "Unterer Bauch",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "sec",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 30,
+   "steps": [
+    "Rückenlage, unterer Rücken am Boden.",
+    "Beine gestreckt knapp über dem Boden.",
+    "Abwechselnd kurz auf und ab schlagen.",
+    "Rücken bleibt flach."
+   ],
+   "mistakes": [
+    "Hohlkreuz.",
+    "Beine zu hoch.",
+    "Luft anhalten."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "flutter_kicks.mp4",
+    "image": "flutter_kicks.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "v_up",
+   "name": "V-Up",
+   "en": "V-Up",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "regress": "situp",
+   "steps": [
+    "Rückenlage, Arme über dem Kopf, Beine gestreckt.",
+    "Gleichzeitig Oberkörper und Beine heben.",
+    "Hände treffen die Füße oben (V-Form).",
+    "Kontrolliert ablegen."
+   ],
+   "mistakes": [
+    "Knie stark gebeugt.",
+    "Fallen lassen.",
+    "Schwung mit den Armen."
+   ],
+   "breathing": "Beim Hochkommen ausatmen.",
+   "media": {
+    "video": "v_up.mp4",
+    "image": "v_up.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "mountain_climber",
+   "name": "Bergsteiger",
+   "en": "Mountain Climber",
+   "pattern": "cardio",
+   "muscles": [
+    "Rumpf",
+    "Hüftbeuger"
+   ],
+   "secondary": [
+    "Schultern",
+    "Beine"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 30,
+   "secPerRep": 0.8,
+   "regress": "plank",
+   "steps": [
+    "Hoher Stütz auf gestreckten Armen.",
+    "Ein Knie zügig zur Brust ziehen.",
+    "Beine im Wechsel laufen lassen.",
+    "Hüfte bleibt tief und ruhig."
+   ],
+   "mistakes": [
+    "Po ragt nach oben.",
+    "Schultern hinter den Händen.",
+    "Füße tippen nur kurz statt durchzuziehen."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "mountain_climber.mp4",
+    "image": "mountain_climber.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "hanging_knee_raise",
+   "name": "Knieheben hängend",
+   "en": "Hanging Knee Raise",
+   "pattern": "core",
+   "muscles": [
+    "Unterer Bauch",
+    "Hüftbeuger"
+   ],
+   "secondary": [
+    "Griffkraft"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 4,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "regress": "leg_raise",
+   "progress": "hanging_leg_raise",
+   "steps": [
+    "Im Hang, Schultern leicht aktiv.",
+    "Knie zur Brust ziehen, Becken einrollen.",
+    "Kurz halten.",
+    "Langsam senken ohne Schwung."
+   ],
+   "mistakes": [
+    "Schwingen.",
+    "Nur die Oberschenkel heben, Becken bleibt hinten.",
+    "Fallen lassen."
+   ],
+   "breathing": "Beim Heben ausatmen.",
+   "media": {
+    "video": "hanging_knee_raise.mp4",
+    "image": "hanging_knee_raise.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "hanging_leg_raise",
+   "name": "Beinheben hängend",
+   "en": "Hanging Leg Raise",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch",
+    "Hüftbeuger"
+   ],
+   "secondary": [
+    "Griffkraft",
+    "Latissimus"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 7,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 3.2,
+   "regress": "hanging_knee_raise",
+   "progress": "toes_to_bar",
+   "steps": [
+    "Im ruhigen Hang.",
+    "Gestreckte Beine bis mindestens waagerecht heben.",
+    "Becken dabei nach oben einrollen.",
+    "Kontrolliert senken."
+   ],
+   "mistakes": [
+    "Schwung aus dem Körper.",
+    "Knie beugen sich.",
+    "Unkontrolliertes Ablassen."
+   ],
+   "breathing": "Beim Heben ausatmen.",
+   "media": {
+    "video": "hanging_leg_raise.mp4",
+    "image": "hanging_leg_raise.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "toes_to_bar",
+   "name": "Toes to Bar",
+   "en": "Toes to Bar",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch",
+    "Hüftbeuger"
+   ],
+   "secondary": [
+    "Latissimus",
+    "Griffkraft"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 8,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "secPerRep": 3.5,
+   "regress": "hanging_leg_raise",
+   "steps": [
+    "Im Hang, Arme gestreckt.",
+    "Latissimus leicht anspannen (Stange nach unten drücken).",
+    "Gestreckte Beine bis zur Stange führen.",
+    "Kontrolliert ablassen."
+   ],
+   "mistakes": [
+    "Großer Schwung.",
+    "Knie stark gebeugt.",
+    "Zu schnell ablassen."
+   ],
+   "breathing": "Beim Heben ausatmen.",
+   "media": {
+    "video": "toes_to_bar.mp4",
+    "image": "toes_to_bar.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "superman",
+   "name": "Superman",
+   "en": "Superman Hold",
+   "pattern": "core",
+   "muscles": [
+    "Rückenstrecker",
+    "Po"
+   ],
+   "secondary": [
+    "Oberer Rücken"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "sec",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 25,
+   "steps": [
+    "Bauchlage, Arme lang nach vorn.",
+    "Arme, Brust und Beine leicht anheben.",
+    "Blick zum Boden, Nacken lang.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Kopf in den Nacken.",
+    "Zu hoch — Schmerz im unteren Rücken.",
+    "Knie beugen."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "superman.mp4",
+    "image": "superman.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "arch_hold",
+   "name": "Arch Hold",
+   "en": "Arch Body Hold",
+   "pattern": "core",
+   "muscles": [
+    "Rückenstrecker",
+    "Po",
+    "Oberer Rücken"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "sec",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 25,
+   "regress": "superman",
+   "steps": [
+    "Bauchlage, Arme neben den Ohren gestreckt.",
+    "Arme und Beine gleichzeitig anheben, Po fest.",
+    "Gleichmäßiger Bogen, Schultern weg von den Ohren.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Nur die Beine heben.",
+    "Kopf in den Nacken.",
+    "Knie beugen."
+   ],
+   "tips": [
+    "Gegenstück zum Hollow Hold."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "arch_hold.mp4",
+    "image": "arch_hold.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "reverse_snow_angel",
+   "name": "Schneeengel in Bauchlage",
+   "en": "Reverse Snow Angel",
+   "pattern": "core",
+   "muscles": [
+    "Oberer Rücken",
+    "Hintere Schulter"
+   ],
+   "secondary": [
+    "Rückenstrecker"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 3.5,
+   "steps": [
+    "Bauchlage, Stirn leicht über dem Boden, Arme neben dem Körper.",
+    "Arme und Brust leicht anheben.",
+    "Arme in einem Bogen über den Kopf führen und zurück.",
+    "Schulterblätter bleiben tief."
+   ],
+   "mistakes": [
+    "Arme berühren den Boden.",
+    "Nacken überstreckt.",
+    "Zu schnell."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "reverse_snow_angel.mp4",
+    "image": "reverse_snow_angel.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "tuck_lsit",
+   "name": "L-Sitz gehockt",
+   "en": "Tuck L-sit",
+   "pattern": "core",
+   "muscles": [
+    "Hüftbeuger",
+    "Bauch",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Schultern"
+   ],
+   "equipment": [
+    "barren"
+   ],
+   "level": 5,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 15,
+   "progress": "lsit",
+   "steps": [
+    "Auf Parallettes, Stühle oder Barren stützen, Arme gestreckt.",
+    "Schultern weit nach unten drücken.",
+    "Knie zur Brust ziehen und die Füße vom Boden lösen.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Gebeugte Ellbogen.",
+    "Schultern sacken zu den Ohren.",
+    "Rundrücken nach hinten fallen lassen."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "tuck_lsit.mp4",
+    "image": "tuck_lsit.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "lsit",
+   "name": "L-Sitz",
+   "en": "L-sit",
+   "pattern": "core",
+   "muscles": [
+    "Hüftbeuger",
+    "Bauch",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Oberschenkel vorn"
+   ],
+   "equipment": [
+    "barren"
+   ],
+   "level": 7,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "regress": "tuck_lsit",
+   "steps": [
+    "Stütz mit gestreckten Armen, Schultern tief.",
+    "Gestreckte Beine waagerecht nach vorn heben.",
+    "Zehen gestreckt, Knie durchgedrückt.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Beine sinken unter die Waagerechte.",
+    "Knie gebeugt.",
+    "Schultern hochgezogen."
+   ],
+   "breathing": "Ruhig weiteratmen, Bauch dabei fest lassen.",
+   "media": {
+    "video": "lsit.mp4",
+    "image": "lsit.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "dragon_flag_neg",
+   "name": "Dragon Flag (negativ)",
+   "en": "Dragon Flag Negative",
+   "pattern": "core",
+   "muscles": [
+    "Gerader Bauch",
+    "Ganzer Rumpf"
+   ],
+   "secondary": [
+    "Latissimus"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 8,
+   "unit": "reps",
+   "stress": [
+    "ruecken",
+    "nacken",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 4,
+   "secPerRep": 6,
+   "regress": "leg_raise",
+   "steps": [
+    "Auf eine Bank legen, hinter dem Kopf festhalten.",
+    "Körper gestreckt auf die Schultern hochschwingen.",
+    "Als gerade Linie so langsam wie möglich absenken.",
+    "Erst kurz über der Bank die Hüfte beugen."
+   ],
+   "mistakes": [
+    "Hüfte knickt beim Senken ein.",
+    "Auf dem Nacken statt den Schultern.",
+    "Zu schnell."
+   ],
+   "tips": [
+    "Nur mit sehr starkem Rumpf."
+   ],
+   "breathing": "Gleichmäßig ausatmen beim Senken.",
+   "media": {
+    "video": "dragon_flag_neg.mp4",
+    "image": "dragon_flag_neg.jpg",
+    "credit": "Freeletics"
+   }
+  },
+  {
+   "id": "jumping_jack",
+   "name": "Hampelmann",
+   "en": "Jumping Jack",
+   "pattern": "cardio",
+   "muscles": [
+    "Ganzer Körper"
+   ],
+   "secondary": [
+    "Waden",
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "sprunggelenk"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 30,
+   "secPerRep": 0.9,
+   "steps": [
+    "Aufrecht, Arme an den Seiten.",
+    "Springen: Beine grätschen, Arme über den Kopf.",
+    "Zurückspringen in die Ausgangsstellung.",
+    "Locker im Rhythmus bleiben."
+   ],
+   "mistakes": [
+    "Auf den Fersen landen.",
+    "Arme nur halb hoch.",
+    "Steife Knie."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "jumping_jack.mp4",
+    "image": "jumping_jack.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "step_jack",
+   "name": "Hampelmann ohne Sprung",
+   "en": "Step Jack",
+   "pattern": "cardio",
+   "muscles": [
+    "Ganzer Körper"
+   ],
+   "secondary": [
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "stress": [],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 30,
+   "secPerRep": 1,
+   "steps": [
+    "Aufrecht stehen.",
+    "Einen Fuß zur Seite tippen und gleichzeitig die Arme über den Kopf.",
+    "Zurück und Seite wechseln.",
+    "Zügiges Tempo."
+   ],
+   "mistakes": [
+    "Arme nur halb.",
+    "Zu langsam für ein Aufwärmen.",
+    "Hängende Schultern."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "step_jack.mp4",
+    "image": "step_jack.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "high_knees",
+   "name": "Kniehebelauf",
+   "en": "High Knees",
+   "pattern": "cardio",
+   "muscles": [
+    "Hüftbeuger",
+    "Oberschenkel"
+   ],
+   "secondary": [
+    "Waden",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "sec",
+   "jump": true,
+   "stress": [
+    "sprunggelenk",
+    "knie"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 30,
+   "steps": [
+    "Auf der Stelle laufen.",
+    "Knie bis auf Hüfthöhe ziehen.",
+    "Auf dem Vorfuß landen.",
+    "Arme schwingen aktiv mit."
+   ],
+   "mistakes": [
+    "Knie zu tief.",
+    "Zurücklehnen.",
+    "Laut aufstampfen."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "high_knees.mp4",
+    "image": "high_knees.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "butt_kicks",
+   "name": "Anfersen",
+   "en": "Butt Kicks",
+   "pattern": "cardio",
+   "muscles": [
+    "Oberschenkel hinten"
+   ],
+   "secondary": [
+    "Waden"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "sec",
+   "jump": true,
+   "stress": [
+    "sprunggelenk"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 30,
+   "steps": [
+    "Auf der Stelle laufen.",
+    "Fersen Richtung Po ziehen.",
+    "Oberkörper aufrecht.",
+    "Leicht auf dem Vorfuß."
+   ],
+   "mistakes": [
+    "Nach vorn lehnen.",
+    "Laut landen.",
+    "Zu langsam."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "butt_kicks.mp4",
+    "image": "butt_kicks.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "jog_in_place",
+   "name": "Laufen auf der Stelle",
+   "en": "Jog in Place",
+   "pattern": "cardio",
+   "muscles": [
+    "Ganzer Körper"
+   ],
+   "secondary": [
+    "Waden"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [],
+   "use": [
+    "warmup"
+   ],
+   "base": 40,
+   "steps": [
+    "Locker auf der Stelle joggen.",
+    "Arme schwingen mit.",
+    "Leise auf dem Vorfuß.",
+    "Langsam Tempo steigern."
+   ],
+   "mistakes": [
+    "Steif und verkrampft.",
+    "Auf den Fersen landen.",
+    "Zu schnell starten."
+   ],
+   "breathing": "Ruhig durch die Nase beginnen.",
+   "media": {
+    "video": "jog_in_place.mp4",
+    "image": "jog_in_place.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "burpee",
+   "name": "Burpee",
+   "en": "Burpee",
+   "pattern": "cardio",
+   "muscles": [
+    "Ganzer Körper"
+   ],
+   "secondary": [
+    "Brust",
+    "Beine",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "handgelenk",
+    "knie",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 3.5,
+   "regress": "half_burpee",
+   "steps": [
+    "Aus dem Stand in die Hocke, Hände vor die Füße.",
+    "Füße nach hinten in den Liegestütz springen, Brust zum Boden.",
+    "Hochdrücken, Füße zu den Händen springen.",
+    "Strecksprung mit Klatschen über dem Kopf."
+   ],
+   "mistakes": [
+    "Hüfte hängt im Liegestütz.",
+    "Rundrücken beim Aufstehen.",
+    "Harte Landung.",
+    "Nicht ganz aufrichten oben."
+   ],
+   "tips": [
+    "Tempo kommt von flüssigen Übergängen, nicht von halber Bewegung."
+   ],
+   "breathing": "Beim Hochspringen ausatmen.",
+   "media": {
+    "video": "burpee.mp4",
+    "image": "burpee.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "half_burpee",
+   "name": "Burpee ohne Sprung",
+   "en": "No-jump Burpee",
+   "pattern": "cardio",
+   "muscles": [
+    "Ganzer Körper"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Beine"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "knie"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 4,
+   "progress": "burpee",
+   "steps": [
+    "In die Hocke, Hände vor die Füße.",
+    "Nacheinander die Füße nach hinten in den Stütz setzen.",
+    "Nacheinander zurück zu den Händen.",
+    "Aufrichten, Arme über den Kopf strecken."
+   ],
+   "mistakes": [
+    "Hohlkreuz im Stütz.",
+    "Rundrücken in der Hocke.",
+    "Nicht ganz aufrichten."
+   ],
+   "tips": [
+    "Leise Variante — gut für die Wohnung."
+   ],
+   "breathing": "Beim Aufrichten ausatmen.",
+   "media": {
+    "video": "half_burpee.mp4",
+    "image": "half_burpee.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "sprawl",
+   "name": "Sprawl",
+   "en": "Sprawl",
+   "pattern": "cardio",
+   "muscles": [
+    "Ganzer Körper"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Beine"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "handgelenk",
+    "huefte"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.5,
+   "regress": "half_burpee",
+   "steps": [
+    "Hände vor die Füße.",
+    "Beine nach hinten springen, Hüfte Richtung Boden.",
+    "Sofort zurückspringen.",
+    "Aufrichten."
+   ],
+   "mistakes": [
+    "Hohlkreuz zu stark.",
+    "Zu langsam aufrichten.",
+    "Schultern hinter den Händen."
+   ],
+   "breathing": "Beim Aufrichten ausatmen.",
+   "media": {
+    "video": "sprawl.mp4",
+    "image": "sprawl.jpg",
+    "credit": "Freeletics"
+   }
+  },
+  {
+   "id": "skater_jump",
+   "name": "Eisschnellläufer",
+   "en": "Skater Jump",
+   "pattern": "cardio",
+   "muscles": [
+    "Po",
+    "Oberschenkel"
+   ],
+   "secondary": [
+    "Waden",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "knie",
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 16,
+   "secPerRep": 1.5,
+   "steps": [
+    "Seitlich auf ein Bein springen.",
+    "Das andere Bein kreuzt hinter dem Standbein.",
+    "Leicht in die Hocke abfedern.",
+    "Zur anderen Seite springen."
+   ],
+   "mistakes": [
+    "Harte Landung.",
+    "Knie fällt nach innen.",
+    "Zu kleine Sprünge."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "skater_jump.mp4",
+    "image": "skater_jump.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "tuck_jump",
+   "name": "Hocksprung",
+   "en": "Tuck Jump",
+   "pattern": "cardio",
+   "muscles": [
+    "Oberschenkel",
+    "Po"
+   ],
+   "secondary": [
+    "Waden",
+    "Bauch"
+   ],
+   "equipment": [],
+   "level": 6,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "knie",
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 2,
+   "regress": "jump_squat",
+   "steps": [
+    "Hüftbreit stehen.",
+    "Explosiv abspringen und Knie zur Brust ziehen.",
+    "Weich landen.",
+    "Direkt weiter."
+   ],
+   "mistakes": [
+    "Landung mit gestreckten Knien.",
+    "Knie fallen nach innen.",
+    "Rundrücken."
+   ],
+   "breathing": "Beim Absprung ausatmen.",
+   "media": {
+    "video": "tuck_jump.mp4",
+    "image": "tuck_jump.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "star_jump",
+   "name": "Sternsprung",
+   "en": "Star Jump",
+   "pattern": "cardio",
+   "muscles": [
+    "Ganzer Körper"
+   ],
+   "secondary": [
+    "Beine",
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "reps",
+   "jump": true,
+   "stress": [
+    "knie",
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 12,
+   "secPerRep": 1.8,
+   "steps": [
+    "Leichte Hocke.",
+    "Explosiv abspringen und Arme und Beine zum Stern spreizen.",
+    "Geschlossen und weich landen.",
+    "Direkt weiter."
+   ],
+   "mistakes": [
+    "Harte Landung.",
+    "Zu wenig Höhe.",
+    "Knie kippen."
+   ],
+   "breathing": "Beim Absprung ausatmen.",
+   "media": {
+    "video": "star_jump.mp4",
+    "image": "star_jump.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "jump_rope",
+   "name": "Seilspringen",
+   "en": "Jump Rope",
+   "pattern": "cardio",
+   "muscles": [
+    "Waden"
+   ],
+   "secondary": [
+    "Schultern",
+    "Ganzer Körper"
+   ],
+   "equipment": [
+    "springseil"
+   ],
+   "level": 3,
+   "unit": "sec",
+   "jump": true,
+   "stress": [
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 60,
+   "steps": [
+    "Seil hinter den Fersen, Ellbogen nah am Körper.",
+    "Aus den Handgelenken drehen.",
+    "Kleine Sprünge auf dem Vorfuß.",
+    "Locker im Rhythmus bleiben."
+   ],
+   "mistakes": [
+    "Zu hohe Sprünge.",
+    "Arme weit ausgestreckt.",
+    "Auf den Fersen landen."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "jump_rope.mp4",
+    "image": "jump_rope.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "shadow_boxing",
+   "name": "Schattenboxen",
+   "en": "Shadow Boxing",
+   "pattern": "cardio",
+   "muscles": [
+    "Schultern",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Beine"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "sec",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "warmup",
+    "main"
+   ],
+   "base": 40,
+   "steps": [
+    "Lockere Boxstellung, Fäuste vor dem Kinn.",
+    "Gerade Schläge abwechselnd, Hüfte dreht mit.",
+    "Leicht auf den Füßen tänzeln.",
+    "Nach jedem Schlag Deckung zurück."
+   ],
+   "mistakes": [
+    "Arme durchschlagen bis zum Anschlag.",
+    "Schultern hochgezogen.",
+    "Steifer Stand."
+   ],
+   "tips": [
+    "Leise Ausdauerübung ohne Sprünge."
+   ],
+   "breathing": "Bei jedem Schlag kurz ausatmen.",
+   "media": {
+    "video": "shadow_boxing.mp4",
+    "image": "shadow_boxing.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "fast_feet",
+   "name": "Fast Feet",
+   "en": "Fast Feet",
+   "pattern": "cardio",
+   "muscles": [
+    "Waden",
+    "Oberschenkel"
+   ],
+   "secondary": [
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "sec",
+   "stress": [
+    "sprunggelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "steps": [
+    "Leichte Hocke, Gewicht auf den Vorfüßen.",
+    "So schnell wie möglich auf der Stelle trippeln.",
+    "Arme vor dem Körper.",
+    "Oberkörper ruhig."
+   ],
+   "mistakes": [
+    "Zu aufrecht.",
+    "Auf die Fersen kommen.",
+    "Große, langsame Schritte."
+   ],
+   "breathing": "Rhythmisch atmen.",
+   "media": {
+    "video": "fast_feet.mp4",
+    "image": "fast_feet.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "arm_circles",
+   "name": "Armkreisen",
+   "en": "Arm Circles",
+   "pattern": "mobility",
+   "muscles": [
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 30,
+   "steps": [
+    "Aufrecht, Arme seitlich gestreckt.",
+    "Erst kleine, dann immer größere Kreise vorwärts.",
+    "Nach der Hälfte der Zeit Richtung wechseln.",
+    "Schultern bleiben tief."
+   ],
+   "mistakes": [
+    "Schultern zu den Ohren.",
+    "Hektisch.",
+    "Ellbogen gebeugt."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "arm_circles.mp4",
+    "image": "arm_circles.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "shoulder_dislocate",
+   "name": "Schulterkreisen mit Band",
+   "en": "Band Shoulder Dislocates",
+   "pattern": "mobility",
+   "muscles": [
+    "Schultern",
+    "Brust"
+   ],
+   "equipment": [
+    "band"
+   ],
+   "level": 1,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 12,
+   "secPerRep": 3,
+   "steps": [
+    "Band weit greifen, Arme gestreckt vor dem Körper.",
+    "In einem Bogen über den Kopf hinter den Körper führen.",
+    "Und zurück nach vorn.",
+    "Griff so breit, dass es ohne Schmerz geht."
+   ],
+   "mistakes": [
+    "Ellbogen beugen.",
+    "Zu enger Griff.",
+    "Hohlkreuz, um nach hinten zu kommen."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "shoulder_dislocate.mp4",
+    "image": "shoulder_dislocate.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "wrist_prep",
+   "name": "Handgelenke vorbereiten",
+   "en": "Wrist Warm-up",
+   "pattern": "mobility",
+   "muscles": [
+    "Handgelenke",
+    "Unterarme"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [
+    "handgelenk"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 45,
+   "steps": [
+    "Vierfüßlerstand, Hände unter den Schultern.",
+    "Gewicht sanft vor und zurück verlagern.",
+    "Hände drehen: Finger zur Seite, dann nach hinten, jeweils sanft lehnen.",
+    "Handrücken kurz aufsetzen und sanft belasten."
+   ],
+   "mistakes": [
+    "Zu viel Druck sofort.",
+    "Schmerz ignorieren.",
+    "Zu kurz — vor Handstand und Planche mindestens eine Minute."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "wrist_prep.mp4",
+    "image": "wrist_prep.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "cat_cow",
+   "name": "Katze-Kuh",
+   "en": "Cat-Cow",
+   "pattern": "mobility",
+   "muscles": [
+    "Wirbelsäule",
+    "Rückenstrecker"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "warmup",
+    "cooldown"
+   ],
+   "base": 40,
+   "steps": [
+    "Vierfüßlerstand.",
+    "Ausatmen: Rücken rund nach oben, Kinn zur Brust.",
+    "Einatmen: Brust nach vorn, Rücken sanft ins Hohlkreuz, Blick nach vorn.",
+    "Fließend im Atemrhythmus wechseln."
+   ],
+   "mistakes": [
+    "Nur der Kopf bewegt sich.",
+    "Zu schnell.",
+    "Arme gebeugt."
+   ],
+   "breathing": "Im Rhythmus der Bewegung.",
+   "media": {
+    "video": "cat_cow.mp4",
+    "image": "cat_cow.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "worlds_greatest",
+   "name": "World’s Greatest Stretch",
+   "en": "World’s Greatest Stretch",
+   "pattern": "mobility",
+   "muscles": [
+    "Hüftbeuger",
+    "Brustwirbelsäule",
+    "Oberschenkel hinten"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "huefte"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 5,
+   "secPerRep": 6,
+   "steps": [
+    "Großer Ausfallschritt, hinteres Knie gestreckt.",
+    "Gleichseitigen Ellbogen innen zum vorderen Fuß senken.",
+    "Arm nach oben aufdrehen, Blick folgt der Hand.",
+    "Hand neben den Fuß, vorderes Bein strecken, zurück."
+   ],
+   "mistakes": [
+    "Hinteres Knie sinkt ab.",
+    "Nur den Arm heben statt den Oberkörper drehen.",
+    "Hektisch."
+   ],
+   "breathing": "Beim Aufdrehen ausatmen.",
+   "media": {
+    "video": "worlds_greatest.mp4",
+    "image": "worlds_greatest.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "hip_circles",
+   "name": "Hüftkreisen",
+   "en": "Hip Circles",
+   "pattern": "mobility",
+   "muscles": [
+    "Hüfte",
+    "Unterer Rücken"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [
+    "huefte"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 30,
+   "steps": [
+    "Hüftbreit stehen, Hände an der Hüfte.",
+    "Große, langsame Kreise mit dem Becken.",
+    "Nach der Hälfte Richtung wechseln.",
+    "Oberkörper möglichst ruhig."
+   ],
+   "mistakes": [
+    "Kleine Bewegung.",
+    "Knie durchgedrückt.",
+    "Zu schnell."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "hip_circles.mp4",
+    "image": "hip_circles.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "leg_swings",
+   "name": "Beinpendel",
+   "en": "Leg Swings",
+   "pattern": "mobility",
+   "muscles": [
+    "Hüftbeuger",
+    "Oberschenkel hinten"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "huefte"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 12,
+   "secPerRep": 1.2,
+   "steps": [
+    "Seitlich an einer Wand festhalten.",
+    "Ein Bein locker vor und zurück schwingen.",
+    "Die Höhe langsam steigern.",
+    "Oberkörper bleibt aufrecht."
+   ],
+   "mistakes": [
+    "Mit Gewalt hoch kicken.",
+    "Rundrücken.",
+    "Standbein-Knie verriegelt."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "leg_swings.mp4",
+    "image": "leg_swings.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "inchworm",
+   "name": "Inchworm",
+   "en": "Inchworm",
+   "pattern": "mobility",
+   "muscles": [
+    "Oberschenkel hinten",
+    "Schultern",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 6,
+   "secPerRep": 7,
+   "steps": [
+    "Aus dem Stand mit möglichst gestreckten Beinen die Hände zum Boden bringen.",
+    "Mit den Händen nach vorn laufen bis in den Liegestütz.",
+    "Optional ein Liegestütz.",
+    "Mit den Füßen zu den Händen laufen und aufrichten."
+   ],
+   "mistakes": [
+    "Hüfte hängt im Stütz.",
+    "Zu große Handschritte.",
+    "Knie stark gebeugt."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "inchworm.mp4",
+    "image": "inchworm.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "thoracic_rotation",
+   "name": "Oberkörper aufdrehen",
+   "en": "Thoracic Rotation",
+   "pattern": "mobility",
+   "muscles": [
+    "Brustwirbelsäule"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "warmup",
+    "cooldown"
+   ],
+   "base": 8,
+   "secPerRep": 3,
+   "steps": [
+    "Vierfüßlerstand, eine Hand an den Hinterkopf.",
+    "Ellbogen unter den Körper zum anderen Arm führen.",
+    "Dann weit nach oben aufdrehen, Blick folgt.",
+    "Becken bleibt ruhig."
+   ],
+   "mistakes": [
+    "Becken dreht mit.",
+    "Zu schnell.",
+    "Stützarm gebeugt."
+   ],
+   "breathing": "Beim Aufdrehen einatmen.",
+   "media": {
+    "video": "thoracic_rotation.mp4",
+    "image": "thoracic_rotation.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "ankle_rocks",
+   "name": "Sprunggelenk mobilisieren",
+   "en": "Ankle Rocks",
+   "pattern": "mobility",
+   "muscles": [
+    "Waden",
+    "Sprunggelenk"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "perSide": true,
+   "stress": [
+    "sprunggelenk"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 10,
+   "secPerRep": 2,
+   "steps": [
+    "Halbkniestand, vorderer Fuß flach.",
+    "Knie über die Zehen nach vorn schieben.",
+    "Ferse bleibt am Boden.",
+    "Zurück und wiederholen."
+   ],
+   "mistakes": [
+    "Ferse hebt ab.",
+    "Knie fällt nach innen.",
+    "Wippen statt kontrolliert."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "ankle_rocks.mp4",
+    "image": "ankle_rocks.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "deep_squat_hold",
+   "name": "Tiefe Hocke halten",
+   "en": "Deep Squat Hold",
+   "pattern": "mobility",
+   "muscles": [
+    "Hüfte",
+    "Sprunggelenk"
+   ],
+   "secondary": [
+    "Rücken"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "sec",
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "warmup",
+    "cooldown"
+   ],
+   "base": 40,
+   "steps": [
+    "In die tiefste Hocke sinken, Fersen am Boden.",
+    "Ellbogen drücken die Knie sanft nach außen.",
+    "Brust aufrecht.",
+    "Entspannt halten."
+   ],
+   "mistakes": [
+    "Fersen heben ab — notfalls etwas unter die Fersen legen.",
+    "Rundrücken.",
+    "Knie nach innen."
+   ],
+   "breathing": "Ruhig und tief atmen.",
+   "media": {
+    "video": "deep_squat_hold.mp4",
+    "image": "deep_squat_hold.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "scap_pushup",
+   "name": "Schulterblatt-Liegestütz",
+   "en": "Scapular Push-up",
+   "pattern": "mobility",
+   "muscles": [
+    "Sägezahnmuskel",
+    "Schulterblätter"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "handgelenk"
+   ],
+   "use": [
+    "warmup"
+   ],
+   "base": 12,
+   "secPerRep": 2,
+   "steps": [
+    "Hoher Stütz, Arme gestreckt.",
+    "Schulterblätter zusammensinken lassen (Brust sinkt leicht).",
+    "Dann den Boden wegdrücken, oberer Rücken wird rund.",
+    "Arme bleiben die ganze Zeit gestreckt."
+   ],
+   "mistakes": [
+    "Ellbogen beugen.",
+    "Hüfte bewegt sich mit.",
+    "Zu kleine Bewegung."
+   ],
+   "breathing": "Beim Wegdrücken ausatmen.",
+   "media": {
+    "video": "scap_pushup.mp4",
+    "image": "scap_pushup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "childs_pose",
+   "name": "Kindhaltung",
+   "en": "Child’s Pose",
+   "pattern": "stretch",
+   "muscles": [
+    "Rücken",
+    "Latissimus",
+    "Hüfte"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [],
+   "use": [
+    "cooldown"
+   ],
+   "base": 45,
+   "steps": [
+    "Knien, große Zehen berühren sich, Knie etwas auseinander.",
+    "Po zu den Fersen sinken lassen.",
+    "Arme weit nach vorn, Stirn zum Boden.",
+    "Entspannen."
+   ],
+   "mistakes": [
+    "Po hebt ab.",
+    "Schultern verkrampft.",
+    "Luft anhalten."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "childs_pose.mp4",
+    "image": "childs_pose.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "cobra",
+   "name": "Kobra",
+   "en": "Cobra Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Bauch",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [
+    "ruecken"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Bauchlage, Hände unter den Schultern.",
+    "Oberkörper sanft aufrichten, Becken bleibt am Boden.",
+    "Schultern weg von den Ohren.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Zu weit hoch mit Schmerz im unteren Rücken.",
+    "Schultern hochgezogen.",
+    "Kopf in den Nacken."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "cobra.mp4",
+    "image": "cobra.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "down_dog",
+   "name": "Herabschauender Hund",
+   "en": "Downward Dog",
+   "pattern": "stretch",
+   "muscles": [
+    "Waden",
+    "Oberschenkel hinten",
+    "Schultern"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "warmup",
+    "cooldown"
+   ],
+   "base": 40,
+   "steps": [
+    "Aus dem Vierfüßler die Hüfte hoch und nach hinten schieben.",
+    "Hände fest in den Boden, Arme lang.",
+    "Fersen Richtung Boden, Knie dürfen leicht gebeugt sein.",
+    "Rücken lang machen."
+   ],
+   "mistakes": [
+    "Runder Rücken statt Fersen zu senken — lieber Knie beugen.",
+    "Schultern zu den Ohren.",
+    "Gewicht nur auf den Händen."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "down_dog.mp4",
+    "image": "down_dog.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "pigeon",
+   "name": "Taube",
+   "en": "Pigeon Pose",
+   "pattern": "stretch",
+   "muscles": [
+    "Po",
+    "Hüfte außen"
+   ],
+   "secondary": [
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "knie",
+    "huefte"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 45,
+   "steps": [
+    "Ein Bein angewinkelt vor dem Körper ablegen, das andere lang nach hinten.",
+    "Becken gerade ausrichten.",
+    "Oberkörper langsam nach vorn ablegen.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Schmerz im Knie — dann den Fuß näher zum Körper.",
+    "Becken kippt zur Seite.",
+    "Krampfhaft tief."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "pigeon.mp4",
+    "image": "pigeon.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "figure_four",
+   "name": "Liegende Vier",
+   "en": "Figure-4 Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Po",
+    "Hüfte außen"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [],
+   "use": [
+    "cooldown"
+   ],
+   "base": 40,
+   "steps": [
+    "Rückenlage, Füße aufgestellt.",
+    "Einen Knöchel auf das andere Knie legen.",
+    "Das untere Bein zur Brust ziehen.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Kopf hebt ab.",
+    "Fuß angezogen lassen vergessen (schützt das Knie).",
+    "Zu stark ziehen."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "figure_four.mp4",
+    "image": "figure_four.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "hamstring_stretch",
+   "name": "Rückseite dehnen sitzend",
+   "en": "Seated Hamstring Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Oberschenkel hinten",
+    "Waden"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [],
+   "use": [
+    "cooldown"
+   ],
+   "base": 45,
+   "steps": [
+    "Sitzen, Beine gestreckt nach vorn.",
+    "Mit geradem Rücken aus der Hüfte nach vorn neigen.",
+    "Hände Richtung Füße.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Rundrücken statt Hüftbeuge.",
+    "Wippen.",
+    "Knie hochgedrückt mit Gewalt."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "hamstring_stretch.mp4",
+    "image": "hamstring_stretch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "quad_stretch",
+   "name": "Oberschenkel vorn dehnen",
+   "en": "Standing Quad Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Oberschenkel vorn",
+    "Hüftbeuger"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Auf einem Bein stehen, notfalls an der Wand halten.",
+    "Fuß zum Po ziehen.",
+    "Knie zeigen nach unten, Becken leicht einrollen.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Hohlkreuz.",
+    "Knie zeigt nach außen.",
+    "Am Fuß reißen."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "quad_stretch.mp4",
+    "image": "quad_stretch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "hip_flexor_stretch",
+   "name": "Hüftbeuger dehnen",
+   "en": "Kneeling Hip Flexor Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Hüftbeuger",
+    "Oberschenkel vorn"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "knie"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 40,
+   "steps": [
+    "Halbkniestand, ein Knie am Boden.",
+    "Po anspannen und Becken nach vorn schieben.",
+    "Oberkörper aufrecht.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Hohlkreuz statt Beckenschub.",
+    "Vorderes Knie weit über die Zehen.",
+    "Po locker."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "hip_flexor_stretch.mp4",
+    "image": "hip_flexor_stretch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "chest_stretch",
+   "name": "Brust dehnen an der Wand",
+   "en": "Wall Chest Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Brust",
+    "Vordere Schulter"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Unterarm auf Schulterhöhe an eine Wand oder einen Türrahmen.",
+    "Oberkörper sanft von der Wand wegdrehen.",
+    "Schulter bleibt tief.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Zu stark drehen.",
+    "Schulter hochgezogen.",
+    "Arm zu hoch."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "chest_stretch.mp4",
+    "image": "chest_stretch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "cross_body_shoulder",
+   "name": "Schulter quer dehnen",
+   "en": "Cross-body Shoulder Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Hintere Schulter"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Einen Arm gestreckt vor der Brust zur anderen Seite führen.",
+    "Mit der anderen Hand am Oberarm sanft heranziehen.",
+    "Schulter tief.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Am Ellbogen ziehen.",
+    "Schulter zum Ohr.",
+    "Oberkörper dreht mit."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "cross_body_shoulder.mp4",
+    "image": "cross_body_shoulder.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "triceps_stretch",
+   "name": "Trizeps dehnen",
+   "en": "Overhead Triceps Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Trizeps",
+    "Latissimus"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Einen Arm hoch, Ellbogen beugen, Hand zwischen die Schulterblätter.",
+    "Mit der anderen Hand den Ellbogen sanft nach hinten drücken.",
+    "Kopf aufrecht.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Hohlkreuz.",
+    "Kopf nach vorn gedrückt.",
+    "Zu fest drücken."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "triceps_stretch.mp4",
+    "image": "triceps_stretch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "butterfly",
+   "name": "Schmetterling",
+   "en": "Butterfly Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Innere Oberschenkel"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [
+    "huefte"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 40,
+   "steps": [
+    "Sitzen, Fußsohlen aneinander.",
+    "Füße zum Körper ziehen, Knie fallen nach außen.",
+    "Mit geradem Rücken leicht nach vorn neigen.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Knie mit den Händen herunterdrücken.",
+    "Rundrücken.",
+    "Wippen."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "butterfly.mp4",
+    "image": "butterfly.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "spinal_twist",
+   "name": "Liegender Drehsitz",
+   "en": "Supine Spinal Twist",
+   "pattern": "stretch",
+   "muscles": [
+    "Rücken",
+    "Po",
+    "Brust"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [],
+   "use": [
+    "cooldown"
+   ],
+   "base": 40,
+   "steps": [
+    "Rückenlage, Arme seitlich.",
+    "Ein Knie anwinkeln und über den Körper zur anderen Seite legen.",
+    "Schultern bleiben am Boden, Blick zur Gegenseite.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Schulter hebt ab.",
+    "Knie mit Gewalt zum Boden.",
+    "Luft anhalten."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "spinal_twist.mp4",
+    "image": "spinal_twist.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "calf_stretch",
+   "name": "Waden dehnen",
+   "en": "Wall Calf Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Waden"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Hände an die Wand, ein Bein weit nach hinten.",
+    "Hintere Ferse in den Boden, Bein gestreckt.",
+    "Becken nach vorn schieben.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Ferse hebt ab.",
+    "Fuß zeigt nach außen.",
+    "Hohlkreuz."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "calf_stretch.mp4",
+    "image": "calf_stretch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "thread_needle",
+   "name": "Faden einfädeln",
+   "en": "Thread the Needle",
+   "pattern": "stretch",
+   "muscles": [
+    "Oberer Rücken",
+    "Hintere Schulter"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "perSide": true,
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Vierfüßlerstand.",
+    "Einen Arm unter dem Körper zur anderen Seite durchschieben.",
+    "Schulter und Schläfe sanft ablegen.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Becken kippt zur Seite.",
+    "Nacken verdreht.",
+    "Zu viel Gewicht auf dem Kopf."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "thread_needle.mp4",
+    "image": "thread_needle.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "wrist_stretch",
+   "name": "Handgelenke dehnen",
+   "en": "Wrist Flexor Stretch",
+   "pattern": "stretch",
+   "muscles": [
+    "Unterarme"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "sec",
+   "stress": [
+    "handgelenk"
+   ],
+   "use": [
+    "cooldown"
+   ],
+   "base": 30,
+   "steps": [
+    "Kniend, Handflächen auf den Boden, Finger zeigen zu den Knien.",
+    "Sanft nach hinten lehnen.",
+    "Ellbogen gestreckt.",
+    "Halten, dann Handrücken aufsetzen."
+   ],
+   "mistakes": [
+    "Zu viel Gewicht.",
+    "Schmerz statt Zug.",
+    "Ellbogen gebeugt."
+   ],
+   "breathing": "Lang ausatmen und mit jedem Ausatmen etwas tiefer sinken.",
+   "media": {
+    "video": "wrist_stretch.mp4",
+    "image": "wrist_stretch.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "pike_hold",
+   "name": "Pike-Stütz auf Erhöhung",
+   "en": "Elevated Pike Hold",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Trizeps"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 3,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 30,
+   "progress": "wall_handstand",
+   "steps": [
+    "Füße auf eine Bank, Hände am Boden.",
+    "Hüfte über die Schultern, Arme gestreckt neben den Ohren.",
+    "Schultern aktiv zu den Ohren schieben (Boden wegdrücken).",
+    "Halten."
+   ],
+   "mistakes": [
+    "Arme gebeugt.",
+    "Hüfte hinter den Händen.",
+    "Kopf hängt — zwischen die Arme."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "pike_hold.mp4",
+    "image": "pike_hold.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "wall_handstand",
+   "name": "Handstand an der Wand (Bauch zur Wand)",
+   "en": "Chest-to-wall Handstand",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Trizeps",
+    "Handgelenke"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 5,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 30,
+   "regress": "pike_hold",
+   "progress": "wall_handstand_tap",
+   "steps": [
+    "Mit dem Rücken zur Wand in den Liegestütz, Füße an der Wand.",
+    "Mit den Füßen die Wand hochlaufen, Hände Richtung Wand.",
+    "Bauch zur Wand, Hände 10–20 cm entfernt, Körper gerade.",
+    "Boden wegdrücken, Rippen rein, Po fest, halten. Abgang: Füße zurücklaufen."
+   ],
+   "mistakes": [
+    "Hohlkreuz (Banane).",
+    "Schultern nicht geöffnet — Arme neben die Ohren.",
+    "Hände zu weit von der Wand.",
+    "Gebeugte Arme."
+   ],
+   "tips": [
+    "Erst Abrollen oder seitliches Aussteigen üben."
+   ],
+   "breathing": "Ruhig weiteratmen.",
+   "media": {
+    "video": "wall_handstand.mp4",
+    "image": "wall_handstand.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "wall_handstand_tap",
+   "name": "Wand-Handstand mit Schulter-Tippen",
+   "en": "Wall Handstand Shoulder Taps",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Handgelenke"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 6,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2,
+   "regress": "wall_handstand",
+   "progress": "freestanding_handstand",
+   "steps": [
+    "Bauch zur Wand im Handstand.",
+    "Gewicht auf eine Hand verlagern.",
+    "Die andere Hand kurz an die Schulter tippen.",
+    "Abwechselnd, Körper bleibt gerade."
+   ],
+   "mistakes": [
+    "Hüfte schwingt seitlich.",
+    "Gewicht nicht verlagert.",
+    "Hohlkreuz."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "wall_handstand_tap.mp4",
+    "image": "wall_handstand_tap.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "handstand_kickup",
+   "name": "Handstand-Aufschwung",
+   "en": "Handstand Kick-up",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Handgelenke"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 5,
+   "regress": "wall_handstand",
+   "progress": "freestanding_handstand",
+   "steps": [
+    "Aus dem Ausfallschritt Arme gestreckt nach vorn oben.",
+    "Hände schulterbreit aufsetzen, Finger gespreizt.",
+    "Mit dem hinteren Bein schwingen, vorderes Bein drückt ab.",
+    "Beine oben schließen; zu weit → Abrollen oder seitlich aussteigen."
+   ],
+   "mistakes": [
+    "Zu viel Schwung ohne Plan für den Ausstieg.",
+    "Arme beugen beim Aufsetzen.",
+    "Kopf hebt sich, Blick zu weit nach vorn."
+   ],
+   "tips": [
+    "Nie ohne geübten Ausstieg frei üben."
+   ],
+   "breathing": "Beim Aufschwung ausatmen.",
+   "media": {
+    "video": "handstand_kickup.mp4",
+    "image": "handstand_kickup.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "freestanding_handstand",
+   "name": "Freier Handstand",
+   "en": "Freestanding Handstand",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Rumpf",
+    "Handgelenke"
+   ],
+   "secondary": [
+    "Trizeps"
+   ],
+   "equipment": [],
+   "level": 7,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "regress": "wall_handstand_tap",
+   "steps": [
+    "Aufschwung in den Handstand.",
+    "Gerade Linie: Hände, Schultern, Hüfte, Füße übereinander.",
+    "Balance über die Finger: Fallen nach vorn → Finger drücken; nach hinten → Handballen.",
+    "Halten, sicher aussteigen."
+   ],
+   "mistakes": [
+    "Hohlkreuz.",
+    "Ellbogen weich.",
+    "Mit den Füßen ausbalancieren statt mit den Händen."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "freestanding_handstand.mp4",
+    "image": "freestanding_handstand.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "frog_stand",
+   "name": "Krähe / Frog Stand",
+   "en": "Frog Stand",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Handgelenke",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "sec",
+   "stress": [
+    "handgelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "progress": "tuck_planche",
+   "steps": [
+    "Hocke, Hände schulterbreit vor den Füßen, Finger gespreizt.",
+    "Knie außen auf die gebeugten Oberarme legen.",
+    "Nach vorn lehnen, bis die Füße abheben.",
+    "Halten, Blick leicht nach vorn."
+   ],
+   "mistakes": [
+    "Zu wenig Vorlage — Füße bleiben am Boden.",
+    "Zu viel Vorlage — Kissen vor den Kopf.",
+    "Finger nicht aktiv."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "frog_stand.mp4",
+    "image": "frog_stand.jpg",
+    "credit": "Sworkit"
+   }
+  },
+  {
+   "id": "planche_lean",
+   "name": "Planche Lean",
+   "en": "Planche Lean",
+   "pattern": "skill",
+   "muscles": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Bizeps",
+    "Handgelenke"
+   ],
+   "equipment": [],
+   "level": 4,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 25,
+   "progress": "tuck_planche",
+   "steps": [
+    "Liegestütz-Position, Finger zur Seite oder nach hinten.",
+    "Schultern weit vor die Hände schieben.",
+    "Arme ganz gestreckt, oberer Rücken rund (Boden wegdrücken).",
+    "Halten, Hüfte in Linie."
+   ],
+   "mistakes": [
+    "Ellbogen beugen sich.",
+    "Eingesunkene Schultern.",
+    "Hüfte hängt."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "planche_lean.mp4",
+    "image": "planche_lean.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "tuck_planche",
+   "name": "Tuck Planche",
+   "en": "Tuck Planche",
+   "pattern": "skill",
+   "muscles": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Trizeps",
+    "Bizeps"
+   ],
+   "equipment": [
+    "parallettes"
+   ],
+   "level": 7,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "regress": "frog_stand",
+   "progress": "adv_tuck_planche",
+   "steps": [
+    "Auf Parallettes oder Boden, Arme gestreckt.",
+    "Schultern weit vor die Hände lehnen.",
+    "Knie zur Brust ziehen, Füße abheben — Rücken rund.",
+    "Halten, Arme bleiben gestreckt."
+   ],
+   "mistakes": [
+    "Knie auf den Armen ablegen (das ist der Frog Stand).",
+    "Gebeugte Arme.",
+    "Zu wenig Vorlage."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "tuck_planche.mp4",
+    "image": "tuck_planche.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "adv_tuck_planche",
+   "name": "Advanced Tuck Planche",
+   "en": "Advanced Tuck Planche",
+   "pattern": "skill",
+   "muscles": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Trizeps"
+   ],
+   "equipment": [
+    "parallettes"
+   ],
+   "level": 8,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "regress": "tuck_planche",
+   "steps": [
+    "Wie die Tuck Planche.",
+    "Rücken flach, Hüfte auf Schulterhöhe.",
+    "Knie weiter vom Körper weg.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Rücken rund wie in der Tuck.",
+    "Hüfte zu hoch.",
+    "Ellbogen beugen."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "adv_tuck_planche.mp4",
+    "image": "adv_tuck_planche.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "tuck_front_lever",
+   "name": "Tuck Front Lever",
+   "en": "Tuck Front Lever",
+   "pattern": "skill",
+   "muscles": [
+    "Latissimus",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Hintere Schulter",
+    "Griffkraft"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 6,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "regress": "scap_pullup",
+   "progress": "adv_tuck_front_lever",
+   "steps": [
+    "Im Hang, Arme gestreckt.",
+    "Stange Richtung Hüfte drücken (Latissimus), Knie zur Brust.",
+    "Körper nach hinten kippen, bis der Rücken waagerecht ist.",
+    "Halten, Arme bleiben gestreckt."
+   ],
+   "mistakes": [
+    "Arme beugen.",
+    "Hüfte hängt unter der Waagerechten.",
+    "Rücken stark rund."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "tuck_front_lever.mp4",
+    "image": "tuck_front_lever.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "adv_tuck_front_lever",
+   "name": "Advanced Tuck Front Lever",
+   "en": "Advanced Tuck Front Lever",
+   "pattern": "skill",
+   "muscles": [
+    "Latissimus",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Hintere Schulter"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 7,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "regress": "tuck_front_lever",
+   "steps": [
+    "Wie Tuck Front Lever.",
+    "Rücken flach, Hüfte geöffnet (Oberschenkel etwa 90° zum Rumpf).",
+    "Ganz waagerecht.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Rücken rund.",
+    "Hüfte sinkt.",
+    "Arme gebeugt."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "adv_tuck_front_lever.mp4",
+    "image": "adv_tuck_front_lever.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "skin_the_cat",
+   "name": "Skin the Cat",
+   "en": "Skin the Cat",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Latissimus",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Bizeps"
+   ],
+   "equipment": [
+    "ringe"
+   ],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 4,
+   "secPerRep": 8,
+   "progress": "german_hang",
+   "steps": [
+    "Im Hang an Ringen (oder Stange), Arme gestreckt.",
+    "Knie zur Brust und langsam zwischen den Armen durch nach hinten drehen.",
+    "Bis in die Dehnung der Schultern (German Hang), nur soweit schmerzfrei.",
+    "Kontrolliert denselben Weg zurück."
+   ],
+   "mistakes": [
+    "Fallen lassen in die Endposition.",
+    "Arme beugen.",
+    "Zu weit bei Schmerz."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "skin_the_cat.mp4",
+    "image": "skin_the_cat.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "german_hang",
+   "name": "German Hang",
+   "en": "German Hang",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Bizeps-Sehne",
+    "Brust"
+   ],
+   "equipment": [
+    "ringe"
+   ],
+   "level": 5,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "regress": "skin_the_cat",
+   "progress": "tuck_back_lever",
+   "steps": [
+    "Über Skin the Cat in die hintere Position drehen.",
+    "Arme gestreckt, Füße zeigen Richtung Boden.",
+    "Schultern sanft dehnen lassen.",
+    "Halten, dann zurückdrehen."
+   ],
+   "mistakes": [
+    "Zu schnell zu tief.",
+    "Schmerz ignorieren.",
+    "Abrupter Ausstieg."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "german_hang.mp4",
+    "image": "german_hang.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "tuck_back_lever",
+   "name": "Tuck Back Lever",
+   "en": "Tuck Back Lever",
+   "pattern": "skill",
+   "muscles": [
+    "Schultern",
+    "Brust",
+    "Rumpf"
+   ],
+   "secondary": [
+    "Bizeps"
+   ],
+   "equipment": [
+    "ringe"
+   ],
+   "level": 6,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "regress": "german_hang",
+   "steps": [
+    "Aus dem German Hang den Körper anheben.",
+    "Knie zur Brust, Rücken zeigt nach oben, waagerecht.",
+    "Arme gestreckt, Ringe nah am Körper.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Hüfte zu tief.",
+    "Arme gebeugt.",
+    "Zu schnelle Steigerung — Bizepssehne braucht Zeit."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "tuck_back_lever.mp4",
+    "image": "tuck_back_lever.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "false_grip_hang",
+   "name": "Hang im falschen Griff",
+   "en": "False Grip Hang",
+   "pattern": "skill",
+   "muscles": [
+    "Unterarme",
+    "Griffkraft"
+   ],
+   "secondary": [
+    "Latissimus"
+   ],
+   "equipment": [
+    "ringe"
+   ],
+   "level": 5,
+   "unit": "sec",
+   "stress": [
+    "handgelenk",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 20,
+   "progress": "muscle_up",
+   "steps": [
+    "Ringe so greifen, dass das Handgelenk über dem Ring liegt (Handballen oben).",
+    "Vorsichtig das Gewicht in den Griff geben.",
+    "Hängen, Ellbogen leicht gebeugt erlaubt.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Griff rutscht in den normalen Griff.",
+    "Zu lange am Anfang — Handgelenke brauchen Gewöhnung.",
+    "Schultern passiv."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "false_grip_hang.mp4",
+    "image": "false_grip_hang.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "vertical_flag",
+   "name": "Vertikale Flagge",
+   "en": "Vertical Flag",
+   "pattern": "skill",
+   "muscles": [
+    "Seitliche Bauchmuskeln",
+    "Schultern",
+    "Latissimus"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 6,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "handgelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "progress": "tuck_flag",
+   "steps": [
+    "An einer senkrechten Stange: obere Hand zieht, untere Hand drückt, Hände etwas mehr als schulterbreit.",
+    "Abspringen und den Körper senkrecht nach oben bringen.",
+    "Arme gestreckt, Körper gerade.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Untere Hand beugt sich.",
+    "Hüfte knickt.",
+    "Abrutschen — trockene Hände."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "vertical_flag.mp4",
+    "image": "vertical_flag.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "tuck_flag",
+   "name": "Tuck Human Flag",
+   "en": "Tuck Human Flag",
+   "pattern": "skill",
+   "muscles": [
+    "Seitliche Bauchmuskeln",
+    "Schultern",
+    "Latissimus"
+   ],
+   "equipment": [
+    "klimmzugstange"
+   ],
+   "level": 8,
+   "unit": "sec",
+   "stress": [
+    "schulter",
+    "handgelenk"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 6,
+   "regress": "vertical_flag",
+   "steps": [
+    "Griff wie bei der vertikalen Flagge.",
+    "Abspringen, Knie zur Brust.",
+    "Körper seitlich waagerecht tragen.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Untere Schulter sackt ein.",
+    "Arme beugen.",
+    "Hüfte sinkt."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "tuck_flag.mp4",
+    "image": "tuck_flag.jpg",
+    "credit": "ExerciseDB (AscendAPI)"
+   }
+  },
+  {
+   "id": "tuck_dragon_flag",
+   "name": "Tuck Dragon Flag",
+   "en": "Tuck Dragon Flag",
+   "pattern": "skill",
+   "muscles": [
+    "Ganzer Rumpf"
+   ],
+   "secondary": [
+    "Latissimus"
+   ],
+   "equipment": [
+    "bank"
+   ],
+   "level": 6,
+   "unit": "sec",
+   "stress": [
+    "ruecken",
+    "nacken"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "regress": "leg_raise",
+   "progress": "dragon_flag_neg",
+   "steps": [
+    "Auf der Bank liegen, hinter dem Kopf festhalten.",
+    "Auf die Schultern hochrollen, Knie gebeugt.",
+    "Hüfte gestreckt, Körper von Schulter bis Knie gerade.",
+    "Halten."
+   ],
+   "mistakes": [
+    "Hüfte knickt ein.",
+    "Druck auf den Nacken.",
+    "Zu flach gehalten."
+   ],
+   "breathing": "Ruhig atmen.",
+   "media": {
+    "video": "tuck_dragon_flag.mp4",
+    "image": "tuck_dragon_flag.jpg",
+    "credit": "Freeletics"
+   }
+  }
+ ]
+}

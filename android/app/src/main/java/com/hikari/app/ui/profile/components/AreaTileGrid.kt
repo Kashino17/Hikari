@@ -36,6 +36,7 @@ import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.automirrored.outlined.Chat
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.FitnessCenter
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.SportsEsports
 import androidx.compose.material.icons.rounded.Check
@@ -80,6 +81,7 @@ import com.hikari.app.ui.theme.HikariTextMuted
  */
 internal object AreaColors {
     val Russian = Color(0xFFF472B6)
+    val Fitness = Color(0xFFA3E635)
     val Music = Color(0xFF22D3EE)
     val Manga = Color(0xFFA78BFA)
     val Books = Color(0xFFD4A373)
@@ -111,6 +113,7 @@ fun AreaTileGrid(
     val news by vm.news.collectAsState()
     val whatsAppDeleted by vm.whatsAppDeleted.collectAsState()
     val lastGame by vm.lastGame.collectAsState()
+    val fitness by vm.fitness.collectAsState()
 
     Column(
         modifier = Modifier
@@ -120,6 +123,8 @@ fun AreaTileGrid(
         verticalArrangement = Arrangement.spacedBy(Gap),
     ) {
         RussianAreaTile(russian) { onOpenSection("russian") }
+
+        FitnessAreaTile(fitness) { onOpenSection("fitness") }
 
         Row(horizontalArrangement = Arrangement.spacedBy(Gap)) {
             MusicAreaTile(music, Modifier.weight(1f)) { onOpenSection("music") }
@@ -261,6 +266,53 @@ private fun RussianAreaTile(tile: RussianTile?, onClick: () -> Unit) {
                         .background(hue),
                 )
             }
+        }
+        val done = tile?.done == true
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(42.dp)
+                .clip(CircleShape)
+                .background(if (done) hue.copy(alpha = 0.18f) else hue),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                if (done) Icons.Rounded.Check else Icons.Rounded.PlayArrow,
+                contentDescription = null,
+                tint = if (done) hue else AreaColors.Ink,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+    }
+}
+
+// ── Fitness ──────────────────────────────────────────────────────────────────
+
+@Composable
+private fun FitnessAreaTile(tile: com.hikari.app.ui.profile.FitnessTile?, onClick: () -> Unit) {
+    val hue = AreaColors.Fitness
+    Tile(hue, onClick, Modifier.fillMaxWidth().height(112.dp)) {
+        GhostIcon(Icons.Outlined.FitnessCenter, hue)
+        Column(Modifier.fillMaxSize()) {
+            TileLabel(if ((tile?.streak ?: 0) > 0) "Fitness · Serie ${tile?.streak}" else "Fitness", hue, icon = Icons.Outlined.FitnessCenter)
+            Spacer(Modifier.height(7.dp))
+            Text(
+                tile?.title?.ifBlank { null } ?: "Training, Skills, Ernährung",
+                color = HikariText,
+                fontSize = 21.sp,
+                fontWeight = FontWeight.Bold,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(end = 56.dp),
+            )
+            Text(
+                tile?.detail?.ifBlank { null } ?: "KI-Coach, Calisthenics, Foto-Tracker",
+                color = HikariTextMuted,
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(end = 56.dp),
+            )
         }
         val done = tile?.done == true
         Box(
