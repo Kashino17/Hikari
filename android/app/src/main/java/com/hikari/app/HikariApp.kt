@@ -81,7 +81,13 @@ class HikariApp : Application(), Configuration.Provider {
         }
         // Abgelaufene Downloads gleich beim Start vom Gerät räumen.
         appScope.launch { runCatching { retentionCleaner.get().run() } }
-        appScope.launch { settings.backendUrl.collect { imageBackendUrl = it } }
+        appScope.launch {
+            settings.backendUrl.collect {
+                imageBackendUrl = it
+                // Spur (Player, WhatsApp-Messprotokoll) auch ohne geöffneten Player an den Mac.
+                com.hikari.app.player.PlayerTrace.setBackend(it)
+            }
+        }
         appScope.launch { settings.authToken.collect { imageAuthToken = it } }
         Coil.setImageLoader(buildImageLoader())
         // Bilder der Downloads aufs Gerät sichern — erst nach dem ImageLoader,

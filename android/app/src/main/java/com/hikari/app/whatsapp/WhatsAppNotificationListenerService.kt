@@ -90,6 +90,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
     override fun onListenerConnected() {
         super.onListenerConnected()
+        WhatsAppProbe.note("listener connected sdk=${Build.VERSION.SDK_INT} mediaFolder=${mediaVault.hasMediaFolderAccess()}")
         // Bereits sichtbare WhatsApp-Benachrichtigungen einlesen, damit der Vergleichsstapel
         // nach einem Neustart sofort wieder steht.
         runCatching {
@@ -112,6 +113,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         if (sbn == null) return
         val pkg = sbn.packageName ?: return
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
+        WhatsAppProbe.posted(sbn)
         enqueueNotification(sbn)
     }
 
@@ -169,6 +171,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
 
             // Bewusst ohne Nachrichteninhalte: nur Struktur, damit sich das Verhalten von
             // WhatsApp per `adb logcat -s HikariWaGuard` nachvollziehen lässt.
+            WhatsAppProbe.note("decision ${result.summary} media=${result.pendingMedia.size}")
             Log.d(
                 TAG,
                 "post chat=${chatLogId(sbn)} channel=${notification.channelId} items=${payload.messagingStyleItems.size} " +
@@ -179,6 +182,10 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
                 mediaScope.launch {
                     val path = mediaVault.captureForMessage(pending)
                     Log.d(TAG, "media type=${pending.mediaType} row=${pending.rowId} saved=${path != null}")
+                    WhatsAppProbe.note(
+                        "media type=${pending.mediaType} row=${pending.rowId} notifUri=${pending.dataUri != null} " +
+                            "folder=${mediaVault.hasMediaFolderAccess()} saved=${path != null}",
+                    )
                     if (path != null) repository.attachMedia(pending.rowId, path)
                 }
             }
@@ -193,6 +200,7 @@ class WhatsAppNotificationListenerService : NotificationListenerService() {
         if (sbn == null) return
         val pkg = sbn.packageName.orEmpty()
         if (!WhatsAppNotificationParser.isSupportedPackage(pkg)) return
+        WhatsAppProbe.removed(sbn, reason)
         val key = sbn.key ?: return
         val notification = sbn.notification
         if (notification != null && (notification.flags and Notification.FLAG_GROUP_SUMMARY) != 0) return
