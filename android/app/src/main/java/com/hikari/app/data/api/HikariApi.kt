@@ -416,6 +416,25 @@ interface HikariApi {
     @GET("api/manga/series")
     suspend fun listMangaSeries(): List<MangaSeriesDto>
 
+    // ── Manga-Katalog (MangaDex, backend/src/api/manga-catalog.ts) ───────────
+    @GET("api/manga/catalog/home")
+    suspend fun getMangaCatalogHome(@Query("lang") lang: String = "all"): com.hikari.app.data.api.dto.MangaCatalogHomeDto
+
+    @GET("api/manga/catalog/list")
+    suspend fun listMangaCatalog(
+        @Query("lang") lang: String = "all",
+        @Query("genre") genre: String? = null,
+        @Query("kind") kind: String? = null,
+        @Query("status") status: String? = null,
+        @Query("sort") sort: String? = null,
+        @Query("q") q: String? = null,
+        @Query("offset") offset: Int = 0,
+        @Query("limit") limit: Int = 30,
+    ): com.hikari.app.data.api.dto.MangaCatalogListDto
+
+    @POST("api/manga/catalog/{id}/open")
+    suspend fun openMangaCatalog(@Path("id") id: String): com.hikari.app.data.api.dto.MangaOpenDto
+
     @GET("api/manga/series/{id}")
     suspend fun getMangaSeries(@Path("id") id: String): MangaSeriesDetailDto
 

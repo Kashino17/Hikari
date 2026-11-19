@@ -103,4 +103,51 @@ class MangaReaderViewModelTest {
             vm.stopPolling()
         }
     }
+
+    @Test(timeout = 5_000) fun pages404_alsoTriggersSync() = runTest {
+        // Der Mac antwortet 404, solange ein Kapitel noch nie geladen wurde (MangaDex-Reihen).
+        coEvery { repo.getChapterPages("ch-1") } throws retrofit2.HttpException(
+            retrofit2.Response.error<Any>(404, okhttp3.ResponseBody.create(null, "{}")),
+        )
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(id = "s", title = "X")
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        try {
+            vm.uiState.test(timeout = 4.seconds) {
+                awaitItem() // Loading
+                vm.load("s", "ch-1")
+                advanceTimeBy(500)
+                assertTrue(awaitItem() is ReaderUiState.Syncing)
+                coVerify { repo.startChapterSync("ch-1") }
+                cancelAndIgnoreRemainingEvents()
+            }
+        } finally {
+            vm.stopPolling()
+        }
+    }
+
+    @Test(timeout = 5_000) fun nextChapter_staysInSameLanguage() = runTest {
+        coEvery { repo.getChapterPages("m:u:de:1") } returns listOf(MangaPageDto("p1", 1, true))
+        coEvery { repo.getSeries("s") } returns MangaSeriesDetailDto(
+            id = "s", title = "X",
+            chapters = listOf(
+                MangaChapterDto("m:u:de:1", 1.0, lang = "de"),
+                MangaChapterDto("m:u:en:2", 2.0, lang = "en"),
+                MangaChapterDto("m:u:de:5", 5.0, lang = "de"),
+            ),
+        )
+        val vm = MangaReaderViewModel(repo, mangaDownloads, settings)
+        try {
+            vm.uiState.test(timeout = 4.seconds) {
+                awaitItem()
+                vm.load("s", "m:u:de:1")
+                advanceTimeBy(500)
+                val st = awaitItem()
+                assertTrue(st is ReaderUiState.Success)
+                assertEquals("m:u:de:5", st.nextChapterId)
+                cancelAndIgnoreRemainingEvents()
+            }
+        } finally {
+            vm.stopPolling()
+        }
+    }
 }

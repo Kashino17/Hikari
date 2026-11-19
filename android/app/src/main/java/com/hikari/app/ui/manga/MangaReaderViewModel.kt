@@ -62,13 +62,26 @@ class MangaReaderViewModel @Inject constructor(
         return out
     }
 
+    /** Nächstes Kapitel in derselben Sprache (MangaDex hat de und en nebeneinander). */
+    private fun nextChapterId(chapters: List<com.hikari.app.data.api.dto.MangaChapterDto>, current: String): String? {
+        val lang = chapters.firstOrNull { it.id == current }?.lang
+        val sorted = chapters.filter { it.lang == lang && it.isAvailable == 1 || it.id == current }.sortedBy { it.number }
+        val idx = sorted.indexOfFirst { it.id == current }
+        return if (idx >= 0 && idx < sorted.size - 1) sorted[idx + 1].id else null
+    }
+
     fun load(seriesId: String, chapterId: String) {
         this.seriesId = seriesId
         this.chapterId = chapterId
         viewModelScope.launch {
             _uiState.value = ReaderUiState.Loading
             runCatching {
-                val pages = repo.getChapterPages(chapterId)
+                // 404 = der Mac hat die Seiten noch nie geholt (z. B. neue MangaDex-Kapitel) → wie leer behandeln.
+                val pages = try {
+                    repo.getChapterPages(chapterId)
+                } catch (e: retrofit2.HttpException) {
+                    if (e.code() == 404) emptyList() else throw e
+                }
                 val detail = repo.getSeries(seriesId)
                 pages to detail
             }.onSuccess { (pages, detail) ->
@@ -77,9 +90,7 @@ class MangaReaderViewModel @Inject constructor(
                     runCatching { repo.startChapterSync(chapterId) }
                     startPollingForPages()
                 } else {
-                    val sorted = detail.chapters.sortedBy { it.number }
-                    val idx = sorted.indexOfFirst { it.id == chapterId }
-                    val next = if (idx >= 0 && idx < sorted.size - 1) sorted[idx + 1].id else null
+                    val next = nextChapterId(detail.chapters, chapterId)
                     _localPagePaths.value = resolveLocalPaths(pages)
                     _uiState.value = ReaderUiState.Success(pages, next)
                 }
@@ -97,9 +108,7 @@ class MangaReaderViewModel @Inject constructor(
                 runCatching { repo.getChapterPages(chapterId) }.onSuccess { pages ->
                     if (pages.isNotEmpty()) {
                         val detail = runCatching { repo.getSeries(seriesId) }.getOrNull()
-                        val sorted = detail?.chapters?.sortedBy { it.number } ?: emptyList()
-                        val idx = sorted.indexOfFirst { it.id == chapterId }
-                        val next = if (idx >= 0 && idx < sorted.size - 1) sorted[idx + 1].id else null
+                        val next = nextChapterId(detail?.chapters.orEmpty(), chapterId)
                         _localPagePaths.value = resolveLocalPaths(pages)
                         _uiState.value = ReaderUiState.Success(pages, next)
                         return@launch

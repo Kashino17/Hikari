@@ -715,16 +715,18 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                 com.hikari.app.ui.ebooks.LesenScreen(
                     initialTab = null,
                     manga = {
-                        MangaListScreen(
-                            onSeriesClick = { id ->
-                                nav.navigate("manga/${URLEncoder.encode(id, "UTF-8")}")
+                        val openSeries: (String) -> Unit = { id -> nav.navigate("manga/${URLEncoder.encode(id, "UTF-8")}") }
+                        val continueAt: (String, String, Int) -> Unit = { sId, cId, page ->
+                            nav.navigate("manga/${URLEncoder.encode(sId, "UTF-8")}/${URLEncoder.encode(cId, "UTF-8")}?page=$page")
+                        }
+                        com.hikari.app.ui.manga.catalog.MangaHomeScreen(
+                            onSeries = openSeries,
+                            onContinue = continueAt,
+                            onList = { f, focus -> nav.navigate(mangaListRoute(f, focus)) },
+                            onOfficial = { nav.navigate("manga-offiziell") },
+                            mine = {
+                                MangaListScreen(onSeriesClick = openSeries, onContinueClick = continueAt, withStatusBar = false)
                             },
-                            onContinueClick = { sId, cId, page ->
-                                val sE = URLEncoder.encode(sId, "UTF-8")
-                                val cE = URLEncoder.encode(cId, "UTF-8")
-                                nav.navigate("manga/$sE/$cE?page=$page")
-                            },
-                            withStatusBar = false,
                         )
                     },
                     books = {
@@ -736,6 +738,21 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         )
                     },
                 )
+            }
+            composable(
+                "manga-katalog?lang={lang}&genre={genre}&kind={kind}&status={status}&sort={sort}&q={q}&title={title}&focus={focus}",
+                arguments = listOf("lang", "genre", "kind", "status", "sort", "q", "title", "focus").map { n ->
+                    navArgument(n) { type = NavType.StringType; nullable = true; defaultValue = null }
+                },
+            ) { entry ->
+                com.hikari.app.ui.manga.catalog.MangaCatalogListScreen(
+                    focusSearch = entry.arguments?.getString("focus") == "1",
+                    onBack = { nav.popBackStack() },
+                    onSeries = { id -> nav.navigate("manga/${URLEncoder.encode(id, "UTF-8")}") },
+                )
+            }
+            composable("manga-offiziell") {
+                com.hikari.app.ui.manga.catalog.MangaOfficialScreen(onBack = { nav.popBackStack() })
             }
             composable("buecher/suche") {
                 com.hikari.app.ui.ebooks.BookSearchScreen(
@@ -891,4 +908,20 @@ private fun bookListRoute(f: com.hikari.app.domain.ebooks.EbookFilter): String {
         "sort=${f.sort}",
     )
     return "buecher/liste?" + parts.joinToString("&")
+}
+
+/** Route der Manga-Katalog-Liste mit Startfilter. */
+private fun mangaListRoute(f: com.hikari.app.domain.repo.MangaCatalogFilter, focus: Boolean): String {
+    val e = { v: String -> android.net.Uri.encode(v) }
+    val parts = listOfNotNull(
+        "lang=${f.lang}",
+        f.genre?.let { "genre=${e(it)}" },
+        f.kind?.let { "kind=${e(it)}" },
+        f.status?.let { "status=$it" },
+        "sort=${f.sort}",
+        f.q?.let { "q=${e(it)}" },
+        f.title?.let { "title=${e(it)}" },
+        if (focus) "focus=1" else null,
+    )
+    return "manga-katalog?" + parts.joinToString("&")
 }

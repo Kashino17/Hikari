@@ -33,6 +33,10 @@ data class MangaChapterDto(
     @SerialName("pageCount") val pageCount: Int = 0,
     @SerialName("isAvailable") val isAvailable: Int = 1,
     @SerialName("isRead") val isRead: Int = 0,
+    /** Sprache des Kapitels: de oder en. */
+    val lang: String? = null,
+    /** Wer übersetzt hat (MangaDex: Fan-Gruppe). */
+    @SerialName("scanlationGroup") val scanlationGroup: String? = null,
 )
 
 @Serializable
@@ -45,6 +49,8 @@ data class MangaSeriesDetailDto(
     @SerialName("totalChapters") val totalChapters: Int = 0,
     val arcs: List<MangaArcDto> = emptyList(),
     val chapters: List<MangaChapterDto> = emptyList(),
+    /** Sprachen mit Kapiteln (de, en). */
+    val langs: List<String> = emptyList(),
 )
 
 @Serializable
@@ -83,3 +89,42 @@ data class MangaProgressRequest(
     @SerialName("chapterId") val chapterId: String,
     @SerialName("pageNumber") val pageNumber: Int,
 )
+
+
+/** Eine Reihe im Manga-Katalog (MangaDex), noch nicht geöffnet. */
+@Serializable
+data class MangaCatalogCardDto(
+    val id: String,
+    val title: String,
+    @SerialName("titleDe") val titleDe: String? = null,
+    val authors: List<String> = emptyList(),
+    val tags: List<String> = emptyList(),
+    val status: String? = null,
+    val kind: String = "Manga",
+    val langs: List<String> = emptyList(),
+    @SerialName("lastChapter") val lastChapter: String? = null,
+    @SerialName("coverUrl") val coverUrl: String? = null,
+    val source: String = "mangadex",
+) {
+    /** Deutscher Titel, wenn es einen gibt — ohne langen Zusatz nach „ - “. */
+    val displayTitle: String get() = titleDe?.substringBefore(" - ")?.trim()?.takeIf { it.isNotBlank() } ?: title
+}
+
+@Serializable
+data class MangaCatalogShelfDto(val key: String, val title: String, val subtitle: String = "", val items: List<MangaCatalogCardDto> = emptyList())
+
+@Serializable
+data class MangaGenreDto(val name: String, val count: Int = 0)
+
+@Serializable
+data class MangaCatalogHomeDto(
+    val shelves: List<MangaCatalogShelfDto> = emptyList(),
+    val genres: List<MangaGenreDto> = emptyList(),
+    val syncing: Boolean = false,
+)
+
+@Serializable
+data class MangaCatalogListDto(val total: Int = 0, val items: List<MangaCatalogCardDto> = emptyList())
+
+@Serializable
+data class MangaOpenDto(@SerialName("seriesId") val seriesId: String)

@@ -1,5 +1,8 @@
 package com.hikari.app.ui.manga
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.border
 import com.hikari.app.domain.sync.SyncStatus
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.animation.AnimatedVisibility
@@ -135,6 +138,14 @@ fun MangaDetailScreen(
                 }
             }
             is MangaDetailUiState.Success -> {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val langs = s.detail.langs.ifEmpty { listOf("de") }
+                var lang by remember(seriesId, langs) {
+                    val pref = ctx.getSharedPreferences("hikari_manga_catalog", android.content.Context.MODE_PRIVATE).getString("lang", "all")
+                    val fromContinue = s.continueItem?.chapterId?.let { com.hikari.app.ui.manga.catalog.langOfChapter(it) }
+                    mutableStateOf(fromContinue?.takeIf { it in langs } ?: pref?.takeIf { it in langs } ?: langs.first())
+                }
+                val chapters = s.detail.chapters.filter { (it.lang ?: "de") == lang }
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
                         DetailHero(
@@ -143,13 +154,24 @@ fun MangaDetailScreen(
                             coverUrl = s.detail.coverPath?.let { vm.coverUrl(baseUrl, it) },
                             ctaLabel = if (s.continueItem != null) "Weiterlesen" else "Lesen",
                             onCta = {
+                                // Neu anfangen = erstes Kapitel in der gewählten Sprache, nicht das neueste.
                                 val ctaChapter = s.continueItem?.chapterId
-                                    ?: s.detail.chapters.firstOrNull { it.isAvailable == 1 }?.id
+                                    ?: chapters.filter { it.isAvailable == 1 }.minByOrNull { it.number }?.id
                                 if (ctaChapter != null) {
                                     onChapterClick(ctaChapter, s.continueItem?.pageNumber)
                                 }
                             },
                             onBack = onBack,
+                        )
+                    }
+                    item {
+                        LangAndSource(
+                            seriesId = seriesId,
+                            langs = langs,
+                            counts = langs.associateWith { l -> s.detail.chapters.count { (it.lang ?: "de") == l } },
+                            selected = lang,
+                            groups = chapters.mapNotNull { it.scanlationGroup }.distinct().take(3),
+                            onLang = { lang = it },
                         )
                     }
                     if (hasSync) item {
@@ -163,7 +185,7 @@ fun MangaDetailScreen(
                     item {
                         ArcAccordion(
                             arcs = s.detail.arcs,
-                            chapters = s.detail.chapters,
+                            chapters = chapters,
                             initialExpandedArcId = s.continueItem?.let { c ->
                                 s.detail.chapters.firstOrNull { it.id == c.chapterId }?.arcId
                             },
@@ -350,5 +372,46 @@ private fun SyncCard(status: SyncStatus, message: String?, lastChapter: Int?, on
                     .padding(horizontal = 14.dp, vertical = 8.dp),
             )
         }
+    }
+}
+
+/** Sprache wählen (mit Kapitelzahl) und ehrlich sagen, woher die Kapitel kommen. */
+@Composable
+private fun LangAndSource(
+    seriesId: String,
+    langs: List<String>,
+    counts: Map<String, Int>,
+    selected: String,
+    groups: List<String>,
+    onLang: (String) -> Unit,
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (l in listOf("de", "en")) {
+                val has = l in langs
+                val on = l == selected
+                Row(
+                    Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                        .background(if (on) com.hikari.app.ui.manga.MangaAccent.copy(alpha = 0.16f) else HikariSurfaceHigh)
+                        .border(1.dp, if (on) com.hikari.app.ui.manga.MangaAccent else Color.Transparent, RoundedCornerShape(12.dp))
+                        .clickable(enabled = has) { onLang(l) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    com.hikari.app.ui.manga.catalog.LangBadge(l, big = true)
+                    Text(
+                        if (has) "${counts[l] ?: 0} Kapitel" else "nicht da",
+                        color = if (has) HikariText else HikariTextFaint, fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(start = 10.dp),
+                    )
+                }
+            }
+        }
+        val source = when {
+            seriesId.startsWith("mangadex:") -> "Fan-Übersetzung über MangaDex" + if (groups.isNotEmpty()) " · ${groups.joinToString(", ")}" else ""
+            seriesId.startsWith("onepiecetube:") -> "Fan-Übersetzung von onepiece.tube"
+            else -> null
+        }
+        if (source != null) Text(source, color = HikariTextFaint, fontSize = 12.sp, maxLines = 2, modifier = Modifier.padding(top = 8.dp))
     }
 }
