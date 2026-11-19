@@ -423,7 +423,12 @@ private fun markColor(c: String?) = when (c) {
 
 /** Liefert die Leser-Seite aus den Assets und das Buch aus dem App-Speicher. */
 private class ReaderWebClient(private val ctx: Context, private val bookFile: File) : WebViewClient() {
-    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean = request.url.host != HOST
+    // Nur fremde Web-Links im Hauptfenster abfangen. Der Leser lädt jedes Kapitel in einen Rahmen
+    // mit blob:-Adresse (ohne Host) — würde das blockiert, bliebe er bei „Buch wird geöffnet …“ stehen.
+    override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
+        val url = request.url
+        return request.isForMainFrame && (url.scheme == "http" || url.scheme == "https") && url.host != HOST
+    }
 
     override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
         val url: Uri = request.url

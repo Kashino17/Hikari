@@ -73,16 +73,40 @@ function flatToc(items, depth = 0, out = []) {
 
 function hookDoc(doc, index) {
   // Tippen: linkes/rechtes Drittel blättert, die Mitte zeigt die Leisten.
-  doc.addEventListener('click', (e) => {
-    if (e.target.closest?.('a[href]')) return
+  // Ein Tippen erkennen wir selbst und halten es von foliates Wisch-Erkennung fern: sonst rasten
+  // Wischen und Blättern gleichzeitig ein, laden am Kapitelende beide das nächste Kapitel, und der
+  // Leser bleibt gesperrt (am Gerät gesehen, 19.11.). Echtes Wischen bleibt bei foliate.
+  const tapAt = (clientX, target) => {
+    if (target?.closest?.('a[href]')) return
     const sel = doc.getSelection()
     if (sel && !sel.isCollapsed) return
     const frame = doc.defaultView?.frameElement
     const left = frame ? frame.getBoundingClientRect().left : 0
-    const x = (left + e.clientX) / window.innerWidth
+    const x = (left + clientX) / window.innerWidth
     if (x < 0.3) view.goLeft()
     else if (x > 0.7) view.goRight()
     else send('onTapCenter', '')
+  }
+  let touch = null
+  let lastTouchTap = 0
+  doc.addEventListener('touchstart', (e) => {
+    const t = e.changedTouches[0]
+    touch = e.touches.length === 1 && t ? { x: t.screenX, y: t.screenY, cx: t.clientX, at: e.timeStamp, target: e.target } : null
+  }, { capture: true, passive: true })
+  doc.addEventListener('touchend', (e) => {
+    const t = e.changedTouches[0]
+    const start = touch
+    touch = null
+    if (!start || !t) return
+    const moved = Math.hypot(t.screenX - start.x, t.screenY - start.y)
+    if (moved > 12 || e.timeStamp - start.at > 400) return // Wischen oder langes Drücken: foliate/Auswahl
+    e.stopImmediatePropagation()
+    lastTouchTap = Date.now()
+    tapAt(start.cx, start.target)
+  }, { capture: true })
+  doc.addEventListener('click', (e) => {
+    if (Date.now() - lastTouchTap < 600) return // schon als Tippen erledigt
+    tapAt(e.clientX, e.target)
   })
   let selTimer = null
   doc.addEventListener('selectionchange', () => {
