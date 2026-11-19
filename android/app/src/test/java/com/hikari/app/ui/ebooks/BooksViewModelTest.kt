@@ -35,7 +35,7 @@ class BooksViewModelTest {
     @After fun teardown() = Dispatchers.resetMain()
 
     @Test fun macNichtErreichbarZeigtHinweisUndGeladeneBuecher() {
-        coEvery { repo.home() } returns Result.failure(IOException("weg"))
+        coEvery { repo.home(any()) } returns Result.failure(IOException("weg"))
         every { repo.local() } returns flowOf(listOf(effi, pdf))
         every { repo.allStates() } returns flowOf(emptyMap())
         val vm = BooksViewModel(repo)
@@ -45,7 +45,7 @@ class BooksViewModelTest {
     }
 
     @Test fun weiterlesenNachZuletztGeoeffnetOhneFertige() {
-        coEvery { repo.home() } returns Result.failure(IOException("weg"))
+        coEvery { repo.home(any()) } returns Result.failure(IOException("weg"))
         every { repo.local() } returns flowOf(listOf(effi, pdf))
         every { repo.allStates() } returns flowOf(
             mapOf(
