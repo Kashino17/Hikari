@@ -16,7 +16,7 @@ import { CATEGORIES } from "../ebooks/categories.js";
 import { resolveCover } from "../ebooks/covers.js";
 import { ensureBookFile } from "../ebooks/files.js";
 import type { PoliteHttp } from "../ebooks/http.js";
-import { normalizeForSearch } from "../ebooks/persist.js";
+import { normalizeForSearch, seriesKey, workKey } from "../ebooks/persist.js";
 import type { EbookSource } from "../ebooks/sources/types.js";
 import { type BookState, mergeState, normalizeState } from "../ebooks/state-merge.js";
 import { ebookSyncState, runEbookSync } from "../ebooks/sync.js";
@@ -215,7 +215,11 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       books: ReturnType<typeof card>[];
     }[] = [];
     // Kein Buch in zwei Regalen: was weiter oben steht, kommt weiter unten nicht nochmal.
+    // Von mehrbändigen Werken (Band 1/2, Teil 1/2) steht nur einer da — außer beim gerade gelesenen Werk.
     const shown = new Set<string>();
+    const shownSeries = new Set<string>();
+    const seriesOf = (b: { title: string; authors: string[] }) =>
+      seriesKey(workKey(b.title, b.authors));
     const add = (
       key: string,
       title: string,
@@ -224,9 +228,20 @@ export function registerEbookRoutes(app: FastifyInstance, deps: EbookDeps): void
       min = 4,
       max = 12,
     ) => {
-      const fresh = books.filter((b) => !shown.has(b.id)).slice(0, max);
+      const fresh: typeof books = [];
+      const series = new Set<string>();
+      for (const b of books) {
+        if (fresh.length >= max) break;
+        const k = seriesOf(b);
+        if (shown.has(b.id) || series.has(k) || (key !== "because" && shownSeries.has(k))) continue;
+        series.add(k);
+        fresh.push(b);
+      }
       if (fresh.length < min) return;
-      for (const b of fresh) shown.add(b.id);
+      for (const b of fresh) {
+        shown.add(b.id);
+        shownSeries.add(seriesOf(b));
+      }
       shelves.push({ key, title, subtitle, books: fresh });
     };
     // „Weil du … liest“: zuerst derselbe Autor, dann dieselbe Art Buch.

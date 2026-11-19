@@ -201,6 +201,43 @@ describe("/api/ebooks", () => {
     expect(byId["gutenberg:c2"]).toBeUndefined();
   });
 
+  it("Startseite: von mehrbändigen Werken steht nur ein Band, die Suche zeigt alle", async () => {
+    const g = ["Johann Wolfgang von Goethe"];
+    upsertBook(
+      db,
+      raw("w1", { title: "Die Leiden des jungen Werther — Band 1", authors: g, popularity: 900 }),
+      ["roman"],
+      3000,
+    );
+    upsertBook(
+      db,
+      raw("w2", { title: "Die Leiden des jungen Werther — Band 2", authors: g, popularity: 800 }),
+      ["roman"],
+      3001,
+    );
+    upsertBook(
+      db,
+      raw("f1", { title: "Faust: Der Tragödie erster Teil", authors: g, popularity: 700 }),
+      ["drama"],
+      3002,
+    );
+    upsertBook(
+      db,
+      raw("f2", { title: "Faust: Der Tragödie zweiter Teil", authors: g, popularity: 600 }),
+      ["drama"],
+      3003,
+    );
+    const { json } = await get("/api/ebooks/home");
+    const all = json.shelves.flatMap((s: { books: { id: string }[] }) => s.books.map((b) => b.id));
+    const count = (a: string, b: string) => all.filter((id: string) => id === a || id === b).length;
+    expect(count("gutenberg:w1", "gutenberg:w2")).toBe(1);
+    expect(count("gutenberg:f1", "gutenberg:f2")).toBe(1);
+    expect(ids((await get("/api/ebooks/list?q=werther")).json.books).sort()).toEqual([
+      "gutenberg:w1",
+      "gutenberg:w2",
+    ]);
+  });
+
   it("Startseite: kein Buch steht in zwei Regalen", async () => {
     for (let i = 1; i <= 30; i++)
       upsertBook(

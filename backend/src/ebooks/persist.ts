@@ -53,6 +53,19 @@ export function workKey(title: string, authors: string[]): string {
   return `${words.join(" ")}|${normalizeForSearch(authors[0] ?? "").trim()}`;
 }
 
+/** Werk ohne Band-/Teil-Angabe: „werther band 1“ und „werther band 2“ → eine Reihe. */
+export function seriesKey(key: string): string {
+  return key
+    .replace(
+      /\b(?:erst|zweit|dritt|viert|funft|sechst|siebt|acht|neunt|zehnt)\w{0,2} (?:teil|band)\b/g,
+      "",
+    )
+    .replace(/\b(?:teil|band|vol) \d+(?: \d+)?\b/g, "")
+    .replace(/\s+/g, " ")
+    .replace(/ \|/, "|")
+    .trim();
+}
+
 /** Für Index UND Suchanfrage gleich: klein, ä→a, ö→o, ü→u, ß→ss. */
 export function normalizeForSearch(s: string): string {
   return s
