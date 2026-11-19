@@ -5,6 +5,9 @@ import type { EbookSource } from "./types.js";
 
 const MIRROR = "https://gutenberg.pglaf.org";
 const MAIN = "https://www.gutenberg.org";
+/** So viele Downloadzahlen holt ein Lauf höchstens nach (eine Anfrage je Buch). */
+export const GUTENBERG_POPULARITY_PER_RUN = 400;
+const POPULARITY_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 /** "Goethe, Johann Wolfgang von, 1749-1832" → "Johann Wolfgang von Goethe"; Übersetzer usw. fallen weg. */
 export function parseAuthors(field: string): string[] {
@@ -83,6 +86,40 @@ export const gutenbergSource: EbookSource = {
         sourceUrl: `${MAIN}/ebooks/${id}`,
       });
     }
+    await addPopularity(ctx, out);
     return out;
   },
 };
+
+/** Beliebtheit = Downloadzahl laut Gutenberg (RDF je Buch), 30 Tage gemerkt, nach und nach ergänzt. */
+async function addPopularity(
+  ctx: Parameters<EbookSource["listCatalog"]>[0],
+  books: RawBook[],
+): Promise<void> {
+  const now = Date.now();
+  const key = (b: RawBook) => `pop:${b.sourceId}`;
+  const stale: RawBook[] = [];
+  for (const b of books) {
+    const c = ctx.cache.get<{ n: number; at: number }>(key(b));
+    if (c) b.popularity = c.n;
+    if (!c || now - c.at > POPULARITY_MAX_AGE_MS) stale.push(b);
+  }
+  // Nie geholte zuerst, dann die ältesten.
+  stale.sort(
+    (a, b) =>
+      (ctx.cache.get<{ at: number }>(key(a))?.at ?? 0) -
+      (ctx.cache.get<{ at: number }>(key(b))?.at ?? 0),
+  );
+  for (const b of stale.slice(0, GUTENBERG_POPULARITY_PER_RUN)) {
+    try {
+      const r = await ctx.http.get(`${MIRROR}/cache/epub/${b.sourceId}/pg${b.sourceId}.rdf`);
+      const n = Number(/<pgterms:downloads[^>]*>(\d+)</.exec(r.body.toString("utf8"))?.[1]);
+      if (r.status === 200 && Number.isFinite(n)) {
+        b.popularity = n;
+        ctx.cache.set(key(b), { n, at: now });
+      }
+    } catch (err) {
+      ctx.log(`gutenberg: Beliebtheit ${b.sourceId} — ${(err as Error).message}`);
+    }
+  }
+}

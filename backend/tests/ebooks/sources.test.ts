@@ -4,7 +4,10 @@ import { gzipSync } from "node:zlib";
 import { describe, expect, it } from "vitest";
 import { type PoliteHttp, createPoliteHttp } from "../../src/ebooks/http.js";
 import { bpbSource } from "../../src/ebooks/sources/bpb.js";
-import { gutenbergSource } from "../../src/ebooks/sources/gutenberg.js";
+import {
+  GUTENBERG_POPULARITY_PER_RUN,
+  gutenbergSource,
+} from "../../src/ebooks/sources/gutenberg.js";
 import { openAccessSource } from "../../src/ebooks/sources/openaccess.js";
 import { SourceBlocked, type SourceContext } from "../../src/ebooks/sources/types.js";
 import { wikisourceSource } from "../../src/ebooks/sources/wikisource.js";
@@ -64,7 +67,8 @@ describe("Gutenberg", () => {
       [(u) => u.endsWith("pg_catalog.csv.gz"), 200, gzipSync(fx("pg_catalog.csv"))],
     ]);
     expect(await gutenbergSource.listCatalog(ctx(http))).toHaveLength(12);
-    expect(http.calls).toEqual(["https://gutenberg.pglaf.org/cache/epub/feeds/pg_catalog.csv.gz"]);
+    expect(http.calls[0]).toBe("https://gutenberg.pglaf.org/cache/epub/feeds/pg_catalog.csv.gz");
+    expect(http.calls.some((u) => u.endsWith("pg_catalog.csv"))).toBe(false);
   });
 
   it("nimmt die Hauptseite, wenn der Spiegel ausfällt", async () => {
@@ -73,6 +77,24 @@ describe("Gutenberg", () => {
       [(u) => u.startsWith("https://www.gutenberg.org/"), 200, fx("pg_catalog.csv")],
     ]);
     expect(await gutenbergSource.listCatalog(ctx(http))).toHaveLength(12);
+  });
+
+  it("Beliebtheit aus den Downloadzahlen, gemerkt und höchstens 400 neue pro Lauf", async () => {
+    const rdf = (n: number) =>
+      `<rdf><pgterms:downloads rdf:datatype="x">${n}</pgterms:downloads></rdf>`;
+    const http = fakeHttp([
+      [(u) => u.endsWith("pg_catalog.csv.gz"), 200, gzipSync(fx("pg_catalog.csv"))],
+      [(u) => u.endsWith("/pg2054.rdf"), 200, rdf(942)],
+      [(u) => u.endsWith(".rdf"), 200, rdf(5)],
+    ]);
+    const c = ctx(http);
+    const books = await gutenbergSource.listCatalog(c);
+    expect(books.find((b) => b.sourceId === "2054")?.popularity).toBe(942);
+    const before = http.calls.filter((u) => u.endsWith(".rdf")).length;
+    expect(before).toBe(12);
+    await gutenbergSource.listCatalog(c);
+    expect(http.calls.filter((u) => u.endsWith(".rdf")).length).toBe(before);
+    expect(GUTENBERG_POPULARITY_PER_RUN).toBe(400);
   });
 
   it("Übersetzer zählen nicht als Autor", async () => {

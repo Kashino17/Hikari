@@ -20,6 +20,45 @@ describe("categorize", () => {
     expect(categorize("gutenberg", ["Historical fiction"])).toContain("historisch");
   });
 
+  it("Romane über Geschichte sind keine Sachbücher (echte Gutenberg-Schlagwörter)", () => {
+    const krieg = categorize("gutenberg", [
+      "World War, 1914-1918 -- Fiction",
+      "Prussia (Germany), East -- Fiction",
+      "DE Prosa",
+      "Category: Historical Novels",
+      "Category: Novels",
+    ]);
+    expect(krieg).toContain("historisch");
+    expect(krieg).not.toContain("geschichte");
+    expect(
+      categorize("gutenberg", [
+        "Prussia (Germany) -- History -- 1815-1870 -- Fiction",
+        "Historical fiction",
+      ]),
+    ).not.toContain("geschichte");
+    expect(categorize("gutenberg", ["Germany -- History -- 1789-1900", "DE Sachbuch"])).toContain(
+      "geschichte",
+    );
+  });
+
+  it("Mord im Drama macht noch keinen Krimi", () => {
+    expect(
+      categorize("gutenberg", [
+        "Tragedies (Drama)",
+        "Murder victims' families -- Drama",
+        "DE Drama",
+      ]),
+    ).not.toContain("krimi");
+    expect(categorize("gutenberg", ["Murderers -- Drama", "DE Drama"])).not.toContain("krimi");
+    expect(categorize("gutenberg", ["Criminals -- Biography", "Autobiographies"])).not.toContain(
+      "krimi",
+    );
+    expect(
+      categorize("gutenberg", ["Detective and mystery stories, German", "Crime Fiction"]),
+    ).toContain("krimi");
+    expect(categorize("gutenberg", ["Category: Crime, Thrillers and Mystery"])).toContain("krimi");
+  });
+
   it("bildet Wikisource-Kategorien ab", () => {
     expect(categorize("wikisource", ["Kriminalliteratur"])).toContain("krimi");
     expect(categorize("wikisource", ["Roman"])).toContain("roman");

@@ -36,14 +36,14 @@ export const CATEGORIES: {
 const RULES: [string, RegExp][] = [
   [
     "krimi",
-    /detective|mystery|mysteries|crime|criminal|murder|kriminal|krimi|detektiv|thriller|spionage|spy stories/i,
+    /detective|mystery|mysteries|crime fiction|crime, thrillers|kriminal|krimi|detektiv|thriller|spionage|spy stories/i,
   ],
   ["abenteuer", /adventure|abenteuer|sea stories|western stories|pirat|seefahrt|indianer/i],
   [
     "fantastik",
     /fantas|horror|ghost|supernatural|science fiction|gothic|grusel|gespenst|phantast|utopi|vampir/i,
   ],
-  ["historisch", /historical fiction|historischer roman|historische erz/i],
+  ["historisch", /historical (fiction|novels)|historischer roman|historische erz/i],
   ["liebe", /love stories|liebes|man-woman relationships|romance/i],
   ["humor", /humou?r|satire|comedy|comedies|komödie|lustspiel|schwank|humoreske|parod/i],
   ["erzaehlungen", /short stories|erzählung|novelle|\btales\b|kurzgeschicht|anekdote/i],
@@ -79,10 +79,23 @@ const RULES: [string, RegExp][] = [
 ];
 
 /** Kategorien eines Buchs aus den Schlagwörtern der Quelle — nie leer. */
+/** Schlagwörter, die ein erzählendes Werk beschreiben („… -- Fiction“): nie Sachbuch-Kategorien daraus. */
+const FICTION_SUBJECT = /fiction|drama\b|poetry|juvenile literature|novels|tales/i;
+const SACHBUCH = new Set(CATEGORIES.filter((c) => c.group === "sachbuch").map((c) => c.id));
+
 export function categorize(_source: string, subjects: string[]): string[] {
   const out = new Set<string>();
   for (const s of subjects) {
-    for (const [id, re] of RULES) if (re.test(s)) out.add(id);
+    const fiction = FICTION_SUBJECT.test(s);
+    for (const [id, re] of RULES) {
+      if (!re.test(s)) continue;
+      // „Prussia -- History -- Fiction“ ist ein historischer Roman, kein Geschichtsbuch.
+      if (fiction && SACHBUCH.has(id)) {
+        if (id === "geschichte") out.add("historisch");
+        continue;
+      }
+      out.add(id);
+    }
   }
   // „DE Prosa“ ist bei Gutenberg der Sammeltopf aller Erzählprosa: nur dann Roman,
   // wenn keine genauere Gattung gefunden wurde.
