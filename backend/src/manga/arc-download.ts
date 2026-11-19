@@ -66,10 +66,7 @@ function stripSourcePrefix(id: string, source: string): string {
  * server already has the page on disk; `ready=false` means the caller
  * should trigger /arcs/:arcId/download first (or wait if one's running).
  */
-export function getArcManifest(
-  db: Database.Database,
-  arcId: string,
-): ArcManifest | null {
+export function getArcManifest(db: Database.Database, arcId: string): ArcManifest | null {
   const arc = db
     .prepare("SELECT id, series_id, title, arc_order FROM manga_arcs WHERE id = ?")
     .get(arcId) as ArcRow | undefined;
@@ -178,11 +175,17 @@ export async function runArcSync(input: ArcSyncInput): Promise<void> {
     .all(input.arcId) as ChapterRow[];
 
   for (const ch of chapters) {
+    // Slug aus der Kapitel-Kennung "<quelle>:<slug>:<nummer>" — bei MangaDex "<uuid>:<sprache>".
+    const prefix = `${arcRow.source}:`;
+    const slug =
+      ch.id.startsWith(prefix) && ch.id.lastIndexOf(":") > prefix.length
+        ? ch.id.slice(prefix.length, ch.id.lastIndexOf(":"))
+        : seriesSlug;
     try {
       await runChapterSync({
         db: input.db,
         adapter: input.adapter,
-        seriesSlug,
+        seriesSlug: slug,
         chapterNumber: ch.number,
         chapterUrl: ch.source_url,
         mangaDir: input.mangaDir,

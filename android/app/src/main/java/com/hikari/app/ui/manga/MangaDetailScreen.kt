@@ -210,7 +210,8 @@ fun MangaDetailScreen(
                     }
                     item {
                         ArcAccordion(
-                            arcs = s.detail.arcs,
+                            // Nur Abschnitte der gewählten Sprache (MangaDex: Zehner-Blöcke je Sprache, alle ladbar).
+                            arcs = s.detail.arcs.filter { a -> chapters.any { it.arcId == a.id } },
                             chapters = chapters,
                             initialExpandedArcId = s.continueItem?.let { c ->
                                 s.detail.chapters.firstOrNull { it.id == c.chapterId }?.arcId

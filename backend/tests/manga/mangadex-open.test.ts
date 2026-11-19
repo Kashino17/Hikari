@@ -122,6 +122,35 @@ describe("openCatalogSeries", () => {
     });
   });
 
+  it("teilt die Kapitel je Sprache in Zehner-Blöcke zum Herunterladen", async () => {
+    const s = setup();
+    await openCatalogSeries(
+      { db: s.db, client: s.client, coverDir: s.coverDir, now: () => s.now.t },
+      SERIES,
+    );
+    const arcs = s.db
+      .prepare(
+        "SELECT id, title, arc_order AS o FROM manga_arcs WHERE series_id = ? ORDER BY arc_order",
+      )
+      .all(SERIES) as { id: string; title: string; o: number }[];
+    // Deutsch: Kapitel 1 und 47 → zwei Blöcke; jeder Block trägt seine Sprache in der Kennung.
+    const de = arcs.filter((a) => a.id.includes(":de:"));
+    expect(de.map((a) => a.id)).toEqual([`${SERIES}:de:arc-1`, `${SERIES}:de:arc-5`]);
+    expect(de.map((a) => a.title)).toEqual(["Kapitel 1", "Kapitel 47"]);
+    expect(
+      arcs.some((a) => a.id.includes(":en:") && /^Kapitel \d+(\.\d+)?–\d+(\.\d+)?$/.test(a.title)),
+    ).toBe(true);
+    // Jedes Kapitel hängt an genau dem Block seiner Sprache.
+    const orphans = s.db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM manga_chapters WHERE series_id = ? AND (arc_id IS NULL OR arc_id NOT LIKE '%:' || lang || ':arc-%')",
+      )
+      .get(SERIES) as { n: number };
+    expect(orphans.n).toBe(0);
+    // Englische und deutsche Blöcke haben verschiedene Ordnungen (eigener Ordner auf dem Handy).
+    expect(new Set(arcs.map((a) => a.o)).size).toBe(arcs.length);
+  });
+
   it("frisch geöffnet: kein neuer Feed; nach 6 h schon", async () => {
     const s = setup();
     const deps = { db: s.db, client: s.client, coverDir: s.coverDir, now: () => s.now.t };

@@ -118,6 +118,7 @@ async function refreshFeed(deps: OpenDeps, seriesId: string, now: number): Promi
         }),
       );
     }
+    writeBlocks(db, seriesId);
     // Was MangaDex nicht mehr anbietet, bleibt sichtbar, ist aber nicht mehr ladbar.
     const keep = new Set(ids);
     const old = db.prepare("SELECT id FROM manga_chapters WHERE series_id = ?").all(seriesId) as {
@@ -132,6 +133,52 @@ async function refreshFeed(deps: OpenDeps, seriesId: string, now: number): Promi
     );
   })();
   return chapters.length;
+}
+
+/** Zehner-Block eines Kapitels: 1–10 → 0, 11–20 → 1 … (Kapitel 0 gehört zum ersten). */
+export function blockOf(number: number): number {
+  return Math.floor(Math.max(0, Math.ceil(number) - 1) / 10);
+}
+
+const fmtNum = (n: number) => String(n);
+
+/**
+ * Kapitel je Sprache in Zehner-Blöcke („Kapitel 1–10“) einteilen. Das sind die Abschnitte, die
+ * die App als Ganzes aufs Handy lädt (wie die Arcs bei onepiece.tube).
+ */
+export function writeBlocks(db: Database.Database, seriesId: string): void {
+  const rows = db
+    .prepare("SELECT id, number, lang FROM manga_chapters WHERE series_id = ? AND lang IS NOT NULL")
+    .all(seriesId) as { id: string; number: number; lang: string }[];
+  const blocks = new Map<
+    string,
+    { lang: string; block: number; ids: string[]; min: number; max: number }
+  >();
+  for (const r of rows) {
+    const block = blockOf(r.number);
+    const key = `${r.lang}:${block}`;
+    const b = blocks.get(key) ?? { lang: r.lang, block, ids: [], min: r.number, max: r.number };
+    b.ids.push(r.id);
+    b.min = Math.min(b.min, r.number);
+    b.max = Math.max(b.max, r.number);
+    blocks.set(key, b);
+  }
+  const upsertArc = db.prepare(
+    `INSERT INTO manga_arcs (id, series_id, title, arc_order, chapter_start, chapter_end)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON CONFLICT(id) DO UPDATE SET title = excluded.title, arc_order = excluded.arc_order,
+       chapter_start = excluded.chapter_start, chapter_end = excluded.chapter_end`,
+  );
+  const link = db.prepare("UPDATE manga_chapters SET arc_id = ? WHERE id = ?");
+  for (const b of blocks.values()) {
+    const arcId = `${seriesId}:${b.lang}:arc-${b.block + 1}`;
+    const title =
+      b.min === b.max ? `Kapitel ${fmtNum(b.min)}` : `Kapitel ${fmtNum(b.min)}–${fmtNum(b.max)}`;
+    // Deutsch und Englisch brauchen getrennte Ordnungen — sie sind auch der Ordner auf dem Handy.
+    const order = (b.lang === "de" ? 0 : 100_000) + b.block;
+    upsertArc.run(arcId, seriesId, title, order, Math.floor(b.min), Math.ceil(b.max));
+    for (const id of b.ids) link.run(arcId, id);
+  }
 }
 
 const opening = new Map<string, Promise<{ seriesId: string }>>();
@@ -196,5 +243,7 @@ async function doOpen(deps: OpenDeps, id: string): Promise<{ seriesId: string }>
       deps.log?.(`manga-katalog: Kapitel von ${id} nicht aufgefrischt (${(err as Error).message})`);
     }
   }
+  // Auch schon früher geöffnete Reihen bekommen ihre Download-Blöcke.
+  writeBlocks(db, seriesId);
   return { seriesId };
 }

@@ -10,12 +10,7 @@ import {
   getArcManifest,
   runArcSync,
 } from "./arc-download.js";
-import type {
-  MangaSourceAdapter,
-  RawPage,
-  RawSeries,
-  RawSeriesDetail,
-} from "./sources/types.js";
+import type { MangaSourceAdapter, RawPage, RawSeries, RawSeriesDetail } from "./sources/types.js";
 
 interface TestFixture {
   source: string;
@@ -52,7 +47,15 @@ function seedArc(
       `INSERT INTO manga_chapters
          (id, series_id, arc_id, number, source_url, page_count, is_available, added_at)
        VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
-    ).run(chapterId, fx.seriesId, fx.arcId, ch.number, `https://example/c${ch.number}`, ch.pages, now);
+    ).run(
+      chapterId,
+      fx.seriesId,
+      fx.arcId,
+      ch.number,
+      `https://example/c${ch.number}`,
+      ch.pages,
+      now,
+    );
 
     for (let p = 1; p <= ch.pages; p++) {
       const pageId = `${chapterId}:${String(p).padStart(2, "0")}`;
@@ -172,6 +175,31 @@ describe("runArcSync", () => {
     };
   }
 
+  it("MangaDex-Block: Seiten landen unter der Kapitel-Kennung mit Sprache (uuid:lang)", async () => {
+    const md: TestFixture = {
+      source: "mangadex",
+      seriesSlug: "u-1:de",
+      seriesId: "mangadex:u-1",
+      arcId: "mangadex:u-1:de:arc-1",
+    };
+    seedArc(db, md, { chapters: [{ number: 1, pages: 0, ready: 0 }] });
+    const adapter: MangaSourceAdapter = {
+      ...makeFakeAdapter("mangadex", 2),
+      downloadPage: async (i: { relativePath: string }) => ({
+        relativePath: i.relativePath,
+        bytes: 10,
+      }),
+    } as MangaSourceAdapter;
+    await runArcSync({ db, adapter, arcId: md.arcId, mangaDir });
+    const pages = db
+      .prepare(
+        "SELECT id, local_path AS p FROM manga_pages WHERE chapter_id = 'mangadex:u-1:de:1' ORDER BY id",
+      )
+      .all() as { id: string; p: string | null }[];
+    expect(pages.map((x) => x.id)).toEqual(["mangadex:u-1:de:1:01", "mangadex:u-1:de:1:02"]);
+    expect(pages.every((x) => x.p)).toBe(true);
+  });
+
   it("throws ArcNotFoundError for unknown arc", async () => {
     const adapter = makeFakeAdapter(FX.source, 1);
     await expect(
@@ -182,9 +210,9 @@ describe("runArcSync", () => {
   it("throws AdapterMismatchError when adapter source differs from arc source", async () => {
     seedArc(db, FX, { chapters: [{ number: 1, pages: 1, ready: 0 }] });
     const wrong = makeFakeAdapter("other-source", 1);
-    await expect(runArcSync({ db, adapter: wrong, arcId: FX.arcId, mangaDir })).rejects.toBeInstanceOf(
-      AdapterMismatchError,
-    );
+    await expect(
+      runArcSync({ db, adapter: wrong, arcId: FX.arcId, mangaDir }),
+    ).rejects.toBeInstanceOf(AdapterMismatchError);
   });
 
   it("emits one chaptersDone event per available chapter (failures included)", async () => {
@@ -239,4 +267,3 @@ describe("runArcSync", () => {
     expect(chaptersDone).toBe(0);
   });
 });
-
