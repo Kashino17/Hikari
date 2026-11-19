@@ -193,6 +193,43 @@ export function otherForm(id) {
 
 export const myPhrases = () => state.mySentences.map((m) => asPhrase(m.ru, m.de, m.note || 'Eigener Satz'));
 
+/** Woher ein eigener Satz stammt — Überschrift im Satzbuch. */
+export function sourceOf(note) {
+  const n = note ?? '';
+  if (n === 'Aus dem Gespräch mit Anja') return 'Anja live';
+  if (n.startsWith('Gesprächsreise')) return 'Gesprächsreise';
+  const song = /^(?:Wort aus|Aus) »(.+)«$/.exec(n);
+  if (song) return `Lieder & Szenen · ${song[1]}`;
+  if (n.startsWith('Grammatik')) return 'Grammatik';
+  if (n.startsWith('Kombi-Meister')) return 'Kombi-Meister';
+  return 'Selbst gebaut';
+}
+
+/**
+ * Einmal beim Start: Was in der Gesprächsreise gelernt wurde (deren eigene Karten und Wortliste),
+ * steht auch im Satzbuch. Ältere Fassungen haben das nicht überall eingetragen.
+ */
+export function syncLearned() {
+  const cp = storage.getJSON('conv_progress');
+  if (!cp) return 0;
+  const norm = (x) => (x ?? '').replaceAll('+', '').replaceAll('\u0301', '').replace(/[.!?,«»]/g, '').trim().toLowerCase();
+  const have = new Set(state.mySentences.map((m) => norm(m.ru)));
+  // Jeder Satz wird nur einmal übernommen — wer ihn danach entfernt, bekommt ihn nicht zurück.
+  const synced = new Set(storage.getJSON('learned_sync_v1') ?? []);
+  const add = [];
+  for (const w of [...(cp.cards ?? []).map((c) => c.phrase), ...(cp.conversationVocabulary ?? [])]) {
+    const k = norm(w?.ru);
+    if (!k || !w?.de?.trim() || synced.has(k)) continue;
+    synced.add(k);
+    if (have.has(k)) continue;
+    have.add(k);
+    add.push({ ru: w.ru, de: w.de, patternId: 'conversation', note: 'Gesprächsreise' });
+  }
+  storage.set('learned_sync_v1', [...synced]);
+  if (add.length) progress.update((p) => ({ ...p, mySentences: [...add, ...p.mySentences] }));
+  return add.length;
+}
+
 /** Alle Sätze, die schon »dran waren«: Karten + freigeschaltete Kurstage (Pool für Spiele). */
 export function learnedPool() {
   const s = progress.settings();

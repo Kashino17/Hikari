@@ -1,7 +1,7 @@
 // Start, Rahmen und Routen.
 import { html, render, useEffect, useState } from '../vendor/preact-htm.js';
 import { storage, isNative, voiceMissing } from './platform.js';
-import { loadData, progress, planState, useRoute, useToast, usePackOffer, useProgress, nav, back, route, TABS, P, useWordSheet, toast } from './app.js';
+import { loadData, progress, planState, useRoute, useToast, usePackOffer, useProgress, nav, back, route, TABS, P, useWordSheet, toast, syncLearned } from './app.js';
 import { WordSheet } from './screens/words.js';
 import { Icon, cls, PackSheet } from './ui.js';
 import { Home } from './screens/home.js';
@@ -113,6 +113,7 @@ async function boot() {
     progress.load();
     planState.load();
     registerTaken();
+    try { syncLearned(); } catch (e) { console.warn('syncLearned', e); }
     startTimeTracking();
     window.__hk = { progress, planState, nav, storage, demo: (k) => { const d = demoProgress(k); planState.update(() => demoPlanState(d)); progress.replace(d); } };
     if (!location.hash) history.replaceState(null, '', '#/heute');

@@ -1,6 +1,6 @@
 // Tab »Satzbuch«: alle Sätze durchsuchen, nach Lernstand filtern, vertiefen, testen.
 import { html, cls, Icon, TopBar, IL, Sheet, PhraseDock, SentenceCard, OtherFormLine, Speaker, Empty, usePlaying, playPhrase, mk, useState, useMemo, useEffect, useRef, fx, useSpicker } from '../ui.js';
-import { D, P, useProgress, progress, nav, back, testSelection, phrasebookPreset, myPhrases, otherForm, exitApp, dayNo } from '../app.js';
+import { D, P, useProgress, progress, nav, back, testSelection, phrasebookPreset, myPhrases, otherForm, exitApp, dayNo, sourceOf, phraseById } from '../app.js';
 import * as Ct from '../domain/content.js';
 
 const STATUS = (box) => (box >= 4 ? ['Sitzt', 'good'] : box === 3 ? ['Aktiv', 'review'] : box >= 1 ? ['Wackelig', 'amber'] : ['Neu', 'faint']);
@@ -28,6 +28,7 @@ function Row({ p, card, fav, open, onToggle }) {
   const [label, tone] = STATUS(box);
   const themes = (D.themeOf[p.id] ?? []).map((id) => D.themes.find((t) => t.id === id)?.title).filter(Boolean);
   const grade = (passed) => progress.gradeCard(p.id, passed, passed ? 5 : 1, passed ? 1 : 0);
+  const own = p.id.startsWith('dd:');
   return html`<div>
     <button class="row" style="align-items:flex-start" onClick=${onToggle}>
       <div class="tx"><${IL} ru=${p.ru} size=${open ? 20 : 16} gloss=${open} /><span style=${`margin-top:${open ? 8 : 3}px;font-size:${open ? 14.5 : 12.5}px`}>${p.de}</span></div>
@@ -40,12 +41,13 @@ function Row({ p, card, fav, open, onToggle }) {
       <${PhraseDock} phrase=${p} size="sm" onEvaluated=${grade} />
       ${(p.lit || p.note || themes.length > 0) && html`<div class="snotes">
         ${p.lit && html`<div class="snote"><${Icon} n="translate" size="17" /><span class="grow"><span class="faint">Wörtlich:</span> ${p.lit}</span></div>`}
-        ${p.note && html`<div class="snote"><${Icon} n="lightbulb" size="17" /><span class="grow">${p.note}</span></div>`}
+        ${p.note && (own ? html`<div class="snote"><${Icon} n="history_edu" size="17" /><span class="grow"><span class="faint">Gelernt:</span> ${p.note}</span></div>` : html`<div class="snote"><${Icon} n="lightbulb" size="17" /><span class="grow">${p.note}</span></div>`)}
         <${OtherFormLine} id=${p.id} />
         ${themes.length > 0 && html`<div class="snote"><${Icon} n="sell" size="17" /><span class="grow faint">${themes.join(', ')}</span></div>`}</div>`}
       <div class="rowx g8">
         <button class=${cls('chip sm', fav && 'on c c-amber')} onClick=${() => { fx.tap(); progress.toggleFavorite(p.id); }}><${Icon} n="star" fill=${fav} />${fav ? 'Gemerkt' : 'Merken'}</button>
-        <button class="chip sm" onClick=${() => nav(`deep/${p.id}`)}><${Icon} n="travel_explore" />${D.deepdive.has(p.id) ? 'Vertiefen' : 'Mehr dazu'}</button></div>
+        <button class="chip sm" onClick=${() => nav(`deep/${p.id}`)}><${Icon} n="travel_explore" />${D.deepdive.has(p.id) ? 'Vertiefen' : 'Mehr dazu'}</button>
+        ${own && html`<button class="chip sm" onClick=${() => { fx.tap(); progress.removeMySentence(p.ru); }}><${Icon} n="delete" />Entfernen</button>`}</div>
     </div>`}
   </div>`;
 }
@@ -69,31 +71,37 @@ export function Phrasebook() {
   const [limit, setLimit] = useState(40);
   const scroller = useRef(null);
   const settings = P.settingsOf(s);
-  const all = useMemo(() => [...D.index.days.flatMap((d) => D.index.dayPhrases(d, settings)), ...D.podIndex.days.flatMap((d) => D.podIndex.dayPhrases(d, settings))], [settings.gender, settings.voice]);
+  const course = useMemo(() => [...D.index.days.flatMap((d) => D.index.dayPhrases(d, settings)), ...D.podIndex.days.flatMap((d) => D.podIndex.dayPhrases(d, settings))], [settings.gender, settings.voice]);
+  // Eigene Sätze (Anja live, Gesprächsreise, Lieder & Szenen, Satzbau …) gehören dazu — neueste zuerst.
+  const own = useMemo(() => { const seen = new Set(course.map((p) => p.id)); return myPhrases().reverse().filter((p) => !seen.has(p.id) && seen.add(p.id)); }, [course, s.mySentences]);
+  const all = useMemo(() => [...own, ...course], [own, course]);
   const mine = filter === 'mine';
   const shown = useMemo(() => {
-    if (mine) return myPhrases().filter((p) => Ct.searchMatches(p, query));
+    if (mine) return own.filter((p) => Ct.searchMatches(p, query));
     const f = FILTERS.find((x) => x[0] === filter)[2];
     return all.filter((p) => Ct.searchMatches(p, query) && f(p, s.cards[p.id], s) && (!theme || (D.themeOf[p.id] ?? []).includes(theme)));
   }, [all, query, filter, theme, s.cards, s.favorites, s.mySentences, mine]);
   useEffect(() => { setLimit(40); scroller.current?.scrollTo(0, 0); }, [query, filter, theme, byTheme]);
 
   const groups = useMemo(() => {
-    if (mine) return [];
     const map = new Map();
     const key = (p) => {
+      if (p.id.startsWith('dd:')) return sourceOf(p.note);
       if (byTheme) return (D.themeOf[p.id] ?? []).map((id) => D.themes.find((t) => t.id === id)?.title).find(Boolean) ?? 'Podcast-Kurs';
       return D.index.itemById.has(p.id) ? `Tag ${dayNo(p.day)} · ${D.index.day(p.day).title}` : `Podcast · Lektion ${p.day} · ${D.podIndex.day(p.day).title}`;
     };
     for (const p of shown.slice(0, limit)) { const k = key(p); if (!map.has(k)) map.set(k, []); map.get(k).push(p); }
     let list = [...map.entries()];
-    if (byTheme) { const order = [...D.themes.map((t) => t.title), 'Podcast-Kurs']; list = list.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0])); }
+    // Eigene Herkunfts-Gruppen zuerst (in der Reihenfolge, in der zuletzt gelernt wurde), dann der Kurs.
+    const ownKeys = [...new Set(own.map((p) => sourceOf(p.note)))];
+    const rank = (k) => { const i = ownKeys.indexOf(k); if (i >= 0) return i - 1000; if (!byTheme) return 0; const order = [...D.themes.map((t) => t.title), 'Podcast-Kurs']; return order.indexOf(k); };
+    list = list.map((e, i) => [e, i]).sort((a, b) => rank(a[0][0]) - rank(b[0][0]) || a[1] - b[1]).map(([e]) => e);
     return list;
-  }, [shown, limit, byTheme, mine]);
+  }, [shown, limit, byTheme, mine, own]);
 
   const send = (to, ids) => { testSelection.ids = ids; nav(to); };
   const ids = shown.map((p) => p.id);
-  const count = (f) => (f === 'mine' ? s.mySentences.length : f === 'all' ? all.length : all.filter((p) => FILTERS.find((x) => x[0] === f)[2](p, s.cards[p.id], s)).length);
+  const count = (f) => (f === 'mine' ? own.length : f === 'all' ? all.length : all.filter((p) => FILTERS.find((x) => x[0] === f)[2](p, s.cards[p.id], s)).length);
   const onScroll = (e) => { const el = e.currentTarget; if (el.scrollTop + el.clientHeight > el.scrollHeight - 600 && limit < shown.length) setLimit((l) => l + 40); };
 
   return html`<div class="screen tab c-words">
@@ -103,23 +111,21 @@ export function Phrasebook() {
       <input value=${query} onInput=${(e) => setQuery(e.target.value)} placeholder="Deutsch, Russisch oder »spasibo«" enterkeyhint="search" />
       ${query && html`<button class="iconbtn" onClick=${() => setQuery('')} aria-label="Löschen"><${Icon} n="close" /></button>`}</label></div>
     <div class="chips mt12">
-      ${[...FILTERS.map((f) => f.slice(0, 2)), ['mine', 'Meine Sätze']].map(([id, label]) => html`<button class=${cls('chip', filter === id && 'on')} onClick=${() => setFilter(id)}>${label}<span style="opacity:.55">${count(id)}</span></button>`)}
+      ${[FILTERS[0].slice(0, 2), ['mine', 'Selbst gelernt'], ...FILTERS.slice(1).map((f) => f.slice(0, 2))].map(([id, label]) => html`<button class=${cls('chip', filter === id && 'on')} onClick=${() => setFilter(id)}>${label}<span style="opacity:.55">${count(id)}</span></button>`)}
       ${!mine && html`<button class=${cls('chip', theme && 'on c')} onClick=${() => setThemeSheet(true)}><${Icon} n="sell" />${theme ? D.themes.find((t) => t.id === theme).title : 'Thema'}</button>`}
     </div>
     <div class="scroll mt12" ref=${scroller} onScroll=${onScroll}>
       ${shown.length > 0 && html`<div class="pad rowx g8">
         <button class="btn sm tonal c-speak grow" onClick=${() => send('reflex', ids)}><${Icon} n="bolt" />Reflex · ${Math.min(ids.length, 10)}</button>
-        ${!mine && html`<button class="btn sm tonal c-words grow" onClick=${() => send('kombi', ids)}><${Icon} n="extension" />Kombi</button>
+        ${html`<button class="btn sm tonal c-words grow" onClick=${() => send('kombi', ids)}><${Icon} n="extension" />Kombi</button>
         <button class="btn sm tonal c-review grow" onClick=${() => send('test', ids)}><${Icon} n="quiz" />Test · ${Math.min(ids.length, 15)}</button>`}
       </div>`}
-      ${shown.length === 0 && html`<${Empty} icon=${mine ? 'edit_note' : 'search_off'} title=${query ? `Nichts gefunden für »${query}«` : mine ? 'Noch keine eigenen Sätze' : 'Hier ist noch nichts'}
-        text=${mine && !query ? 'Im Kurs »Satzbau« und im Kombi-Meister baust und speicherst du eigene Sätze.' : 'Probier einen anderen Filter oder ein anderes Wort.'} />`}
-      ${mine && html`<div class="pad stack g10 mt12 c-words">${shown.map((p) => html`<${PhraseCard} p=${p} key=${p.id} onEvaluated=${gradeSpoken(p.id)}>
-        <button class="chip sm" onClick=${() => progress.removeMySentence(p.ru)}><${Icon} n="delete" />Entfernen</button><//>`)}</div>`}
+      ${shown.length === 0 && html`<${Empty} icon=${mine ? 'edit_note' : 'search_off'} title=${query ? `Nichts gefunden für »${query}«` : mine ? 'Noch nichts selbst gelernt' : 'Hier ist noch nichts'}
+        text=${mine && !query ? 'Was du mit Anja, in der Gesprächsreise, in Lieder & Szenen oder im Satzbau lernst und merkst, landet hier.' : 'Probier einen anderen Filter oder ein anderes Wort.'} />`}
       ${groups.map(([title, list]) => html`<div class="sec" style="padding-top:18px" key=${title}><div class="over" style="margin:0 4px 8px">${title}</div>
         <div class="list">${list.map((p) => html`<${Row} key=${p.id} p=${p} card=${s.cards[p.id]} fav=${s.favorites.includes(p.id)} open=${openId === p.id}
           onToggle=${() => { const o = openId === p.id ? null : p.id; setOpenId(o); if (o) playPhrase(p); }} />`)}</div></div>`)}
-      ${!mine && limit < shown.length && html`<div class="center sub" style="padding:18px">${shown.length - limit} weitere — einfach weiterscrollen</div>`}
+      ${limit < shown.length && html`<div class="center sub" style="padding:18px">${shown.length - limit} weitere — einfach weiterscrollen</div>`}
       <div class="end"></div>
     </div>
     ${themeSheet && html`<${Sheet} onClose=${() => setThemeSheet(false)} title="Thema wählen">
@@ -138,7 +144,7 @@ function Sec({ title, hint, children }) {
 export function Deepdive({ id }) {
   const s = useProgress();
   const settings = P.settingsOf(s);
-  const p = D.index.phrase(id, settings) ?? D.podIndex.phrase(id, settings);
+  const p = phraseById(id, settings);
   const e = D.deepdive.get(id);
   const related = useMemo(() => (p ? Ct.related(p, D.index.phrasesUpTo(P.unlockedDay(s, D.index.days.length), settings)) : []), [id]);
   if (!p) return html`<div class="screen"><${TopBar} title="Vertiefen" onBack=${() => back('satzbuch')} /><${Empty} title="Dieser Satz wurde nicht gefunden." /></div>`;
