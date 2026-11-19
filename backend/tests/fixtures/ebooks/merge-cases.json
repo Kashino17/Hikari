@@ -1,0 +1,47 @@
+[
+  {
+    "name": "neuere Position gewinnt",
+    "a": { "position": { "value": { "cfi": "epubcfi(/6/4)", "percent": 0.1 }, "at": 100 }, "bookmarks": [], "highlights": [] },
+    "b": { "position": { "value": { "cfi": "epubcfi(/6/8)", "percent": 0.3 }, "at": 200 }, "bookmarks": [], "highlights": [] },
+    "expected": { "position": { "value": { "cfi": "epubcfi(/6/8)", "percent": 0.3 }, "at": 200 }, "bookmarks": [], "highlights": [] }
+  },
+  {
+    "name": "Lesezeichen beider Seiten werden vereinigt",
+    "a": { "bookmarks": [{ "id": "m1", "cfi": "c1", "label": "Anfang", "at": 10 }], "highlights": [] },
+    "b": { "bookmarks": [{ "id": "m2", "cfi": "c2", "label": "Mitte", "at": 20 }], "highlights": [{ "id": "h1", "cfi": "c3", "text": "Satz", "color": "gelb", "at": 5 }] },
+    "expected": {
+      "bookmarks": [{ "id": "m1", "cfi": "c1", "label": "Anfang", "at": 10 }, { "id": "m2", "cfi": "c2", "label": "Mitte", "at": 20 }],
+      "highlights": [{ "id": "h1", "cfi": "c3", "text": "Satz", "color": "gelb", "at": 5 }]
+    }
+  },
+  {
+    "name": "gelöscht (neuer) schlägt vorhanden (älter)",
+    "a": { "bookmarks": [{ "id": "m1", "cfi": "c1", "at": 10 }], "highlights": [] },
+    "b": { "bookmarks": [{ "id": "m1", "cfi": "c1", "at": 30, "deleted": true }], "highlights": [] },
+    "expected": { "bookmarks": [{ "id": "m1", "cfi": "c1", "at": 30, "deleted": true }], "highlights": [] }
+  },
+  {
+    "name": "vorhanden (neuer) schlägt gelöscht (älter)",
+    "a": { "highlights": [{ "id": "h1", "cfi": "c1", "text": "neu", "color": "blau", "at": 50 }], "bookmarks": [] },
+    "b": { "highlights": [{ "id": "h1", "cfi": "c1", "at": 40, "deleted": true }], "bookmarks": [] },
+    "expected": { "highlights": [{ "id": "h1", "cfi": "c1", "text": "neu", "color": "blau", "at": 50 }], "bookmarks": [] }
+  },
+  {
+    "name": "leere Seite",
+    "a": { "bookmarks": [], "highlights": [] },
+    "b": { "saved": { "value": true, "at": 7 }, "finished": { "value": false, "at": 3 }, "lastOpenedAt": 9, "bookmarks": [], "highlights": [] },
+    "expected": { "saved": { "value": true, "at": 7 }, "finished": { "value": false, "at": 3 }, "lastOpenedAt": 9, "bookmarks": [], "highlights": [] }
+  },
+  {
+    "name": "gleiche Zeit → b gewinnt",
+    "a": { "saved": { "value": false, "at": 5 }, "lastOpenedAt": 12, "bookmarks": [{ "id": "m1", "cfi": "a", "at": 5 }], "highlights": [] },
+    "b": { "saved": { "value": true, "at": 5 }, "lastOpenedAt": 8, "bookmarks": [{ "id": "m1", "cfi": "b", "at": 5 }], "highlights": [] },
+    "expected": { "saved": { "value": true, "at": 5 }, "lastOpenedAt": 12, "bookmarks": [{ "id": "m1", "cfi": "b", "at": 5 }], "highlights": [] }
+  },
+  {
+    "name": "Listen nach Zeit sortiert, fehlende Listen als leer",
+    "a": { "bookmarks": [{ "id": "z", "cfi": "c9", "at": 90 }] },
+    "b": { "bookmarks": [{ "id": "y", "cfi": "c1", "at": 10 }] },
+    "expected": { "bookmarks": [{ "id": "y", "cfi": "c1", "at": 10 }, { "id": "z", "cfi": "c9", "at": 90 }], "highlights": [] }
+  }
+]
