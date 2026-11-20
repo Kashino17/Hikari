@@ -184,7 +184,8 @@
     "video": "wide_pushup.mp4",
     "image": "wide_pushup.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "archer_pushup"
   },
   {
    "id": "diamond_pushup",
@@ -601,7 +602,8 @@
     "video": "hindu_pushup.mp4",
     "image": "hindu_pushup.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "pike_pushup"
   },
   {
    "id": "bench_dip",
@@ -918,7 +920,8 @@
     "video": "band_row.mp4",
     "image": "band_row.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "inverted_row"
   },
   {
    "id": "inverted_row",
@@ -1497,7 +1500,8 @@
     "video": "sumo_squat.mp4",
     "image": "sumo_squat.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "cossack_squat"
   },
   {
    "id": "wall_sit",
@@ -1538,7 +1542,8 @@
     "video": "wall_sit.mp4",
     "image": "wall_sit.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "tempo_squat"
   },
   {
    "id": "tempo_squat",
@@ -1581,7 +1586,8 @@
     "video": "tempo_squat.mp4",
     "image": "tempo_squat.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "bulgarian_split_squat"
   },
   {
    "id": "jump_squat",
@@ -1670,7 +1676,8 @@
     "video": "cossack_squat.mp4",
     "image": "cossack_squat.jpg",
     "credit": "Freeletics"
-   }
+   },
+   "progress": "assisted_pistol"
   },
   {
    "id": "split_squat",
@@ -1992,7 +1999,8 @@
     "video": "forward_lunge.mp4",
     "image": "forward_lunge.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "walking_lunge"
   },
   {
    "id": "walking_lunge",
@@ -2081,7 +2089,8 @@
     "video": "lateral_lunge.mp4",
     "image": "lateral_lunge.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "cossack_squat"
   },
   {
    "id": "curtsy_lunge",
@@ -2124,7 +2133,8 @@
     "video": "curtsy_lunge.mp4",
     "image": "curtsy_lunge.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "walking_lunge"
   },
   {
    "id": "jump_lunge",
@@ -2214,7 +2224,8 @@
     "video": "step_up.mp4",
     "image": "step_up.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "bulgarian_split_squat"
   },
   {
    "id": "glute_bridge",
@@ -2688,7 +2699,8 @@
     "video": "dead_bug.mp4",
     "image": "dead_bug.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "regress": "bird_dog"
   },
   {
    "id": "bird_dog",
@@ -2730,7 +2742,8 @@
     "video": "bird_dog.mp4",
     "image": "bird_dog.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "dead_bug"
   },
   {
    "id": "hollow_hold",
@@ -2935,7 +2948,8 @@
     "video": "bicycle_crunch.mp4",
     "image": "bicycle_crunch.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "v_up"
   },
   {
    "id": "russian_twist",
@@ -3052,7 +3066,8 @@
     "video": "flutter_kicks.mp4",
     "image": "flutter_kicks.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "leg_raise"
   },
   {
    "id": "v_up",
@@ -3313,7 +3328,8 @@
     "video": "superman.mp4",
     "image": "superman.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "arch_hold"
   },
   {
    "id": "arch_hold",
@@ -3397,7 +3413,8 @@
     "video": "reverse_snow_angel.mp4",
     "image": "reverse_snow_angel.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "arch_hold"
   },
   {
    "id": "tuck_lsit",
@@ -3579,7 +3596,8 @@
     "video": "jumping_jack.mp4",
     "image": "jumping_jack.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "star_jump"
   },
   {
    "id": "step_jack",
@@ -3618,7 +3636,8 @@
     "video": "step_jack.mp4",
     "image": "step_jack.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "fast_feet"
   },
   {
    "id": "high_knees",
@@ -3662,7 +3681,8 @@
     "video": "high_knees.mp4",
     "image": "high_knees.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "progress": "tuck_jump"
   },
   {
    "id": "butt_kicks",
@@ -4011,7 +4031,8 @@
     "video": "star_jump.mp4",
     "image": "star_jump.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "regress": "jumping_jack"
   },
   {
    "id": "jump_rope",
@@ -4138,7 +4159,8 @@
     "video": "fast_feet.mp4",
     "image": "fast_feet.jpg",
     "credit": "Sworkit"
-   }
+   },
+   "regress": "step_jack"
   },
   {
    "id": "arm_circles",
@@ -6006,6 +6028,435 @@
     "video": "tuck_dragon_flag.mp4",
     "image": "tuck_dragon_flag.jpg",
     "credit": "Freeletics"
+   }
+  },
+  {
+   "id": "wall_fist_pushup",
+   "name": "Wand-Liegestütz auf Fäusten",
+   "en": "Wall Fist Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Vordere Schulter"
+   ],
+   "equipment": [
+    "wand"
+   ],
+   "level": 1,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "main",
+    "warmup"
+   ],
+   "base": 14,
+   "secPerRep": 2.2,
+   "progress": "knee_fist_pushup",
+   "steps": [
+    "Vor eine Wand stellen, etwa eine Armlänge entfernt.",
+    "Fäuste auf Brusthöhe schulterbreit an die Wand, Handgelenk gerade.",
+    "Körper gestreckt zur Wand senken, Ellbogen etwa 45° zum Körper.",
+    "Kontrolliert zurückdrücken, bis die Arme gestreckt sind."
+   ],
+   "mistakes": [
+    "Handgelenk knickt ab — Faust gerade halten.",
+    "Hüfte bleibt zurück statt mitzukommen."
+   ],
+   "tips": [
+    "Faust mit geradem Handgelenk: Knöchel von Zeige- und Mittelfinger tragen, das Handgelenk knickt nicht ab — so bleibt es entlastet."
+   ],
+   "breathing": "Zur Wand einatmen, beim Wegdrücken ausatmen.",
+   "media": {
+    "video": "incline_pushup.mp4",
+    "image": "incline_pushup.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "knee_fist_pushup",
+   "name": "Knie-Liegestütz auf Fäusten",
+   "en": "Knee Fist Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.5,
+   "progress": "fist_pushup",
+   "regress": "wall_fist_pushup",
+   "steps": [
+    "Auf eine weiche Unterlage knien, Fäuste schulterbreit unter die Schultern, Handgelenk gerade.",
+    "Körper von den Knien bis zum Kopf in einer Linie, Bauch fest.",
+    "Brust zwischen die Fäuste senken, Ellbogen etwa 45° zum Körper.",
+    "Hochdrücken, bis die Arme gestreckt sind."
+   ],
+   "mistakes": [
+    "Handgelenk kippt seitlich weg.",
+    "Po bleibt oben — dann trainiert die Brust kaum."
+   ],
+   "tips": [
+    "Faust mit geradem Handgelenk: Knöchel von Zeige- und Mittelfinger tragen, das Handgelenk knickt nicht ab — so bleibt es entlastet.",
+    "Ein gefaltetes Handtuch unter den Fäusten schont die Knöchel."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "knee_pushup.mp4",
+    "image": "knee_pushup.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "fist_pushup",
+   "name": "Liegestütz auf Fäusten",
+   "en": "Fist Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Brust",
+    "Trizeps"
+   ],
+   "secondary": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "schulter"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.6,
+   "progress": "close_fist_pushup",
+   "regress": "knee_fist_pushup",
+   "steps": [
+    "Fäuste schulterbreit unter die Schultern, Handgelenk gerade, Daumen außen an der Faust.",
+    "Körper gestreckt: Fersen, Po und Kopf auf einer Linie.",
+    "Senken, bis die Brust knapp über dem Boden ist.",
+    "Mit dem ganzen Körper hochdrücken."
+   ],
+   "mistakes": [
+    "Handgelenk knickt nach innen oder außen.",
+    "Hüfte hängt durch."
+   ],
+   "tips": [
+    "Faust mit geradem Handgelenk: Knöchel von Zeige- und Mittelfinger tragen, das Handgelenk knickt nicht ab — so bleibt es entlastet.",
+    "Durch die Fäuste wird die Bewegung ein paar Zentimeter tiefer — das macht sie sogar effektiver."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "pushup.mp4",
+    "image": "pushup.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "close_fist_pushup",
+   "name": "Enge Liegestütz auf Fäusten",
+   "en": "Close-grip Fist Push-up",
+   "pattern": "push",
+   "muscles": [
+    "Trizeps",
+    "Brust"
+   ],
+   "secondary": [
+    "Vordere Schulter",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 2.8,
+   "regress": "fist_pushup",
+   "steps": [
+    "Fäuste dicht nebeneinander unter dem Brustbein, Handgelenk gerade.",
+    "Körper gestreckt, Bauch und Po fest.",
+    "Senken, Ellbogen streichen eng am Körper nach hinten.",
+    "Hochdrücken bis die Arme gestreckt sind."
+   ],
+   "mistakes": [
+    "Ellbogen gehen nach außen — dann ist es keine enge Variante mehr.",
+    "Zu schnell nach unten fallen."
+   ],
+   "tips": [
+    "Faust mit geradem Handgelenk: Knöchel von Zeige- und Mittelfinger tragen, das Handgelenk knickt nicht ab — so bleibt es entlastet."
+   ],
+   "breathing": "Beim Absenken einatmen, beim Hochdrücken ausatmen.",
+   "media": {
+    "video": "diamond_pushup.mp4",
+    "image": "diamond_pushup.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "prone_ytw",
+   "name": "Y-T-W in Bauchlage",
+   "en": "Prone Y-T-W",
+   "pattern": "pull",
+   "muscles": [
+    "Oberer Rücken",
+    "Hintere Schulter"
+   ],
+   "secondary": [
+    "Unterer Rücken"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "stress": [],
+   "use": [
+    "main",
+    "warmup"
+   ],
+   "base": 8,
+   "secPerRep": 4.5,
+   "progress": "door_frame_row",
+   "steps": [
+    "Auf den Bauch legen, Stirn auf ein kleines Handtuch, Beine lang.",
+    "Arme schräg nach vorn heben (Y), Daumen zeigen nach oben, kurz halten.",
+    "Arme zur Seite (T), Schulterblätter zusammen, kurz halten.",
+    "Ellbogen beugen und nach hinten ziehen (W), dann zurück zum Y — das ist eine Wiederholung."
+   ],
+   "mistakes": [
+    "Kopf in den Nacken reißen — Blick bleibt zum Boden.",
+    "Schultern zu den Ohren ziehen."
+   ],
+   "tips": [
+    "Klein und sauber schlägt hoch und schwungvoll — der obere Rücken soll brennen, nicht der Nacken."
+   ],
+   "breathing": "Beim Anheben ausatmen, beim Ablegen einatmen.",
+   "media": {
+    "video": "reverse_snow_angel.mp4",
+    "image": "reverse_snow_angel.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "prone_pulldown",
+   "name": "Latzug in Bauchlage",
+   "en": "Prone Pulldown",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Oberer Rücken"
+   ],
+   "secondary": [
+    "Hintere Schulter"
+   ],
+   "equipment": [],
+   "level": 1,
+   "unit": "reps",
+   "stress": [],
+   "use": [
+    "main",
+    "warmup"
+   ],
+   "base": 12,
+   "secPerRep": 3,
+   "progress": "door_frame_row",
+   "steps": [
+    "Auf den Bauch legen, Arme lang über dem Kopf, Daumen nach oben.",
+    "Brust und Arme leicht vom Boden lösen.",
+    "Ellbogen kräftig zu den Rippen ziehen, als würdest du dich an einer Stange hochziehen.",
+    "Arme wieder nach vorn strecken, ohne abzulegen."
+   ],
+   "mistakes": [
+    "Nur die Arme bewegen statt die Schulterblätter nach unten zu ziehen.",
+    "Hohlkreuz statt langer Wirbelsäule."
+   ],
+   "tips": [
+    "Denk an »Schulterblätter in die Gesäßtaschen«."
+   ],
+   "breathing": "Beim Ziehen ausatmen, beim Strecken einatmen.",
+   "media": {
+    "video": "superman.mp4",
+    "image": "superman.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "door_frame_row",
+   "name": "Türrahmen-Rudern",
+   "en": "Door Frame Row",
+   "pattern": "pull",
+   "muscles": [
+    "Oberer Rücken",
+    "Latissimus",
+    "Bizeps"
+   ],
+   "secondary": [
+    "Hintere Schulter",
+    "Unterarme"
+   ],
+   "equipment": [],
+   "level": 2,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "perSide": true,
+   "progress": "towel_door_row",
+   "regress": "prone_ytw",
+   "steps": [
+    "In einen offenen Türrahmen stellen, Fußspitzen nah an der Kante.",
+    "Mit einer Hand die Rahmenkante auf Brusthöhe greifen, Handgelenk gerade.",
+    "Arm strecken und den Körper nach hinten lehnen.",
+    "Brust zum Rahmen ziehen, Schulterblatt nach hinten unten — langsam zurück."
+   ],
+   "mistakes": [
+    "Mit der Hüfte ziehen statt mit dem Rücken.",
+    "Schulter rollt nach vorn."
+   ],
+   "tips": [
+    "Je näher die Füße am Rahmen, desto schwerer."
+   ],
+   "breathing": "Beim Heranziehen ausatmen, beim Zurücklehnen einatmen.",
+   "media": {
+    "video": "ring_row.mp4",
+    "image": "ring_row.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "towel_door_row",
+   "name": "Handtuch-Rudern an der Tür",
+   "en": "Towel Door Row",
+   "pattern": "pull",
+   "muscles": [
+    "Oberer Rücken",
+    "Latissimus",
+    "Bizeps"
+   ],
+   "secondary": [
+    "Hintere Schulter",
+    "Unterarme",
+    "Rumpf"
+   ],
+   "equipment": [],
+   "level": 3,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 10,
+   "secPerRep": 2.8,
+   "progress": "single_arm_towel_row",
+   "regress": "door_frame_row",
+   "steps": [
+    "Tür schließen und abschließen. Du stehst auf der Seite, auf der die Tür von dir weg aufgeht — so drückt dein Zug sie in den Rahmen.",
+    "Ein festes Handtuch um beide Türklinken legen, je ein Ende in eine Hand, Handgelenke gerade.",
+    "Füße nah an die Tür, Arme gestreckt, Körper gerade nach hinten lehnen.",
+    "Brust zu den Händen ziehen, Schulterblätter zusammen — langsam zurück."
+   ],
+   "mistakes": [
+    "Auf der falschen Türseite stehen — dann zieht man die Tür auf.",
+    "Hüfte knickt ein."
+   ],
+   "tips": [
+    "Vorher einmal kräftig ziehen und prüfen, ob Klinke und Handtuch halten.",
+    "Je steiler du stehst, desto leichter; je flacher, desto schwerer."
+   ],
+   "breathing": "Beim Heranziehen ausatmen, beim Zurücklehnen einatmen.",
+   "media": {
+    "video": "ring_row.mp4",
+    "image": "ring_row.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
+   }
+  },
+  {
+   "id": "single_arm_towel_row",
+   "name": "Einarmiges Handtuch-Rudern",
+   "en": "Single-arm Towel Row",
+   "pattern": "pull",
+   "muscles": [
+    "Latissimus",
+    "Oberer Rücken",
+    "Bizeps"
+   ],
+   "secondary": [
+    "Rumpf",
+    "Unterarme"
+   ],
+   "equipment": [],
+   "level": 5,
+   "unit": "reps",
+   "stress": [
+    "schulter",
+    "ellbogen"
+   ],
+   "use": [
+    "main"
+   ],
+   "base": 8,
+   "secPerRep": 3,
+   "perSide": true,
+   "regress": "towel_door_row",
+   "steps": [
+    "Aufbau wie beim Handtuch-Rudern, Tür abgeschlossen, du stehst auf der Seite, auf der sie von dir weg aufgeht.",
+    "Beide Handtuchenden in eine Hand nehmen, Handgelenk gerade.",
+    "Gerade nach hinten lehnen, freier Arm locker.",
+    "Mit einem Arm heranziehen, ohne den Körper zu verdrehen — langsam zurück."
+   ],
+   "mistakes": [
+    "Oberkörper dreht auf.",
+    "Ruckartiges Ziehen."
+   ],
+   "tips": [
+    "Rumpf fest wie beim Seitstütz — die Drehung zu verhindern ist die halbe Übung."
+   ],
+   "breathing": "Beim Heranziehen ausatmen.",
+   "media": {
+    "video": "ring_row.mp4",
+    "image": "ring_row.jpg",
+    "credit": "Sworkit",
+    "hinweis": "Video zeigt die Grundform — Ausführung laut Schritten"
    }
   }
  ]

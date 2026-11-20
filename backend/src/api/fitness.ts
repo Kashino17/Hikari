@@ -57,6 +57,7 @@ import { loadPrograms, phaseFor, setPrograms, startProgram, stopProgram, getProg
 import { weekPreview, weekReview } from "../fitness/week.js";
 import { best, history, loadBenchmarks, resolveItems as benchItems, saveRun, targets, tierFor } from "../fitness/benchmark.js";
 import { bodyProgress } from "../fitness/body.js";
+import { backupInfo, scheduleBackups } from "../fitness/backup.js";
 import {
   NUTRIENTS,
   type Nutrients,
@@ -129,6 +130,35 @@ function sendFile(reply: FastifyReply, file: string, type: string, range?: strin
 export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   mkdirSync(deps.dir, { recursive: true });
   const db: FitDb = openFitnessDb(join(deps.dir, "fitness.db"));
+  // Tägliche Sicherung (Datenbank + Körperfotos) nach ~/.hikari/<ordner>-backup — getrennt vom Arbeitsordner.
+  const BACKUP_DIR = `${deps.dir}-backup`;
+
+  /**
+   * Tagesziel statt Wochenschnitt: der im Ziel eingerechnete Trainings-Durchschnitt fällt raus, das
+   * echte Training des Tages kommt rein (erledigt; an Trainingstagen sonst das geplante). Kohlenhydrate
+   * wandern mit, Zucker/gesättigte Fette bleiben bei 10 % der Energie.
+   */
+  const dayTargets = (day: string) => {
+    const profile = getProfile(db);
+    const base = computeTargets(profile);
+    const sess = sessionsBetween(db, day, day).filter((x) => x.status !== "skipped");
+    const done = sess.filter((x) => x.status === "done");
+    const trainingDay = profile.trainingDays.includes(weekday(day));
+    const counted = done.length ? done : trainingDay ? sess.slice(0, 1) : [];
+    const trainKcal = counted.reduce((a, x) => a + (x.plan.kcal ?? 0), 0);
+    const delta = Math.round((trainKcal - base.explain.training) / 10) * 10;
+    if (!delta) return { ...base, day: { delta: 0, training: trainKcal, done: done.length > 0 } };
+    const kcal = base.kcal + delta;
+    const carbs = Math.max(50, base.carbs + Math.round(delta / 4));
+    return {
+      ...base,
+      kcal,
+      carbs,
+      goals: { ...base.goals, kcal: { min: kcal }, carbs: { min: carbs }, sugar: { max: Math.round((kcal * 0.1) / 4) }, satfat: { max: Math.round((kcal * 0.1) / 9) } },
+      day: { delta, training: trainKcal, done: done.length > 0 },
+    };
+  };
+  if (!deps.dir.includes("test")) scheduleBackups(db, deps.dir, BACKUP_DIR, deps.log);
   const mediaDir = join(deps.dir, "media");
   const photoDir = join(deps.dir, "photos");
   const imgDir = join(deps.dir, "img");
@@ -343,6 +373,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     if (today) void todaySession(ai, db, catalog, { regenerate: true, log: deps.log }).catch(() => {});
     return { ok: true, current: phaseFor(db, getPrograms(), localDay()) };
   });
+  app.get("/fitness/backup", async () => ({ ...backupInfo(BACKUP_DIR), dir: BACKUP_DIR }));
   app.get("/fitness/week", async () => weekPreview(db, catalog));
 
   // ── Workouts auf Zeit (Bestzeiten) ──
@@ -473,7 +504,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     return {
       day,
       profile,
-      targets: computeTargets(profile),
+      targets: dayTargets(day),
       ai: ai.status(),
       today,
       week: Array.from({ length: 7 }, (_, i) => {
@@ -517,7 +548,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       .get(day) as { plan: string; status: string; result: string | null } | undefined;
     const food = foodLogDay(db, day);
     const kcal = Math.round(sumNutrients(food.map((f) => f.totals)).kcal ?? 0);
-    const left = computeTargets(profile).kcal - kcal;
+    const left = dayTargets(day).kcal - kcal;
     const eat = left >= 0 ? `noch ${left} kcal` : `${-left} kcal über Ziel`;
     const streak = trainingStreak(db, day, profile.trainingDays);
     // Bild für die Profil-Kachel: erste Hauptübung des Tages (sonst ein Klimmzug).
@@ -1042,8 +1073,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   const dayData = (day: string) => {
     const entries = foodLogDay(db, day);
     const totals = roundNutrients(sumNutrients(entries.map((e) => e.totals)));
-    const profile = getProfile(db);
-    const targets = computeTargets(profile);
+    const targets = dayTargets(day);
     return { day, entries, totals, targets, status: nutrientStatus(totals, targets) };
   };
 

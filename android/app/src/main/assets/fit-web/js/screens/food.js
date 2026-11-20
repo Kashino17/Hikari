@@ -57,6 +57,7 @@ function Diary({ day }) {
         <div class="side">
           <div class="kv"><span class="muted">Gegessen</span><b class="num">${fmtNum(k)} kcal</b></div>
           <div class="kv"><span class="muted">Ziel</span><b class="num">${fmtNum(t.kcal)} kcal</b></div>
+          ${t.day?.delta ? html`<div class="kv dayAdj"><span>${t.day.delta > 0 ? (t.day.done ? 'Training erledigt' : 'Trainingstag') : 'Ruhetag'}</span><b class="num">${t.day.delta > 0 ? '+' : '−'}${fmtNum(Math.abs(t.day.delta))}</b></div>` : ''}
           <div class="kv"><span class="muted">Mahlzeiten</span><b>${d.entries.length}</b></div>
         </div>
       </div>

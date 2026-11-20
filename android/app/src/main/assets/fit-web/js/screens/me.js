@@ -21,6 +21,7 @@ const ALLERG = ['Gluten', 'Laktose', 'Ei', 'Nüsse', 'Erdnüsse', 'Soja', 'Fisch
 
 export function Me() {
   const [rem, setRem] = useState(() => reminders.get());
+  const [bk] = useData('/fitness/backup');
   const [hs, setHs] = useState(null);
   useEffect(() => { if (health.available()) health.status().then(setHs).catch(() => setHs('unavailable')); }, []);
   const [state] = useData('/fitness/state');
@@ -91,7 +92,8 @@ export function Me() {
     ${info === 'ueber' && html`<${Sheet} title="Daten und Quellen" onClose=${() => setInfo(null)}><p class="small muted" style="line-height:1.6">
       <b style="color:var(--text)">KI</b> · ${state.ai.hasKey ? `Gemini (kostenlos) · heute ${Object.values(state.ai.used ?? {}).reduce((x, y) => x + y, 0)} Anfragen` : 'kein Schlüssel'}<br />
       <b style="color:var(--text)">Rezepte</b> · ${state.recipes.have} von ${state.recipes.total || 790} aufbereitet${state.recipes.running ? ' (läuft)' : ''}<br />
-      Videos: Sworkit, Freeletics, ExerciseDB (AscendAPI) · Nährwerte: BLS 4.0 (MRI) · Rezepte: TheMealDB<br />Achtsamkeit: Klangschalen-Aufnahmen von »דג בלי מלח«, Wikimedia Commons (CC BY-SA 4.0) · Yoga-Figuren: yoga-api (MIT) · Klangbetten: YouTube-Kanäle, im Klang-Blatt genannt</p><//>`}
+      Videos: Sworkit, Freeletics, ExerciseDB (AscendAPI) · Nährwerte: BLS 4.0 (MRI) · Rezepte: TheMealDB<br />Achtsamkeit: Klangschalen-Aufnahmen von »דג בלי מלח«, Wikimedia Commons (CC BY-SA 4.0) · Yoga-Figuren: yoga-api (MIT) · Klangbetten: YouTube-Kanäle, im Klang-Blatt genannt<br />
+      <b style="color:var(--text)">Sicherung</b> · ${bk?.last ? `täglich auf deinem Mac, zuletzt ${relDay(bk.last.day, today())} · ${bk.count} Tage aufbewahrt` : 'täglich auf deinem Mac (die erste läuft beim nächsten Serverstart)'}</p><//>`}
   </div>`;
 }
 
@@ -211,7 +213,8 @@ export function Onboarding() {
 
 /** Erinnerungen an Trainingstagen + abends »Serie retten« (Android-Benachrichtigung). */
 function ReminderSheet({ p, rem, onSave, onClose }) {
-  const [on, setOn] = useState(rem?.enabled ?? true);
+  // Noch nie eingestellt → beim Öffnen an (wer hier speichert, will erinnert werden).
+  const [on, setOn] = useState(rem?.configured ? rem.enabled : true);
   const [min, setMin] = useState(rem?.minutes ?? 18 * 60);
   const [streak, setStreak] = useState(rem?.streak ?? true);
   const times = [7 * 60, 12 * 60, 17 * 60, 18 * 60, 19 * 60, 20 * 60];
@@ -248,6 +251,7 @@ function HealthSheet({ status, onStatus, onClose }) {
       <div><b class="num">${sleep?.sleepMin ? `${Math.floor(sleep.sleepMin / 60)}:${String(sleep.sleepMin % 60).padStart(2, '0')}` : '–'}</b><span>Schlaf</span></div>
       <div><b class="num">${last?.restingHr ?? '–'}</b><span>Ruhepuls</span></div>
       <div><b class="num">${last?.activeKcal ?? '–'}</b><span>aktive kcal</span></div></div>`}
+    ${(status === 'granted' || status === 'partial') && days && !days.some((x) => x.steps != null || x.sleepMin != null || x.restingHr != null) && html`<p class="small mt12" style="color:#F2B847;line-height:1.5">Verbunden, aber noch keine Daten. In Samsung Health: Einstellungen → Health Connect → dort Samsung Health erlauben, Schritte, Schlaf und Herzfrequenz zu teilen. Danach erscheinen die Werte hier.</p>`}
     <button class="btn mt20" disabled=${busy} onClick=${connect}>${busy ? html`<${Spinner} />` : status === 'granted' ? 'Berechtigungen ändern' : 'Health Connect verbinden'}</button>
   </div><//>`;
 }

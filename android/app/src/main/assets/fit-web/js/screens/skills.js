@@ -169,6 +169,8 @@ function Practice({ s, st, catalog }) {
     try {
       const r = await api.post(`/fitness/skills/${s.id}/log`, { step: stepIdx, sets, feel });
       refresh('/fitness/skills');
+      // Offline: wartet auf dem Handy, Stufen-Auswertung kommt beim Nachsenden.
+      if (r?.queued) { toast('Offline gespeichert — wird nachgetragen, sobald dein Server erreichbar ist'); setRes({ advanced: false, met: false, state: { hits: 0 } }); setBusy(false); return; }
       setRes(r);
       if (r.advanced) { beep('go'); voice.say('Neue Stufe'); }
     } catch { toast('Server nicht erreichbar'); }

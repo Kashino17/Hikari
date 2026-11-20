@@ -187,9 +187,15 @@ export function chooseDayType(ctx: PlanContext): DayType {
   const canPull = p.equipment.some((q) => ["klimmzugstange", "ringe", "band"].includes(q));
   const last = ctx.recent[0]?.dayType;
   const trainedLast3 = ctx.recent.filter((r) => r.daysAgo <= 3).length;
+  // Nur Tagestypen, für die es mit Ausrüstung und Beschwerden auch Hauptübungen gibt
+  // (sonst bestünde z. B. ein »Drücken«-Tag nur aus einem Seitstütz).
+  const doable = (t: DayType) => {
+    const pats: string[] = DAY_TYPES[t].patterns.filter((x) => x !== "core");
+    return !pats.length || ctx.catalog.exercises.some((e) => pats.includes(e.pattern) && e.use.includes("main") && usable(ctx, e));
+  };
   const scores: [DayType, number][] = (Object.keys(DAY_TYPES) as DayType[])
     .filter((t) => t !== "mobilitaet" || trainedLast3 >= 3 || energy <= 2)
-    .filter((t) => t !== "zug" || canPull)
+    .filter(doable)
     .map((t) => {
       const groups = DAY_TYPES[t].groups;
       let s = groups.length

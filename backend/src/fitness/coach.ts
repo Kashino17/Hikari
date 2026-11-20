@@ -505,14 +505,22 @@ export function applyVariants(db: FitDb, ctx: PlanContext, plan: SessionPlan): S
   const resolve = makeResolver(db, ctx.catalog, (e) => usable(ctx, e));
   const blocks = plan.blocks.map((b) => {
     if (b.kind !== "main" && b.kind !== "finisher") return b;
-    const used = new Set<string>();
+    const used = new Set<string>(b.items.map((it) => it.ex).filter((x) => resolve(x) === x));
     const items = b.items.map((it) => {
       const id = resolve(it.ex);
-      if (id === it.ex || used.has(id)) { used.add(it.ex); return it; }
-      const e = ctx.catalog.byId.get(id);
-      if (!e) return it;
-      used.add(id);
-      return { ...it, ex: id, amount: doseFor(ctx, e, plan.intensity, b.kind) };
+      if (id === it.ex) return it;
+      let e = ctx.catalog.byId.get(id);
+      // Zeigen mehrere Übungen auf dieselbe neue Variante (ganze Kette beherrscht): statt die
+      // beherrschte stehen zu lassen, eine andere, noch nicht beherrschte desselben Musters nehmen.
+      if (!e || used.has(id)) {
+        const orig = ctx.catalog.byId.get(it.ex);
+        e = ctx.catalog.exercises
+          .filter((x) => x.pattern === orig?.pattern && x.use.includes("main") && usable(ctx, x) && resolve(x.id) === x.id && !used.has(x.id))
+          .sort((a, c) => Math.abs(a.level - (orig?.level ?? 3)) - Math.abs(c.level - (orig?.level ?? 3)))[0];
+        if (!e) return it;
+      }
+      used.add(e.id);
+      return { ...it, ex: e.id, amount: doseFor(ctx, e, plan.intensity, b.kind) };
     });
     return { ...b, items };
   });

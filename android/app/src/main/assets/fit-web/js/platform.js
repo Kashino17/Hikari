@@ -440,3 +440,6 @@ export const health = {
     return days;
   },
 };
+
+/** In den anderen Bereich springen (Fitness ↔ Achtsamkeit) — nur in der App. */
+export function openArea(area) { try { native?.openArea?.(area); } catch { /* */ } }

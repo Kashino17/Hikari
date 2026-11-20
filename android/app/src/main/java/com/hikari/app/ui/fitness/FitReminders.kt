@@ -38,9 +38,10 @@ object FitReminders {
     private const val PREFS = "hikari_fit_reminders"
     private const val WORK_TRAIN = "fit-reminder-train"
     private const val WORK_STREAK = "fit-reminder-streak"
+    private const val WORK_WEEK = "fit-reminder-week"
     const val CHANNEL_ID = "fitness_reminder"
 
-    data class Config(val enabled: Boolean, val minutes: Int, val streak: Boolean, val days: Set<Int>)
+    data class Config(val enabled: Boolean, val minutes: Int, val streak: Boolean, val days: Set<Int>, val configured: Boolean = false)
 
     fun read(context: Context): Config {
         val p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -49,11 +50,12 @@ object FitReminders {
             minutes = p.getInt("minutes", 18 * 60),
             streak = p.getBoolean("streak", true),
             days = p.getString("days", "").orEmpty().split(',').mapNotNull { it.toIntOrNull() }.toSet(),
+            configured = p.contains("enabled"),
         )
     }
 
     fun toJson(c: Config): String = JSONObject()
-        .put("enabled", c.enabled).put("minutes", c.minutes).put("streak", c.streak)
+        .put("enabled", c.enabled).put("configured", c.configured).put("minutes", c.minutes).put("streak", c.streak)
         .put("days", org.json.JSONArray(c.days.sorted())).toString()
 
     /** Aus der Oberfläche: speichern und Arbeit neu planen. */
@@ -75,8 +77,16 @@ object FitReminders {
         if (!c.enabled) {
             wm.cancelUniqueWork(WORK_TRAIN)
             wm.cancelUniqueWork(WORK_STREAK)
+            wm.cancelUniqueWork(WORK_WEEK)
             return
         }
+        // Montags 9 Uhr: Wochenrückblick (nur wenn letzte Woche trainiert wurde — prüft der Worker).
+        wm.enqueueUniquePeriodicWork(
+            WORK_WEEK, ExistingPeriodicWorkPolicy.UPDATE,
+            PeriodicWorkRequestBuilder<FitReminderWorker>(7, TimeUnit.DAYS)
+                .setInitialDelay(delayUntilMonday(9 * 60), TimeUnit.MILLISECONDS)
+                .setInputData(workDataOf("kind" to "week")).build(),
+        )
         wm.enqueueUniquePeriodicWork(
             WORK_TRAIN, ExistingPeriodicWorkPolicy.UPDATE,
             PeriodicWorkRequestBuilder<FitReminderWorker>(24, TimeUnit.HOURS)
@@ -102,6 +112,16 @@ object FitReminders {
         return next.timeInMillis - now.timeInMillis
     }
 
+    internal fun delayUntilMonday(minutes: Int, now: Calendar = Calendar.getInstance()): Long {
+        val next = (now.clone() as Calendar).apply {
+            set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+            set(Calendar.HOUR_OF_DAY, minutes / 60); set(Calendar.MINUTE, minutes % 60)
+            set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
+        }
+        while (!next.after(now)) next.add(Calendar.WEEK_OF_YEAR, 1)
+        return next.timeInMillis - now.timeInMillis
+    }
+
     /** 0 = Montag … 6 = Sonntag (wie im Fitness-Profil). */
     fun todayIndex(): Int = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) + 5) % 7
 }
@@ -114,8 +134,9 @@ class FitReminderWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val c = FitReminders.read(context)
-        if (!c.enabled || FitReminders.todayIndex() !in c.days) return Result.success()
         val kind = inputData.getString("kind") ?: "train"
+        if (kind == "week") return weekly(c)
+        if (!c.enabled || FitReminders.todayIndex() !in c.days) return Result.success()
         // Was steht heute an? (Server über den App-Client — Host wird umgeschrieben.)
         val today = withContext(Dispatchers.IO) {
             runCatching {
@@ -138,6 +159,20 @@ class FitReminderWorker @AssistedInject constructor(
                 else "Dein Coach hat dein Training vorbereitet.",
             )
         }
+        return Result.success()
+    }
+
+    private suspend fun weekly(c: FitReminders.Config): Result {
+        if (!c.enabled) return Result.success()
+        val week = withContext(Dispatchers.IO) {
+            runCatching {
+                okHttp.newBuilder().callTimeout(java.time.Duration.ofSeconds(12)).build()
+                    .newCall(Request.Builder().url("http://hikari.invalid/fitness/week").build()).execute()
+                    .use { r -> if (r.isSuccessful) JSONObject(r.body?.string().orEmpty()) else null }
+            }.getOrNull()
+        } ?: return Result.success()
+        val n = week.optJSONObject("review")?.optInt("sessions") ?: 0
+        if (n > 0) notify("Dein Wochenrückblick ist bereit", "$n ${if (n == 1) "Einheit" else "Einheiten"} letzte Woche — dein Coach sagt dir, was diese Woche kommt.")
         return Result.success()
     }
 

@@ -609,6 +609,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     com.hikari.app.ui.fitness.FitWebScreen(
                         onClose = { nav.popBackStack() },
                         onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
+                        onOpenArea = { nav.navigate(it) },
                     )
                 }
             }

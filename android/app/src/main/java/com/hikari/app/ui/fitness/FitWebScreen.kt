@@ -26,6 +26,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.runtime.Composable
@@ -87,10 +89,13 @@ fun FitWebScreen(
     onOpenVideo: (id: String, title: String) -> Unit,
     /** "fit" (Training, Skills, Ernährung) oder "mind" (Achtsamkeit & Spiritualität, eigener Bereich). */
     area: String = "fit",
+    /** Zum anderen Bereich springen (z. B. Ruhetag → Achtsamkeit). */
+    onOpenArea: (String) -> Unit = {},
     vm: FitWebViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     val bridge = remember { FitWebBridge(context.applicationContext, vm.okHttp, onClose, onOpenVideo, vm.music) }
+    bridge.openAreaFn = onOpenArea
     bridge.activity = context
 
     val photoFile = remember { File(context.cacheDir, "fit_photo.jpg") }
@@ -110,7 +115,9 @@ fun FitWebScreen(
     val density = LocalDensity.current
     val bars = WindowInsets.systemBars.union(WindowInsets.displayCutout)
     val insetTop = with(density) { bars.getTop(this).toDp().value }
-    val insetBottom = with(density) { bars.getBottom(this).toDp().value }
+    // Offene Tastatur: die WebView weicht nach oben aus (imePadding), unten braucht es dann keinen Rand.
+    val imeOpen = WindowInsets.ime.getBottom(density) > 0
+    val insetBottom = if (imeOpen) 0f else with(density) { bars.getBottom(this).toDp().value }
     LaunchedEffect(insetTop, insetBottom) { bridge.pushInsets(insetTop, insetBottom) }
 
     // Barcode-Scanner-Modul der Play-Dienste schon vorab laden, damit der erste Scan nicht scheitert.
@@ -126,7 +133,7 @@ fun FitWebScreen(
     // sie nur kurz leiser (bridge.duck).
 
     AndroidView(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().imePadding(),
         factory = { ctx ->
             WebView(ctx).apply {
                 // Ohne eigene LayoutParams rechnet Chromium mit Viewport-Höhe 0.
@@ -277,6 +284,8 @@ class FitWebBridge(
     }
 
     @JavascriptInterface fun exit() { main.post { if (!closed) onClose() } }
+    var openAreaFn: (String) -> Unit = {}
+    @JavascriptInterface fun openArea(area: String) { if (area == "mind" || area == "fitness") main.post { if (!closed) openAreaFn(area) } }
 
     private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
 

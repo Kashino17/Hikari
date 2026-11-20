@@ -23,7 +23,10 @@ export function WeekPlan() {
         </div>
         <div class="pc-weeks">${Array.from({ length: ph.weeks }, (_, i) => html`<i class=${cls(i + 1 < ph.week && 'done', i + 1 === ph.week && 'cur')} />`)}</div>
       </button>`
-      : html`<button class="progInvite" onClick=${() => nav('programme')}><${Icon} n="flag" /><div class="grow"><b>${w.program?.done ? 'Programm geschafft — wie geht es weiter?' : 'Programm wählen'}</b><span>Mehrere Wochen mit Ziel, Steigerung und Entlastungswoche</span></div><${Icon} n="chevron_right" /></button>`}
+      : w.program?.done ? html`<div class="progDone">
+          <div class="row" style="gap:12px"><${Icon} n="emoji_events" /><div class="grow"><b>${w.program.name} geschafft</b><span>${w.program.weeks} Wochen durchgezogen — stark.</span></div></div>
+          <div class="row mt12" style="gap:8px"><button class="btn sm" onClick=${() => nav('test')}>Fitness-Test</button><button class="btn sm ghost" onClick=${() => nav('programme')}>Nächstes Programm</button></div></div>`
+      : html`<button class="progInvite" onClick=${() => nav('programme')}><${Icon} n="flag" /><div class="grow"><b>Programm wählen</b><span>Mehrere Wochen mit Ziel, Steigerung und Entlastungswoche</span></div><${Icon} n="chevron_right" /></button>`}
     <div class="wkStrip">${w.days.map((d, i) => {
       const s = d.session;
       const type = s?.dayType ?? d.predicted?.dayType;

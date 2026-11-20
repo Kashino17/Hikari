@@ -1387,3 +1387,13 @@ html.area-mind .brLabel b{font-family:var(--serif);font-weight:560;font-size:30p
 .bigInput{display:flex;align-items:baseline;justify-content:center;gap:8px}
 .bigInput input{width:170px;text-align:center;font-family:var(--display);font-weight:800;font-size:56px;background:none;border:0;border-bottom:2px solid var(--border);color:var(--text)}
 .bigInput span{font-size:20px;color:var(--muted)}
+.kv.dayAdj span{color:rgb(var(--food));font-size:12.5px}.kv.dayAdj b{color:rgb(var(--food))}
+/* Ruhetag → Achtsamkeit, Programm geschafft */
+.restCard{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:18px;background:#0A0F26;border:1px solid rgba(244,193,99,.35);color:#F6F0E4;text-align:left;font:inherit}
+.restCard .rc-moon{width:34px;height:34px;border-radius:50%;background:rgb(244,193,99);flex:none;box-shadow:inset -9px -3px 0 0 #0A0F26}
+.restCard b{display:block;font-size:15px}.restCard span{font-size:12.5px;color:#A9AECB}
+.restCard>.ms{color:rgb(244,193,99)}
+.progDone{border-radius:20px;padding:16px;background:#fff;color:#000}
+.progDone>.row>.ms{font-size:30px}.progDone b{display:block;font-family:var(--display);font-size:20px;font-weight:800}.progDone span{font-size:13px;opacity:.65}
+.progDone .btn{background:#000;color:#fff;flex:1}.progDone .btn.ghost{background:rgba(0,0,0,.08);color:#000}
+body:has(.sheet) .offPill{display:none}

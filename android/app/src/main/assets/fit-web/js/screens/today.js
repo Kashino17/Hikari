@@ -1,6 +1,6 @@
 // »Heute«: Woche, Trainingstag vom Coach, Tagesform, Ernährung und Skill auf einen Blick.
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
-import { api, health, prefetch } from '../platform.js';
+import { api, health, prefetch, openArea, isNative } from '../platform.js';
 import { useEffect as useEffectT } from '../../vendor/preact-htm.js';
 import { WeekReviewCard } from './plan.js';
 import { nav, useData, setData, refresh, longDate, wdShort, today as todayStr, relDay, parseDay, INTENSITY, toast, useCatalog, fmtNum, SLOT_NAMES } from '../app.js';
@@ -62,6 +62,8 @@ export function Today() {
             : html`<${Hero} s=${session} restDay=${!isTrainingDay} second=${state?.week?.find((w) => w.day === day)?.done} onAdapt=${() => setAdapt(true)} />`}
         </div>
         <${HealthRow} days=${hl?.days} />
+        ${state && !other && !isTrainingDay && !done && isNative && html`<button class="restCard mt12" onClick=${() => openArea('mind')}>
+          <span class="rc-moon" /><div class="grow"><b>Ruhetag — gönn dir 15 Minuten</b><span>Sanftes Yoga oder eine Atemübung lösen Muskelkater und helfen der Erholung.</span></div><${Icon} n="arrow_forward" /></button>`}
         <${WeekReviewCard} />
         ${prog && !prog.test.last && html`<button class="assessCard mt12" onClick=${() => nav('test')}>
           <${Icon} n="assignment_turned_in" /><div class="grow"><b>Einstufung: 5 Minuten</b><span>Vier kurze Tests — danach plant dein Coach genau auf deinem Level.</span></div><${Icon} n="chevron_right" /></button>`}

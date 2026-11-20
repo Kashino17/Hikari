@@ -86,7 +86,12 @@ export function FitnessTest() {
   const last = d.test.last;
   const finish = async (all) => {
     setBusy(true);
-    try { setRes(await api.post('/fitness/test', { results: all })); refresh('/fitness/progress'); refresh('/fitness/state'); } catch { setBusy(false); }
+    try {
+      const r = await api.post('/fitness/test', { results: all });
+      // Offline: Ergebnis wartet auf dem Handy, Einstufung folgt beim Nachsenden.
+      setRes(r?.queued ? { queued: true, results: all } : r);
+      refresh('/fitness/progress'); refresh('/fitness/state');
+    } catch { setBusy(false); }
   };
   if (res) return html`<${TestResult} res=${res} tests=${tests} />`;
   if (i < 0) return html`<div class="screen c-train"><${Top} title="Fitness-Test" sub=${`${tests.length} Übungen · etwa 8 Minuten`} />
@@ -163,6 +168,11 @@ function TestStep({ t, k, n, last, busy, onDone, onQuit }) {
 }
 
 function TestResult({ res, tests }) {
+  if (res.queued) return html`<div class="screen c-train"><div class="scroll"><div class="pad" style="padding-top:calc(28px + var(--sat))">
+    <div class="tr-hero"><span class="lc-k">Fitness-Test</span><div class="lc-n mt8">Offline gespeichert</div></div>
+    <p class="small muted mt16">Deine Werte sind auf dem Handy. Sobald dein Server erreichbar ist, werden sie gesendet und dein Coach stuft dich ein.</p>
+    <div class="trList mt16">${tests.map((t) => html`<div class="trRow"><div class="grow"><b>${t.name}</b></div><span class="num tr-v">${res.results[t.id]}${t.unit === 'sec' ? ' s' : ''}</span></div>`)}</div>
+    <button class="btn mt20" onClick=${() => nav('training', { replace: true })}>Fertig</button></div></div></div>`;
   const up = res.before != null && res.level > res.before;
   return html`<div class="screen c-train"><div class="scroll"><div class="pad" style="padding-top:calc(28px + var(--sat))">
     <div class="tr-hero"><span class="lc-k">${res.prev ? 'Dein neues Level' : 'Deine Einstufung'}</span><div class="lc-v num">${res.level}<small>/5</small></div>

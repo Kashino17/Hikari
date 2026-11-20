@@ -449,3 +449,62 @@ describe("Bestzeiten und Körper", () => {
     expect(weightTrend(rows)).toBeCloseTo(0.3, 1);
   });
 });
+
+describe("Sicherung", () => {
+  it("sichert Datenbank und neue Körperfotos, hält 14 Tage", async () => {
+    const { backupNow, backupInfo } = await import("./backup.js");
+    const { mkdtempSync, writeFileSync, mkdirSync, readdirSync, existsSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const dir = mkdtempSync(join(tmpdir(), "fitbk-"));
+    const db = openFitnessDb(join(dir, "fitness.db"));
+    saveProfile(db, { onboarded: true, weightKg: 71 });
+    mkdirSync(join(dir, "body"));
+    writeFileSync(join(dir, "body", "abc.jpg"), "x");
+    const target = join(dir, "backup");
+    for (let i = 0; i < 16; i++) writeFileSync(join(target.replace(/backup$/, ""), "dummy"), ""); // nichts
+    mkdirSync(target, { recursive: true });
+    for (let i = 1; i <= 16; i++) writeFileSync(join(target, `fitness-2026-01-${String(i).padStart(2, "0")}.db`), "");
+    const f = await backupNow(db, dir, target);
+    expect(existsSync(f)).toBe(true);
+    expect(existsSync(join(target, "body", "abc.jpg"))).toBe(true);
+    expect(readdirSync(target).filter((x) => x.endsWith(".db")).length).toBe(14);
+    const copy = openFitnessDb(f);
+    expect(getProfile(copy).weightKg).toBe(71);
+    expect(backupInfo(target).count).toBe(14);
+  });
+});
+
+describe("Lernschleife über mehrere Einheiten (wie im echten Gebrauch)", () => {
+  it("8 Einheiten »zu leicht« + übertroffen → Dosis steigt, Aufstiege, Varianten im nächsten Plan", async () => {
+    const { checkProgression, makeResolver } = await import("./progression.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"], limitations: ["handgelenk"], noJumps: true, trainingDays: [0, 1, 2, 3, 4, 5, 6], goal: "muskeln", level: 2 });
+    const allEvents: { kind: string; from?: string | undefined; to?: string | undefined }[] = [];
+    for (let i = 0; i < 8; i++) {
+      const day = addDaysT("2026-11-23", i);
+      const s = await todaySession(null, db, catalog, { day });
+      const done: Record<string, number[]> = {};
+      const exFb: { ex: string; difficulty: number; technique: number }[] = [];
+      s.plan.blocks.forEach((b, bi) => b.items.forEach((it, ii) => {
+        done[`${bi}:${ii}`] = Array.from({ length: Math.max(1, b.rounds ?? 1) }, () => Math.round(it.amount * 1.25));
+        if (b.kind === "main") exFb.push({ ex: it.ex, difficulty: -1, technique: 3 });
+      }));
+      const signals = applyFeedback(db, s, { overall: 2, pain: [], exercises: exFb }, { seconds: 1500, done, skipped: [] });
+      const ctx = buildContext(db, catalog, day);
+      allEvents.push(...checkProgression(db, catalog, day, signals, (e) => usable(ctx, e)));
+    }
+    const ups = allEvents.filter((e) => e.kind === "auf");
+    expect(ups.length).toBeGreaterThan(0);
+    // Der nächste Plan nutzt die neue Variante statt der beherrschten Übung.
+    const day = addDaysT("2026-11-23", 8);
+    const ctx = buildContext(db, catalog, day);
+    const resolve = makeResolver(db, catalog, (e) => usable(ctx, e));
+    expect(resolve(ups[0]!.from!)).not.toBe(ups[0]!.from);
+    const next = await todaySession(null, db, catalog, { day });
+    const left = next.plan.blocks.flatMap((b) => b.items.filter((i) => ups.map((u) => u.from).includes(i.ex)).map((i) => `${b.kind}:${i.ex}`));
+    console.log("Aufstiege:", ups.map((u) => `${u.from}→${u.to}`).join(", "), "| noch im Plan:", left.join(", "));
+    expect(left.filter((x) => x.startsWith("main") || x.startsWith("finisher"))).toEqual([]);
+    console.log("Aufstiege:", ups.map((u) => `${u.from}→${u.to}`).join(", "), "· Level jetzt", getProfile(db).level);
+  });
+});
+function addDaysT(day: string, n: number) { const [y, m, d] = day.split("-").map(Number) as [number, number, number]; const dt = new Date(y, m - 1, d + n, 12); return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`; }

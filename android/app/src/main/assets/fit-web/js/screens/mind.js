@@ -107,7 +107,8 @@ function PendingVideo() {
     const r = await api.post(`${M}/log`, { kind: p.kind, ref: p.ref, seconds: p.watched, moodAfter: mood }).catch(() => null);
     close();
     refresh(M);
-    if (r?.unlocked) toast(`Stufe ${r.unlocked} im Yoga-Pfad ist frei`);
+    if (r?.queued) toast('Offline gespeichert — wird nachgetragen');
+    else if (r?.unlocked) toast(`Stufe ${r.unlocked} im Yoga-Pfad ist frei`);
     else toast(`${min(p.watched)} Minuten eingetragen`);
   };
   return html`<${Sheet} title="Schön, dass du da warst" onClose=${close}>
@@ -346,6 +347,7 @@ function Done({ kind, ref, seconds, moodBefore, title, onAgain }) {
   const save = async () => {
     const r = await api.post(`${M}/log`, { kind, ref, seconds, moodBefore, moodAfter: mood, note: note.trim() || undefined }).catch(() => null);
     setSaved(r ?? { ok: false });
+    if (r?.queued) toast('Offline gespeichert — wird nachgetragen, sobald dein Server erreichbar ist');
     refresh(M);
     if (r?.unlocked) { bell(1); haptic('success'); }
   };
