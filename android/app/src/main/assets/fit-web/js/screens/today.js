@@ -2,7 +2,7 @@
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
 import { api } from '../platform.js';
 import { nav, useData, setData, refresh, longDate, wdShort, today as todayStr, relDay, parseDay, INTENSITY, toast, useCatalog, fmtNum, SLOT_NAMES } from '../app.js';
-import { Icon, Loop, Ring, Sheet, Bar, cls, Spinner } from '../ui.js';
+import { Icon, Loop, Ring, Sheet, Bar, cls, Spinner, ScoreBadge } from '../ui.js';
 import { openFoodDay } from './food.js';
 
 const isoD = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -147,7 +147,7 @@ function DayView({ day, today }) {
               <div class="small muted">${fmtNum(f.totals.protein ?? 0)} g Eiweiß · ${f.meals.length} ${f.meals.length === 1 ? 'Mahlzeit' : 'Mahlzeiten'}</div></div></div>
           <div class="mt12">${f.meals.map((m) => html`<div class="row small" style="padding:5px 0"><span class="muted" style="width:86px;flex:none">${SLOT_NAMES[m.meal] ?? m.meal}</span><span class="grow ell">${m.title}</span><span class="num muted">${m.kcal}</span></div>`)}</div>
           ${f.report ? html`<button class="foodRep mt12" onClick=${() => nav(`ernaehrung/coach/${day}`)}>
-              <div class="scoreBadge sm"><b>${f.report.score}</b><span>von 10</span></div>
+              <${ScoreBadge} score=${f.report.score} sm />
               <div class="grow"><div class="eyebrow" style="color:rgb(var(--food))">Ernährungs-Coach</div><div class="small mt4" style="line-height:1.4">${f.report.headline}</div></div>
               <${Icon} n="chevron_right" style="color:var(--faint)" /></button>`
             : html`<button class="btn tint mt12" onClick=${() => nav(`ernaehrung/coach/${day}`)}><${Icon} n="psychology" />Auswertung erstellen</button>`}`

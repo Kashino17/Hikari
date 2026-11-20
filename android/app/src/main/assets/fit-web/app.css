@@ -1099,3 +1099,8 @@ html.area-mind .brOrb i::after{content:"";position:absolute;inset:30%;border-rad
 html.area-mind .brOrb::before{border:1.5px solid rgba(var(--mind),.38);box-shadow:none;background:none}
 html.area-mind .brOrb::after{display:none}
 html.area-mind .brLabel b{font-family:var(--serif);font-weight:560;font-size:30px}
+/* Note »x von 10«: Farbe folgt der Note (8–10 = Akzentfarbe des Bereichs) */
+.scoreBadge.sc-low{background:#EE7B6F;color:#1A0E0C}
+.scoreBadge.sc-mid{background:#F2B847;color:#1A1405}
+.scoreBadge.sc-fair{background:#C6DD69;color:#141A06}
+.scoreBadge.sc-good{background:rgb(var(--c));color:var(--ink)}

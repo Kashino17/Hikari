@@ -2,7 +2,7 @@
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
 import { api, pickPhoto, scanBarcode } from '../platform.js';
 import { back, nav, useData, setData, refresh, today as todayStr, relDay, toast, fmtNum, SLOT_NAMES, SLOT_ICONS, slotNow, img, recipeImg, parseDay } from '../app.js';
-import { Icon, Ring, Bar, Sheet, Top, Seg, cls, Spinner, Empty } from '../ui.js';
+import { Icon, Ring, Bar, Sheet, Top, Seg, cls, Spinner, Empty, ScoreBadge } from '../ui.js';
 import { RecipeBrowse, IngImg } from './recipes.js';
 import { FoodStats } from './stats.js';
 
@@ -290,7 +290,7 @@ export function DayReport({ day: day0 }) {
     <div class="scroll"><div class="pad">
       ${err ? html`<${Empty} icon="cloud_off" title=${err} />` : !r ? html`<div class="row gap12 mt12"><${Spinner} /><div class="muted">Coach liest dein Tagebuch …</div></div><div class="skel mt16" style="height:300px" />` : html`
         <div class="review c-food" style="background:linear-gradient(180deg,rgba(var(--food),.14),rgba(var(--food),.03)),var(--surface);border-color:rgba(var(--food),.22)">
-          <div class="row" style="align-items:flex-start"><div class="scoreBadge"><b>${r.score}</b><span>von 10</span></div><h3 class="grow">${r.headline}</h3></div>
+          <div class="row" style="align-items:flex-start"><${ScoreBadge} score=${r.score} /><h3 class="grow">${r.headline}</h3></div>
           ${r.good?.length > 0 && html`<div class="grp c-good"><div class="gl">Läuft gut</div><ul>${r.good.map((t) => html`<li>${t}</li>`)}</ul></div>`}
           ${r.bad?.length > 0 && html`<div class="grp c-bad"><div class="gl">Nicht so gut</div><ul>${r.bad.map((t) => html`<li>${t}</li>`)}</ul></div>`}
           ${r.variety && html`<div class="grp c-sky"><div class="gl">Vielfalt</div><p class="mt4" style="font-size:14.5px;line-height:1.45">${r.variety}</p></div>`}
