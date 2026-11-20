@@ -1,6 +1,23 @@
 import { join } from "node:path";
 import type { ParseContext, ParsedTask } from "./parse.js";
 import { isoDay } from "./plan.js";
+
+/**
+ * Was Whisper in Stille gern erfindet (Abspann-Floskeln aus Untertitel-Trainingsdaten).
+ * Am 21.11. wurde aus einer stillen Aufnahme »Transcribed by ESO · Translated by —« — zwei Scheinaufgaben.
+ */
+const SILENCE =
+  /(transcribed|translated|subtitles?|captions?) by|untertitel|amara\.org|copyright|vielen dank (fürs|für das|für's) zu(schauen|hören)|thanks? for watching|bis zum nächsten mal|^[\s.,!?…—-]*$/i;
+
+/** Erfundene Sätze raus; was übrig bleibt, ist das Gesagte (kann leer sein). */
+export function cleanSpoken(text: string): string {
+  return text
+    .split(/(?<=[.!?…])\s+|\s+[·—-]\s+/)
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0 && !SILENCE.test(x))
+    .join(" ")
+    .trim();
+}
 import type { Capture, TaskStore } from "./store.js";
 
 export interface CaptureDeps {
@@ -108,7 +125,7 @@ export class CaptureProcessor {
       let text = c.text ?? "";
       if (c.file) {
         store.setCapture(c, { status: "transcribing" });
-        text = (await this.deps.transcribe(join(store.captureDir, c.file))).text.trim();
+        text = cleanSpoken((await this.deps.transcribe(join(store.captureDir, c.file))).text);
         store.setCapture(c, { text });
       }
       if (!text) {
@@ -132,7 +149,7 @@ export class CaptureProcessor {
         parsed = this.deps.fallback(text, ctx);
         fallback = true;
       }
-      if (!parsed.length) parsed = this.deps.fallback(text, ctx);
+      // Leer heißt: Qwen hat keine Aufgabe gefunden — dann auch keine anlegen.
       const res = applyParsed(store, parsed, c);
       store.setCapture(c, { status: "done", fallback, ...res });
       this.deps.log?.("tasks: Aufnahme sortiert", {

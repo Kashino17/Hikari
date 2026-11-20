@@ -5,7 +5,7 @@ import fastifyMultipart from "@fastify/multipart";
 import Fastify, { type FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { registerTaskRoutes } from "../api/tasks.js";
-import { CaptureProcessor } from "./capture.js";
+import { CaptureProcessor, cleanSpoken } from "./capture.js";
 import { type ParsedTask, TaskParser, fallbackParse } from "./parse.js";
 import { addDays, blocked, briefing, effDue, fitFor, openTasks, projectNext } from "./plan.js";
 import { TaskStore } from "./store.js";
@@ -317,5 +317,40 @@ describe("Routen", () => {
     store.addTask({ title: "B", minutes: 40 });
     const b = (await app.inject({ method: "GET", url: "/tasks/briefing?minutes=15&max=1" })).json();
     expect(b.items.map((x: { title: string }) => x.title)).toEqual(["A"]);
+  });
+});
+
+describe("Stille", () => {
+  it("Whisper-Floskeln werden keine Aufgaben", async () => {
+    expect(cleanSpoken("Transcribed by ESO · Translated by —")).toBe("");
+    expect(cleanSpoken("Untertitel im Auftrag des ZDF. Morgen Bank anrufen.")).toBe(
+      "Morgen Bank anrufen.",
+    );
+    const proc = new CaptureProcessor({
+      store,
+      today: () => TODAY,
+      transcribe: async () => ({ text: "Transcribed by ESO · Translated by —" }),
+      parse: async () => [],
+      fallback: fallbackParse,
+    });
+    const c = store.newCapture("voice", null, { data: Buffer.from("x"), ext: ".m4a" });
+    proc.enqueue(c.id);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(c.status).toBe("failed");
+    expect(store.state().tasks).toHaveLength(0);
+  });
+
+  it("Qwen findet nichts: keine Aufgabe, auch nicht über die Regeln", async () => {
+    const proc = new CaptureProcessor({
+      store,
+      today: () => TODAY,
+      transcribe: async () => ({ text: "" }),
+      parse: async () => [],
+      fallback: fallbackParse,
+    });
+    const c = store.newCapture("text", "hm ja also", null);
+    proc.enqueue(c.id);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(c).toMatchObject({ status: "done", created: [] });
   });
 });

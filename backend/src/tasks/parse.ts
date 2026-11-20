@@ -118,7 +118,7 @@ Regeln:
 - stakes: 3 = Strafe, Gebühr oder Frist einer Behörde/Bank hängt dran, 2 = Behörde/Bank/Geld/Kunde, 1 = wäre ärgerlich, 0 = egal.
 - note: in 2–5 Wörtern, warum es wichtig ist, nur wenn gesagt („Rücksendefrist“, „Kunde wartet“). Sonst leer.
 - project: gehört die Aufgabe zu einem laufenden Vorhaben, dessen id. Ist es selbst ein großes Vorhaben mit mehreren Schritten (Umzug, Visum beantragen, Steuererklärung), ein kurzer Name dafür und die Schritte in steps (2–6 Schritte in sinnvoller Reihenfolge). Sonst leer und steps leer.
-- Erfinde keine Aufgaben. Das Diktat kann Hörfehler enthalten: Gemeintes nehmen.
+- Erfinde keine Aufgaben. Das Diktat kann Hörfehler enthalten: Gemeintes nehmen. Steht keine Aufgabe darin (Rauschen, Floskeln wie „Untertitel von …“), gib eine leere Liste zurück.
 Antworte NUR mit dem JSON-Objekt.`;
 }
 
