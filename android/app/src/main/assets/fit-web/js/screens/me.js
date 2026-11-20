@@ -100,6 +100,22 @@ export function Me() {
   </div>`;
 }
 
+/**
+ * Freitext-Liste (z. B. Abneigungen): der Text bleibt beim Tippen genau so stehen — vorher wurde er bei
+ * jedem Tastendruck in eine Liste verwandelt und zurückgeschrieben, dabei verschwanden Komma und Leerzeichen
+ * am Ende sofort. Getrennt wird erst im Hintergrund (Komma, Semikolon, Punkt, Zeilenumbruch); die Chips
+ * darunter zeigen, was verstanden wurde.
+ */
+function ListInput({ list, placeholder, onChange }) {
+  const [text, setText] = useState(() => list.join(', '));
+  const parse = (t) => [...new Set(t.split(/[,;.\n]+/).map((x) => x.trim()).filter((x) => x.length >= 2))];
+  const items = parse(text);
+  return html`<div>
+    <input class="input" placeholder=${placeholder} value=${text} onInput=${(e) => { setText(e.target.value); onChange(parse(e.target.value)); }} />
+    ${items.length > 0 && html`<div class="chips wrap mt8">${items.map((x) => html`<span class="chip on" style="pointer-events:none">${x}</span>`)}</div>`}
+  </div>`;
+}
+
 // ── Profil bearbeiten (gleiche Felder wie die Einrichtung, auf einer Seite) ──
 export function ProfileEdit() {
   const [state] = useData('/fitness/state');
@@ -151,7 +167,7 @@ function ProfileFields({ p, up, catalog, part = null, all = false }) {
       <button class=${cls('li card mt12')} style="border-radius:12px" onClick=${() => up({ noJumps: !p.noJumps })}><div class="tx"><div class="t1">Ohne Sprünge</div><div class="t2">Leise trainieren, gelenkschonend</div></div><span class=${cls('chip', p.noJumps && 'on')}>${p.noJumps ? 'An' : 'Aus'}</span></button></div>`}
     ${show('essen') && html`<div class="fbq c-food"><div class="q">Ernährungsform</div><div class="chips wrap">${DIETS.map(([k, l]) => html`<button class=${cls('chip', p.diet === k && 'on')} onClick=${() => up({ diet: k })}>${l}</button>`)}</div>
       <div class="q mt20">Allergien & Unverträglichkeiten</div><div class="chips wrap">${ALLERG.map((a) => html`<button class=${cls('chip', p.allergies.includes(a) && 'on')} onClick=${() => up({ allergies: toggle(p.allergies, a) })}>${a}</button>`)}</div>
-      <div class="field mt20"><label>Mag ich nicht (mit Komma trennen)</label><input class="input" placeholder="z. B. Pilze, Oliven, Koriander" value=${p.dislikes.join(', ')} onInput=${(e) => up({ dislikes: e.target.value.split(',').map((x) => x.trim()).filter(Boolean) })} /></div>
+      <div class="field mt20"><label>Mag ich nicht (mit Komma trennen)</label><${ListInput} list=${p.dislikes} placeholder="z. B. Pilze, Oliven, Koriander" onChange=${(dislikes) => up({ dislikes })} /></div>
       <div class="q mt20">Mahlzeiten am Tag</div><div class="chips wrap">${[2, 3, 4, 5].map((n) => html`<button class=${cls('chip', p.mealsPerDay === n && 'on')} onClick=${() => up({ mealsPerDay: n })}>${n}</button>`)}</div>
       <div class="q mt20">Zeit zum Kochen</div><div class="chips wrap">${[15, 30, 45, 60].map((n) => html`<button class=${cls('chip', p.cookingMinutes === n && 'on')} onClick=${() => up({ cookingMinutes: n })}>${n === 60 ? '60+ min' : `bis ${n} min`}</button>`)}</div></div>`}
   </div>`;
