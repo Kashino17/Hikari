@@ -46,7 +46,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
@@ -283,21 +287,82 @@ private fun FitnessAreaTile(tile: FitnessTile?, onClick: () -> Unit) {
     }
 }
 
-// ── Achtsamkeit: Nachtblau, goldener Mond ───────────────────────────────────
+// ── Achtsamkeit: Bild und Farbe folgen der Tageszeit ────────────────────────
+// Morgen Sonnenaufgang, Tag volle Sonne, Abend Sonnenuntergang, Nacht Mond — volle Farben, kein Schleier.
+
+private enum class DayPhase(val bg: Color, val sub: Color) {
+    Morgen(Color(0xFF1F2D63), Color(0xFFB4BCE0)),
+    Tag(Color(0xFF1B4A8C), Color(0xFFBFD2EE)),
+    Abend(Color(0xFF3B2156), Color(0xFFC8B4DC)),
+    Nacht(Color(0xFF0A0F26), Color(0xFFA4AACB)),
+}
+
+private fun dayPhase(hour: Int) = when (hour) {
+    in 5..10 -> DayPhase.Morgen
+    in 11..16 -> DayPhase.Tag
+    in 17..20 -> DayPhase.Abend
+    else -> DayPhase.Nacht
+}
 
 @Composable
 private fun MindAreaTile(tile: MindTile?, onClick: () -> Unit) {
     val gold = AreaColors.Mind
-    val night = AreaColors.MindNight
-    Tile(night, onClick, Modifier.fillMaxWidth().height(150.dp), border = true) {
-        // Mond: goldene Scheibe, von einer nachtblauen Scheibe zur Sichel angeschnitten.
-        Canvas(Modifier.align(Alignment.CenterEnd).size(150.dp).offset(x = 18.dp)) {
-            val r = size.minDimension * 0.30f
-            val c = Offset(size.width * 0.50f, size.height * 0.50f)
-            drawCircle(gold, radius = r, center = c)
-            drawCircle(night, radius = r, center = Offset(c.x + r * 0.45f, c.y - r * 0.30f))
-            drawCircle(gold.copy(alpha = 0.9f), radius = 3.5f.dp.toPx(), center = Offset(size.width * 0.18f, size.height * 0.22f))
-            drawCircle(gold.copy(alpha = 0.7f), radius = 2.5f.dp.toPx(), center = Offset(size.width * 0.80f, size.height * 0.80f))
+    // Tageszeit alle fünf Minuten neu prüfen — die Profilseite bleibt oft lange offen.
+    var phase by remember { mutableStateOf(dayPhase(java.time.LocalTime.now().hour)) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(5 * 60_000L)
+            phase = dayPhase(java.time.LocalTime.now().hour)
+        }
+    }
+    val bg = phase.bg
+    Tile(bg, onClick, Modifier.fillMaxWidth().height(150.dp), border = true) {
+        // Mond darf über den Rand ragen, Sonnenstrahlen nicht.
+        Canvas(Modifier.align(Alignment.CenterEnd).size(150.dp).offset(x = if (phase == DayPhase.Nacht) 18.dp else 2.dp)) {
+            val w = size.width
+            val h = size.height
+            when (phase) {
+                DayPhase.Nacht -> {
+                    // Mond: goldene Scheibe, von einer nachtblauen Scheibe zur Sichel angeschnitten.
+                    val r = size.minDimension * 0.30f
+                    val c = Offset(w * 0.50f, h * 0.50f)
+                    drawCircle(gold, radius = r, center = c)
+                    drawCircle(bg, radius = r, center = Offset(c.x + r * 0.45f, c.y - r * 0.30f))
+                    drawCircle(gold.copy(alpha = 0.9f), radius = 3.5f.dp.toPx(), center = Offset(w * 0.18f, h * 0.22f))
+                    drawCircle(gold.copy(alpha = 0.7f), radius = 2.5f.dp.toPx(), center = Offset(w * 0.80f, h * 0.80f))
+                }
+                DayPhase.Tag -> {
+                    // Volle Sonne mit Strahlenkranz.
+                    val c = Offset(w * 0.50f, h * 0.48f)
+                    val r = size.minDimension * 0.22f
+                    for (i in 0 until 12) {
+                        val a = Math.toRadians(i * 30.0)
+                        val dx = kotlin.math.cos(a).toFloat()
+                        val dy = kotlin.math.sin(a).toFloat()
+                        drawLine(gold, Offset(c.x + dx * r * 1.35f, c.y + dy * r * 1.35f), Offset(c.x + dx * r * 1.75f, c.y + dy * r * 1.75f), strokeWidth = 4.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                    }
+                    drawCircle(gold, radius = r, center = c)
+                }
+                DayPhase.Morgen, DayPhase.Abend -> {
+                    // Sonne halb über dem Horizont: morgens gold mit Strahlen nach oben, abends orange und tiefer.
+                    val sun = if (phase == DayPhase.Morgen) gold else Color(0xFFF2925A)
+                    val horizon = h * (if (phase == DayPhase.Morgen) 0.66f else 0.72f)
+                    val r = size.minDimension * (if (phase == DayPhase.Morgen) 0.27f else 0.30f)
+                    val c = Offset(w * 0.50f, horizon)
+                    if (phase == DayPhase.Morgen) {
+                        for (i in 0..6) {
+                            val a = Math.toRadians(180.0 + i * 30.0)
+                            val dx = kotlin.math.cos(a).toFloat()
+                            val dy = kotlin.math.sin(a).toFloat()
+                            drawLine(gold, Offset(c.x + dx * r * 1.3f, c.y + dy * r * 1.3f), Offset(c.x + dx * r * 1.65f, c.y + dy * r * 1.65f), strokeWidth = 4.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                        }
+                    }
+                    clipRect(bottom = horizon) { drawCircle(sun, radius = r, center = c) }
+                    drawLine(sun, Offset(w * 0.08f, horizon), Offset(w * 0.92f, horizon), strokeWidth = 3.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                    drawLine(sun.copy(alpha = 0.55f), Offset(w * 0.24f, horizon + 9.dp.toPx()), Offset(w * 0.76f, horizon + 9.dp.toPx()), strokeWidth = 2.5f.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                    drawLine(sun.copy(alpha = 0.3f), Offset(w * 0.38f, horizon + 17.dp.toPx()), Offset(w * 0.62f, horizon + 17.dp.toPx()), strokeWidth = 2.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+                }
+            }
         }
         Column(Modifier.fillMaxSize().padding(Pad).padding(end = 110.dp)) {
             Text("Achtsamkeit", color = gold, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
@@ -315,7 +380,7 @@ private fun MindAreaTile(tile: MindTile?, onClick: () -> Unit) {
             Spacer(Modifier.weight(1f))
             Text(
                 tile?.detail ?: "Yoga, Meditation, Atmen",
-                color = Color(0xFFA4AACB),
+                color = phase.sub,
                 fontSize = 12.5.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
