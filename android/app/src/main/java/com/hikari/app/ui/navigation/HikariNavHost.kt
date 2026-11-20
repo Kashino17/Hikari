@@ -168,6 +168,15 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
             (hikariDestinations.any { it.route == deepLinkRoute } || deepLinkRoute in hubSectionRoutes)
         ) {
             navTo(nav, deepLinkRoute)
+        } else if (deepLinkRoute != null && deepLinkRoute.startsWith("profile?tab=")) {
+            // Widget, Briefing: Profil mit dem gewünschten Reiter (z. B. Aufgaben).
+            com.hikari.app.ui.profile.ProfileTabRequest.pending.value = deepLinkRoute.substringAfter("tab=")
+            navTo(nav, "profile")
+        } else if (deepLinkRoute != null && deepLinkRoute.startsWith("tasks?page=")) {
+            // Aufgaben-Benachrichtigung: Unterseite über dem Profil, Zurück führt in den Reiter.
+            com.hikari.app.ui.profile.ProfileTabRequest.pending.value = "aufgaben"
+            navTo(nav, "profile")
+            nav.navigate(deepLinkRoute)
         } else if (deepLinkRoute != null && deepLinkRoute.startsWith("voice-notes/")) {
             // Aus der Zusammenfassungs-Benachrichtigung: Liste drunter, damit
             // Zurück in der WhatsApp-Ecke landet.
@@ -698,6 +707,18 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                             if (route == "music") navFresh(nav, route) else nav.navigate(route)
                         },
                         pendingImport = sharedImport,
+                    )
+                }
+            }
+            composable(
+                route = "tasks?page={page}",
+                arguments = listOf(navArgument("page") { type = NavType.StringType; defaultValue = "kinds" }),
+            ) { entry ->
+                Box(Modifier.fillMaxSize().padding(padding)) {
+                    com.hikari.app.ui.tasks.TasksWebScreen(
+                        page = entry.arguments?.getString("page") ?: "kinds",
+                        onOpen = { page -> nav.navigate("tasks?page=" + android.net.Uri.encode(page)) },
+                        onClose = { nav.popBackStack() },
                     )
                 }
             }

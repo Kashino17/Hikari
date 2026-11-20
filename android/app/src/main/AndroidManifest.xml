@@ -148,6 +148,75 @@
             </intent-filter>
         </activity>
 
+        <!-- Aufgaben: Aufnahme-Fenster (Schnellmenü, Widget, Mikrofon im Reiter). Eigene Aufgabe,
+             damit es über jeder App aufgeht, ohne Hikari nach vorne zu holen. -->
+        <activity
+            android:name=".tasks.TaskCaptureActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.hikari.app.tasks"
+            android:windowSoftInputMode="adjustResize"
+            android:theme="@style/Theme.Hikari.TaskCapture" />
+
+        <!-- Eigener Starter »Hikari Aufgabe« — z. B. für Seitentaste zweimal drücken. -->
+        <activity-alias
+            android:name=".tasks.TaskLauncher"
+            android:exported="true"
+            android:label="Hikari Aufgabe"
+            android:icon="@mipmap/ic_task_launcher"
+            android:roundIcon="@mipmap/ic_task_launcher"
+            android:targetActivity=".tasks.TaskCaptureActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Teilen-Ziel: Text aus WhatsApp, Mail & Co. wird zur Aufgabe. -->
+        <activity
+            android:name=".tasks.TaskShareActivity"
+            android:exported="true"
+            android:label="Hikari Aufgabe"
+            android:icon="@mipmap/ic_task_launcher"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".tasks.TaskTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_task_tile"
+            android:label="Aufgabe"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".tasks.TasksWidget"
+            android:exported="false"
+            android:label="Hikari Aufgaben">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_tasks_info" />
+        </receiver>
+
+        <receiver
+            android:name=".tasks.TaskActionReceiver"
+            android:exported="false" />
+
         <!-- WorkManager-Vordergrunddienst für den Sprachnachrichten-Upload. -->
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"

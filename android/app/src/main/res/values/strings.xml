@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Hikari</string>
+    <string name="widget_tasks_desc">Was gerade in 15 Minuten passt, Haken und Mikrofon</string>
 </resources>

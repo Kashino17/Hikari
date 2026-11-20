@@ -32,6 +32,7 @@ import { registerStreamRoutes } from "./api/stream.js";
 import { registerVideoFullRoute } from "./api/video-full.js";
 import { registerVideosRoutes } from "./api/videos.js";
 import { registerVoiceRoutes } from "./api/voice.js";
+import { registerTaskRoutes } from "./api/tasks.js";
 import { registerWatchLaterRoutes } from "./api/watch-later.js";
 import { loadConfig } from "./config.js";
 import { openDatabase } from "./db/connection.js";
@@ -81,6 +82,9 @@ import { KeepAwake, registerKeepAwake } from "./system/keep-awake.js";
 import { VoiceJobStore, VoiceProcessor } from "./voice/jobs.js";
 import { VoiceSummarizer } from "./voice/summarize.js";
 import { WhisperWorker } from "./voice/whisper.js";
+import { CaptureProcessor } from "./tasks/capture.js";
+import { TaskParser, fallbackParse } from "./tasks/parse.js";
+import { TaskStore } from "./tasks/store.js";
 
 const cfg = loadConfig();
 mkdirSync(cfg.videoDir, { recursive: true });
@@ -261,6 +265,21 @@ await registerMusicRoutes(app, {
   });
   const resumed = voiceProcessor.recover();
   if (resumed > 0) app.log.info({ resumed }, "voice jobs resumed");
+
+  // Aufgaben: diktieren oder tippen → Whisper schreibt mit, Qwen zerlegt in Aufgaben
+  // (gleiche Modelle wie bei den Sprachnachrichten; ohne LM Studio sortieren einfache Regeln).
+  const taskStore = new TaskStore(join(cfg.dataDir, "tasks"));
+  const taskParser = new TaskParser({ ...voiceLlm, ttlSeconds: idleMs / 1000 });
+  const captureProcessor = new CaptureProcessor({
+    store: taskStore,
+    transcribe: (p) => whisper.transcribe(p),
+    parse: (text, ctx) => taskParser.parse(text, ctx),
+    fallback: fallbackParse,
+    log: (msg, extra) => app.log.info(extra ?? {}, msg),
+  });
+  await registerTaskRoutes(app, { store: taskStore, processor: captureProcessor, parser: taskParser });
+  const capturesResumed = captureProcessor.recover();
+  if (capturesResumed > 0) app.log.info({ capturesResumed }, "task captures resumed");
   app.addHook("onClose", async () => whisper.stop());
 }
 

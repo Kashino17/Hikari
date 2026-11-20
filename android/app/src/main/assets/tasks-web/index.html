@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Aufgaben</title>
+<!--
+  Aufgaben im Profil (Kadir 21.11.2026, in der Tailscale-Vorschau abgesegnet, Stil 1 »Plakat«).
+  Ohne Build-Schritt. Daten: GET /api/tasks (über die App zum Hikari-Server durchgereicht),
+  Änderungen über window.HikariNative.request (POST/PATCH/DELETE kommen in der WebView nicht durch).
+  Zwei Modi: ohne ?page = Reiter im Profil; mit ?page=… = Unterseite als eigener Bildschirm.
+  Vorschau im Browser: node tools/tasks_web/server.mjs
+-->
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="app"></div>
+<button class="fab" id="fab" aria-label="Aufgabe sprechen"></button>
+<div class="page" id="page"></div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

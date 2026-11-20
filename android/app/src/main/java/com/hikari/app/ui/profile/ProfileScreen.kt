@@ -83,7 +83,12 @@ import com.hikari.app.ui.theme.HikariTextFaint
 import com.hikari.app.ui.theme.HikariTextMuted
 import java.io.File
 
-private enum class ProfileTab { BEREICHE, CHANNELS, DOWNLOADS }
+private enum class ProfileTab { BEREICHE, AUFGABEN, CHANNELS, DOWNLOADS }
+
+/** Deep-Links (Benachrichtigung, Widget) wählen hierüber einen Reiter im Profil, z. B. »aufgaben«. */
+object ProfileTabRequest {
+    val pending = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+}
 
 @Composable
 fun ProfileScreen(
@@ -107,7 +112,13 @@ fun ProfileScreen(
     val streak by tilesVm.streak.collectAsState()
 
     var showEditSheet by remember { mutableStateOf(false) }
-    var tab by remember { mutableStateOf(ProfileTab.BEREICHE) }
+    var tab by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(ProfileTab.BEREICHE) }
+    val tabRequest by ProfileTabRequest.pending.collectAsState()
+    LaunchedEffect(tabRequest) {
+        val want = tabRequest ?: return@LaunchedEffect
+        ProfileTab.entries.firstOrNull { it.name.equals(want, ignoreCase = true) }?.let { tab = it }
+        ProfileTabRequest.pending.value = null
+    }
     var importOpen by remember { mutableStateOf(false) }
     var importSeed by remember { mutableStateOf<SharedImport?>(null) }
 
@@ -220,6 +231,11 @@ fun ProfileScreen(
         Box(modifier = Modifier.fillMaxSize()) {
             when (tab) {
                 ProfileTab.BEREICHE -> AreaTileGrid(vm = tilesVm, onOpenSection = onOpenSection)
+                ProfileTab.AUFGABEN -> com.hikari.app.ui.tasks.TasksWebScreen(
+                    page = null,
+                    onOpen = { page -> onOpenSection("tasks?page=" + android.net.Uri.encode(page)) },
+                    onClose = {},
+                )
                 ProfileTab.CHANNELS -> ChannelsTab(
                     onOpenChannel = onOpenChannel,
                     onOpenImport = { importOpen = true },
@@ -340,7 +356,7 @@ private fun ProfileTabsRow(
     onTabSelected: (ProfileTab) -> Unit,
 ) {
     TextTabs(
-        tabs = listOf(TextTab("Bereiche"), TextTab("Kanäle", channelsCount), TextTab("Downloads", downloadsCount)),
+        tabs = listOf(TextTab("Bereiche"), TextTab("Aufgaben"), TextTab("Kanäle", channelsCount), TextTab("Downloads", downloadsCount)),
         selected = active.ordinal,
         onSelect = { onTabSelected(ProfileTab.entries[it]) },
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp),
