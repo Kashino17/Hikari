@@ -7,6 +7,7 @@
  * sind dort schon herausgefiltert), Mengen werden auf ein sinnvolles Band um die Regel-Dosis
  * geklemmt, und die Dauer muss zur gewünschten Zeit passen. Fällt die KI aus, gilt der Regelplan.
  */
+import { makeResolver } from "./progression.js";
 import type { FitnessAi } from "./ai.js";
 import type { Catalog, Exercise } from "./catalog.js";
 import { type FitDb, addDays, localDay } from "./db.js";
@@ -347,7 +348,9 @@ export async function aiPlan(
   rules: SessionPlan,
 ): Promise<{ plan: SessionPlan; model: string }> {
   const p: Profile = ctx.profile;
-  const allowed = ctx.catalog.exercises.filter((e) => usable(ctx, e));
+  // Beherrschte Grundübungen nicht anbieten — dort ist die nächste Variante dran (progression.ts).
+  const resolveV = makeResolver(db, ctx.catalog, (e) => usable(ctx, e));
+  const allowed = ctx.catalog.exercises.filter((e) => usable(ctx, e) && resolveV(e.id) === e.id);
   // Kompakt: eine Zeile je Übung (spart Eingabe und damit Zeit).
   const line = (e: Exercise) =>
     [
@@ -479,6 +482,28 @@ export function withSkillBlock(
   return next;
 }
 
+/**
+ * Beherrschte Übungen durch die nächste Variante ersetzen (progression.ts) — mit der passenden Menge
+ * für die neue Übung. Gilt für Regel- und KI-Pläne gleichermaßen.
+ */
+export function applyVariants(db: FitDb, ctx: PlanContext, plan: SessionPlan): SessionPlan {
+  const resolve = makeResolver(db, ctx.catalog, (e) => usable(ctx, e));
+  const blocks = plan.blocks.map((b) => {
+    if (b.kind !== "main" && b.kind !== "finisher") return b;
+    const used = new Set<string>();
+    const items = b.items.map((it) => {
+      const id = resolve(it.ex);
+      if (id === it.ex || used.has(id)) { used.add(it.ex); return it; }
+      const e = ctx.catalog.byId.get(id);
+      if (!e) return it;
+      used.add(id);
+      return { ...it, ex: id, amount: doseFor(ctx, e, plan.intensity, b.kind) };
+    });
+    return { ...b, items };
+  });
+  return { ...plan, blocks };
+}
+
 function insertSession(
   db: FitDb,
   day: string,
@@ -513,7 +538,7 @@ async function upgrade(
     const ctx = buildContext(db, catalog, s.day, checkin, forceType);
     const rulesOnly = { ...s.plan, blocks: s.plan.blocks.filter((b) => b.kind !== "skill") };
     const r = await aiPlan(ai, db, ctx, rulesOnly);
-    const plan = withSkillBlock(db, catalog, s.day, r.plan);
+    const plan = withSkillBlock(db, catalog, s.day, applyVariants(db, ctx, r.plan));
     const res = db
       .prepare("UPDATE sessions SET plan = ?, source = ? WHERE id = ? AND status = 'planned'")
       .run(JSON.stringify(plan), r.model, s.id);
@@ -567,7 +592,7 @@ export async function todaySession(
     return existing;
   }
   const ctx = buildContext(db, catalog, day, opts.checkin, opts.forceType);
-  const rules = withSkillBlock(db, catalog, day, buildRulesPlan(ctx));
+  const rules = withSkillBlock(db, catalog, day, applyVariants(db, ctx, buildRulesPlan(ctx)));
   const row = insertSession(db, day, rules, "regeln", existing?.id);
   if (ai?.available()) {
     const job = upgrade(ai, db, catalog, row, opts.checkin, opts.forceType, opts.log);
@@ -601,7 +626,7 @@ export async function extraSession(
     day,
   );
   const ctx = buildContext(db, catalog, day, opts.checkin, opts.forceType);
-  const rules = withSkillBlock(db, catalog, day, buildRulesPlan(ctx));
+  const rules = withSkillBlock(db, catalog, day, applyVariants(db, ctx, buildRulesPlan(ctx)));
   const row = insertSession(db, day, rules, "regeln");
   if (ai?.available()) {
     // Regelplan sofort; der Coach verfeinert im Hintergrund (freie Modelle brauchen teils Minuten).
@@ -652,12 +677,16 @@ function weekdayOf(day: string): number {
 // ── Feedback verarbeiten ────────────────────────────────────────────────────
 
 /** Feste Lernregeln je Übung — die KI liest das Ergebnis beim nächsten Plan mit. */
+/** Signal je Hauptübung für Auf-/Abstieg (progression.checkProgression). */
+export interface ExerciseSignal { ex: string; dose: number; times: number; difficulty?: number | undefined; technique?: number | undefined; reached: number; pain?: boolean | undefined }
+
 export function applyFeedback(
   db: FitDb,
   session: SessionRow,
   fb: SessionFeedback,
   result: SessionResult,
-) {
+): ExerciseSignal[] {
+  const signals: ExerciseSignal[] = [];
   const now = Date.now();
   const day = session.day;
   const upsert =
@@ -690,6 +719,8 @@ export function applyFeedback(
         else if (reached > 1.15) shift += 0.08;
         if (f?.technique === 1) shift -= 0.05;
         dose = Math.min(2.2, Math.max(0.45, dose * (1 + shift)));
+        if (!skipped && done.length)
+          signals.push({ ex: it.ex, dose, times: (st?.times ?? 0) + 1, difficulty: f?.difficulty, technique: f?.technique, reached, pain: f?.pain });
         upsert.run({
           id: it.ex,
           dose: skipped ? (st?.dose ?? 1) : dose,
@@ -723,6 +754,7 @@ export function applyFeedback(
       "UPDATE sessions SET status = 'done', result = ?, feedback = ?, done_at = ? WHERE id = ?",
     ).run(JSON.stringify(result), JSON.stringify(fb), now, session.id);
   })();
+  return signals;
 }
 
 const REVIEW_SYSTEM = `Du bist der Personal Coach des Nutzers. Er hat gerade eine Einheit beendet und Feedback gegeben.

@@ -16,6 +16,7 @@ export function Today() {
   const [session, , reload] = useData('/fitness/today');
   const [food] = useData('/fitness/food/day');
   const [skills] = useData('/fitness/skills');
+  const [prog] = useData('/fitness/progress');
   const catalog = useCatalog();
   const [adapt, setAdapt] = useState(false);
   const day = state?.day ?? todayStr();
@@ -48,6 +49,8 @@ export function Today() {
             : done ? html`<${DoneCard} s=${session} />`
             : html`<${Hero} s=${session} restDay=${!isTrainingDay} second=${state?.week?.find((w) => w.day === day)?.done} onAdapt=${() => setAdapt(true)} />`}
         </div>
+        ${prog && !prog.test.last && html`<button class="assessCard mt12" onClick=${() => nav('test')}>
+          <${Icon} n="assignment_turned_in" /><div class="grow"><b>Einstufung: 5 Minuten</b><span>Vier kurze Tests — danach plant dein Coach genau auf deinem Level.</span></div><${Icon} n="chevron_right" /></button>`}
         <div class="sec"><h2 class="h2">Dein Tag</h2></div>
         <div class="tiles">
           <${FoodTile} food=${food} />

@@ -5,6 +5,7 @@ import { nav, useData, useCatalog, setData, refresh, relDay, today, toast, parse
 import { Icon, Loop, Top, Columns, cls, Spinner, Empty } from '../ui.js';
 import { PATTERN } from './exercise.js';
 import { TrainingStats } from './stats.js';
+import { LevelCard, Families, ProgressEvents } from './progress.js';
 
 const FREE = [
   ['ganzkoerper', 'Ganzkörper', 'burpee'],
@@ -69,8 +70,12 @@ function StartTraining({ state }) {
 
 function Progress() {
   const [hist] = useData('/fitness/history?days=90');
+  const [pg] = useData('/fitness/progress');
+  const cat = useCatalog();
   return html`<div>
-    <div class="mt16"><${TrainingStats} /></div>
+    ${pg ? html`<div class="mt16"><${LevelCard} d=${pg} /></div><${Families} d=${pg} cat=${cat} /><${ProgressEvents} d=${pg} />` : html`<div class="skel mt16" style="height:150px" />`}
+    <div class="sec"><h2 class="h2">Verlauf</h2></div>
+    <div><${TrainingStats} /></div>
     <div class="sec"><h2 class="h2">Zuletzt</h2>${hist?.sessions?.length > 3 && html`<button class="more" onClick=${() => nav('verlauf')}>Alle<${Icon} n="chevron_right" style="font-size:18px" /></button>`}</div>
     ${!hist ? html`<div class="skel" style="height:140px" />` : hist.sessions.length === 0 ? html`<div class="card pad16 small muted">Noch keine Einheit — dein erstes Training steht unter »Heute«.</div>`
       : html`<div class="list">${hist.sessions.slice(0, 3).map((s) => html`<${HistRow} s=${s} />`)}</div>`}

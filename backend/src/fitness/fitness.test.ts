@@ -13,7 +13,7 @@ import {
 import { openFitnessDb } from "./db.js";
 import { BlsDb } from "./foods.js";
 import { buildRulesPlan, planSeconds, usable } from "./planner.js";
-import { computeTargets, normalizeProfile, saveProfile } from "./profile.js";
+import { computeTargets, getProfile, normalizeProfile, saveProfile } from "./profile.js";
 import { recipeTags, youtubeId } from "./recipes.js";
 import { goalMet, logSkill, setSkill, skillStates } from "./skills.js";
 import { mindStats, setManualUnlock, yogaProgress } from "./mind.js";
@@ -320,5 +320,61 @@ describe("Achtsamkeit: Yoga-Pfad und Statistik", () => {
     expect(mindStats(db, "2026-11-20").streak).toBe(3);
     expect(mindStats(db, "2026-11-22").streak).toBe(0);
     expect(mindStats(db, "2026-11-19").todayMinutes).toBe(10);
+  });
+});
+
+describe("Progression: Aufstieg, Abstieg, Level, Test", () => {
+  it("beherrschte Übung → nächste Variante, Plan nutzt sie mit passender Menge", async () => {
+    const { checkProgression, makeResolver } = await import("./progression.js");
+    const { applyVariants } = await import("./coach.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"] });
+    const ctx = buildContext(db, catalog, "2026-11-20");
+    const ok = (e: Parameters<typeof usable>[1]) => usable(ctx, e);
+    // Liegestütz beherrscht (Dosis hoch, 2× gemacht, Ziel erreicht)
+    const ev = checkProgression(db, catalog, "2026-11-20", [{ ex: "pushup", dose: 1.5, times: 2, reached: 1.1 }], ok);
+    expect(ev[0]).toMatchObject({ kind: "auf", from: "pushup", to: "diamond_pushup" });
+    expect(makeResolver(db, catalog, ok)("pushup")).toBe("diamond_pushup");
+    const plan = {
+      title: "t", dayType: "druck", intensity: "mittel",
+      blocks: [{ kind: "main", title: "m", format: "sets", rounds: 3, items: [{ ex: "pushup", amount: 20, rest: 30 }] }],
+    } as unknown as Parameters<typeof applyVariants>[2];
+    const out = applyVariants(db, ctx, plan);
+    expect(out.blocks[0]?.items[0]?.ex).toBe("diamond_pushup");
+    expect(out.blocks[0]?.items[0]?.amount).toBeLessThan(20);
+    // Diamant dauerhaft zu schwer → zurück zum normalen Liegestütz
+    const back = checkProgression(db, catalog, "2026-11-22", [{ ex: "diamond_pushup", dose: 0.6, times: 2, reached: 0.6 }], ok);
+    expect(back[0]).toMatchObject({ kind: "ab", to: "pushup" });
+    expect(makeResolver(db, catalog, ok)("pushup")).toBe("pushup");
+  });
+
+  it("kein Aufstieg bei »zu schwer«, unsicherer Technik oder Schmerz; Ausrüstung muss passen", async () => {
+    const { checkProgression } = await import("./progression.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"] });
+    const ctx = buildContext(db, catalog, "2026-11-20");
+    const ok = (e: Parameters<typeof usable>[1]) => usable(ctx, e);
+    expect(checkProgression(db, catalog, "d", [{ ex: "pushup", dose: 1.6, times: 3, reached: 1, difficulty: 1 }], ok)).toEqual([]);
+    expect(checkProgression(db, catalog, "d", [{ ex: "pushup", dose: 1.6, times: 3, reached: 1, technique: 1 }], ok)).toEqual([]);
+    expect(checkProgression(db, catalog, "d", [{ ex: "pushup", dose: 1.6, times: 3, reached: 1, pain: true }], ok)).toEqual([]);
+    // Dip braucht Barren → kein Aufstieg von bench_dip ohne Ausrüstung
+    expect(checkProgression(db, catalog, "d", [{ ex: "bench_dip", dose: 1.6, times: 3, reached: 1 }], ok)).toEqual([]);
+    // Bulgarische Kniebeuge braucht eine Bank → übersprungen, weiter zur assistierten Pistol
+    const skip = checkProgression(db, catalog, "d", [{ ex: "split_squat", dose: 1.6, times: 3, reached: 1 }], ok);
+    expect(skip[0]).toMatchObject({ kind: "auf", from: "split_squat", to: "assisted_pistol" });
+  });
+
+  it("vier Aufstiege heben das Level, der Test setzt es direkt", async () => {
+    const { checkProgression } = await import("./progression.js");
+    const { saveTest } = await import("./assessment.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, level: 2, equipment: ["boden", "klimmzugstange"] });
+    const ctx = buildContext(db, catalog, "2026-11-20");
+    const ok = (e: Parameters<typeof usable>[1]) => usable(ctx, e);
+    const ev = checkProgression(db, catalog, "2026-11-20", ["incline_pushup", "squat", "crunch", "dead_bug"].map((ex) => ({ ex, dose: 1.5, times: 2, reached: 1 })), ok);
+    expect(ev.find((e) => e.kind === "level_auf")?.level).toBe(3);
+    const r = saveTest(db, { liegestuetz: 32, kniebeuge: 46, plank: 125, klimmzug: 10 });
+    expect(r.level).toBe(4);
+    expect(getProfile(db).level).toBe(4);
   });
 });

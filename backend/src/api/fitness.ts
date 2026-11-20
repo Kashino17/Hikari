@@ -21,6 +21,7 @@ import {
   type SessionFeedback,
   type SessionResult,
   applyFeedback,
+  buildContext,
   extraSession,
   getSession,
   prepareNext,
@@ -49,7 +50,9 @@ import {
   nutrientStatus,
   resolveItems,
 } from "../fitness/meal-ai.js";
-import { DAY_TYPES, type DayType, blockSeconds } from "../fitness/planner.js";
+import { DAY_TYPES, type DayType, blockSeconds, usable } from "../fitness/planner.js";
+import { checkProgression, progressionView } from "../fitness/progression.js";
+import { saveTest, testState } from "../fitness/assessment.js";
 import {
   NUTRIENTS,
   type Nutrients,
@@ -302,6 +305,17 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     nutrients: NUTRIENTS,
   }));
 
+  // ── Fortschritt: Level, Übungsstufen (Auf-/Abstiege), Fitness-Test ──
+  app.get("/fitness/progress", async () => {
+    const ctx = buildContext(db, catalog, localDay());
+    const t = testState(db, catalog);
+    return {
+      ...progressionView(db, catalog, (e) => usable(ctx, e)),
+      test: { ...t, tests: t.tests.map((x) => ({ ...x, exercise: exerciseView(x.ex) })) },
+    };
+  });
+  app.post<{ Body: { results?: Record<string, number> } }>("/fitness/test", async (req) => saveTest(db, req.body?.results ?? {}));
+
   app.get<{ Params: { file: string } }>("/fitness/media/:file", async (req, reply) => {
     const m = /^([a-z0-9_]{1,60})\.(mp4|jpg)$/.exec(req.params.file);
     if (!m) return reply.code(400).send({ error: "file" });
@@ -533,7 +547,10 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         exercises: req.body.feedback?.exercises ?? [],
         ...(req.body.feedback?.note ? { note: String(req.body.feedback.note).slice(0, 600) } : {}),
       };
-      applyFeedback(db, s, fb, result);
+      const signals = applyFeedback(db, s, fb, result);
+      // Auf-/Abstiege und Level (progression.ts) — gleich zurückgeben, die App zeigt sie im Abschluss.
+      const pctx = buildContext(db, catalog, s.day);
+      const progress = checkProgression(db, catalog, s.day, signals, (e) => usable(pctx, e));
       // Skill-Block im Training zählt auch im Skill-Protokoll (zwei erfolgreiche Tage → nächste Stufe).
       const skillNews: { skill: string; advanced: boolean; met: boolean }[] = [];
       s.plan.blocks.forEach((b, bi) => {
@@ -553,7 +570,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       });
       // Auswertung und nächster Plan laufen auf dem Server weiter — die App darf zu sein.
       startCoachJob(s, fb, result, skillNews);
-      return { ok: true, job: coachJobView(s.id), skills: skillNews };
+      return { ok: true, job: coachJobView(s.id), skills: skillNews, progress };
     },
   );
 

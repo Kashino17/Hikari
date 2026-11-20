@@ -5,7 +5,30 @@
 import Database from "better-sqlite3";
 import { ensureDir } from "./ai.js";
 
-const SCHEMA = `
+const SCHEMA = `CREATE TABLE IF NOT EXISTS test_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day TEXT NOT NULL,
+  results TEXT NOT NULL,         -- JSON {testId: Wert}
+  tiers TEXT NOT NULL,           -- JSON {testId: Stufe 1–5}
+  level INTEGER NOT NULL,
+  at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS variant_map (
+  base TEXT PRIMARY KEY,         -- diese Übung …
+  current TEXT NOT NULL,         -- … wird ersetzt durch diese
+  since TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS progress_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  day TEXT NOT NULL,
+  kind TEXT NOT NULL,            -- auf | ab | level_auf | level_ab | test
+  ex_from TEXT,
+  ex_to TEXT,
+  level INTEGER,
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS progress_events_day ON progress_events(day);
+
 CREATE TABLE IF NOT EXISTS kv (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,

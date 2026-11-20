@@ -4,6 +4,7 @@ import { html, useEffect, useMemo, useRef, useState } from '../../vendor/preact-
 import { api, local } from '../platform.js';
 import { back, nav, useData, refresh, amountText, mmss, toast, useCatalog, relDay, today } from '../app.js';
 import { Icon, Loop, cls, Spinner } from '../ui.js';
+import { ProgressNews } from './progress.js';
 
 const OVERALL = [
   ['Viel zu leicht', 'Ich hätte deutlich mehr geschafft'],
@@ -52,9 +53,10 @@ function Wizard({ s, regions }) {
       ...(note.trim() ? { note: note.trim() } : {}),
     };
     try {
-      await api.post(`/fitness/session/${s.id}/finish`, { result: { seconds: fin.elapsed, ...fin.result }, feedback });
+      const r = await api.post(`/fitness/session/${s.id}/finish`, { result: { seconds: fin.elapsed, ...fin.result }, feedback });
       local.set(`fin:${s.id}`, null);
-      local.set(`coachfin:${s.id}`, { elapsed: fin.elapsed, result: fin.result });
+      local.set(`coachfin:${s.id}`, { elapsed: fin.elapsed, result: fin.result, progress: r?.progress ?? [] });
+      refresh('/fitness/progress');
       refresh('/fitness/state'); refresh('/fitness/today');
       nav(`coach/${s.id}`, { replace: true });
     } catch {
@@ -209,6 +211,7 @@ function Result({ job, s, fin }) {
         <div class="stat"><b>${s?.plan?.kcal ?? '–'}</b><span>kcal</span></div>
         <div class="stat"><b>${reps}</b><span>Wdh./Sek.</span></div>
       </div>
+      <${ProgressNews} items=${fin?.progress} />
       ${(job.skills ?? []).filter((k) => k.advanced || k.met).map((k) => html`<div class="card pad16 mt16 row c-amber" style="border-color:rgba(var(--amber),.35)"><${Icon} n=${k.advanced ? 'workspace_premium' : 'check_circle'} fill style="color:rgb(var(--amber));font-size:28px" /><div class="grow"><div class="h3">${k.advanced ? `${k.skill}: neue Stufe frei` : `${k.skill}: Ziel erreicht`}</div><div class="small muted">${k.advanced ? 'Zwei Tage geschafft — ab jetzt die nächste Stufe.' : 'Noch einmal an einem anderen Tag, dann ist die Stufe frei.'}</div></div></div>`)}
       ${review ? html`<div class="review mt20">
         <div class="row gap8"><div class="iconTile soft" style="width:32px;height:32px;border-radius:9px"><${Icon} n="psychology" style="font-size:18px" /></div><div class="eyebrow" style="color:rgb(var(--train))">Dein Coach</div></div>
