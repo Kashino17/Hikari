@@ -2,7 +2,7 @@
 // (Einstufung + alle 4 Wochen). Server: /fitness/progress, /fitness/test (progression.ts, assessment.ts).
 import { html, useEffect, useRef, useState } from '../../vendor/preact-htm.js';
 import { api, beep, haptic, keepAwake } from '../platform.js';
-import { nav, useData, refresh, relDay, today, mmss } from '../app.js';
+import { nav, useData, refresh, relDay, today, mmss, toast } from '../app.js';
 import { Icon, Top, cls, Loop, Spinner } from '../ui.js';
 
 const PATTERN = { push: 'Drücken', pull: 'Ziehen', squat: 'Beine', lunge: 'Beine', hinge: 'Hüfte', core: 'Rumpf', skill: 'Skill', cardio: 'Ausdauer' };
@@ -91,7 +91,7 @@ export function FitnessTest() {
       // Offline: Ergebnis wartet auf dem Handy, Einstufung folgt beim Nachsenden.
       setRes(r?.queued ? { queued: true, results: all } : r);
       refresh('/fitness/progress'); refresh('/fitness/state');
-    } catch { setBusy(false); }
+    } catch { setBusy(false); toast('Konnte nicht speichern — dein Server antwortet gerade nicht. Deine Werte bleiben hier, tipp gleich nochmal.'); }
   };
   if (res) return html`<${TestResult} res=${res} tests=${tests} />`;
   if (i < 0) return html`<div class="screen c-train"><${Top} title="Fitness-Test" sub=${`${tests.length} Übungen · etwa 8 Minuten`} />

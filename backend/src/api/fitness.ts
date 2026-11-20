@@ -36,6 +36,7 @@ import {
   kvGet,
   kvSet,
   localDay,
+  clientDay,
   openFitnessDb,
   weekday,
 } from "../fitness/db.js";
@@ -133,6 +134,31 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   // Tägliche Sicherung (Datenbank + Körperfotos) nach ~/.hikari/<ordner>-backup — getrennt vom Arbeitsordner.
   const BACKUP_DIR = `${deps.dir}-backup`;
 
+  // Doppel-Schutz: Das Handy schickt Ergebnisse mit einer einmaligen Kennung (X-Hikari-Req). Kommt
+  // dieselbe Anfrage noch einmal (Warteschlange nach Abbruch, Zeitüberschreitung), zählt sie nicht doppelt.
+  db.prepare("DELETE FROM replay_seen WHERE at < ?").run(Date.now() - 60 * 86_400_000);
+  const seenReq = db.prepare("SELECT 1 FROM replay_seen WHERE id = ?");
+  const markReq = db.prepare("INSERT OR IGNORE INTO replay_seen(id, at) VALUES(?, ?)");
+  const reqId = (req: { method: string; url: string; headers: Record<string, unknown> }) => {
+    const id = req.headers["x-hikari-req"];
+    return req.method === "POST" && req.url.startsWith("/fitness/") && typeof id === "string" && id.length >= 8 && id.length <= 64 ? id : null;
+  };
+  app.addHook("preHandler", async (req, reply) => {
+    const id = reqId(req);
+    if (id && seenReq.get(id)) return reply.code(200).send({ ok: true, duplicate: true });
+  });
+  app.addHook("onResponse", async (req, reply) => {
+    const id = reqId(req);
+    if (id && reply.statusCode < 500) markReq.run(id, Date.now());
+  });
+  /** Übung (per Id) machbar mit Ausrüstung/Beschwerden des Profils. */
+  const exOk = (ctx: ReturnType<typeof buildContext>) => (id: string) => {
+    const e = catalog.byId.get(id);
+    return !!e && usable(ctx, e);
+  };
+  /** Tag eines Ergebnisses: mitgeschickt oder aus dem Offline-Zeitpunkt (siehe clientDay). */
+  const dayOf = (req: { headers: Record<string, unknown> }, bodyDay?: unknown) => clientDay(bodyDay, req.headers["x-hikari-at"]);
+
   /**
    * Tagesziel statt Wochenschnitt: der im Ziel eingerechnete Trainings-Durchschnitt fällt raus, das
    * echte Training des Tages kommt rein (erledigt; an Trainingstagen sonst das geplante). Kohlenhydrate
@@ -144,10 +170,15 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const sess = sessionsBetween(db, day, day).filter((x) => x.status !== "skipped");
     const done = sess.filter((x) => x.status === "done");
     const trainingDay = profile.trainingDays.includes(weekday(day));
-    const counted = done.length ? done : trainingDay ? sess.slice(0, 1) : [];
+    const upcoming = day >= localDay();
+    // done = trainiert · planned = Trainingstag, kommt noch · missed = Trainingstag ausgelassen · rest = Ruhetag
+    const kind = done.length ? "done" : trainingDay && upcoming ? "planned" : trainingDay ? "missed" : "rest";
+    // Trainingstag ohne fertigen Plan: der Durchschnitt bleibt drin (ändert sich, sobald der Plan steht).
+    if (kind === "planned" && !sess.length) return { ...base, day: { delta: 0, training: base.explain.training, done: false, kind } };
+    const counted = done.length ? done : kind === "planned" ? sess.slice(0, 1) : [];
     const trainKcal = counted.reduce((a, x) => a + (x.plan.kcal ?? 0), 0);
     const delta = Math.round((trainKcal - base.explain.training) / 10) * 10;
-    if (!delta) return { ...base, day: { delta: 0, training: trainKcal, done: done.length > 0 } };
+    if (!delta) return { ...base, day: { delta: 0, training: trainKcal, done: done.length > 0, kind } };
     const kcal = base.kcal + delta;
     const carbs = Math.max(50, base.carbs + Math.round(delta / 4));
     return {
@@ -155,7 +186,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       kcal,
       carbs,
       goals: { ...base.goals, kcal: { min: kcal }, carbs: { min: carbs }, sugar: { max: Math.round((kcal * 0.1) / 4) }, satfat: { max: Math.round((kcal * 0.1) / 9) } },
-      day: { delta, training: trainKcal, done: done.length > 0 },
+      day: { delta, training: trainKcal, done: done.length > 0, kind },
     };
   };
   if (!deps.dir.includes("test")) scheduleBackups(db, deps.dir, BACKUP_DIR, deps.log);
@@ -342,13 +373,17 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   // ── Fortschritt: Level, Übungsstufen (Auf-/Abstiege), Fitness-Test ──
   app.get("/fitness/progress", async () => {
     const ctx = buildContext(db, catalog, localDay());
-    const t = testState(db, catalog);
+    const t = testState(db, catalog, exOk(ctx));
     return {
       ...progressionView(db, catalog, (e) => usable(ctx, e)),
       test: { ...t, tests: t.tests.map((x) => ({ ...x, exercise: exerciseView(x.ex) })) },
     };
   });
-  app.post<{ Body: { results?: Record<string, number> } }>("/fitness/test", async (req) => saveTest(db, req.body?.results ?? {}));
+  app.post<{ Body: { results?: Record<string, number>; day?: string } }>("/fitness/test", async (req, reply) => {
+    const day = dayOf(req, req.body?.day);
+    const r = saveTest(db, req.body?.results ?? {}, exOk(buildContext(db, catalog, day)), day);
+    return r ?? reply.code(400).send({ error: "leer" });
+  });
 
   // ── Programme (mehrere Wochen) und Woche ──
   setPrograms(loadPrograms(deps.dataDir));
@@ -384,9 +419,11 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const ok = items.every(Boolean);
     const list = items.filter(Boolean) as { ex: string; menge: number; statt: string | null }[];
     const t = targets(list, b.runden, catalog);
-    const pb = best(db, b.id);
+    // Bestzeit nur gegen dieselbe Version (mit denselben Ersatzübungen).
+    const subs = Object.fromEntries(list.filter((i) => i.statt).map((i) => [i.statt as string, i.ex]));
+    const pb = best(db, b.id, subs);
     return {
-      ...b, machbar: ok, targets: t, best: pb, tier: pb != null ? tierFor(pb, t) : null,
+      ...b, machbar: ok, subs, targets: t, best: pb, tier: pb != null ? tierFor(pb, t) : null,
       items: list.map((it) => ({ ...it, exercise: exerciseView(it.ex) })),
     };
   };
@@ -394,25 +431,27 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   app.get<{ Params: { id: string } }>("/fitness/benchmark/:id", async (req, reply) => {
     const b = benches.find((x) => x.id === req.params.id);
     if (!b) return reply.code(404).send({ error: "not_found" });
-    return { ...benchView(b), history: history(db, b.id) };
+    const v = benchView(b);
+    return { ...v, history: history(db, b.id, v.subs) };
   });
-  app.post<{ Params: { id: string }; Body: { seconds?: number } }>("/fitness/benchmark/:id", async (req, reply) => {
+  app.post<{ Params: { id: string }; Body: { seconds?: number; day?: string } }>("/fitness/benchmark/:id", async (req, reply) => {
     const b = benches.find((x) => x.id === req.params.id);
     const sec = Math.round(Number(req.body?.seconds) || 0);
     if (!b || sec < 20) return reply.code(400).send({ error: "input" });
     const v = benchView(b);
-    const subs = Object.fromEntries(v.items.filter((i) => i.statt).map((i) => [i.statt as string, i.ex]));
-    const r = saveRun(db, b.id, sec, subs);
+    if (!v.machbar) return reply.code(400).send({ error: "nicht_machbar" });
+    const r = saveRun(db, b.id, sec, v.subs, dayOf(req, req.body?.day));
     return { ...r, seconds: sec, best: Math.min(sec, r.before ?? sec), tier: tierFor(sec, v.targets), targets: v.targets };
   });
 
   // ── Körper: Gewichtstrend, Umfänge, Fortschrittsfotos ──
   const BODY_DIR = join(deps.dir, "body");
   app.get("/fitness/body/progress", async () => bodyProgress(db));
-  app.post<{ Body: { day?: string; chest?: number; arm?: number; waist?: number; hips?: number; thigh?: number } }>("/fitness/body/measure", async (req) => {
+  app.post<{ Body: { day?: string; chest?: number; arm?: number; waist?: number; hips?: number; thigh?: number } }>("/fitness/body/measure", async (req, reply) => {
     const b = req.body ?? {};
-    const day = /^\d{4}-\d{2}-\d{2}$/.test(b.day ?? "") ? (b.day as string) : localDay();
+    const day = dayOf(req, b.day);
     const n = (v: unknown) => (typeof v === "number" && v > 10 && v < 250 ? Math.round(v * 10) / 10 : null);
+    if ([b.chest, b.arm, b.waist, b.hips, b.thigh].every((v) => n(v) == null)) return reply.code(400).send({ error: "leer" });
     db.prepare(`INSERT INTO body_measure(day, chest, arm, waist, hips, thigh, at) VALUES(?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(day) DO UPDATE SET chest = COALESCE(excluded.chest, chest), arm = COALESCE(excluded.arm, arm), waist = COALESCE(excluded.waist, waist),
       hips = COALESCE(excluded.hips, hips), thigh = COALESCE(excluded.thigh, thigh), at = excluded.at`).run(day, n(b.chest), n(b.arm), n(b.waist), n(b.hips), n(b.thigh), Date.now());
@@ -451,8 +490,9 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         resting_hr = COALESCE(excluded.resting_hr, resting_hr), active_kcal = COALESCE(excluded.active_kcal, active_kcal), updated_at = excluded.updated_at`);
       const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null);
       let n = 0;
-      for (const d of req.body?.days ?? []) {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(d.day)) continue;
+      const days = Array.isArray(req.body?.days) ? req.body.days : [];
+      for (const d of days) {
+        if (!d || typeof d.day !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(d.day)) continue;
         up.run(d.day, num(d.steps), num(d.sleepMin), num(d.restingHr), num(d.activeKcal), Date.now());
         n++;
       }
@@ -694,18 +734,22 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     async (req, reply) => {
       const s = getSession(db, req.params.id);
       if (!s) return reply.code(404).send({ error: "not_found" });
+      // Schon abgeschlossen (z. B. aus der Offline-Schlange noch einmal gesendet): nicht doppelt werten —
+      // sonst zählt eine Einheit zweimal für Auf-/Abstiege, Level und Skill-Tage.
+      if (s.status === "done") return { ok: true, duplicate: true, job: coachJobView(s.id), skills: [], progress: [] };
+      const rb = (req.body ?? {}) as Partial<{ result: SessionResult; feedback: SessionFeedback }>;
       const result: SessionResult = {
-        seconds: Math.max(0, Math.round(Number(req.body.result?.seconds) || 0)),
-        done: req.body.result?.done ?? {},
-        skipped: req.body.result?.skipped ?? [],
+        seconds: Math.max(0, Math.round(Number(rb.result?.seconds) || 0)),
+        done: rb.result?.done ?? {},
+        skipped: rb.result?.skipped ?? [],
       };
       const fb: SessionFeedback = {
-        overall: Math.min(5, Math.max(1, Math.round(Number(req.body.feedback?.overall) || 3))),
-        ...(req.body.feedback?.energy ? { energy: req.body.feedback.energy } : {}),
-        ...(req.body.feedback?.enjoyment ? { enjoyment: req.body.feedback.enjoyment } : {}),
-        pain: (req.body.feedback?.pain ?? []).filter((p) => p.region in REGIONS),
-        exercises: req.body.feedback?.exercises ?? [],
-        ...(req.body.feedback?.note ? { note: String(req.body.feedback.note).slice(0, 600) } : {}),
+        overall: Math.min(5, Math.max(1, Math.round(Number(rb.feedback?.overall) || 3))),
+        ...(rb.feedback?.energy ? { energy: rb.feedback.energy } : {}),
+        ...(rb.feedback?.enjoyment ? { enjoyment: rb.feedback.enjoyment } : {}),
+        pain: (rb.feedback?.pain ?? []).filter((p) => p.region in REGIONS),
+        exercises: rb.feedback?.exercises ?? [],
+        ...(rb.feedback?.note ? { note: String(rb.feedback.note).slice(0, 600) } : {}),
       };
       const signals = applyFeedback(db, s, fb, result);
       // Auf-/Abstiege und Level (progression.ts) — gleich zurückgeben, die App zeigt sie im Abschluss.
@@ -718,7 +762,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         const sets = (result.done[`${bi}:0`] ?? []).filter((v) => typeof v === "number");
         if (!sets.length) return;
         try {
-          const r = logSkill(db, catalog, b.skill.id, b.skill.step, sets, null);
+          const r = logSkill(db, catalog, b.skill.id, b.skill.step, sets, null, s.day);
           skillNews.push({
             skill: catalog.skillById.get(b.skill.id)?.name ?? b.skill.id,
             advanced: r.advanced,
@@ -1031,12 +1075,19 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
 
   app.post<{ Body: { weight?: number; waist?: number; day?: string } }>(
     "/fitness/body",
-    async (req) => {
-      const day = req.body.day ?? localDay();
+    async (req, reply) => {
+      const b = req.body ?? {};
+      const day = dayOf(req, b.day);
+      const num = (v: unknown, lo: number, hi: number) => (typeof v === "number" && v >= lo && v <= hi ? Math.round(v * 10) / 10 : null);
+      const weight = num(b.weight, 25, 350);
+      const waist = num(b.waist, 30, 250);
+      if (weight == null && waist == null) return reply.code(400).send({ error: "input" });
       db.prepare(
         "INSERT INTO body_log(day, weight, waist) VALUES(?, ?, ?) ON CONFLICT(day) DO UPDATE SET weight = COALESCE(excluded.weight, weight), waist = COALESCE(excluded.waist, waist)",
-      ).run(day, req.body.weight ?? null, req.body.waist ?? null);
-      if (req.body.weight && day === localDay()) saveProfile(db, { weightKg: req.body.weight });
+      ).run(day, weight, waist);
+      // Profilgewicht = jüngster Eintrag (auch wenn ein Offline-Eintrag von gestern erst heute ankommt).
+      const newer = db.prepare("SELECT 1 FROM body_log WHERE day > ? AND weight IS NOT NULL").get(day);
+      if (weight != null && !newer) saveProfile(db, { weightKg: weight });
       return { ok: true };
     },
   );
@@ -1062,6 +1113,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
           Number(req.body.step) || 0,
           req.body.sets ?? [],
           req.body.feel ?? null,
+          dayOf(req, (req.body as { day?: string }).day),
         );
       } catch (e) {
         return reply.code(400).send({ error: e instanceof Error ? e.message : "log" });

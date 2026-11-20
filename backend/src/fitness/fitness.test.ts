@@ -508,3 +508,126 @@ describe("Lernschleife über mehrere Einheiten (wie im echten Gebrauch)", () => 
   });
 });
 function addDaysT(day: string, n: number) { const [y, m, d] = day.split("-").map(Number) as [number, number, number]; const dt = new Date(y, m - 1, d + n, 12); return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`; }
+
+describe("Prüfung 20.11.: gefundene Fehler bleiben behoben", () => {
+  it("Abstieg, dann Aufstieg → zurück auf der Ausgangsübung (kein Kreis)", async () => {
+    const { checkProgression, makeResolver } = await import("./progression.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"], limitations: [] });
+    const ok = () => true;
+    const down = [{ ex: "pushup", dose: 0.6, times: 3, reached: 0.5 }];
+    checkProgression(db, catalog, "2026-11-20", down, ok);
+    expect(makeResolver(db, catalog, ok)("pushup")).toBe("knee_pushup");
+    const up = [{ ex: "knee_pushup", dose: 1.5, times: 3, reached: 1 }];
+    checkProgression(db, catalog, "2026-11-22", up, ok);
+    expect(makeResolver(db, catalog, ok)("pushup")).toBe("pushup");
+    expect(db.prepare("SELECT COUNT(*) AS n FROM variant_map").get()).toEqual({ n: 0 });
+    // weiter hoch: pushup → nächste Stufe, die Kette zeigt sie auf der Fortschrittsseite
+    checkProgression(db, catalog, "2026-11-24", [{ ex: "pushup", dose: 1.5, times: 3, reached: 1 }], ok);
+    const next = catalog.byId.get("pushup")!.progress!;
+    expect(makeResolver(db, catalog, ok)("pushup")).toBe(next);
+    const { progressionView } = await import("./progression.js");
+    const fam = progressionView(db, catalog, ok).families.find((f) => f.steps.some((s) => s.id === next) && f.steps.some((s) => s.id === "pushup"))!;
+    expect(fam.steps[fam.current]!.id).toBe(next);
+  });
+
+  it("Variante übernimmt Einheit und »je Seite«, Intervalle behalten ihre feste Zeit", async () => {
+    const { applyVariants } = await import("./coach.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden", "klimmzugstange"], limitations: [], minutes: 45, trainingDays: [0, 1, 2, 3, 4, 5, 6] });
+    // alles eine Stufe hoch
+    const ins = db.prepare("INSERT INTO variant_map(base, current, since) VALUES(?, ?, '2026-11-01')");
+    for (const e of catalog.exercises) if (e.progress) ins.run(e.id, e.progress);
+    for (let i = 0; i < 14; i++) {
+      const day = addDaysT("2026-11-23", i);
+      const ctx = buildContext(db, catalog, day);
+      const plan = applyVariants(db, ctx, buildRulesPlan(ctx));
+      for (const b of plan.blocks) {
+        if (b.kind !== "main" && b.kind !== "finisher") continue;
+        for (const it of b.items) {
+          const e = catalog.byId.get(it.ex)!;
+          if (b.format === "intervals") expect([30, 40]).toContain(it.amount);
+          else if (b.format !== "flow") {
+            expect(it.unit, `${day} ${it.ex}`).toBe(e.unit);
+            expect(!!it.perSide, `${day} ${it.ex}`).toBe(!!e.perSide);
+          }
+        }
+      }
+      expect(plan.minutes).toBe(Math.round(planSeconds(plan, catalog) / 60));
+    }
+  });
+
+  it("Handgelenk + ohne Sprünge + lange Einheiten: auch der Finisher bleibt machbar", () => {
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"], limitations: ["handgelenk"], noJumps: true, minutes: 75, trainingDays: [0, 1, 2, 3, 4, 5, 6] });
+    for (let i = 0; i < 21; i++) {
+      const ctx = buildContext(db, catalog, addDaysT("2026-11-23", i));
+      const plan = buildRulesPlan(ctx);
+      for (const b of plan.blocks) for (const it of b.items) expect(usable(ctx, catalog.byId.get(it.ex)!), `${b.kind} ${it.ex}`).toBe(true);
+    }
+  });
+
+  it("Fitness-Test: Handgelenk → Liegestütz auf Fäusten, ausgelassene Tests zählen nicht als 0", async () => {
+    const { saveTest, testsFor } = await import("./assessment.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"], limitations: ["handgelenk"], noJumps: true, sex: "m", level: 3 });
+    const ctx = buildContext(db, catalog, "2026-11-20");
+    const ok = (id: string) => { const e = catalog.byId.get(id); return !!e && usable(ctx, e); };
+    const tests = testsFor(db, ok);
+    expect(tests.map((t) => t.ex)).toEqual(["fist_pushup", "squat", "plank"]);
+    const r = saveTest(db, { liegestuetz: 30, kniebeuge: 45, plank: "" as unknown as number }, ok, "2026-11-18");
+    expect(Object.keys(r!.tiers)).toEqual(["liegestuetz", "kniebeuge"]);
+    expect(r!.level).toBeGreaterThanOrEqual(3);
+    expect(saveTest(db, {}, ok)).toBeNull();
+    expect((db.prepare("SELECT day FROM test_log").get() as { day: string }).day).toBe("2026-11-18");
+  });
+
+  it("Programmwoche: Zeitumstellung zählt richtig, Start am Wochenende → Woche 1 ab Montag", async () => {
+    const { phaseFor, startProgram, getPrograms, setPrograms, loadPrograms } = await import("./program.js");
+    setPrograms(loadPrograms(DATA));
+    const db = freshDb();
+    const id = getPrograms()[0]!.id;
+    (await import("./db.js")).kvSet(db, "program", { id, start: "2026-03-23" });
+    expect(phaseFor(db, getPrograms(), "2026-03-30")!.week).toBe(2);
+    startProgram(db, id, "2026-11-22"); // Sonntag
+    expect(phaseFor(db, getPrograms(), "2026-11-22")!.week).toBe(1);
+    expect(phaseFor(db, getPrograms(), "2026-11-29")!.week).toBe(1);
+    expect(phaseFor(db, getPrograms(), "2026-11-30")!.week).toBe(2);
+  });
+
+  it("API: doppelt gesendeter Abschluss zählt einmal, Offline-Ergebnis landet am richtigen Tag", async () => {
+    const Fastify = (await import("fastify")).default;
+    const { mkdtempSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const { registerFitnessRoutes } = await import("../api/fitness.js");
+    const app = Fastify();
+    const dir = mkdtempSync(join(tmpdir(), "fit-test-"));
+    registerFitnessRoutes(app, { dir, dataDir: DATA, geminiKey: () => null, log: () => {} });
+    await app.ready();
+    await app.inject({ method: "POST", url: "/fitness/profile", payload: { onboarded: true, equipment: ["boden"], trainingDays: [0, 1, 2, 3, 4, 5, 6] } });
+    const t = (await app.inject({ method: "GET", url: "/fitness/today" })).json() as { id: string; plan: { blocks: { kind: string; items: { ex: string; amount: number }[]; rounds?: number }[] } };
+    const done: Record<string, number[]> = {};
+    t.plan.blocks.forEach((b, bi) => b.items.forEach((it, ii) => { done[`${bi}:${ii}`] = Array.from({ length: b.rounds ?? 1 }, () => it.amount * 2); }));
+    const body = { result: { seconds: 900, done, skipped: [] }, feedback: { overall: 2, exercises: t.plan.blocks.flatMap((b) => b.kind === "main" ? b.items.map((i) => ({ ex: i.ex, difficulty: -1, technique: 3 })) : []) } };
+    const a = await app.inject({ method: "POST", url: `/fitness/session/${t.id}/finish`, payload: body, headers: { "x-hikari-req": "req-aaaa-1111" } });
+    expect(a.statusCode).toBe(200);
+    const times = () => (db2().prepare("SELECT SUM(times) AS n FROM exercise_state").get() as { n: number }).n;
+    const { openFitnessDb: open } = await import("./db.js");
+    const db2 = () => open(join(dir, "fitness.db"));
+    const n1 = times();
+    // gleiche Kennung (Schlange) und ohne Kennung (abgelaufene Verbindung) → beide nicht gewertet
+    expect((await app.inject({ method: "POST", url: `/fitness/session/${t.id}/finish`, payload: body, headers: { "x-hikari-req": "req-aaaa-1111" } })).json()).toMatchObject({ duplicate: true });
+    expect((await app.inject({ method: "POST", url: `/fitness/session/${t.id}/finish`, payload: body })).json()).toMatchObject({ duplicate: true });
+    expect(times()).toBe(n1);
+    // Gewicht offline von gestern: landet gestern, nicht heute
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    await app.inject({ method: "POST", url: "/fitness/body", payload: { weight: 70.2 }, headers: { "x-hikari-at": String(y.getTime()), "x-hikari-req": "req-bbbb-2222" } });
+    const rows = db2().prepare("SELECT day, weight FROM body_log").all() as { day: string; weight: number }[];
+    expect(rows).toEqual([{ day: (await import("./db.js")).localDay(y), weight: 70.2 }]);
+    // kaputte Eingaben → kein 500
+    expect((await app.inject({ method: "POST", url: "/fitness/health", payload: { days: "x" } })).statusCode).toBe(200);
+    expect((await app.inject({ method: "POST", url: "/fitness/health", payload: { days: [null, { day: 5 }] } })).statusCode).toBe(200);
+    expect((await app.inject({ method: "POST", url: "/fitness/body/measure", payload: {} })).statusCode).toBe(400);
+    await app.close();
+  });
+});

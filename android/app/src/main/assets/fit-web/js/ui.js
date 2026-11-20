@@ -86,7 +86,7 @@ export const Empty = ({ icon = 'info', title, text, children }) => html`<div cla
 export const Spinner = () => html`<div class="spinner" />`;
 
 /** Einfache Liniengrafik (Gewicht, Kalorien). */
-export function Spark({ points, height = 150, color = 'rgb(var(--c))', goal }) {
+export function Spark({ points, height = 150, color = 'rgb(var(--c))', goal, goalStroke = 'rgba(255,255,255,.25)' }) {
   if (!points?.length) return null;
   const w = 340;
   const vals = points.map((p) => p.v).concat(goal != null ? [goal] : []);
@@ -97,7 +97,7 @@ export function Spark({ points, height = 150, color = 'rgb(var(--c))', goal }) {
   const y = (v) => height - 22 - ((v - lo) / span) * (height - 44);
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ');
   return html`<svg class="chart" viewBox="0 0 ${w} ${height}" preserveAspectRatio="none">
-    ${goal != null && html`<line x1="0" x2=${w} y1=${y(goal)} y2=${y(goal)} stroke="rgba(255,255,255,.25)" stroke-dasharray="4 4" />`}
+    ${goal != null && html`<line x1="0" x2=${w} y1=${y(goal)} y2=${y(goal)} stroke=${goalStroke} stroke-dasharray="4 4" />`}
     <path d=${`${d} L${x(points.length - 1)},${height} L${x(0)},${height} Z`} fill=${color} opacity=".12" />
     <path d=${d} fill="none" stroke=${color} stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
     ${points.map((p, i) => html`<circle cx=${x(i)} cy=${y(p.v)} r=${i === points.length - 1 ? 4.5 : 2.5} fill=${color} />`)}

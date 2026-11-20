@@ -4,7 +4,7 @@
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
-import { type FitDb, localDay } from "../fitness/db.js";
+import { type FitDb, clientDay, localDay } from "../fitness/db.js";
 import {
   daySeed,
   loadMind,
@@ -150,7 +150,7 @@ export function registerMindRoutes(app: FastifyInstance, db: FitDb, dir: string,
     const before = yogaProgress(db, m.levels).open;
     db.prepare(
       "INSERT INTO mind_log(day, kind, ref, seconds, mood_before, mood_after, note, at) VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-    ).run(localDay(), b.kind, b.ref ?? null, seconds, mood(b.moodBefore), mood(b.moodAfter), b.note?.slice(0, 500) ?? null, Date.now());
+    ).run(clientDay((b as { day?: string }).day, req.headers["x-hikari-at"]), b.kind, b.ref ?? null, seconds, mood(b.moodBefore), mood(b.moodAfter), b.note?.slice(0, 500) ?? null, Date.now());
     const after = yogaProgress(db, m.levels);
     return { ok: true, stats: mindStats(db), path: after, unlocked: after.open > before ? after.open : null };
   });

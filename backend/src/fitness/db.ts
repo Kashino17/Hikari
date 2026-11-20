@@ -5,7 +5,11 @@
 import Database from "better-sqlite3";
 import { ensureDir } from "./ai.js";
 
-const SCHEMA = `CREATE TABLE IF NOT EXISTS benchmark_log (
+const SCHEMA = `CREATE TABLE IF NOT EXISTS replay_seen (
+  id TEXT PRIMARY KEY,           -- X-Hikari-Req: einmalige Kennung einer Anfrage vom Handy
+  at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS benchmark_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   bench TEXT NOT NULL,
   day TEXT NOT NULL,
@@ -218,6 +222,24 @@ export function kvSet(db: FitDb, key: string, value: unknown) {
 }
 
 /** Lokaler Kalendertag (Zeitzone des Macs = Kadirs Zeitzone). */
+/**
+ * Tag, zu dem ein Ergebnis gehört: vom Gerät mitgeschickt (body.day) oder aus dem Zeitpunkt, an dem es
+ * offline entstand (Kopfzeile X-Hikari-At) — sonst heute. Höchstens 30 Tage zurück, nie in der Zukunft.
+ */
+export function clientDay(bodyDay?: unknown, at?: unknown): string {
+  const today = localDay();
+  const back = new Date();
+  back.setDate(back.getDate() - 30);
+  const min = localDay(back);
+  if (typeof bodyDay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(bodyDay) && bodyDay <= today && bodyDay >= min) return bodyDay;
+  const ms = Number(at);
+  if (Number.isFinite(ms) && ms > 0 && ms <= Date.now() + 60_000) {
+    const d = localDay(new Date(ms));
+    if (d >= min && d <= today) return d;
+  }
+  return today;
+}
+
 export function localDay(d = new Date()): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");

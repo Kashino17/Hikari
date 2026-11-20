@@ -29,10 +29,24 @@ const BASE: TestDef[] = [
 const PULL: TestDef = { id: "klimmzug", ex: "pullup", name: "Klimmzüge", unit: "reps", mode: "max", how: "Aus dem ganz gestreckten Hang, Kinn über die Stange, ohne Schwung. So viele wie möglich.", norms: [1, 4, 9, 15], femaleFactor: 0.4 };
 const BURPEE: TestDef = { id: "burpees", ex: "burpee", name: "Burpees in 60 s", unit: "reps", mode: "timed", seconds: 60, how: "Eine Minute Burpees: Brust zum Boden, oben ein kleiner Sprung mit gestreckter Hüfte.", norms: [10, 15, 20, 25], femaleFactor: 0.85 };
 
-export function testsFor(db: FitDb): TestDef[] {
+const FIST: Partial<TestDef> = {
+  ex: "fist_pushup",
+  name: "Liegestütze auf Fäusten",
+  how: "So viele saubere Liegestütze auf den Fäusten wie möglich am Stück — Handgelenk gerade, Körper gerade, Brust fast am Boden. Sobald die Form bricht, ist Schluss.",
+};
+
+/** Tests passend zum Profil: Beschwerden und Ausrüstung (ok = Übung machbar). Nicht machbare fallen weg. */
+export function testsFor(db: FitDb, ok: (exId: string) => boolean = () => true): TestDef[] {
   const p = getProfile(db);
   const canPull = p.equipment.some((q) => ["klimmzugstange", "ringe"].includes(q));
-  return [...BASE, canPull ? PULL : BURPEE];
+  const out: TestDef[] = [];
+  for (const t of BASE) {
+    if (ok(t.ex)) out.push(t);
+    else if (t.id === "liegestuetz" && FIST.ex && ok(FIST.ex)) out.push({ ...t, ...FIST } as TestDef);
+  }
+  const extra = canPull && ok(PULL.ex) ? PULL : ok(BURPEE.ex) ? BURPEE : null;
+  if (extra) out.push(extra);
+  return out;
 }
 
 export function tierOf(t: TestDef, value: number, female: boolean): number {
@@ -50,14 +64,14 @@ export function testHistory(db: FitDb) {
   );
 }
 
-export function testState(db: FitDb, catalog: Catalog) {
+export function testState(db: FitDb, catalog: Catalog, ok?: (exId: string) => boolean) {
   const hist = testHistory(db);
   const last = hist[0] ?? null;
   const today = localDay();
   const next = last ? addDays(last.day, 28) : today;
   const daysUntil = Math.max(0, Math.round((Date.parse(`${next}T12:00:00`) - Date.parse(`${today}T12:00:00`)) / 86_400_000));
   return {
-    tests: testsFor(db).filter((t) => catalog.byId.has(t.ex)),
+    tests: testsFor(db, ok).filter((t) => catalog.byId.has(t.ex)),
     last,
     history: hist,
     due: !last || daysUntil === 0,
@@ -65,21 +79,29 @@ export function testState(db: FitDb, catalog: Catalog) {
   };
 }
 
-export function saveTest(db: FitDb, results: Record<string, number>) {
+export function saveTest(
+  db: FitDb,
+  results: Record<string, unknown>,
+  ok?: (exId: string) => boolean,
+  day = localDay(),
+) {
   const p = getProfile(db);
   const female = p.sex !== "m";
-  const defs = testsFor(db);
+  const defs = testsFor(db, ok);
   const tiers: Record<string, number> = {};
   const clean: Record<string, number> = {};
   for (const t of defs) {
-    const v = Math.max(0, Math.round(Number(results[t.id]) || 0));
+    // Ausgelassen (leer) zählt nicht — sonst drückt ein übersprungener Test das Level auf 1.
+    const raw = results[t.id];
+    if (raw == null || raw === "" || !Number.isFinite(Number(raw))) continue;
+    const v = Math.max(0, Math.round(Number(raw)));
     clean[t.id] = v;
     tiers[t.id] = tierOf(t, v, female);
   }
   const vals = Object.values(tiers);
+  if (!vals.length) return null;
   const level = Math.min(5, Math.max(1, Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)));
   const prev = testHistory(db)[0] ?? null;
-  const day = localDay();
   const now = Date.now();
   db.prepare("INSERT INTO test_log(day, results, tiers, level, at) VALUES(?, ?, ?, ?, ?)").run(day, JSON.stringify(clean), JSON.stringify(tiers), level, now);
   const before = p.level;

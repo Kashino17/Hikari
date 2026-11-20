@@ -12,8 +12,8 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -30,15 +30,19 @@ import okhttp3.Request
 import org.json.JSONObject
 
 /**
- * Trainings-Erinnerungen: an Trainingstagen zur gewählten Uhrzeit (»Heute ist Trainingstag«) und
- * abends um 20:30, wenn noch nicht trainiert wurde (»Serie retten«). Einstellungen setzt die
- * Fitness-Oberfläche über die Brücke (FitWebBridge.setReminders), gespeichert in SharedPreferences.
+ * Trainings-Erinnerungen: an Trainingstagen zur gewählten Uhrzeit (»Heute ist Trainingstag«),
+ * abends um 20:30, wenn noch nicht trainiert wurde (»Serie retten«), montags 9 Uhr Wochenrückblick.
+ * Einstellungen setzt die Fitness-Oberfläche über die Brücke (FitWebBridge.setReminders).
+ *
+ * Jede Erinnerung ist eine einmalige Arbeit auf die nächste echte Uhrzeit, die sich nach dem Lauf
+ * selbst neu stellt. (Periodische 24-h-Arbeit wanderte jeden Tag nach hinten, sprang bei der
+ * Zeitumstellung um eine Stunde und übernahm eine geänderte Uhrzeit nach dem ersten Lauf nie.)
  */
 object FitReminders {
     private const val PREFS = "hikari_fit_reminders"
-    private const val WORK_TRAIN = "fit-reminder-train"
-    private const val WORK_STREAK = "fit-reminder-streak"
-    private const val WORK_WEEK = "fit-reminder-week"
+    private fun work(kind: String) = "fit-remind-$kind"
+    private val OLD_PERIODIC = listOf("fit-reminder-train", "fit-reminder-streak", "fit-reminder-week")
+    const val STREAK_MIN = 20 * 60 + 30
     const val CHANNEL_ID = "fitness_reminder"
 
     data class Config(val enabled: Boolean, val minutes: Int, val streak: Boolean, val days: Set<Int>, val configured: Boolean = false)
@@ -71,36 +75,35 @@ object FitReminders {
         schedule(context)
     }
 
-    fun schedule(context: Context) {
+    /**
+     * Alle Erinnerungen neu stellen. policy: REPLACE nach einer Änderung in den Einstellungen (neue
+     * Uhrzeit gilt sofort), KEEP beim App-Start (nur fehlende anlegen), APPEND_OR_REPLACE aus dem
+     * laufenden Worker (die nächste startet, wenn diese fertig ist — ohne sich selbst abzubrechen).
+     */
+    fun schedule(context: Context, policy: ExistingWorkPolicy = ExistingWorkPolicy.REPLACE, only: String? = null) {
         val c = read(context)
         val wm = WorkManager.getInstance(context)
+        OLD_PERIODIC.forEach { wm.cancelUniqueWork(it) }
+        val kinds = listOfNotNull("train", if (c.streak) "streak" else null, "week")
         if (!c.enabled) {
-            wm.cancelUniqueWork(WORK_TRAIN)
-            wm.cancelUniqueWork(WORK_STREAK)
-            wm.cancelUniqueWork(WORK_WEEK)
+            listOf("train", "streak", "week").forEach { wm.cancelUniqueWork(work(it)) }
             return
         }
-        // Montags 9 Uhr: Wochenrückblick (nur wenn letzte Woche trainiert wurde — prüft der Worker).
-        wm.enqueueUniquePeriodicWork(
-            WORK_WEEK, ExistingPeriodicWorkPolicy.UPDATE,
-            PeriodicWorkRequestBuilder<FitReminderWorker>(7, TimeUnit.DAYS)
-                .setInitialDelay(delayUntilMonday(9 * 60), TimeUnit.MILLISECONDS)
-                .setInputData(workDataOf("kind" to "week")).build(),
-        )
-        wm.enqueueUniquePeriodicWork(
-            WORK_TRAIN, ExistingPeriodicWorkPolicy.UPDATE,
-            PeriodicWorkRequestBuilder<FitReminderWorker>(24, TimeUnit.HOURS)
-                .setInitialDelay(delayUntil(c.minutes), TimeUnit.MILLISECONDS)
-                .setInputData(workDataOf("kind" to "train")).build(),
-        )
-        if (c.streak) {
-            wm.enqueueUniquePeriodicWork(
-                WORK_STREAK, ExistingPeriodicWorkPolicy.UPDATE,
-                PeriodicWorkRequestBuilder<FitReminderWorker>(24, TimeUnit.HOURS)
-                    .setInitialDelay(delayUntil(20 * 60 + 30), TimeUnit.MILLISECONDS)
-                    .setInputData(workDataOf("kind" to "streak")).build(),
+        if (!c.streak) wm.cancelUniqueWork(work("streak"))
+        for (kind in kinds) {
+            if (only != null && kind != only) continue
+            val delay = when (kind) {
+                "train" -> delayUntil(c.minutes)
+                "streak" -> delayUntil(STREAK_MIN)
+                else -> delayUntilMonday(9 * 60)
+            }
+            wm.enqueueUniqueWork(
+                work(kind), policy,
+                OneTimeWorkRequestBuilder<FitReminderWorker>()
+                    .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                    .setInputData(workDataOf("kind" to kind)).build(),
             )
-        } else wm.cancelUniqueWork(WORK_STREAK)
+        }
     }
 
     internal fun delayUntil(minutes: Int, now: Calendar = Calendar.getInstance()): Long {
@@ -124,6 +127,10 @@ object FitReminders {
 
     /** 0 = Montag … 6 = Sonntag (wie im Fitness-Profil). */
     fun todayIndex(): Int = (Calendar.getInstance().get(Calendar.DAY_OF_WEEK) + 5) % 7
+
+    fun notificationsAllowed(context: Context): Boolean =
+        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 }
 
 @HiltWorker
@@ -133,10 +140,26 @@ class FitReminderWorker @AssistedInject constructor(
     private val okHttp: OkHttpClient,
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
-        val c = FitReminders.read(context)
         val kind = inputData.getString("kind") ?: "train"
-        if (kind == "week") return weekly(c)
-        if (!c.enabled || FitReminders.todayIndex() !in c.days) return Result.success()
+        try {
+            remind(kind)
+        } finally {
+            // Nächste Erinnerung dieser Art auf die nächste echte Uhrzeit stellen.
+            runCatching { FitReminders.schedule(context, ExistingWorkPolicy.APPEND_OR_REPLACE, only = kind) }
+        }
+        return Result.success()
+    }
+
+    private suspend fun remind(kind: String) {
+        val c = FitReminders.read(context)
+        if (kind == "week") { weekly(c); return }
+        if (!c.enabled || FitReminders.todayIndex() !in c.days) return
+        // Stark verspätet (Gerät lange im Tiefschlaf)? Dann lieber keine Erinnerung als eine falsche.
+        val now = java.util.Calendar.getInstance().let { it.get(java.util.Calendar.HOUR_OF_DAY) * 60 + it.get(java.util.Calendar.MINUTE) }
+        val due = if (kind == "streak") FitReminders.STREAK_MIN else c.minutes
+        if (now < due - 5 || now > due + 180) return
+        // Offline gespeicherte Trainings zuerst nachsenden — sonst mahnt »Serie retten« ein erledigtes Training an.
+        withContext(Dispatchers.IO) { runCatching { FitCache.flush(context, okHttp) } }
         // Was steht heute an? (Server über den App-Client — Host wird umgeschrieben.)
         val today = withContext(Dispatchers.IO) {
             runCatching {
@@ -145,7 +168,7 @@ class FitReminderWorker @AssistedInject constructor(
                     .use { r -> if (r.isSuccessful) JSONObject(r.body?.string().orEmpty()) else null }
             }.getOrNull()
         }
-        if (today?.optString("status") == "done") return Result.success()
+        if (today?.optString("status") == "done") return
         val title = today?.optJSONObject("plan")?.optString("title").orEmpty()
         val minutes = today?.optJSONArray("blockSeconds")?.let { a -> (0 until a.length()).sumOf { a.optInt(it) } / 60 } ?: 0
         when (kind) {
@@ -159,21 +182,19 @@ class FitReminderWorker @AssistedInject constructor(
                 else "Dein Coach hat dein Training vorbereitet.",
             )
         }
-        return Result.success()
     }
 
-    private suspend fun weekly(c: FitReminders.Config): Result {
-        if (!c.enabled) return Result.success()
+    private suspend fun weekly(c: FitReminders.Config) {
+        if (!c.enabled) return
         val week = withContext(Dispatchers.IO) {
             runCatching {
                 okHttp.newBuilder().callTimeout(java.time.Duration.ofSeconds(12)).build()
                     .newCall(Request.Builder().url("http://hikari.invalid/fitness/week").build()).execute()
                     .use { r -> if (r.isSuccessful) JSONObject(r.body?.string().orEmpty()) else null }
             }.getOrNull()
-        } ?: return Result.success()
+        } ?: return
         val n = week.optJSONObject("review")?.optInt("sessions") ?: 0
         if (n > 0) notify("Dein Wochenrückblick ist bereit", "$n ${if (n == 1) "Einheit" else "Einheiten"} letzte Woche — dein Coach sagt dir, was diese Woche kommt.")
-        return Result.success()
     }
 
     private fun notify(title: String, text: String) {

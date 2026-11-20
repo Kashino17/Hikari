@@ -26,7 +26,7 @@ export function Me() {
   useEffect(() => { if (health.available()) health.status().then(setHs).catch(() => setHs('unavailable')); }, []);
   const [state] = useData('/fitness/state');
   const [hist] = useData('/fitness/history?days=180');
-  const [w, setW] = useState(false);
+  const [, rerender] = useState(0);
   const [info, setInfo] = useState(null);
   const p = state?.profile;
   const t = state?.targets;
@@ -65,7 +65,7 @@ export function Me() {
           <button class="bt c-food" onClick=${() => nav('profil')}>
             <span class="bt-l">Ernährung</span><${Icon} n="eco" cls="bt-ic" style="color:rgb(var(--food))" />
             <span class="bt-s ell">${DIETS.find((d) => d[0] === p.diet)?.[1]}${p.allergies.length ? ` · ohne ${p.allergies.join(', ')}` : ''}</span></button>
-          <button class=${cls('bt', voice.on && 'on')} onClick=${() => { voice.set(!voice.on); setW(w); }}>
+          <button class=${cls('bt', voice.on && 'on')} onClick=${() => { voice.set(!voice.on); rerender((x) => x + 1); }}>
             <span class="bt-l">Rems Ansagen</span><${Icon} n=${voice.on ? 'record_voice_over' : 'voice_over_off'} cls="bt-ic" />
             <span class="bt-s">${voice.on ? 'An' : 'Aus'}</span></button>
           <button class="bt c-food" onClick=${() => nav('einkauf')}>
@@ -83,11 +83,10 @@ export function Me() {
         <div class="end" />
       </div>
     </div>
-    ${w && html`<${WeightSheet} p=${p} onClose=${() => setW(false)} />`}
     ${info === 'erinnerung' && html`<${ReminderSheet} p=${p} rem=${rem} onSave=${(c) => { reminders.set(c); setRem(c); }} onClose=${() => setInfo(null)} />`}
     ${info === 'health' && html`<${HealthSheet} status=${hs} onStatus=${setHs} onClose=${() => setInfo(null)} />`}
     ${info === 'ziele' && html`<${Sheet} title="Deine Tagesziele" onClose=${() => setInfo(null)}><div class="c-food">
-      <div class="row"><div class="grow"><div style="font-size:30px;font-weight:800;font-family:var(--display)" class="num">${fmtNum(t.kcal)} kcal</div></div><div class="small muted" style="text-align:right">Grundumsatz ${fmtNum(t.explain.bmr)}<br />Alltag ×${t.explain.pal} · Training +${t.explain.training}<br />Ziel ${t.explain.delta >= 0 ? '+' : ''}${t.explain.delta}</div></div>
+      <div class="row"><div class="grow"><div style="font-size:30px;font-weight:800;font-family:var(--display)" class="num">${fmtNum(t.kcal)} kcal</div></div><div class="small muted" style="text-align:right">Grundumsatz ${fmtNum(t.explain.bmr)}<br />Alltag ×${t.explain.pal} · Training +${t.explain.training}<br />Ziel ${t.explain.delta >= 0 ? '+' : ''}${t.explain.delta}${t.day?.delta ? html`<br />heute ${t.day.delta > 0 ? '+' : '−'}${Math.abs(t.day.delta)} (${{ done: 'Training erledigt', planned: 'Trainingstag', missed: 'ausgelassen', rest: 'Ruhetag' }[t.day.kind] ?? 'Tag'})` : ''}</div></div>
       <div class="macroBand mt16"><div><b>${t.protein}</b><span>Eiweiß g</span></div><div><b>${t.carbs}</b><span>KH g</span></div><div><b>${t.fat}</b><span>Fett g</span></div><div><b>${fmtNum(t.water, 1)}</b><span>Wasser l</span></div></div></div><//>`}
     ${info === 'ueber' && html`<${Sheet} title="Daten und Quellen" onClose=${() => setInfo(null)}><p class="small muted" style="line-height:1.6">
       <b style="color:var(--text)">KI</b> · ${state.ai.hasKey ? `Gemini (kostenlos) · heute ${Object.values(state.ai.used ?? {}).reduce((x, y) => x + y, 0)} Anfragen` : 'kein Schlüssel'}<br />
@@ -95,21 +94,6 @@ export function Me() {
       Videos: Sworkit, Freeletics, ExerciseDB (AscendAPI) · Nährwerte: BLS 4.0 (MRI) · Rezepte: TheMealDB<br />Achtsamkeit: Klangschalen-Aufnahmen von »דג בלי מלח«, Wikimedia Commons (CC BY-SA 4.0) · Yoga-Figuren: yoga-api (MIT) · Klangbetten: YouTube-Kanäle, im Klang-Blatt genannt<br />
       <b style="color:var(--text)">Sicherung</b> · ${bk?.last ? `täglich auf deinem Mac, zuletzt ${relDay(bk.last.day, today())} · ${bk.count} Tage aufbewahrt` : 'täglich auf deinem Mac (die erste läuft beim nächsten Serverstart)'}</p><//>`}
   </div>`;
-}
-
-function WeightSheet({ p, onClose }) {
-  const [v, setV] = useState(String(p.weightKg).replace('.', ','));
-  const save = async () => {
-    const n = Number(v.replace(',', '.'));
-    if (!(n > 30 && n < 300)) { toast('Bitte ein gültiges Gewicht'); return; }
-    await api.post('/fitness/body', { weight: n }).catch(() => null);
-    refresh('/fitness/state'); refresh('/fitness/history?days=180'); refresh('/fitness/food/day');
-    onClose();
-  };
-  return html`<${Sheet} title="Gewicht heute" onClose=${onClose}>
-    <div class="row"><input class="input" style="font-size:26px;font-weight:700;height:60px;text-align:center" inputmode="decimal" value=${v} onInput=${(e) => setV(e.target.value)} /><span class="muted">kg</span></div>
-    <button class="btn mt16" onClick=${save}>Speichern</button>
-  <//>`;
 }
 
 // ── Profil bearbeiten (gleiche Felder wie die Einrichtung, auf einer Seite) ──
@@ -126,6 +110,7 @@ export function ProfileEdit() {
     try {
       const r = await api.post('/fitness/profile', cur);
       setData('/fitness/state', { ...state, profile: r.profile, targets: r.targets });
+      reminders.followDays(r.profile.trainingDays);
       refresh('/fitness/state'); refresh('/fitness/food/day'); refresh('/fitness/recipes');
       toast('Gespeichert — der Coach plant ab jetzt damit');
       back('ich');
@@ -192,6 +177,7 @@ export function Onboarding() {
     try {
       const r = await api.post('/fitness/profile', { ...cur, onboarded: true });
       setData('/fitness/state', { ...state, profile: r.profile, targets: r.targets });
+      reminders.followDays(r.profile.trainingDays);
       refresh('/fitness/state'); refresh('/fitness/today'); refresh('/fitness/food/day');
       nav('heute', { replace: true });
     } catch { toast('Server nicht erreichbar'); setBusy(false); }
@@ -219,7 +205,13 @@ function ReminderSheet({ p, rem, onSave, onClose }) {
   const [streak, setStreak] = useState(rem?.streak ?? true);
   const times = [7 * 60, 12 * 60, 17 * 60, 18 * 60, 19 * 60, 20 * 60];
   const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-  const save = () => { onSave({ enabled: on, minutes: min, streak, days: p.trainingDays }); toast(on ? 'Erinnerungen an' : 'Erinnerungen aus'); onClose(); };
+  const save = async () => {
+    // Ohne Erlaubnis kämen die Erinnerungen nie an — also vorher fragen.
+    const ok = on ? await reminders.permit() : true;
+    onSave({ enabled: on, minutes: min, streak, days: p.trainingDays });
+    toast(!on ? 'Erinnerungen aus' : ok ? 'Erinnerungen an' : 'Gespeichert — aber Benachrichtigungen sind für Hikari aus. In den Android-Einstellungen erlauben.');
+    onClose();
+  };
   return html`<${Sheet} title="Erinnerungen" onClose=${onClose}><div class="pad">
     <button class=${cls('toggleRow', on && 'on')} onClick=${() => setOn(!on)}><div class="grow"><b>An Trainingstagen erinnern</b><span>${p.trainingDays.length} Tage pro Woche laut deinem Profil</span></div><i class="tg" /></button>
     ${on && html`<div class="lbl mt16">Uhrzeit</div><div class="chips wrap mt8">${times.map((t) => html`<button class=${cls('chip', min === t && 'on')} onClick=${() => setMin(t)}>${fmt(t)}</button>`)}</div>

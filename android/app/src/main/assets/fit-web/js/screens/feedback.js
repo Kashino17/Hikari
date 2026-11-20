@@ -57,6 +57,8 @@ function Wizard({ s, regions }) {
       local.set(`fin:${s.id}`, null);
       if (r?.queued) {
         // Offline: Ergebnis wartet auf dem Handy und geht raus, sobald der Mac erreichbar ist.
+        // Bis der Server es weiß: »Heute« zeigt das Training schon als erledigt (sonst lädt es zum Wiederholen ein).
+        local.set(`offdone:${s.id}`, { seconds: fin.elapsed, overall: feedback.overall });
         toast('Training gespeichert — die Auswertung kommt, sobald dein Server erreichbar ist');
         nav('heute', { replace: true });
         return;

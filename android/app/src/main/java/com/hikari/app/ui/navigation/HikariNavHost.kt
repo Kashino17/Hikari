@@ -609,7 +609,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                     com.hikari.app.ui.fitness.FitWebScreen(
                         onClose = { nav.popBackStack() },
                         onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
-                        onOpenArea = { nav.navigate(it) },
+                        onOpenArea = { nav.navigate(it) { launchSingleTop = true } },
                     )
                 }
             }
@@ -619,6 +619,7 @@ fun HikariNavHost(deepLinkRoute: String? = null, sharedImport: SharedImport? = n
                         onClose = { nav.popBackStack() },
                         onOpenVideo = { id, title -> nav.navigate(playVideoRoute(id, title, "")) },
                         area = "mind",
+                        onOpenArea = { nav.navigate(it) { launchSingleTop = true } },
                     )
                 }
             }

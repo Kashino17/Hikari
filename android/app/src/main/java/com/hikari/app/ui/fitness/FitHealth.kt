@@ -73,7 +73,18 @@ object FitHealth {
                     val from = d.minusDays(1).atTime(18, 0).atZone(zone).toInstant()
                     val to = d.atTime(14, 0).atZone(zone).toInstant()
                     val recs = client.readRecords(ReadRecordsRequest(SleepSessionRecord::class, TimeRangeFilter.between(from, to))).records
-                    val min = recs.sumOf { java.time.Duration.between(it.startTime, it.endTime).toMinutes() }
+                    // Mehrere Quellen (Uhr + Samsung Health) zeichnen dieselbe Nacht auf → Zeiträume
+                    // zusammenlegen statt addieren, sonst zählt der Schlaf doppelt.
+                    var min = 0L
+                    var curS: java.time.Instant? = null
+                    var curE: java.time.Instant? = null
+                    for (r in recs.sortedBy { it.startTime }) {
+                        if (curE == null || r.startTime.isAfter(curE)) {
+                            if (curS != null && curE != null) min += java.time.Duration.between(curS, curE).toMinutes()
+                            curS = r.startTime; curE = r.endTime
+                        } else if (r.endTime.isAfter(curE)) curE = r.endTime
+                    }
+                    if (curS != null && curE != null) min += java.time.Duration.between(curS, curE).toMinutes()
                     if (min > 0) o.put("sleepMin", min)
                 }
             }

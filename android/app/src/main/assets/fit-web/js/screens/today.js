@@ -1,6 +1,6 @@
 // »Heute«: Woche, Trainingstag vom Coach, Tagesform, Ernährung und Skill auf einen Blick.
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
-import { api, health, prefetch, openArea, isNative } from '../platform.js';
+import { api, health, prefetch, openArea, isNative, local } from '../platform.js';
 import { useEffect as useEffectT } from '../../vendor/preact-htm.js';
 import { WeekReviewCard } from './plan.js';
 import { nav, useData, setData, refresh, longDate, wdShort, today as todayStr, relDay, parseDay, INTENSITY, toast, useCatalog, fmtNum, SLOT_NAMES } from '../app.js';
@@ -45,7 +45,11 @@ export function Today() {
   }, [session?.upgrading, session?.id]);
 
   const isTrainingDay = state?.profile?.trainingDays?.includes((new Date().getDay() + 6) % 7);
-  const done = session?.status === 'done';
+  // Offline abgeschlossen, Server weiß es noch nicht → trotzdem als erledigt zeigen.
+  const off = session && session.status !== 'done' ? local.get(`offdone:${session.id}`, null) : null;
+  if (session?.status === 'done' && local.get(`offdone:${session.id}`, null)) local.set(`offdone:${session.id}`, null);
+  const done = session?.status === 'done' || !!off;
+  const shown = off ? { ...session, status: 'done', result: { seconds: off.seconds }, feedback: { overall: off.overall }, pending: true } : session;
   return html`<div class="screen tab c-train">
     <div class="scroll">
       <header class="top big">
@@ -58,7 +62,7 @@ export function Today() {
         <${Week} today=${day} sel=${sel} onSel=${setSel} />
         ${other ? html`<${DayView} day=${sel} today=${day} />` : html`<div class="mt16">
           ${!session ? html`<div class="skel" style="height:380px" />`
-            : done ? html`<${DoneCard} s=${session} />`
+            : done ? html`<${DoneCard} s=${shown} />`
             : html`<${Hero} s=${session} restDay=${!isTrainingDay} second=${state?.week?.find((w) => w.day === day)?.done} onAdapt=${() => setAdapt(true)} />`}
         </div>
         <${HealthRow} days=${hl?.days} />
@@ -66,7 +70,7 @@ export function Today() {
           <span class="rc-moon" /><div class="grow"><b>Ruhetag — gönn dir 15 Minuten</b><span>Sanftes Yoga oder eine Atemübung lösen Muskelkater und helfen der Erholung.</span></div><${Icon} n="arrow_forward" /></button>`}
         <${WeekReviewCard} />
         ${prog && !prog.test.last && html`<button class="assessCard mt12" onClick=${() => nav('test')}>
-          <${Icon} n="assignment_turned_in" /><div class="grow"><b>Einstufung: 5 Minuten</b><span>Vier kurze Tests — danach plant dein Coach genau auf deinem Level.</span></div><${Icon} n="chevron_right" /></button>`}
+          <${Icon} n="assignment_turned_in" /><div class="grow"><b>Einstufung: 5 Minuten</b><span>${['', 'Ein kurzer Test', 'Zwei kurze Tests', 'Drei kurze Tests', 'Vier kurze Tests'][prog?.test?.tests?.length ?? 4] ?? 'Kurze Tests'} — danach plant dein Coach genau auf deinem Level.</span></div><${Icon} n="chevron_right" /></button>`}
         <div class="sec"><h2 class="h2">Dein Tag</h2></div>
         <div class="tiles">
           <${FoodTile} food=${food} />
@@ -241,7 +245,7 @@ function DoneCard({ s }) {
   const [extra, setExtra] = useState(false);
   const rev = hist?.sessions?.find((x) => x.id === s.id)?.review;
   return html`<div class="review">
-    <div class="row"><div class="iconTile"><${Icon} n="check" /></div><div class="grow"><div class="eyebrow" style="color:rgb(var(--train))">Erledigt</div><div class="h3">${s.plan.title}</div></div></div>
+    <div class="row"><div class="iconTile"><${Icon} n="check" /></div><div class="grow"><div class="eyebrow" style="color:rgb(var(--train))">${s.pending ? 'Erledigt · wird übertragen' : 'Erledigt'}</div><div class="h3">${s.plan.title}</div></div></div>
     <div class="stats3 mt16">
       <div class="stat"><b>${Math.round((s.result?.seconds ?? 0) / 60)}</b><span>Minuten</span></div>
       <div class="stat"><b>${s.plan.kcal}</b><span>kcal</span></div>

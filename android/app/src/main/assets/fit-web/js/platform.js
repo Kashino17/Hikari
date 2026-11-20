@@ -414,12 +414,18 @@ export function exitArea() { if (native?.exit) native.exit(); else history.back(
 // ── Offline vorladen, Erinnerungen, Gesundheitsdaten (Health Connect) ──
 /** Pfade im Hintergrund aufs Gerät laden (heutiger Plan + Übungsvideos) — nur in der App. */
 export function prefetch(paths) { try { native?.prefetch?.(JSON.stringify(paths.filter(Boolean))); } catch { /* */ } }
-export const pendingResults = () => { try { return native?.pendingCount?.() ?? 0; } catch { return 0; } };
 
 export const reminders = {
   available: () => !!native?.setReminders,
   get() { try { return JSON.parse(native?.getReminders?.() ?? 'null'); } catch { return null; } },
   set(cfg) { try { native?.setReminders?.(JSON.stringify(cfg)); } catch { /* */ } },
+  /** Darf die App benachrichtigen? Fragt (Android 13+) einmal nach. → true/false */
+  async permit() {
+    if (!native?.requestNotifications) return true;
+    try { return !!(await call((id) => native.requestNotifications(id))).granted; } catch { return false; }
+  },
+  /** Trainingstage geändert → Erinnerungen folgen (nur wenn sie an sind). */
+  followDays(days) { const c = this.get(); if (c?.enabled) this.set({ ...c, days }); },
 };
 
 export const health = {

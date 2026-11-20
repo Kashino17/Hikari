@@ -65,7 +65,10 @@ export function phaseFor(db: FitDb, programs: Program[], day: string): ProgramPh
   if (!st) return null;
   const p = programs.find((x) => x.id === st.id);
   if (!p) return null;
-  const week = Math.floor((Date.parse(`${mondayOf(day)}T12:00:00`) - Date.parse(`${st.start}T12:00:00`)) / (7 * 86_400_000)) + 1;
+  // Runden statt abschneiden: über die Zeitumstellung ist eine Woche 167 oder 169 Stunden lang.
+  let week = Math.round((Date.parse(`${mondayOf(day)}T12:00:00`) - Date.parse(`${st.start}T12:00:00`)) / (7 * 86_400_000)) + 1;
+  // Am Wochenende gestartet: die Tage bis Montag gehören schon zu Woche 1.
+  if (week === 0) week = 1;
   if (week < 1) return null;
   const done = week > p.wochen;
   const ph = p.phasen.find((x) => x.wochen.includes(Math.min(week, p.wochen))) ?? p.phasen[p.phasen.length - 1];
@@ -78,7 +81,9 @@ export function phaseFor(db: FitDb, programs: Program[], day: string): ProgramPh
 }
 
 export function startProgram(db: FitDb, id: string, today: string) {
-  kvSet(db, "program", { id, start: mondayOf(today) });
+  // Ab Samstag gestartet → Woche 1 beginnt am nächsten Montag (sonst wäre sie ein, zwei Tage lang).
+  const start = weekday(today) >= 5 ? addDays(mondayOf(today), 7) : mondayOf(today);
+  kvSet(db, "program", { id, start });
 }
 export function stopProgram(db: FitDb) {
   db.prepare("DELETE FROM kv WHERE key = 'program'").run();

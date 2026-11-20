@@ -53,6 +53,8 @@ function BenchRun({ b, onQuit }) {
   const [c, setC] = useState(3);
   const [el, setEl] = useState(0);
   const [res, setRes] = useState(null);
+  // Gespeicherte Zeit getrennt halten: ein letzter Uhr-Tick nach dem Ziel darf sie nicht verstellen.
+  const [final, setFinal] = useState(0);
   const t0 = useRef(0);
   useEffect(() => { keepAwake(true); return () => keepAwake(false); }, []);
   useEffect(() => {
@@ -69,13 +71,13 @@ function BenchRun({ b, onQuit }) {
     haptic('tick');
     if (k + 1 < steps.length) { if (steps[k + 1].r !== steps[k].r) beep('go'); setK(k + 1); return; }
     const sec = Math.round((Date.now() - t0.current) / 1000);
-    beep('end'); haptic('success'); setPhase('done'); setEl(sec);
-    try { setRes(await api.post(`/fitness/benchmark/${b.id}`, { seconds: sec })); refresh('/fitness/benchmarks'); refresh(`/fitness/benchmark/${b.id}`); }
+    beep('end'); haptic('success'); setPhase('done'); setEl(sec); setFinal(sec);
+    try { setRes(await api.post(`/fitness/benchmark/${b.id}`, { seconds: sec, day: today() })); refresh('/fitness/benchmarks'); refresh(`/fitness/benchmark/${b.id}`); }
     catch (e) { setRes({ seconds: sec, error: e.status === 400 ? 'kurz' : 'offline' }); }
   };
   if (phase === 'done') return html`<div class="screen c-train"><div class="scroll"><div class="pad" style="padding-top:calc(28px + var(--sat))">
-    <div class="tr-hero"><span class="lc-k">${b.name}</span><div class="lc-v num" style="font-size:76px">${mmss(el)}</div>
-      ${res?.pb && html`<div class="pbBadge">Neue Bestzeit${res.before != null ? ` · ${mmss(res.before - el)} schneller` : ''}</div>`}
+    <div class="tr-hero"><span class="lc-k">${b.name}</span><div class="lc-v num" style="font-size:76px">${mmss(final)}</div>
+      ${res?.pb && html`<div class="pbBadge">Neue Bestzeit${res.before != null ? ` · ${mmss(res.before - final)} schneller` : ''}</div>`}
       ${res?.tier && html`<div class="mt8"><${Medal} tier=${res.tier} /></div>`}</div>
     ${!res ? html`<div class="row gap12 mt16"><${Spinner} /><span class="muted">Speichere …</span></div>`
       : res.queued ? html`<p class="small muted mt16">Offline gespeichert — die Zeit wird gewertet, sobald dein Server erreichbar ist.</p>`

@@ -2,7 +2,7 @@
 // Server: /fitness/programs, /fitness/program, /fitness/week, /fitness/week/review (program.ts, week.ts).
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
 import { api } from '../platform.js';
-import { nav, useData, refresh, relDay, today, parseDay, toast } from '../app.js';
+import { back, nav, useData, refresh, relDay, today, parseDay, toast } from '../app.js';
 import { Icon, Top, Sheet, cls, Loop, Spinner } from '../ui.js';
 
 const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
@@ -49,7 +49,7 @@ export function Programs() {
   const cur = d.current && !d.current.done ? d.current : null;
   const start = async (id) => {
     setBusy(true);
-    try { await api.post('/fitness/program', { id }); refresh('/fitness/week'); refresh('/fitness/programs'); refresh('/fitness/today'); toast(id ? 'Programm gestartet — dein Coach plant ab heute danach' : 'Programm beendet'); setOpen(null); nav('training', { replace: true }); } catch { toast('Server nicht erreichbar'); }
+    try { await api.post('/fitness/program', { id }); refresh('/fitness/week'); refresh('/fitness/programs'); refresh('/fitness/today'); toast(id ? (new Date().getDay() % 6 === 0 ? 'Programm gestartet — Woche 1 zählt ab Montag' : 'Programm gestartet — dein Coach plant ab heute danach') : 'Programm beendet'); setOpen(null); back('training'); } catch { toast('Server nicht erreichbar'); }
     setBusy(false);
   };
   const p = open && d.programs.find((x) => x.id === open);
@@ -69,7 +69,7 @@ export function Programs() {
       ${!p.machbar && html`<p class="small mt12" style="color:#F2B847">Dafür brauchst du ${p.braucht.join(' oder ')} — in »Ich« bei der Ausrüstung eintragen.</p>`}
       ${cur?.id === p.id ? html`<button class="btn ghost mt16" disabled=${busy} onClick=${() => start(null)}>Programm beenden</button>`
         : html`<button class="btn mt16" disabled=${busy || !p.machbar} onClick=${() => start(p.id)}>${cur ? 'Wechseln und starten' : 'Programm starten'}</button>`}
-      <p class="tiny muted mt8">Woche 1 ist diese Woche. Am Ende steht der Fitness-Test.</p>
+      <p class="tiny muted mt8">${new Date().getDay() % 6 === 0 ? 'Woche 1 beginnt am Montag — das Wochenende zählt schon mit.' : 'Woche 1 ist diese Woche.'} Am Ende steht der Fitness-Test.</p>
     </div><//>`}
   </div>`;
 }
@@ -96,8 +96,9 @@ export function BalanceCard() {
 export function WeekReviewCard() {
   const [w] = useData('/fitness/week');
   if (!w || !w.review.sessions) return null;
+  // Nur Montag bis Mittwoch — danach ist die Woche zu weit weg.
   const wd = (parseDay(today()).getDay() + 6) % 7;
-  if (wd > 2 && w.review.headline) return null;
+  if (wd > 2) return null;
   return html`<button class="reviewCard mt12" onClick=${() => nav(`woche/${w.review.monday}`)}>
     <${Icon} n="insights" /><div class="grow"><b>Dein Wochenrückblick</b><span>${w.review.headline ?? `${w.review.sessions} Einheiten letzte Woche — was dein Coach daraus macht`}</span></div><${Icon} n="chevron_right" /></button>`;
 }
@@ -108,7 +109,8 @@ export function WeekReview({ monday }) {
   const load = (force) => { setR(null); setErr(null); api.get(`/fitness/week/review?monday=${monday}${force ? '&force=1' : ''}`).then((x) => setR(x.review)).catch((e) => setErr(e.status === 503 ? 'Kein Gemini-Schlüssel auf dem Server.' : 'Der Coach ist gerade nicht erreichbar.')); };
   useEffect(() => load(false), [monday]);
   const end = new Date(parseDay(monday)); end.setDate(end.getDate() + 6);
-  const label = `${parseDay(monday).getDate()}.–${end.getDate()}.${end.getMonth() + 1}.`;
+  const st = parseDay(monday);
+  const label = st.getMonth() === end.getMonth() ? `${st.getDate()}.–${end.getDate()}.${end.getMonth() + 1}.` : `${st.getDate()}.${st.getMonth() + 1}.–${end.getDate()}.${end.getMonth() + 1}.`;
   return html`<div class="screen c-train"><${Top} title="Wochenrückblick" sub=${`Woche ${label}`} actions=${html`<button class="ib" onClick=${() => load(true)} aria-label="Neu"><${Icon} n="refresh" /></button>`} />
     <div class="scroll"><div class="pad">
       ${err ? html`<div class="card pad16 small muted">${err}</div>` : !r ? html`<div class="row gap12 mt12"><${Spinner} /><div class="muted">Dein Coach schaut auf deine Woche …</div></div><div class="skel mt16" style="height:300px" />` : html`

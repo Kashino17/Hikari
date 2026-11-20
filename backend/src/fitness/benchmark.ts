@@ -52,14 +52,19 @@ export function tierFor(seconds: number, t: { gold: number; silber: number; bron
   return seconds <= t.gold ? "gold" : seconds <= t.silber ? "silber" : seconds <= t.bronze ? "bronze" : null;
 }
 
-export function history(db: FitDb, bench: string) {
-  return db.prepare("SELECT day, seconds FROM benchmark_log WHERE bench = ? ORDER BY at DESC LIMIT 20").all(bench) as { day: string; seconds: number }[];
+/** Version eines Workouts = welche Übungen ersetzt wurden. Zeiten verschiedener Versionen sind nicht vergleichbar. */
+export function subsKey(subs: Record<string, string>): string {
+  return JSON.stringify(Object.fromEntries(Object.entries(subs).sort(([a], [b]) => a.localeCompare(b))));
 }
-export function best(db: FitDb, bench: string): number | null {
-  return (db.prepare("SELECT MIN(seconds) AS s FROM benchmark_log WHERE bench = ?").get(bench) as { s: number | null }).s;
+const sameVersion = "COALESCE(subs, '{}') = ?";
+export function history(db: FitDb, bench: string, subs: Record<string, string> = {}) {
+  return db.prepare(`SELECT day, seconds FROM benchmark_log WHERE bench = ? AND ${sameVersion} ORDER BY at DESC LIMIT 20`).all(bench, subsKey(subs)) as { day: string; seconds: number }[];
 }
-export function saveRun(db: FitDb, bench: string, seconds: number, subs: Record<string, string>) {
-  const before = best(db, bench);
-  db.prepare("INSERT INTO benchmark_log(bench, day, seconds, subs, at) VALUES(?, ?, ?, ?, ?)").run(bench, localDay(), seconds, JSON.stringify(subs), Date.now());
+export function best(db: FitDb, bench: string, subs: Record<string, string> = {}): number | null {
+  return (db.prepare(`SELECT MIN(seconds) AS s FROM benchmark_log WHERE bench = ? AND ${sameVersion}`).get(bench, subsKey(subs)) as { s: number | null }).s;
+}
+export function saveRun(db: FitDb, bench: string, seconds: number, subs: Record<string, string>, day = localDay()) {
+  const before = best(db, bench, subs);
+  db.prepare("INSERT INTO benchmark_log(bench, day, seconds, subs, at) VALUES(?, ?, ?, ?, ?)").run(bench, day, seconds, subsKey(subs), Date.now());
   return { pb: before == null || seconds < before, before };
 }

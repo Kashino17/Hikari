@@ -32,7 +32,7 @@ function WeightTab({ d, onAdd }) {
   const w = d.weights;
   const last = w[w.length - 1];
   const first = w[0];
-  const pts = w.slice(-60).map((x) => x.weight);
+  const pts = w.slice(-60).map((x) => ({ v: x.weight }));
   const dir = d.target && last ? Math.sign(d.target - last.weight) : 0;
   const onTrack = d.trend != null && dir !== 0 && Math.sign(d.trend) === dir;
   return html`<div>
@@ -42,7 +42,7 @@ function WeightTab({ d, onAdd }) {
           <span class="bh-s">${last ? `gewogen ${relDay(last.day, today())}` : 'Noch nichts eingetragen'}</span></div>
         ${d.trend != null && html`<div class="bh-trend ${cls(onTrack ? 'good' : dir ? 'bad' : '')}"><b class="num">${d.trend > 0 ? '+' : ''}${fmtNum(d.trend, 2)}</b><span>kg pro Woche</span></div>`}
       </div>
-      ${pts.length > 1 && html`<div class="mt12"><${Spark} points=${pts} goal=${d.target} /></div>`}
+      ${pts.length > 1 && html`<div class="mt12"><${Spark} points=${pts} goal=${d.target} color="rgb(17,17,17)" goalStroke="rgba(0,0,0,.3)" /></div>`}
       ${d.target && html`<div class="bh-goal"><${Icon} n="flag" /><span>${d.eta ? `Ziel ${fmtNum(d.target, 1)} kg voraussichtlich ${longDate(d.eta)}` : d.trend == null ? `Ziel ${fmtNum(d.target, 1)} kg — für eine Prognose mindestens dreimal in vier Wochen wiegen` : `Ziel ${fmtNum(d.target, 1)} kg — der Trend zeigt gerade in die andere Richtung`}</span></div>`}
     </div>
     <button class="btn mt16" onClick=${onAdd}><${Icon} n="monitor_weight" />Gewicht eintragen</button>
@@ -107,7 +107,11 @@ function WeightAdd({ last, onClose }) {
   const save = async () => {
     const n = Number(v.replace(',', '.'));
     if (!(n > 30 && n < 300)) { toast('Bitte ein gültiges Gewicht'); return; }
-    try { await api.post('/fitness/body', { weight: n }); refresh('/fitness/body/progress'); refresh('/fitness/state'); onClose(); } catch { toast('Server nicht erreichbar'); }
+    try {
+      const r = await api.post('/fitness/body', { weight: n, day: today() });
+      if (r?.queued) toast('Offline gespeichert — wird nachgetragen');
+      refresh('/fitness/body/progress'); refresh('/fitness/state'); onClose();
+    } catch { toast('Server nicht erreichbar'); }
   };
   return html`<${Sheet} title="Gewicht" onClose=${onClose}><div class="pad">
     <div class="bigInput"><input inputmode="decimal" value=${v} onInput=${(e) => setV(e.target.value)} autofocus /><span>kg</span></div>
@@ -118,7 +122,11 @@ function MeasureAdd({ last, onClose }) {
   const [v, setV] = useState(() => Object.fromEntries(MEASURES.map(([k]) => [k, last?.[k] != null ? String(last[k]).replace('.', ',') : ''])));
   const save = async () => {
     const body = Object.fromEntries(MEASURES.map(([k]) => [k, v[k] ? Number(String(v[k]).replace(',', '.')) : undefined]).filter(([, x]) => x));
-    try { await api.post('/fitness/body/measure', body); refresh('/fitness/body/progress'); onClose(); toast('Maße gespeichert'); } catch { toast('Server nicht erreichbar'); }
+    if (!Object.keys(body).length) { toast('Trag mindestens ein Maß ein'); return; }
+    try {
+      const r = await api.post('/fitness/body/measure', { ...body, day: today() });
+      refresh('/fitness/body/progress'); onClose(); toast(r?.queued ? 'Offline gespeichert — wird nachgetragen' : 'Maße gespeichert');
+    } catch { toast('Server nicht erreichbar'); }
   };
   return html`<${Sheet} title="Maße in cm" onClose=${onClose}><div class="pad">
     <div class="measForm">${MEASURES.map(([k, l]) => html`<label><span>${l}</span><input inputmode="decimal" value=${v[k]} onInput=${(e) => setV({ ...v, [k]: e.target.value })} placeholder="–" /></label>`)}</div>

@@ -106,12 +106,24 @@ export function checkProgression(
   const setMap = db.prepare(
     "INSERT INTO variant_map(base, current, since) VALUES(?, ?, ?) ON CONFLICT(base) DO UPDATE SET current = excluded.current, since = excluded.since",
   );
-  const delMap = db.prepare("DELETE FROM variant_map WHERE base = ? OR (current = ? AND base = ?)");
+  const delMap = db.prepare("DELETE FROM variant_map WHERE base = ?");
   const log = db.prepare("INSERT INTO progress_events(day, kind, ex_from, ex_to, level, at) VALUES(?, ?, ?, ?, ?, ?)");
   const initState = db.prepare(
     "INSERT INTO exercise_state(exercise_id, dose, times, updated_at) VALUES(?, ?, 0, ?) ON CONFLICT(exercise_id) DO UPDATE SET dose = excluded.dose, updated_at = excluded.updated_at",
   );
   const map = variantMap(db);
+  // Jede Übung gehört zu genau einer Wurzel (der Übung, die der Planer ursprünglich wählt). Auf- und
+  // Abstiege biegen immer die Wurzel um — so entstehen keine Kreise (Liegestütz → Knie → Liegestütz).
+  const rootOf = (id: string) => [...map.entries()].find(([, cur]) => cur === id)?.[0] ?? id;
+  const point = (root: string, to: string) => {
+    if (to === root) {
+      delMap.run(root);
+      map.delete(root);
+    } else {
+      setMap.run(root, to, day);
+      map.set(root, to);
+    }
+  };
   for (const s of signals) {
     const e = catalog.byId.get(s.ex);
     if (!e) continue;
@@ -123,19 +135,18 @@ export function checkProgression(
       let n = catalog.byId.get(e.progress);
       for (let hop = 0; n && !ok(n) && hop < 3; hop++) n = n.progress ? catalog.byId.get(n.progress) : undefined;
       if (!n || !ok(n)) continue;
-      setMap.run(e.id, n.id, day);
+      point(rootOf(e.id), n.id);
       // Neue Variante etwas vorsichtiger beginnen; die alte fällt auf die Grundmenge zurück.
       initState.run(n.id, 0.85, now);
       initState.run(e.id, 1, now);
       log.run(day, "auf", e.id, n.id, null, now);
       events.push({ kind: "auf", from: e.id, to: n.id, fromName: e.name, toName: n.name });
     } else if (down) {
-      // War diese Übung selbst ein Aufstieg? Dann zurück auf die vorige Variante.
-      const base = [...map.entries()].find(([, cur]) => cur === e.id)?.[0];
-      const easier = base ? catalog.byId.get(base) : easierOf(catalog, e.id);
+      // Eine Stufe leichter (nicht machbare Stufen überspringen).
+      let easier = easierOf(catalog, e.id);
+      for (let hop = 0; easier && !ok(easier) && hop < 3; hop++) easier = easierOf(catalog, easier.id);
       if (!easier || !ok(easier)) continue;
-      if (base) delMap.run(base, e.id, base);
-      else setMap.run(e.id, easier.id, day);
+      point(rootOf(e.id), easier.id);
       initState.run(easier.id, 1.1, now);
       initState.run(e.id, 1, now);
       log.run(day, "ab", e.id, easier.id, null, now);
@@ -183,12 +194,18 @@ export function progressionView(db: FitDb, catalog: Catalog, ok: (e: Exercise) =
       best: number | null;
     }[]).map((r) => [r.exercise_id, r]),
   );
+  // Zuletzt geänderte Zuordnung zuerst — sie bestimmt, auf welcher Stufe die Kette gerade steht.
+  const maps = db.prepare("SELECT base FROM variant_map ORDER BY since DESC, rowid DESC").all() as { base: string }[];
   const fam = chains(catalog)
     .filter((c) => c.some(ok))
     .map((c) => {
       const usable = c.filter(ok);
-      const start = usable[0];
-      const cur = start ? resolve(start.id) : null;
+      const ids = new Set(c.map((e) => e.id));
+      const m = maps.find((r) => ids.has(r.base));
+      // Ohne Auf-/Abstieg: die Stufe, die am häufigsten trainiert wurde, sonst die leichteste machbare.
+      const trained = usable.filter((e) => states.has(e.id)).sort((a, b) => (states.get(b.id)?.times ?? 0) - (states.get(a.id)?.times ?? 0))[0];
+      let cur: string | null = m ? resolve(m.base) : (trained ?? usable[0])?.id ?? null;
+      if (cur && !ids.has(cur)) cur = m?.base ?? null;
       const idx = Math.max(0, c.findIndex((e) => e.id === cur));
       const st = cur ? states.get(cur) : undefined;
       return {

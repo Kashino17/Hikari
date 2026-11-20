@@ -57,6 +57,10 @@ class HikariApp : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        // Fitness-Erinnerungen: fehlende anlegen (z. B. nach Update von den alten periodischen Erinnerungen).
+        runCatching { com.hikari.app.ui.fitness.FitReminders.schedule(this, androidx.work.ExistingWorkPolicy.KEEP) }
+        // Offline gespeicherte Fitness-Ergebnisse, die noch warten, im Hintergrund nachsenden.
+        runCatching { if (com.hikari.app.ui.fitness.FitCache.pending(this) > 0) com.hikari.app.ui.fitness.FitCache.scheduleFlush(this) }
         WhatsAppNotificationListenerService.ensureServiceBound(this)
         // Russisch-Lernstand sichern (Gerät + Mac) und bei Verlust automatisch zurückholen.
         russianBackup.start(appScope)

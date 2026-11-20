@@ -99,6 +99,7 @@ export function logSkill(
   step: number,
   sets: number[],
   feel: number | null,
+  day = localDay(),
 ) {
   const skill = catalog.skillById.get(skillId);
   if (!skill) throw new Error("skill");
@@ -108,7 +109,6 @@ export function logSkill(
     .slice(0, 12);
   if (!clean.length) throw new Error("leer");
   setSkill(db, skillId, { active: true });
-  const day = localDay();
   db.prepare(
     "INSERT INTO skill_log(skill_id, step, day, value, sets, feel, at) VALUES(?, ?, ?, ?, ?, ?, ?)",
   ).run(skillId, step, day, Math.max(...clean), JSON.stringify(clean), feel, Date.now());

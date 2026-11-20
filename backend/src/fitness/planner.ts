@@ -466,7 +466,7 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
       },
     ],
   };
-  fitToTime(plan, ctx.catalog, minutes);
+  fitToTime(plan, ctx.catalog, minutes, (e) => usable(ctx, e), ctx.program?.deload ? ctx.program.volume : 1);
   plan.kcal = estimateKcal(plan, ctx.catalog, p.weightKg);
   plan.minutes = Math.round(planSeconds(plan, ctx.catalog) / 60);
   plan.coach = rulesCoachText(plan, ctx);
@@ -474,13 +474,20 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
 }
 
 /** Runden/Sätze des Hauptteils so anpassen, dass die Einheit in die gewünschte Zeit passt. */
-export function fitToTime(plan: SessionPlan, catalog: Catalog, minutes: number) {
+export function fitToTime(
+  plan: SessionPlan,
+  catalog: Catalog,
+  minutes: number,
+  ok: (e: Exercise) => boolean = () => true,
+  /** Entlastungswoche: weniger Zeit für den Hauptteil, sonst füllen zusätzliche Runden das gesenkte Volumen wieder auf. */
+  mainScale = 1,
+) {
   const main = plan.blocks.find((b) => b.kind === "main");
   if (!main || main.format === "flow") return;
   const others = plan.blocks
     .filter((b) => b !== main)
     .reduce((a, b) => a + blockSeconds(b, catalog), 0);
-  const budget = minutes * 60 - others;
+  const budget = (minutes * 60 - others) * mainScale;
   let best = 1;
   for (let r = 1; r <= 6; r++) {
     main.rounds = r;
@@ -491,13 +498,14 @@ export function fitToTime(plan: SessionPlan, catalog: Catalog, minutes: number) 
   const left = budget - blockSeconds(main, catalog);
   if (
     left > 240 &&
+    mainScale >= 1 &&
     plan.dayType !== "mobilitaet" &&
     !plan.blocks.some((b) => b.kind === "finisher")
   ) {
     const core = main.items.find((i) => catalog.byId.get(i.ex)?.pattern === "core");
     const cardio = catalog.exercises.find(
       (e) =>
-        e.pattern === "cardio" && !main.items.some((i) => i.ex === e.id) && e.use.includes("main"),
+        e.pattern === "cardio" && !main.items.some((i) => i.ex === e.id) && e.use.includes("main") && ok(e),
     );
     const items = [cardio, core ? catalog.byId.get(core.ex) : undefined].filter(
       (e): e is Exercise => !!e,

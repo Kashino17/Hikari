@@ -2,7 +2,7 @@
 import { html, render } from '../vendor/preact-htm.js';
 import { isNative, exitArea, nativeOn, net } from './platform.js';
 import { useEffect as useEffectM, useState as useStateM } from '../vendor/preact-htm.js';
-import { AREA, TABS, back, nav, route, useRoute, useToast, useData, toast } from './app.js';
+import { AREA, TABS, back, nav, route, useRoute, useToast, useData, toast, refresh } from './app.js';
 import { Icon, cls } from './ui.js';
 import { Today } from './screens/today.js';
 import { Training, History, Library } from './screens/training.js';
@@ -92,7 +92,11 @@ function OfflinePill() {
   const [off, setOff] = useStateM(net.offline);
   useEffectM(() => {
     const a = nativeOn('offline', (p) => setOff(!!p.on));
-    const b = nativeOn('synced', (p) => toast(`${p.count} offline gespeicherte${p.count === 1 ? 's Ergebnis' : ' Ergebnisse'} gesendet`));
+    const b = nativeOn('synced', (p) => {
+      toast(`${p.count} offline gespeicherte${p.count === 1 ? 's Ergebnis' : ' Ergebnisse'} gesendet`);
+      // Was offline entstand, ist jetzt auf dem Server — offene Seiten neu laden.
+      for (const k of ['/fitness/today', '/fitness/state', '/fitness/progress', '/fitness/week', '/fitness/body/progress', '/fitness/benchmarks', '/fitness/skills', '/fitness/history?days=7']) refresh(k);
+    });
     return () => { a(); b(); };
   }, []);
   return off ? html`<div class="offPill"><span />Offline · letzter Stand vom Handy</div>` : null;

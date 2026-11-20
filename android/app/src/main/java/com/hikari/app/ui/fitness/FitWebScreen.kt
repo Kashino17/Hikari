@@ -108,6 +108,11 @@ fun FitWebScreen(
     bridge.launchGallery = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
     val health = rememberLauncherForActivityResult(androidx.health.connect.client.PermissionController.createRequestPermissionResultContract()) { bridge.onHealthResult() }
     bridge.launchHealth = { runCatching { health.launch(FitHealth.PERMISSIONS) }.onFailure { bridge.onHealthResult() } }
+    val notif = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { bridge.onNotifResult() }
+    bridge.launchNotif = {
+        if (android.os.Build.VERSION.SDK_INT >= 33) runCatching { notif.launch(android.Manifest.permission.POST_NOTIFICATIONS) }.onFailure { bridge.onNotifResult() }
+        else bridge.onNotifResult()
+    }
     // Offline entstandene Ergebnisse nachsenden, sobald der Bereich geöffnet wird.
     LaunchedEffect(Unit) { bridge.flushQueue() }
 
@@ -166,6 +171,9 @@ fun FitWebScreen(
 
 /** Liefert die Oberfläche aus den Assets und reicht GET-Anfragen an den Hikari-Server durch. */
 private class FitWebClient(private val app: Context, private val okHttp: OkHttpClient) : WebViewClient() {
+    private val quick: OkHttpClient by lazy {
+        okHttp.newBuilder().connectTimeout(java.time.Duration.ofSeconds(4)).readTimeout(java.time.Duration.ofSeconds(20)).build()
+    }
 
     override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
         if (request.url.host == HOST) return false
@@ -204,8 +212,10 @@ private class FitWebClient(private val app: Context, private val okHttp: OkHttpC
         // Übungsvideos/-bilder: einmal geladen, dann immer vom Gerät (spart Netz, geht offline).
         if (FitCache.isMedia(pathAndQuery)) FitCache.get(app, pathAndQuery)?.let { return FitCache.serve(it, range, offline = false) }
         if (FitCache.cacheable(pathAndQuery)) {
+            // Liegt eine Kopie auf dem Gerät, nicht 15 s auf einen unerreichbaren Mac warten.
+            val client = if (FitCache.has(app, pathAndQuery)) quick else okHttp
             return try {
-                okHttp.newCall(Request.Builder().url("http://hikari.invalid$pathAndQuery").build()).execute().use { res ->
+                client.newCall(Request.Builder().url("http://hikari.invalid$pathAndQuery").build()).execute().use { res ->
                     val type = res.header("Content-Type") ?: "application/octet-stream"
                     val bytes = res.body?.bytes() ?: ByteArray(0)
                     if (res.isSuccessful) FitCache.put(app, pathAndQuery, type, bytes)
@@ -303,8 +313,23 @@ class FitWebBridge(
     }
 
     // ── Erinnerungen ──
-    @JavascriptInterface fun getReminders(): String = FitReminders.toJson(FitReminders.read(app))
+    @JavascriptInterface fun getReminders(): String =
+        JSONObject(FitReminders.toJson(FitReminders.read(app))).put("permission", FitReminders.notificationsAllowed(app)).toString()
     @JavascriptInterface fun setReminders(json: String) { runCatching { FitReminders.apply(app, json) } }
+
+    // Benachrichtigungen dürfen (Android 13+) — sonst wären Erinnerungen stumm.
+    var launchNotif: () -> Unit = {}
+    private var notifId: String? = null
+    @JavascriptInterface fun requestNotifications(id: String) {
+        if (FitReminders.notificationsAllowed(app)) { reply(id, JSONObject().put("granted", true)); return }
+        notifId = id
+        main.post { if (!closed) launchNotif() }
+    }
+    fun onNotifResult() {
+        val id = notifId ?: return
+        notifId = null
+        reply(id, JSONObject().put("granted", FitReminders.notificationsAllowed(app)))
+    }
 
     // ── Health Connect ──
     var launchHealth: () -> Unit = {}
@@ -358,13 +383,19 @@ class FitWebBridge(
     @JavascriptInterface
     fun httpPost(id: String, path: String, json: String) {
         if (!path.startsWith("/")) { reply(id, JSONObject().put("status", 400).put("body", "")); return }
-        val req = Request.Builder().url("http://hikari.invalid$path").post(json.toRequestBody("application/json".toMediaTypeOrNull())).build()
+        // Ergebnisse tragen eine Kennung und ihren Zeitpunkt: kommt dieselbe Anfrage später aus der
+        // Warteschlange noch einmal, wertet der Server sie nicht doppelt — und am richtigen Tag.
+        val queueable = FitCache.queueable(path)
+        val reqId = java.util.UUID.randomUUID().toString()
+        val at = System.currentTimeMillis()
+        val req = Request.Builder().url("http://hikari.invalid$path").post(json.toRequestBody("application/json".toMediaTypeOrNull()))
+            .apply { if (queueable) header("X-Hikari-Req", reqId).header("X-Hikari-At", at.toString()) }.build()
         // Essensfotos und KI-Pläne brauchen Zeit — eigener Client mit langer Wartezeit.
         slow.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: java.io.IOException) {
                 // Offline: Ergebnisse (Training, Skill, Achtsamkeit …) warten und gehen später raus.
-                if (FitCache.queueable(path)) {
-                    FitCache.enqueue(app, path, json)
+                if (queueable) {
+                    FitCache.enqueue(app, path, json, reqId, at)
                     reply(id, JSONObject().put("status", 202).put("body", JSONObject().put("queued", true).toString()))
                 } else reply(id, JSONObject().put("status", 0).put("body", ""))
             }

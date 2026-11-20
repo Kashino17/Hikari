@@ -503,6 +503,7 @@ export function withSkillBlock(
  */
 export function applyVariants(db: FitDb, ctx: PlanContext, plan: SessionPlan): SessionPlan {
   const resolve = makeResolver(db, ctx.catalog, (e) => usable(ctx, e));
+  let changed = false;
   const blocks = plan.blocks.map((b) => {
     if (b.kind !== "main" && b.kind !== "finisher") return b;
     const used = new Set<string>(b.items.map((it) => it.ex).filter((x) => resolve(x) === x));
@@ -520,11 +521,26 @@ export function applyVariants(db: FitDb, ctx: PlanContext, plan: SessionPlan): S
         if (!e) return it;
       }
       used.add(e.id);
-      return { ...it, ex: e.id, amount: doseFor(ctx, e, plan.intensity, b.kind) };
+      changed = true;
+      // Intervalle: feste Arbeitszeit bleibt. Sonst Menge, Einheit und »je Seite« der neuen Übung
+      // (Stufen wechseln oft zwischen Wiederholungen und Sekunden, z. B. Unterarmstütz → Schulter-Tippen).
+      if (b.format === "intervals" || b.format === "flow") return { ...it, ex: e.id };
+      const { perSide: _old, ...rest } = it;
+      return {
+        ...rest,
+        ex: e.id,
+        amount: doseFor(ctx, e, plan.intensity, b.kind),
+        unit: e.unit,
+        ...(e.perSide ? { perSide: true } : {}),
+      };
     });
     return { ...b, items };
   });
-  return { ...plan, blocks };
+  if (!changed) return plan;
+  const out = { ...plan, blocks };
+  out.kcal = estimateKcal(out, ctx.catalog, ctx.profile.weightKg);
+  out.minutes = Math.round(planSeconds(out, ctx.catalog) / 60);
+  return out;
 }
 
 function insertSession(
