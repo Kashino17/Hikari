@@ -105,7 +105,9 @@ export interface PlanContext {
   recent: { daysAgo: number; groups: string[]; dayType: DayType; hard: boolean }[];
   /** Regionen mit aktuellen Beschwerden (letzte 7 Tage) */
   painRegions: string[];
-  checkin?: { energy?: number; minutes?: number; sore?: string[]; wish?: string } | undefined;
+  checkin?: { energy?: number; minutes?: number; sore?: string[]; wish?: string; sleep?: number } | undefined;
+  /** Health Connect: Schlaf letzte Nacht (min), Ruhepuls heute und Schnitt der 7 Tage davor */
+  health?: { sleepMin?: number | null; restingHr?: number | null; restingHrAvg?: number | null; steps?: number | null } | null | undefined;
   forceType?: DayType | undefined;
   /** Laufendes Programm: Phase mit Volumen, Intensität, Fokus (program.ts) */
   program?: { volume: number; intensity: "leicht" | "mittel" | "hart"; focus: Partial<Record<DayType, number>>; deload: boolean } | null | undefined;
@@ -147,9 +149,23 @@ function targetDifficulty(level: number, intensity: SessionPlan["intensity"]) {
   return intensity === "leicht" ? base - 1 : intensity === "hart" ? base + 0.6 : base;
 }
 
+/**
+ * Tagesform: Check-in-Energie (1–5), sonst 3 — eine Stufe weniger bei kurzer Nacht (< 6 h laut Uhr
+ * oder »schlecht geschlafen«) oder deutlich erhöhtem Ruhepuls (≥ 7 Schläge über dem Schnitt).
+ */
+export function effectiveEnergy(ctx: PlanContext): number {
+  let e = ctx.checkin?.energy ?? 3;
+  const h = ctx.health;
+  const shortNight = (h?.sleepMin != null && h.sleepMin > 0 && h.sleepMin < 360) || ctx.checkin?.sleep === 1;
+  const highHr = h?.restingHr != null && h.restingHrAvg != null && h.restingHr >= h.restingHrAvg + 7;
+  if (shortNight) e -= 1;
+  if (highHr) e -= 1;
+  return Math.max(1, Math.min(5, e));
+}
+
 export function chooseDayType(ctx: PlanContext): DayType {
   if (ctx.forceType) return ctx.forceType;
-  const energy = ctx.checkin?.energy ?? 3;
+  const energy = effectiveEnergy(ctx);
   if (energy <= 1) return "mobilitaet";
   const fatigue: Record<string, number> = {};
   for (const r of ctx.recent) {
@@ -312,7 +328,7 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
   );
   const p = ctx.profile;
   const dayType = chooseDayType(ctx);
-  const energy = ctx.checkin?.energy ?? 3;
+  const energy = effectiveEnergy(ctx);
   // Zweites Training am selben Tag: eine Stufe ruhiger.
   const second = ctx.recent.some((r) => r.daysAgo === 0);
   let intensity: SessionPlan["intensity"] =

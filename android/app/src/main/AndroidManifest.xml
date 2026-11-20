@@ -10,6 +10,7 @@
     <!-- Android 11+: Spracherkennungs-Dienst sichtbar machen, sonst meldet
          SpeechRecognizer.isRecognitionAvailable() immer false. -->
     <queries>
+        <package android:name="com.google.android.apps.healthdata" />
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
@@ -22,6 +23,11 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Health Connect: nur lesen (Fitness-Coach: Tagesform aus Schlaf und Ruhepuls) -->
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- Sprachnachrichten: Upload im Hintergrund (WorkManager, expedited). -->
@@ -87,6 +93,9 @@
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize"
             android:theme="@style/Theme.Hikari">
             <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
@@ -103,6 +112,16 @@
         <!-- Teilen-Ziel für Sprachnachrichten (WhatsApp: Sprachnachrichten
              markieren, Teilen, Hikari). Unsichtbar: kopiert, gibt an den
              Worker weiter, schließt sofort — man bleibt in WhatsApp. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
         <activity
             android:name=".voice.VoiceShareActivity"
             android:exported="true"

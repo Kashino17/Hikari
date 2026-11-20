@@ -1,6 +1,6 @@
 // »Ich«: Profil, Ziele, Gewichtsverlauf, Tagesziele (Energie/Makros), Einstellungen — und die Einrichtung beim ersten Start.
-import { html, useState } from '../../vendor/preact-htm.js';
-import { api, voice, exitArea, isNative } from '../platform.js';
+import { html, useEffect, useState } from '../../vendor/preact-htm.js';
+import { api, voice, exitArea, isNative, reminders, health } from '../platform.js';
 import { back, nav, useData, setData, refresh, toast, fmtNum, GOALS, relDay, today } from '../app.js';
 import { Icon, Top, Spark, cls, Spinner, Sheet } from '../ui.js';
 
@@ -20,6 +20,9 @@ const DIETS = [['alles', 'Alles'], ['vegetarisch', 'Vegetarisch'], ['vegan', 'Ve
 const ALLERG = ['Gluten', 'Laktose', 'Ei', 'Nüsse', 'Erdnüsse', 'Soja', 'Fisch', 'Schalentiere', 'Sellerie', 'Senf', 'Sesam'];
 
 export function Me() {
+  const [rem, setRem] = useState(() => reminders.get());
+  const [hs, setHs] = useState(null);
+  useEffect(() => { if (health.available()) health.status().then(setHs).catch(() => setHs('unavailable')); }, []);
   const [state] = useData('/fitness/state');
   const [hist] = useData('/fitness/history?days=180');
   const [w, setW] = useState(false);
@@ -67,6 +70,12 @@ export function Me() {
           <button class="bt c-food" onClick=${() => nav('einkauf')}>
             <span class="bt-l">Einkaufsliste</span><${Icon} n="shopping_cart" cls="bt-ic" style="color:rgb(var(--food))" />
             <span class="bt-s">für deinen Plan</span></button>
+          ${reminders.available() && html`<button class=${cls('bt', rem?.enabled && 'on')} onClick=${() => setInfo('erinnerung')}>
+            <span class="bt-l">Erinnerungen</span><${Icon} n=${rem?.enabled ? 'notifications_active' : 'notifications_off'} cls="bt-ic" />
+            <span class="bt-s">${rem?.enabled ? `Trainingstage ${String(Math.floor(rem.minutes / 60)).padStart(2, '0')}:${String(rem.minutes % 60).padStart(2, '0')}` : 'Aus'}</span></button>`}
+          ${health.available() && html`<button class=${cls('bt', hs === 'granted' && 'on')} onClick=${() => setInfo('health')}>
+            <span class="bt-l">Gesundheitsdaten</span><${Icon} n="monitor_heart" cls="bt-ic" />
+            <span class="bt-s">${hs === 'granted' ? 'Verbunden' : hs === 'partial' ? 'Teilweise' : hs === 'unavailable' ? 'Nicht verfügbar' : 'Health Connect'}</span></button>`}
         </div>
         <button class="link small mt20" onClick=${() => setInfo('ueber')}>Über Daten und Quellen</button>
         ${isNative && html`<button class="btn ghost mt16" onClick=${exitArea}><${Icon} n="logout" />Zurück zu Hikari</button>`}
@@ -74,6 +83,8 @@ export function Me() {
       </div>
     </div>
     ${w && html`<${WeightSheet} p=${p} onClose=${() => setW(false)} />`}
+    ${info === 'erinnerung' && html`<${ReminderSheet} p=${p} rem=${rem} onSave=${(c) => { reminders.set(c); setRem(c); }} onClose=${() => setInfo(null)} />`}
+    ${info === 'health' && html`<${HealthSheet} status=${hs} onStatus=${setHs} onClose=${() => setInfo(null)} />`}
     ${info === 'ziele' && html`<${Sheet} title="Deine Tagesziele" onClose=${() => setInfo(null)}><div class="c-food">
       <div class="row"><div class="grow"><div style="font-size:30px;font-weight:800;font-family:var(--display)" class="num">${fmtNum(t.kcal)} kcal</div></div><div class="small muted" style="text-align:right">Grundumsatz ${fmtNum(t.explain.bmr)}<br />Alltag ×${t.explain.pal} · Training +${t.explain.training}<br />Ziel ${t.explain.delta >= 0 ? '+' : ''}${t.explain.delta}</div></div>
       <div class="macroBand mt16"><div><b>${t.protein}</b><span>Eiweiß g</span></div><div><b>${t.carbs}</b><span>KH g</span></div><div><b>${t.fat}</b><span>Fett g</span></div><div><b>${fmtNum(t.water, 1)}</b><span>Wasser l</span></div></div></div><//>`}
@@ -196,4 +207,47 @@ export function Onboarding() {
       ${i < STEPS.length - 1 ? html`<button class="btn" onClick=${() => setI(i + 1)}>Weiter</button>` : html`<button class="btn" disabled=${busy} onClick=${finish}>${busy ? html`<${Spinner} />` : 'Los geht’s'}</button>`}
     </div>
   </div>`;
+}
+
+/** Erinnerungen an Trainingstagen + abends »Serie retten« (Android-Benachrichtigung). */
+function ReminderSheet({ p, rem, onSave, onClose }) {
+  const [on, setOn] = useState(rem?.enabled ?? true);
+  const [min, setMin] = useState(rem?.minutes ?? 18 * 60);
+  const [streak, setStreak] = useState(rem?.streak ?? true);
+  const times = [7 * 60, 12 * 60, 17 * 60, 18 * 60, 19 * 60, 20 * 60];
+  const fmt = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+  const save = () => { onSave({ enabled: on, minutes: min, streak, days: p.trainingDays }); toast(on ? 'Erinnerungen an' : 'Erinnerungen aus'); onClose(); };
+  return html`<${Sheet} title="Erinnerungen" onClose=${onClose}><div class="pad">
+    <button class=${cls('toggleRow', on && 'on')} onClick=${() => setOn(!on)}><div class="grow"><b>An Trainingstagen erinnern</b><span>${p.trainingDays.length} Tage pro Woche laut deinem Profil</span></div><i class="tg" /></button>
+    ${on && html`<div class="lbl mt16">Uhrzeit</div><div class="chips wrap mt8">${times.map((t) => html`<button class=${cls('chip', min === t && 'on')} onClick=${() => setMin(t)}>${fmt(t)}</button>`)}</div>
+      <button class=${cls('toggleRow mt16', streak && 'on')} onClick=${() => setStreak(!streak)}><div class="grow"><b>Abends »Serie retten«</b><span>Um 20:30, wenn du an einem Trainingstag noch nicht trainiert hast</span></div><i class="tg" /></button>`}
+    <button class="btn mt20" onClick=${save}>Speichern</button>
+  </div><//>`;
+}
+
+/** Health Connect: Schritte, Schlaf, Ruhepuls, aktive Kalorien — nur lesen. */
+function HealthSheet({ status, onStatus, onClose }) {
+  const [busy, setBusy] = useState(false);
+  const [days, setDays] = useState(null);
+  useEffect(() => { if (status === 'granted' || status === 'partial') health.read(7).then(setDays).catch(() => {}); }, [status]);
+  const connect = async () => {
+    setBusy(true);
+    const st = await health.connect().catch(() => 'unavailable');
+    onStatus(st);
+    if (st === 'granted' || st === 'partial') { await health.sync(true).catch(() => {}); refresh('/fitness/health'); toast('Verbunden — dein Coach sieht jetzt Schlaf und Ruhepuls'); }
+    else if (st === 'update') toast('Bitte Health Connect im Play Store aktualisieren');
+    else if (st === 'unavailable') toast('Health Connect ist auf diesem Gerät nicht verfügbar');
+    setBusy(false);
+  };
+  const last = days?.[days.length - 1];
+  const sleep = days?.filter((d) => d.sleepMin).slice(-1)[0];
+  return html`<${Sheet} title="Gesundheitsdaten" onClose=${onClose}><div class="pad">
+    <p class="small muted" style="line-height:1.55">Über Health Connect liest Hikari Schritte, Schlaf, Ruhepuls und aktive Kalorien von deinem Handy oder deiner Uhr (z. B. Samsung Health). Nur lesen — nichts wird geschrieben. Dein Coach plant nach einer kurzen Nacht oder bei erhöhtem Ruhepuls automatisch leichter.</p>
+    ${(status === 'granted' || status === 'partial') && html`<div class="hsGrid mt16">
+      <div><b class="num">${last?.steps != null ? last.steps.toLocaleString('de-DE') : '–'}</b><span>Schritte heute</span></div>
+      <div><b class="num">${sleep?.sleepMin ? `${Math.floor(sleep.sleepMin / 60)}:${String(sleep.sleepMin % 60).padStart(2, '0')}` : '–'}</b><span>Schlaf</span></div>
+      <div><b class="num">${last?.restingHr ?? '–'}</b><span>Ruhepuls</span></div>
+      <div><b class="num">${last?.activeKcal ?? '–'}</b><span>aktive kcal</span></div></div>`}
+    <button class="btn mt20" disabled=${busy} onClick=${connect}>${busy ? html`<${Spinner} />` : status === 'granted' ? 'Berechtigungen ändern' : 'Health Connect verbinden'}</button>
+  </div><//>`;
 }

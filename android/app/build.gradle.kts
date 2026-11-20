@@ -115,6 +115,8 @@ dependencies {
     implementation(libs.datastore.preferences)
 
     implementation(libs.work.runtime)
+    // Health Connect (Schritte, Schlaf, Ruhepuls) — alpha08 ist die neueste, die mit compileSdk 34 baut.
+    implementation("androidx.health.connect:connect-client:1.1.0-alpha08")
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 

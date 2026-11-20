@@ -55,6 +55,12 @@ function Wizard({ s, regions }) {
     try {
       const r = await api.post(`/fitness/session/${s.id}/finish`, { result: { seconds: fin.elapsed, ...fin.result }, feedback });
       local.set(`fin:${s.id}`, null);
+      if (r?.queued) {
+        // Offline: Ergebnis wartet auf dem Handy und geht raus, sobald der Mac erreichbar ist.
+        toast('Training gespeichert — die Auswertung kommt, sobald dein Server erreichbar ist');
+        nav('heute', { replace: true });
+        return;
+      }
       local.set(`coachfin:${s.id}`, { elapsed: fin.elapsed, result: fin.result, progress: r?.progress ?? [] });
       refresh('/fitness/progress');
       refresh('/fitness/state'); refresh('/fitness/today');

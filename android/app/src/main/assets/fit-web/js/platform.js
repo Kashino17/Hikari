@@ -57,10 +57,18 @@ const parse = (status, text) => {
   if (status < 200 || status >= 300) throw new ApiError(status, body);
   return body;
 };
+// Offline: Der App-Proxy liefert ohne Verbindung den letzten Stand (Kopfzeile X-Hikari-Offline).
+export const net = { offline: false };
+function markOffline(on) {
+  if (net.offline === on) return;
+  net.offline = on;
+  window.__hkEvent?.('offline', { on });
+}
 export const api = {
   async get(path) {
     let r;
     try { r = await fetch(`/api${path}`, { cache: 'no-store' }); } catch { throw new ApiError(0, { error: 'offline' }); }
+    markOffline(r.headers.get('X-Hikari-Offline') === '1');
     return parse(r.status, await r.text());
   },
   async post(path, body) {
@@ -402,3 +410,33 @@ export function openVideo(id, title = '') {
 }
 
 export function exitArea() { if (native?.exit) native.exit(); else history.back(); }
+
+// ── Offline vorladen, Erinnerungen, Gesundheitsdaten (Health Connect) ──
+/** Pfade im Hintergrund aufs Gerät laden (heutiger Plan + Übungsvideos) — nur in der App. */
+export function prefetch(paths) { try { native?.prefetch?.(JSON.stringify(paths.filter(Boolean))); } catch { /* */ } }
+export const pendingResults = () => { try { return native?.pendingCount?.() ?? 0; } catch { return 0; } };
+
+export const reminders = {
+  available: () => !!native?.setReminders,
+  get() { try { return JSON.parse(native?.getReminders?.() ?? 'null'); } catch { return null; } },
+  set(cfg) { try { native?.setReminders?.(JSON.stringify(cfg)); } catch { /* */ } },
+};
+
+export const health = {
+  available: () => !!native?.healthStatus,
+  /** unavailable | update | needs_permission | partial | granted */
+  async status() { if (!native?.healthStatus) return 'unavailable'; const m = await call((id) => native.healthStatus(id)); return m.status; },
+  async connect() { if (!native?.healthConnect) return 'unavailable'; const m = await call((id) => native.healthConnect(id)); return m.status; },
+  async read(days = 7) { if (!native?.healthRead) return []; const m = await call((id) => native.healthRead(id, days)); return m.days ?? []; },
+  /** Lesen und an den Server schicken (höchstens alle 30 min). → gesendete Tage */
+  async sync(force = false) {
+    const last = Number(local.get('health:sync', 0));
+    if (!force && Date.now() - last < 30 * 60_000) return null;
+    if ((await this.status()) !== 'granted' && (await this.status()) !== 'partial') return null;
+    const days = await this.read(7);
+    if (!days.length) return null;
+    await api.post('/fitness/health', { days });
+    local.set('health:sync', Date.now());
+    return days;
+  },
+};

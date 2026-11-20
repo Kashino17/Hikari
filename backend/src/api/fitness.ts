@@ -342,6 +342,28 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     return { ok: true, current: phaseFor(db, getPrograms(), localDay()) };
   });
   app.get("/fitness/week", async () => weekPreview(db, catalog));
+
+  // ── Gesundheitsdaten vom Handy (Health Connect): Schritte, Schlaf, Ruhepuls, aktive kcal je Tag ──
+  app.post<{ Body: { days?: { day: string; steps?: number | null; sleepMin?: number | null; restingHr?: number | null; activeKcal?: number | null }[] } }>(
+    "/fitness/health",
+    async (req) => {
+      const up = db.prepare(`INSERT INTO health_log(day, steps, sleep_min, resting_hr, active_kcal, updated_at) VALUES(?, ?, ?, ?, ?, ?)
+        ON CONFLICT(day) DO UPDATE SET steps = COALESCE(excluded.steps, steps), sleep_min = COALESCE(excluded.sleep_min, sleep_min),
+        resting_hr = COALESCE(excluded.resting_hr, resting_hr), active_kcal = COALESCE(excluded.active_kcal, active_kcal), updated_at = excluded.updated_at`);
+      const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null);
+      let n = 0;
+      for (const d of req.body?.days ?? []) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(d.day)) continue;
+        up.run(d.day, num(d.steps), num(d.sleepMin), num(d.restingHr), num(d.activeKcal), Date.now());
+        n++;
+      }
+      return { ok: true, saved: n };
+    },
+  );
+  app.get("/fitness/health", async () => {
+    const rows = db.prepare("SELECT day, steps, sleep_min AS sleepMin, resting_hr AS restingHr, active_kcal AS activeKcal FROM health_log WHERE day >= ? ORDER BY day").all(addDays(localDay(), -13));
+    return { days: rows };
+  });
   app.get<{ Querystring: { monday?: string; force?: string } }>("/fitness/week/review", async (req, reply) => {
     const monday = /^\d{4}-\d{2}-\d{2}$/.test(req.query.monday ?? "") ? (req.query.monday as string) : weekPreview(db, catalog).review.monday;
     const c = db.prepare("SELECT data FROM coach_notes WHERE kind = 'woche' AND day = ? ORDER BY at DESC LIMIT 1").get(monday) as { data: string } | undefined;
@@ -495,7 +517,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
 
   app.post<{
     Body: {
-      checkin?: { energy?: number; minutes?: number; sore?: string[]; wish?: string };
+      checkin?: { energy?: number; minutes?: number; sore?: string[]; wish?: string; sleep?: number };
       dayType?: DayType;
     };
   }>("/fitness/today/adapt", async (req) => {

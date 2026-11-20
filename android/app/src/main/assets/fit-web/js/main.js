@@ -1,7 +1,8 @@
 // Start, Rahmen, Reiter und Routen des Fitness-Bereichs.
 import { html, render } from '../vendor/preact-htm.js';
-import { isNative, exitArea } from './platform.js';
-import { AREA, TABS, back, nav, route, useRoute, useToast, useData } from './app.js';
+import { isNative, exitArea, nativeOn, net } from './platform.js';
+import { useEffect as useEffectM, useState as useStateM } from '../vendor/preact-htm.js';
+import { AREA, TABS, back, nav, route, useRoute, useToast, useData, toast } from './app.js';
 import { Icon, cls } from './ui.js';
 import { Today } from './screens/today.js';
 import { Training, History, Library } from './screens/training.js';
@@ -82,6 +83,17 @@ function Screen({ r }) {
 const FRAME = isNative || (typeof matchMedia !== 'undefined' && matchMedia('(pointer: coarse)').matches) ? 'full' : '';
 if (FRAME === 'full') document.documentElement.classList.add('full');
 
+/** Ohne Verbindung zum Mac: kleiner Hinweis oben; nachgesendete Ergebnisse als Meldung. */
+function OfflinePill() {
+  const [off, setOff] = useStateM(net.offline);
+  useEffectM(() => {
+    const a = nativeOn('offline', (p) => setOff(!!p.on));
+    const b = nativeOn('synced', (p) => toast(`${p.count} offline gespeicherte${p.count === 1 ? 's Ergebnis' : ' Ergebnisse'} gesendet`));
+    return () => { a(); b(); };
+  }, []);
+  return off ? html`<div class="offPill"><span />Offline · letzter Stand vom Handy</div>` : null;
+}
+
 function App() {
   const r = useRoute();
   const t = useToast();
@@ -92,6 +104,7 @@ function App() {
   return html`<div class=${cls('desk', FRAME)}>
     <div class="phone"><div class="app">
       <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+        <${OfflinePill} />
         <div style="position:relative;flex:1;min-height:0">${needsOnboarding ? html`<${Onboarding} />` : html`<${Screen} r=${r} key=${tab ? 'tabs' : r} />`}</div>
         ${tab && !needsOnboarding && html`<${TabBar} active=${r} />`}
       </div>

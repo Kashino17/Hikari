@@ -5,7 +5,15 @@
 import Database from "better-sqlite3";
 import { ensureDir } from "./ai.js";
 
-const SCHEMA = `CREATE TABLE IF NOT EXISTS test_log (
+const SCHEMA = `CREATE TABLE IF NOT EXISTS health_log (
+  day TEXT PRIMARY KEY,
+  steps INTEGER,
+  sleep_min INTEGER,             -- Schlaf der Nacht, die an diesem Tag endet
+  resting_hr REAL,
+  active_kcal REAL,
+  updated_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS test_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   day TEXT NOT NULL,
   results TEXT NOT NULL,         -- JSON {testId: Wert}

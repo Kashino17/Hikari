@@ -1,6 +1,7 @@
 // »Heute«: Woche, Trainingstag vom Coach, Tagesform, Ernährung und Skill auf einen Blick.
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
-import { api } from '../platform.js';
+import { api, health, prefetch } from '../platform.js';
+import { useEffect as useEffectT } from '../../vendor/preact-htm.js';
 import { WeekReviewCard } from './plan.js';
 import { nav, useData, setData, refresh, longDate, wdShort, today as todayStr, relDay, parseDay, INTENSITY, toast, useCatalog, fmtNum, SLOT_NAMES } from '../app.js';
 import { Icon, Loop, Ring, Sheet, Bar, cls, Spinner, ScoreBadge } from '../ui.js';
@@ -18,6 +19,16 @@ export function Today() {
   const [food] = useData('/fitness/food/day');
   const [skills] = useData('/fitness/skills');
   const [prog] = useData('/fitness/progress');
+  const [hl] = useData('/fitness/health');
+  // Gesundheitsdaten im Hintergrund abgleichen (höchstens alle 30 min) — der Coach nutzt Schlaf/Ruhepuls.
+  useEffectT(() => { health.sync().then((d) => d && refresh('/fitness/health')).catch(() => {}); }, []);
+  // Offline-Training: heutigen Plan und seine Übungsvideos aufs Handy holen.
+  useEffectT(() => {
+    if (!session?.id) return;
+    const media = Object.values(session.exercises ?? {}).flatMap((e) => [e?.media?.image, e?.media?.video, e?.media?.video2])
+      .filter((u) => typeof u === 'string').map((u) => u.replace(/^\/api/, '')).filter((u) => u.startsWith('/fitness/media/'));
+    prefetch([`/fitness/session/${session.id}`, '/fitness/catalog', ...media]);
+  }, [session?.id]);
   const catalog = useCatalog();
   const [adapt, setAdapt] = useState(false);
   const day = state?.day ?? todayStr();
@@ -50,6 +61,7 @@ export function Today() {
             : done ? html`<${DoneCard} s=${session} />`
             : html`<${Hero} s=${session} restDay=${!isTrainingDay} second=${state?.week?.find((w) => w.day === day)?.done} onAdapt=${() => setAdapt(true)} />`}
         </div>
+        <${HealthRow} days=${hl?.days} />
         <${WeekReviewCard} />
         ${prog && !prog.test.last && html`<button class="assessCard mt12" onClick=${() => nav('test')}>
           <${Icon} n="assignment_turned_in" /><div class="grow"><b>Einstufung: 5 Minuten</b><span>Vier kurze Tests — danach plant dein Coach genau auf deinem Level.</span></div><${Icon} n="chevron_right" /></button>`}
@@ -306,12 +318,13 @@ function AdaptSheet({ onClose }) {
   const [energy, setEnergy] = useState(3);
   const [minutes, setMinutes] = useState(state?.profile?.sessionMinutes ?? 35);
   const [sore, setSore] = useState([]);
+  const [sleep, setSleep] = useState(null);
   const [wish, setWish] = useState('');
   const [busy, setBusy] = useState(false);
   const go = async () => {
     setBusy(true);
     try {
-      const s = await api.post('/fitness/today/adapt', { checkin: { energy, minutes, sore }, ...(wish ? { dayType: wish } : {}) });
+      const s = await api.post('/fitness/today/adapt', { checkin: { energy, minutes, sore, ...(sleep ? { sleep } : {}) }, ...(wish ? { dayType: wish } : {}) });
       setData('/fitness/today', s);
       refresh('/fitness/state');
       toast(s.source === 'regeln' ? 'Plan angepasst (ohne KI — Coach gerade nicht erreichbar)' : 'Der Coach hat deinen Tag neu geplant');
@@ -325,6 +338,8 @@ function AdaptSheet({ onClose }) {
     <div class="c-train">
       <div class="fbq" style="margin-top:4px"><div class="q">Wie viel Energie hast du heute?</div>
         <div class="scale">${['Platt', 'Müde', 'Okay', 'Gut', 'Top'].map((l, i) => html`<button class=${cls(energy === i + 1 && 'on')} onClick=${() => setEnergy(i + 1)}><b>${i + 1}</b>${l}</button>`)}</div></div>
+      <div class="fbq"><div class="q">Wie hast du geschlafen?</div>
+        <div class="chips">${[[1, 'Schlecht'], [2, 'Okay'], [3, 'Gut']].map(([k, l]) => html`<button class=${cls('chip', sleep === k && 'on')} onClick=${() => setSleep(sleep === k ? null : k)}>${l}</button>`)}</div></div>
       <div class="fbq"><div class="q">Wie viel Zeit hast du?</div>
         <div class="chips wrap">${[15, 20, 30, 45, 60].map((m) => html`<button class=${cls('chip', minutes === m && 'on')} onClick=${() => setMinutes(m)}>${m} min</button>`)}</div></div>
       <div class="fbq"><div class="q">Muskelkater?</div>
@@ -370,4 +385,20 @@ function ExtraSheet({ onClose }) {
       <button class="btn mt24" disabled=${busy} onClick=${go}>${busy ? html`<${Spinner} />Coach plant …` : 'Training planen lassen'}</button>
     </div>
   <//>`;
+}
+
+/** Schlaf, Schritte, Ruhepuls von heute (Health Connect) — nur wenn verbunden. */
+function HealthRow({ days }) {
+  const d = days?.length ? days[days.length - 1] : null;
+  if (!d || d.day !== todayStr() || (d.steps == null && d.sleepMin == null && d.restingHr == null)) return null;
+  const prev = days.slice(0, -1).map((x) => x.restingHr).filter((x) => x != null);
+  const avg = prev.length ? prev.reduce((a, b) => a + b, 0) / prev.length : null;
+  const short = d.sleepMin != null && d.sleepMin < 360;
+  const high = d.restingHr != null && avg != null && d.restingHr >= avg + 7;
+  return html`<div class="healthRow mt12">
+    ${d.sleepMin != null && html`<div class=${cls(short && 'warn')}><${Icon} n="bedtime" /><b class="num">${Math.floor(d.sleepMin / 60)}:${String(d.sleepMin % 60).padStart(2, '0')}</b><span>Schlaf</span></div>`}
+    ${d.steps != null && html`<div><${Icon} n="directions_walk" /><b class="num">${d.steps.toLocaleString('de-DE')}</b><span>Schritte</span></div>`}
+    ${d.restingHr != null && html`<div class=${cls(high && 'warn')}><${Icon} n="favorite" /><b class="num">${Math.round(d.restingHr)}</b><span>Ruhepuls</span></div>`}
+    ${(short || high) && html`<p class="hrNote">${short ? 'Kurze Nacht' : 'Ruhepuls erhöht'} — dein Coach plant heute etwas leichter.</p>`}
+  </div>`;
 }

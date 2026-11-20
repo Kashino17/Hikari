@@ -48,6 +48,8 @@ import java.io.File
 import java.util.Locale
 import javax.inject.Inject
 import kotlin.math.max
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -99,6 +101,10 @@ fun FitWebScreen(
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri -> bridge.onPhoto(uri) }
     bridge.launchCamera = { runCatching { camera.launch(photoUri) }.onFailure { bridge.onPhoto(null) } }
     bridge.launchGallery = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+    val health = rememberLauncherForActivityResult(androidx.health.connect.client.PermissionController.createRequestPermissionResultContract()) { bridge.onHealthResult() }
+    bridge.launchHealth = { runCatching { health.launch(FitHealth.PERMISSIONS) }.onFailure { bridge.onHealthResult() } }
+    // Offline entstandene Ergebnisse nachsenden, sobald der Bereich geöffnet wird.
+    LaunchedEffect(Unit) { bridge.flushQueue() }
 
     // Randmaße in dp (= CSS-Pixel) — Statusleiste/Kamera-Aussparung oben, Gestenleiste unten.
     val density = LocalDensity.current
@@ -187,6 +193,25 @@ private class FitWebClient(private val app: Context, private val okHttp: OkHttpC
 
     private fun proxy(pathAndQuery: String, request: WebResourceRequest): WebResourceResponse {
         if (request.method != "GET") return status(405, "Method Not Allowed")
+        val range = request.requestHeaders["Range"]
+        // Übungsvideos/-bilder: einmal geladen, dann immer vom Gerät (spart Netz, geht offline).
+        if (FitCache.isMedia(pathAndQuery)) FitCache.get(app, pathAndQuery)?.let { return FitCache.serve(it, range, offline = false) }
+        if (FitCache.cacheable(pathAndQuery)) {
+            return try {
+                okHttp.newCall(Request.Builder().url("http://hikari.invalid$pathAndQuery").build()).execute().use { res ->
+                    val type = res.header("Content-Type") ?: "application/octet-stream"
+                    val bytes = res.body?.bytes() ?: ByteArray(0)
+                    if (res.isSuccessful) FitCache.put(app, pathAndQuery, type, bytes)
+                    if (res.isSuccessful) FitCache.serve(FitCache.Entry(bytes, type), range, offline = false)
+                    else WebResourceResponse(type.substringBefore(';'), "utf-8", res.code, res.message.ifBlank { "Error" }, mapOf("Cache-Control" to "no-store"), ByteArrayInputStream(bytes))
+                }
+            } catch (e: Exception) {
+                // Mac nicht erreichbar → letzter Stand vom Gerät
+                FitCache.get(app, pathAndQuery)?.let { FitCache.serve(it, range, offline = true) }
+                    ?: WebResourceResponse("application/json", "utf-8", 502, "Bad Gateway", mapOf("Cache-Control" to "no-store"),
+                        ByteArrayInputStream("""{"error":"backend_unreachable"}""".toByteArray()))
+            }
+        }
         return try {
             // Der Host ist ein Platzhalter — der OkHttp-Client der App schreibt ihn auf die eingestellte Server-Adresse um.
             val builder = Request.Builder().url("http://hikari.invalid$pathAndQuery")
@@ -247,10 +272,64 @@ class FitWebBridge(
         setDuck(false)
         ambient?.release()
         ambient = null
+        runCatching { scope.cancel() }
         webView = null
     }
 
     @JavascriptInterface fun exit() { main.post { if (!closed) onClose() } }
+
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
+
+    // ── Offline: vorladen, Warteschlange ──
+    @JavascriptInterface fun prefetch(pathsJson: String) {
+        val list = runCatching { org.json.JSONArray(pathsJson).let { a -> (0 until a.length()).map { a.getString(it) } } }.getOrDefault(emptyList())
+        scope.launch { FitCache.prefetch(app, okHttp, list) }
+    }
+    @JavascriptInterface fun pendingCount(): Int = FitCache.pending(app)
+    fun flushQueue() {
+        scope.launch {
+            val n = FitCache.flush(app, okHttp)
+            if (n > 0) js("window.__hkEvent && window.__hkEvent('synced', {count:$n})")
+        }
+    }
+
+    // ── Erinnerungen ──
+    @JavascriptInterface fun getReminders(): String = FitReminders.toJson(FitReminders.read(app))
+    @JavascriptInterface fun setReminders(json: String) { runCatching { FitReminders.apply(app, json) } }
+
+    // ── Health Connect ──
+    var launchHealth: () -> Unit = {}
+    private var healthId: String? = null
+    @JavascriptInterface fun healthStatus(id: String) {
+        scope.launch { reply(id, JSONObject().put("status", runCatching { FitHealth.status(app) }.getOrDefault("unavailable"))) }
+    }
+    @JavascriptInterface fun healthConnect(id: String) {
+        scope.launch {
+            when (runCatching { FitHealth.status(app) }.getOrDefault("unavailable")) {
+                "unavailable" -> reply(id, JSONObject().put("status", "unavailable"))
+                "update" -> {
+                    main.post {
+                        runCatching {
+                            activity?.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=com.google.android.apps.healthdata")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                        }
+                    }
+                    reply(id, JSONObject().put("status", "update"))
+                }
+                else -> { healthId = id; main.post { launchHealth() } }
+            }
+        }
+    }
+    fun onHealthResult() {
+        val id = healthId ?: return
+        healthId = null
+        scope.launch { reply(id, JSONObject().put("status", runCatching { FitHealth.status(app) }.getOrDefault("unavailable"))) }
+    }
+    @JavascriptInterface fun healthRead(id: String, days: Int) {
+        scope.launch {
+            val data = runCatching { FitHealth.read(app, days.coerceIn(1, 30)) }.getOrDefault("[]")
+            reply(id, JSONObject().put("days", org.json.JSONArray(data)))
+        }
+    }
 
     // ── Randmaße: die Seite läuft bis unter Statusleiste und Gestenleiste und polstert selbst ──
     @Volatile var insetTop = 0f
@@ -273,10 +352,17 @@ class FitWebBridge(
         val req = Request.Builder().url("http://hikari.invalid$path").post(json.toRequestBody("application/json".toMediaTypeOrNull())).build()
         // Essensfotos und KI-Pläne brauchen Zeit — eigener Client mit langer Wartezeit.
         slow.newCall(req).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: java.io.IOException) { reply(id, JSONObject().put("status", 0).put("body", "")) }
+            override fun onFailure(call: Call, e: java.io.IOException) {
+                // Offline: Ergebnisse (Training, Skill, Achtsamkeit …) warten und gehen später raus.
+                if (FitCache.queueable(path)) {
+                    FitCache.enqueue(app, path, json)
+                    reply(id, JSONObject().put("status", 202).put("body", JSONObject().put("queued", true).toString()))
+                } else reply(id, JSONObject().put("status", 0).put("body", ""))
+            }
             override fun onResponse(call: Call, response: Response) {
                 val body = response.use { runCatching { it.body?.string().orEmpty() }.getOrDefault("") }
                 reply(id, JSONObject().put("status", response.code).put("body", body))
+                if (response.code < 500) flushQueue()
             }
         })
     }
