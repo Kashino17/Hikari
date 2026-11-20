@@ -191,7 +191,7 @@ function viewHome() {
     ${nx ? `<button class="nx" data-go="day:${dayIso(Math.max(0, effDue(nx)))}"><span class="bar" style="background:${AREAS[nx.area].c}"></span><div><div class="t">${esc(nx.title)}</div><div class="m">Als Nächstes fällig · ${dueWord(effDue(nx))}</div></div>${I("chev")}</button>` : ""}</div>`;
 
   h += `<div class="hubs">
-    <button class="hub k" data-go="kinds"><div class="mini">${Object.keys(KINDS).map((k) => `<span><svg viewBox="0 0 160 104">${ART[k]}</svg></span>`).join("")}</div><div class="lb"><div><b>Was gerade geht</b><span>${open.length} Dinge · 4 Orte</span></div>${I("chev")}</div></button>
+    <button class="hub k" data-go="kinds"><div class="mini">${Object.keys(KINDS).map((k) => `<span><svg viewBox="0 0 160 104">${ART[k]}</svg></span>`).join("")}</div><div class="lb"><div><b>Was gerade geht</b><span>${open.length} ${open.length === 1 ? "Ding" : "Dinge"} · 4 Orte</span></div>${I("chev")}</div></button>
     <button class="hub a" data-go="areas">${miniTreemap()}<div class="lb"><div><b>Alles nach Bereich</b><span>${all.length} offen · 6 Bereiche</span></div>${I("chev")}</div></button></div>`;
   return h;
 }
@@ -266,7 +266,7 @@ function pageHtml(key) {
   if (kind === "kind") {
     const l = openTasks().filter((t) => t.kind === arg); const tot = l.reduce((s, t) => s + t.minutes, 0);
     return pgTop() + `<div class="pg-hero" style="background:var(--paper)"><svg class="art" viewBox="0 0 160 104">${ART[arg]}</svg><div class="k">Was gerade geht</div><h2>${KINDS[arg].name}</h2>
-      <div class="goal">${l.length} Dinge · zusammen ${fmtMin(tot)}</div>${mbar(l)}</div><div class="pg-body">${taskList(key, l)}</div>`;
+      <div class="goal">${l.length} ${l.length === 1 ? "Ding" : "Dinge"} · zusammen ${fmtMin(tot)}</div>${mbar(l)}</div><div class="pg-body">${taskList(key, l)}</div>`;
   }
   if (kind === "area") {
     const l = openTasks().filter((t) => t.area === arg);

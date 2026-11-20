@@ -75,13 +75,13 @@ svg.big{fill:none;stroke-linecap:round;stroke-linejoin:round}
 /* Zwei Knöpfe zu den Unterseiten */
 .hubs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hub{border-radius:22px;min-height:176px;padding:14px;display:flex;flex-direction:column;position:relative;overflow:hidden}
-.hub .mini{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.hub .mini{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
 .hub .mini span{height:40px;border-radius:10px;display:grid;place-items:center;overflow:hidden;background:#0B0B0D0d}
 .hub .mini svg{width:40px;height:28px;fill:none;stroke:var(--ink);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
-.hub .mtm{position:relative;height:86px}
+.hub .mtm{position:relative;height:86px;width:100%}
 .hub .mtm i{position:absolute;padding:2px}
 .hub .mtm i b{display:block;width:100%;height:100%;border-radius:7px}
-.hub .lb{margin-top:auto;padding-top:12px;display:flex;align-items:flex-end;gap:6px}
+.hub .lb{margin-top:auto;padding-top:12px;display:flex;align-items:flex-end;gap:6px;width:100%}
 .hub .lb div b{display:block;font-size:16px;font-weight:900;line-height:1.1;letter-spacing:-.2px}
 .hub .lb div span{font-size:12px;opacity:.7}
 .hub .lb>.ic{margin-left:auto;width:20px;height:20px;flex:none;opacity:.6}
@@ -96,7 +96,7 @@ svg.big{fill:none;stroke-linecap:round;stroke-linejoin:round}
 .cnt{font-size:52px;line-height:.82;letter-spacing:-1.5px}
 .nm{font-size:15.5px;font-weight:900;line-height:1.05;letter-spacing:-.2px}
 .kt .sm{font-size:11.5px;font-weight:500;opacity:.65;margin-top:2px}
-.mbar{display:flex;gap:2px;margin-top:11px;height:8px}
+.mbar{display:flex;gap:2px;margin-top:11px;height:8px;width:100%}
 .mbar i{border-radius:3px;min-width:5px;box-shadow:inset 0 0 0 1.5px #0B0B0D33}
 
 /* Alles nach Bereich: Fläche nach Gewicht */
