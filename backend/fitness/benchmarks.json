@@ -1,0 +1,14 @@
+[
+  { "id": "funke", "name": "Funke", "kurz": "Der Einstieg: kurz, rund, alles dabei", "level": 1, "runden": 3,
+    "uebungen": [{ "ex": "squat", "menge": 12 }, { "ex": "knee_pushup", "menge": 8 }, { "ex": "crunch", "menge": 12 }, { "ex": "jumping_jack", "menge": 20 }] },
+  { "id": "welle", "name": "Welle", "kurz": "Vier Runden Ganzkörper im gleichmäßigen Fluss", "level": 2, "runden": 4,
+    "uebungen": [{ "ex": "squat", "menge": 15 }, { "ex": "pushup", "menge": 10 }, { "ex": "reverse_lunge", "menge": 8 }, { "ex": "situp", "menge": 12 }] },
+  { "id": "kern", "name": "Kern", "kurz": "Rumpf und Hüfte — ohne einen Sprung", "level": 2, "runden": 4,
+    "uebungen": [{ "ex": "dead_bug", "menge": 12 }, { "ex": "bicycle_crunch", "menge": 20 }, { "ex": "glute_bridge", "menge": 15 }, { "ex": "leg_raise", "menge": 10 }] },
+  { "id": "sturm", "name": "Sturm", "kurz": "Fünf schnelle Runden für Puls und Beine", "level": 3, "runden": 5,
+    "uebungen": [{ "ex": "burpee", "menge": 8 }, { "ex": "jump_squat", "menge": 12 }, { "ex": "plank_shoulder_tap", "menge": 16 }, { "ex": "jumping_jack", "menge": 30 }] },
+  { "id": "komet", "name": "Komet", "kurz": "Lang, hart, ehrlich — für fortgeschrittene Tage", "level": 4, "runden": 3,
+    "uebungen": [{ "ex": "burpee", "menge": 12 }, { "ex": "walking_lunge", "menge": 12 }, { "ex": "v_up", "menge": 12 }, { "ex": "mountain_climber", "menge": 30 }] },
+  { "id": "gipfel", "name": "Gipfel", "kurz": "Ziehen, Drücken, Beugen — fünf Runden Kraft", "level": 4, "runden": 5,
+    "uebungen": [{ "ex": "pullup", "menge": 5 }, { "ex": "pushup", "menge": 10 }, { "ex": "squat", "menge": 15 }] }
+]

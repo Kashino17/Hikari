@@ -95,6 +95,7 @@ object FitCache {
     private val QUEUEABLE = listOf(
         Regex("^/fitness/session/[^/]+/(start|finish)$"), Regex("^/fitness/skills/[^/]+/log$"),
         Regex("^/fitness/mind/log$"), Regex("^/fitness/body$"), Regex("^/fitness/health$"), Regex("^/fitness/test$"),
+        Regex("^/fitness/benchmark/[^/]+$"), Regex("^/fitness/body/measure$"),
     )
     fun queueable(path: String) = QUEUEABLE.any { it.matches(path) }
 

@@ -43,7 +43,7 @@ export function Me() {
         </div>
 
         <div class="bento mt12">
-          <button class="bt wide" onClick=${() => setW(true)}>
+          <button class="bt wide" onClick=${() => nav('koerper')}>
             <span class="bt-l">Gewicht</span>
             <div class="row" style="align-items:flex-end;gap:14px"><b class="bt-big num">${fmtNum(p.weightKg, 1)}<small> kg</small></b>
               ${pts.length > 1 && html`<div class="grow"><${Spark} points=${pts} goal=${p.targetWeightKg} /></div>`}</div>

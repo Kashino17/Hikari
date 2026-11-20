@@ -55,6 +55,8 @@ import { checkProgression, progressionView } from "../fitness/progression.js";
 import { saveTest, testState } from "../fitness/assessment.js";
 import { loadPrograms, phaseFor, setPrograms, startProgram, stopProgram, getPrograms } from "../fitness/program.js";
 import { weekPreview, weekReview } from "../fitness/week.js";
+import { best, history, loadBenchmarks, resolveItems as benchItems, saveRun, targets, tierFor } from "../fitness/benchmark.js";
+import { bodyProgress } from "../fitness/body.js";
 import {
   NUTRIENTS,
   type Nutrients,
@@ -342,6 +344,72 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     return { ok: true, current: phaseFor(db, getPrograms(), localDay()) };
   });
   app.get("/fitness/week", async () => weekPreview(db, catalog));
+
+  // ── Workouts auf Zeit (Bestzeiten) ──
+  const benches = loadBenchmarks(deps.dataDir);
+  const benchView = (b: (typeof benches)[number]) => {
+    const ctx = buildContext(db, catalog, localDay());
+    const items = benchItems(b, catalog, (e) => usable(ctx, e));
+    const ok = items.every(Boolean);
+    const list = items.filter(Boolean) as { ex: string; menge: number; statt: string | null }[];
+    const t = targets(list, b.runden, catalog);
+    const pb = best(db, b.id);
+    return {
+      ...b, machbar: ok, targets: t, best: pb, tier: pb != null ? tierFor(pb, t) : null,
+      items: list.map((it) => ({ ...it, exercise: exerciseView(it.ex) })),
+    };
+  };
+  app.get("/fitness/benchmarks", async () => ({ benchmarks: benches.map(benchView) }));
+  app.get<{ Params: { id: string } }>("/fitness/benchmark/:id", async (req, reply) => {
+    const b = benches.find((x) => x.id === req.params.id);
+    if (!b) return reply.code(404).send({ error: "not_found" });
+    return { ...benchView(b), history: history(db, b.id) };
+  });
+  app.post<{ Params: { id: string }; Body: { seconds?: number } }>("/fitness/benchmark/:id", async (req, reply) => {
+    const b = benches.find((x) => x.id === req.params.id);
+    const sec = Math.round(Number(req.body?.seconds) || 0);
+    if (!b || sec < 20) return reply.code(400).send({ error: "input" });
+    const v = benchView(b);
+    const subs = Object.fromEntries(v.items.filter((i) => i.statt).map((i) => [i.statt as string, i.ex]));
+    const r = saveRun(db, b.id, sec, subs);
+    return { ...r, seconds: sec, best: Math.min(sec, r.before ?? sec), tier: tierFor(sec, v.targets), targets: v.targets };
+  });
+
+  // ── Körper: Gewichtstrend, Umfänge, Fortschrittsfotos ──
+  const BODY_DIR = join(deps.dir, "body");
+  app.get("/fitness/body/progress", async () => bodyProgress(db));
+  app.post<{ Body: { day?: string; chest?: number; arm?: number; waist?: number; hips?: number; thigh?: number } }>("/fitness/body/measure", async (req) => {
+    const b = req.body ?? {};
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(b.day ?? "") ? (b.day as string) : localDay();
+    const n = (v: unknown) => (typeof v === "number" && v > 10 && v < 250 ? Math.round(v * 10) / 10 : null);
+    db.prepare(`INSERT INTO body_measure(day, chest, arm, waist, hips, thigh, at) VALUES(?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(day) DO UPDATE SET chest = COALESCE(excluded.chest, chest), arm = COALESCE(excluded.arm, arm), waist = COALESCE(excluded.waist, waist),
+      hips = COALESCE(excluded.hips, hips), thigh = COALESCE(excluded.thigh, thigh), at = excluded.at`).run(day, n(b.chest), n(b.arm), n(b.waist), n(b.hips), n(b.thigh), Date.now());
+    if (n(b.waist)) db.prepare("INSERT INTO body_log(day, waist) VALUES(?, ?) ON CONFLICT(day) DO UPDATE SET waist = excluded.waist").run(day, n(b.waist));
+    return { ok: true };
+  });
+  app.post<{ Body: { base64?: string; mime?: string; pose?: string } }>("/fitness/body/photo", async (req, reply) => {
+    const b64 = String(req.body?.base64 ?? "");
+    if (b64.length < 1000) return reply.code(400).send({ error: "photo" });
+    const pose = ["vorn", "seite", "hinten"].includes(req.body?.pose ?? "") ? (req.body?.pose as string) : "vorn";
+    mkdirSync(BODY_DIR, { recursive: true });
+    const id = randomUUID().slice(0, 12);
+    const file = `${id}.jpg`;
+    writeFileSync(join(BODY_DIR, file), Buffer.from(b64, "base64"));
+    db.prepare("INSERT INTO body_photo(id, day, pose, file, at) VALUES(?, ?, ?, ?, ?)").run(id, localDay(), pose, file, Date.now());
+    return { ok: true, id, url: `/fitness/body/photo/${file}` };
+  });
+  app.get<{ Params: { file: string } }>("/fitness/body/photo/:file", async (req, reply) => {
+    if (!/^[a-f0-9-]+\.jpg$/.test(req.params.file)) return reply.code(400).send();
+    const f = join(BODY_DIR, req.params.file);
+    if (!existsSync(f)) return reply.code(404).send();
+    return sendFile(reply, f, "image/jpeg");
+  });
+  app.post<{ Params: { id: string } }>("/fitness/body/photo/:id/delete", async (req) => {
+    const r = db.prepare("SELECT file FROM body_photo WHERE id = ?").get(req.params.id) as { file: string } | undefined;
+    if (r) { try { (await import("node:fs")).unlinkSync(join(BODY_DIR, r.file)); } catch { /* schon weg */ } db.prepare("DELETE FROM body_photo WHERE id = ?").run(req.params.id); }
+    return { ok: true };
+  });
 
   // ── Gesundheitsdaten vom Handy (Health Connect): Schritte, Schlaf, Ruhepuls, aktive kcal je Tag ──
   app.post<{ Body: { days?: { day: string; steps?: number | null; sleepMin?: number | null; restingHr?: number | null; activeKcal?: number | null }[] } }>(

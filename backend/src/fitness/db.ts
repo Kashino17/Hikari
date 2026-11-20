@@ -5,7 +5,28 @@
 import Database from "better-sqlite3";
 import { ensureDir } from "./ai.js";
 
-const SCHEMA = `CREATE TABLE IF NOT EXISTS health_log (
+const SCHEMA = `CREATE TABLE IF NOT EXISTS benchmark_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  bench TEXT NOT NULL,
+  day TEXT NOT NULL,
+  seconds INTEGER NOT NULL,
+  subs TEXT,                     -- JSON: ersetzte Übungen {original: ersatz}
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS benchmark_log_bench ON benchmark_log(bench);
+CREATE TABLE IF NOT EXISTS body_measure (
+  day TEXT PRIMARY KEY,
+  chest REAL, arm REAL, waist REAL, hips REAL, thigh REAL,
+  at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS body_photo (
+  id TEXT PRIMARY KEY,
+  day TEXT NOT NULL,
+  pose TEXT NOT NULL,            -- vorn | seite | hinten
+  file TEXT NOT NULL,
+  at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS health_log (
   day TEXT PRIMARY KEY,
   steps INTEGER,
   sleep_min INTEGER,             -- Schlaf der Nacht, die an diesem Tag endet

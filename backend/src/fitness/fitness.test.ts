@@ -420,3 +420,32 @@ describe("Programme, Woche, Balance", () => {
     expect(w.days.filter((d) => d.predicted).length).toBe(3);
   });
 });
+
+describe("Bestzeiten und Körper", () => {
+  it("nicht machbare Übungen werden ersetzt, Zielzeiten und Bestzeit stimmen", async () => {
+    const { loadBenchmarks, resolveItems, targets, tierFor, saveRun, best } = await import("./benchmark.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"], limitations: ["handgelenk"], noJumps: true });
+    const ctx = buildContext(db, catalog, "2026-11-20");
+    const b = loadBenchmarks(DATA).find((x) => x.id === "funke")!;
+    const items = resolveItems(b, catalog, (e) => usable(ctx, e));
+    expect(items.every(Boolean)).toBe(true);
+    const kp = items.find((i) => i?.statt === "Knie-Liegestütz" || i?.statt?.includes("Liegest"));
+    expect(kp).toBeTruthy(); // Handgelenk → Ersatz
+    expect(items.some((i) => i?.ex === "jumping_jack")).toBe(false); // keine Sprünge
+    const t = targets(items as { ex: string; menge: number }[], b.runden, catalog);
+    expect(t.gold).toBeLessThan(t.silber);
+    expect(tierFor(t.gold - 1, t)).toBe("gold");
+    expect(saveRun(db, "funke", 300, {}).pb).toBe(true);
+    expect(saveRun(db, "funke", 320, {}).pb).toBe(false);
+    expect(best(db, "funke")).toBe(300);
+  });
+
+  it("Gewichtstrend und Prognose zum Ziel", async () => {
+    const { weightTrend } = await import("./body.js");
+    const { localDay, addDays } = await import("./db.js");
+    const t = localDay();
+    const rows = [0, 7, 14, 21].map((i) => ({ day: addDays(t, -21 + i), weight: 63 + i / 7 * 0.3 }));
+    expect(weightTrend(rows)).toBeCloseTo(0.3, 1);
+  });
+});

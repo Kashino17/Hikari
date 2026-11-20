@@ -13,6 +13,8 @@ import { Skills, SkillDetail, SkillPractice } from './screens/skills.js';
 import { NutrientDetail } from './screens/stats.js';
 import { FitnessTest } from './screens/progress.js';
 import { Programs, WeekReview } from './screens/plan.js';
+import { BenchDetail } from './screens/bench.js';
+import { BodyPage } from './screens/body.js';
 import { Food, PhotoFlow, AddMeal, EntryDetail, DayReport, Shopping, BarcodeFlow } from './screens/food.js';
 import { RecipeDetail, RecipeList } from './screens/recipes.js';
 import { Me, ProfileEdit, Onboarding } from './screens/me.js';
@@ -48,6 +50,8 @@ const ROUTES = [
   [/^ernaehrung\/naehrstoff\/(\w+)$/, (m) => html`<${NutrientDetail} k=${m[1]} />`],
   [/^test$/, () => html`<${FitnessTest} />`],
   [/^programme$/, () => html`<${Programs} />`],
+  [/^bestzeit\/(\w+)$/, (m) => html`<${BenchDetail} id=${m[1]} />`],
+  [/^koerper$/, () => html`<${BodyPage} />`],
   [/^woche\/(\d{4}-\d{2}-\d{2})$/, (m) => html`<${WeekReview} monday=${m[1]} />`],
   [/^einkauf$/, () => html`<${Shopping} />`],
   [/^rezepte(?:\/(\w+))?$/, (m) => html`<${RecipeList} filter=${m[1]} />`],

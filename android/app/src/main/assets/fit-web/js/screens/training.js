@@ -7,6 +7,7 @@ import { PATTERN } from './exercise.js';
 import { TrainingStats } from './stats.js';
 import { LevelCard, Families, ProgressEvents } from './progress.js';
 import { WeekPlan, BalanceCard } from './plan.js';
+import { BenchRail } from './bench.js';
 
 const FREE = [
   ['ganzkoerper', 'Ganzkörper', 'burpee'],
@@ -67,6 +68,7 @@ function StartTraining({ state }) {
       <div class="lt-tx"><b>Übungsbibliothek</b><span>${catalog ? `${catalog.exercises.length} Übungen mit Video und Technik` : ' '}</span></div>
       <${Icon} n="chevron_right" />
     </button>
+    <${BenchRail} />
   </div>`;
 }
 
@@ -77,6 +79,7 @@ function Progress() {
   return html`<div>
     ${pg ? html`<div class="mt16"><${LevelCard} d=${pg} /></div><${Families} d=${pg} cat=${cat} /><${ProgressEvents} d=${pg} />` : html`<div class="skel mt16" style="height:150px" />`}
     <${BalanceCard} />
+    <button class="bodyLink mt12" onClick=${() => nav('koerper')}><${Icon} n="accessibility_new" /><div class="grow"><b>Körper</b><span>Gewichtstrend, Maße und Vorher-Nachher-Fotos</span></div><${Icon} n="chevron_right" /></button>
     <div class="sec"><h2 class="h2">Verlauf</h2></div>
     <div><${TrainingStats} /></div>
     <div class="sec"><h2 class="h2">Zuletzt</h2>${hist?.sessions?.length > 3 && html`<button class="more" onClick=${() => nav('verlauf')}>Alle<${Icon} n="chevron_right" style="font-size:18px" /></button>`}</div>
