@@ -1,6 +1,7 @@
 // »Heute«: Woche, Trainingstag vom Coach, Tagesform, Ernährung und Skill auf einen Blick.
 import { html, useEffect, useState } from '../../vendor/preact-htm.js';
 import { api } from '../platform.js';
+import { WeekReviewCard } from './plan.js';
 import { nav, useData, setData, refresh, longDate, wdShort, today as todayStr, relDay, parseDay, INTENSITY, toast, useCatalog, fmtNum, SLOT_NAMES } from '../app.js';
 import { Icon, Loop, Ring, Sheet, Bar, cls, Spinner, ScoreBadge } from '../ui.js';
 import { openFoodDay } from './food.js';
@@ -49,6 +50,7 @@ export function Today() {
             : done ? html`<${DoneCard} s=${session} />`
             : html`<${Hero} s=${session} restDay=${!isTrainingDay} second=${state?.week?.find((w) => w.day === day)?.done} onAdapt=${() => setAdapt(true)} />`}
         </div>
+        <${WeekReviewCard} />
         ${prog && !prog.test.last && html`<button class="assessCard mt12" onClick=${() => nav('test')}>
           <${Icon} n="assignment_turned_in" /><div class="grow"><b>Einstufung: 5 Minuten</b><span>Vier kurze Tests — danach plant dein Coach genau auf deinem Level.</span></div><${Icon} n="chevron_right" /></button>`}
         <div class="sec"><h2 class="h2">Dein Tag</h2></div>

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "grundlagen",
+    "name": "Grundlagen",
+    "kurz": "Saubere Technik, Ganzkörper, ein solides Fundament",
+    "ziel": "In vier Wochen die Grundübungen sicher beherrschen und regelmäßig trainieren",
+    "wochen": 4,
+    "bild": "squat",
+    "fuer": "Einstieg oder Neustart",
+    "phasen": [
+      { "wochen": [1, 2], "name": "Ankommen", "volumen": 0.85, "intensitaet": "mittel", "fokus": { "ganzkoerper": 0.8 }, "notiz": "Technik vor Tempo — jede Wiederholung sauber" },
+      { "wochen": [3], "name": "Aufbauen", "volumen": 1.0, "intensitaet": "mittel", "fokus": { "ganzkoerper": 0.5, "druck": 0.2, "beine": 0.2 }, "notiz": "Etwas mehr Umfang, gleiche saubere Ausführung" },
+      { "wochen": [4], "name": "Festigen & testen", "volumen": 0.9, "intensitaet": "mittel", "fokus": { "ganzkoerper": 0.5 }, "notiz": "Am Ende der Woche der Fitness-Test" }
+    ]
+  },
+  {
+    "id": "muskelaufbau",
+    "name": "Muskelaufbau",
+    "kurz": "Mehr Volumen, schwerere Varianten, Entlastung zur rechten Zeit",
+    "ziel": "Acht Wochen sichtbar Muskeln aufbauen — mit Körpergewicht",
+    "wochen": 8,
+    "bild": "diamond_pushup",
+    "fuer": "Muskeln und Kraft",
+    "phasen": [
+      { "wochen": [1], "name": "Aufbau", "volumen": 1.0, "intensitaet": "mittel", "fokus": { "druck": 0.4, "zug": 0.4, "beine": 0.4 }, "notiz": "Grundvolumen setzen, Varianten finden" },
+      { "wochen": [2, 3], "name": "Steigerung", "volumen": 1.12, "intensitaet": "hart", "fokus": { "druck": 0.45, "zug": 0.45, "beine": 0.45 }, "notiz": "Jede Woche ein bisschen mehr — nah ans Muskelversagen" },
+      { "wochen": [4], "name": "Entlastung", "volumen": 0.6, "intensitaet": "leicht", "fokus": { "ganzkoerper": 0.4, "mobilitaet": 0.3 }, "notiz": "Weniger Umfang, damit der Körper aufholt — hier wächst der Muskel" },
+      { "wochen": [5, 6, 7], "name": "Höhepunkt", "volumen": 1.22, "intensitaet": "hart", "fokus": { "druck": 0.5, "zug": 0.5, "beine": 0.45 }, "notiz": "Höchster Umfang, schwerste Varianten" },
+      { "wochen": [8], "name": "Entlastung & Test", "volumen": 0.6, "intensitaet": "leicht", "fokus": { "ganzkoerper": 0.4 }, "notiz": "Erholen, dann der Fitness-Test" }
+    ]
+  },
+  {
+    "id": "klimmzug",
+    "name": "Erster Klimmzug",
+    "kurz": "Schulterblätter, Negative, Hang — Schritt für Schritt nach oben",
+    "ziel": "In sechs Wochen den ersten sauberen Klimmzug — oder deutlich mehr als bisher",
+    "wochen": 6,
+    "bild": "pullup",
+    "braucht": ["klimmzugstange", "ringe"],
+    "fuer": "Zugkraft",
+    "phasen": [
+      { "wochen": [1, 2], "name": "Fundament", "volumen": 1.0, "intensitaet": "mittel", "fokus": { "zug": 0.9, "core": 0.3 }, "notiz": "Hängen, Schulterblätter, Rudern" },
+      { "wochen": [3], "name": "Negative", "volumen": 1.1, "intensitaet": "hart", "fokus": { "zug": 1.0 }, "notiz": "Langsames Ablassen baut die Kraft für den Weg nach oben" },
+      { "wochen": [4], "name": "Entlastung", "volumen": 0.65, "intensitaet": "leicht", "fokus": { "zug": 0.4, "mobilitaet": 0.3 }, "notiz": "Sehnen und Ellbogen erholen lassen" },
+      { "wochen": [5, 6], "name": "Durchbruch", "volumen": 1.15, "intensitaet": "hart", "fokus": { "zug": 1.0, "core": 0.3 }, "notiz": "Volle Versuche — am Ende der Test" }
+    ]
+  },
+  {
+    "id": "fettverbrennung",
+    "name": "Fett verbrennen",
+    "kurz": "Intervalle, Ganzkörper-Zirkel, viel Bewegung",
+    "ziel": "Sechs Wochen Ausdauer und Stoffwechsel hochfahren, Muskeln dabei halten",
+    "wochen": 6,
+    "bild": "burpee",
+    "fuer": "Abnehmen und Kondition",
+    "phasen": [
+      { "wochen": [1, 2], "name": "Tempo finden", "volumen": 1.0, "intensitaet": "mittel", "fokus": { "ausdauer": 0.7, "ganzkoerper": 0.6 }, "notiz": "Zirkel und Intervalle, kurze Pausen" },
+      { "wochen": [3], "name": "Mehr Druck", "volumen": 1.12, "intensitaet": "hart", "fokus": { "ausdauer": 0.8, "ganzkoerper": 0.6 }, "notiz": "Längere Intervalle, mehr Runden" },
+      { "wochen": [4], "name": "Entlastung", "volumen": 0.65, "intensitaet": "leicht", "fokus": { "mobilitaet": 0.4, "ganzkoerper": 0.3 }, "notiz": "Lockerer bewegen, gut schlafen" },
+      { "wochen": [5, 6], "name": "Endspurt", "volumen": 1.18, "intensitaet": "hart", "fokus": { "ausdauer": 0.9, "ganzkoerper": 0.6 }, "notiz": "Die härtesten Wochen — am Ende der Test" }
+    ]
+  },
+  {
+    "id": "kraft_skills",
+    "name": "Kraft & Skills",
+    "kurz": "Drücken und Ziehen auf Kraft, dazu dein Skill jeden Trainingstag",
+    "ziel": "Acht Wochen Kraft für Handstand, Front Lever und Co. aufbauen",
+    "wochen": 8,
+    "bild": "pike_pushup",
+    "fuer": "Calisthenics-Skills",
+    "phasen": [
+      { "wochen": [1, 2], "name": "Basis", "volumen": 1.0, "intensitaet": "mittel", "fokus": { "druck": 0.5, "zug": 0.5, "core": 0.3 }, "notiz": "Grundkraft und Körperspannung" },
+      { "wochen": [3], "name": "Kraft", "volumen": 1.08, "intensitaet": "hart", "fokus": { "druck": 0.6, "zug": 0.6, "core": 0.3 }, "notiz": "Weniger Wiederholungen, schwerere Varianten" },
+      { "wochen": [4], "name": "Entlastung", "volumen": 0.6, "intensitaet": "leicht", "fokus": { "mobilitaet": 0.5, "core": 0.3 }, "notiz": "Gelenke und Handgelenke schonen" },
+      { "wochen": [5, 6, 7], "name": "Kraftblock", "volumen": 1.15, "intensitaet": "hart", "fokus": { "druck": 0.6, "zug": 0.6, "core": 0.35 }, "notiz": "Schwerste Varianten, volle Spannung" },
+      { "wochen": [8], "name": "Entlastung & Test", "volumen": 0.6, "intensitaet": "leicht", "fokus": { "ganzkoerper": 0.3 }, "notiz": "Erholen, dann Fitness-Test" }
+    ]
+  }
+]

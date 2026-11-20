@@ -11,6 +11,7 @@ import { ExerciseDetail } from './screens/exercise.js';
 import { Skills, SkillDetail, SkillPractice } from './screens/skills.js';
 import { NutrientDetail } from './screens/stats.js';
 import { FitnessTest } from './screens/progress.js';
+import { Programs, WeekReview } from './screens/plan.js';
 import { Food, PhotoFlow, AddMeal, EntryDetail, DayReport, Shopping, BarcodeFlow } from './screens/food.js';
 import { RecipeDetail, RecipeList } from './screens/recipes.js';
 import { Me, ProfileEdit, Onboarding } from './screens/me.js';
@@ -45,6 +46,8 @@ const ROUTES = [
   [/^ernaehrung\/coach(?:\/(.+))?$/, (m) => html`<${DayReport} day=${m[1]} />`],
   [/^ernaehrung\/naehrstoff\/(\w+)$/, (m) => html`<${NutrientDetail} k=${m[1]} />`],
   [/^test$/, () => html`<${FitnessTest} />`],
+  [/^programme$/, () => html`<${Programs} />`],
+  [/^woche\/(\d{4}-\d{2}-\d{2})$/, (m) => html`<${WeekReview} monday=${m[1]} />`],
   [/^einkauf$/, () => html`<${Shopping} />`],
   [/^rezepte(?:\/(\w+))?$/, (m) => html`<${RecipeList} filter=${m[1]} />`],
   [/^rezept\/(.+)$/, (m) => html`<${RecipeDetail} id=${m[1]} />`],

@@ -378,3 +378,45 @@ describe("Progression: Aufstieg, Abstieg, Level, Test", () => {
     expect(getProfile(db).level).toBe(4);
   });
 });
+
+describe("Programme, Woche, Balance", () => {
+  it("Entlastungswoche → leicht und weniger Umfang; Fokus lenkt den Tagestyp", async () => {
+    const { loadPrograms, setPrograms, startProgram, phaseFor } = await import("./program.js");
+    const { buildRulesPlan, doseFor } = await import("./planner.js");
+    setPrograms(loadPrograms(DATA));
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden", "klimmzugstange"], trainingDays: [0, 2, 4] });
+    startProgram(db, "muskelaufbau", "2026-11-02"); // Montag → Woche 4 = 23.–29.11. Entlastung
+    const ph = phaseFor(db, (await import("./program.js")).getPrograms(), "2026-11-24");
+    expect(ph).toMatchObject({ week: 4, phase: "Entlastung", deload: true });
+    const ctx = buildContext(db, catalog, "2026-11-24", { energy: 4 });
+    const plan = buildRulesPlan(ctx);
+    expect(plan.intensity).toBe("leicht");
+    const e = catalog.byId.get("pushup")!;
+    const ctxNormal = { ...ctx, program: null };
+    expect(doseFor(ctx, e, "mittel", "main")).toBeLessThan(doseFor(ctxNormal, e, "mittel", "main"));
+    // Klimmzug-Programm: Ziehen bevorzugt
+    startProgram(db, "klimmzug", "2026-11-16");
+    const { chooseDayType } = await import("./planner.js");
+    expect(chooseDayType(buildContext(db, catalog, "2026-11-18", { energy: 3 }))).toBe("zug");
+  });
+
+  it("viel Drücken, kaum Ziehen in der Woche → Ziehen kommt dran", async () => {
+    const { chooseDayType } = await import("./planner.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden", "klimmzugstange"], goal: "muskeln" });
+    const ctx = buildContext(db, catalog, "2026-11-20", { energy: 3 });
+    ctx.balance = { druck: 12, zug: 2, beine: 8, core: 4, ausdauer: 0 };
+    ctx.recent = [];
+    expect(chooseDayType(ctx)).toBe("zug");
+  });
+
+  it("Wochenvorschau sagt offene Trainingstage voraus", async () => {
+    const { weekPreview } = await import("./week.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, trainingDays: [0, 2, 4] });
+    const w = weekPreview(db, catalog, "2026-11-16");
+    expect(w.days).toHaveLength(7);
+    expect(w.days.filter((d) => d.predicted).length).toBe(3);
+  });
+});

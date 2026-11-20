@@ -107,6 +107,10 @@ export interface PlanContext {
   painRegions: string[];
   checkin?: { energy?: number; minutes?: number; sore?: string[]; wish?: string } | undefined;
   forceType?: DayType | undefined;
+  /** Laufendes Programm: Phase mit Volumen, Intensität, Fokus (program.ts) */
+  program?: { volume: number; intensity: "leicht" | "mittel" | "hart"; focus: Partial<Record<DayType, number>>; deload: boolean } | null | undefined;
+  /** Erledigte Arbeitssätze je Gruppe in dieser Woche (druck, zug, beine, core, ausdauer) */
+  balance?: Record<string, number> | undefined;
 }
 
 // ── Zufall, über den Tag gesät ──────────────────────────────────────────────
@@ -186,6 +190,17 @@ export function chooseDayType(ctx: PlanContext): DayType {
       if (t === "core") s -= 0.35;
       if (t === "mobilitaet") s += p.focus.includes("beweglichkeit") ? 0.2 : -0.6;
       if (energy === 2 && (t === "ausdauer" || t === "beine")) s -= 0.4;
+      // Programm-Fokus (z. B. »Erster Klimmzug« → Ziehen)
+      s += ctx.program?.focus?.[t] ?? 0;
+      // Muskelbalance der Woche: vernachlässigte Gruppen nachziehen
+      const bal = ctx.balance;
+      if (bal) {
+        const b = { druck: bal.druck ?? 0, zug: bal.zug ?? 0, beine: bal.beine ?? 0 };
+        if (t === "zug" && b.druck >= 4 && b.zug < 0.6 * b.druck) s += 0.5;
+        if (t === "druck" && b.zug >= 4 && b.druck < 0.6 * b.zug) s += 0.4;
+        const upper = (b.druck + b.zug) / 2;
+        if (t === "beine" && upper >= 4 && b.beine < 0.5 * upper) s += 0.45;
+      }
       const wish = ctx.checkin?.wish ?? "";
       if (wish && (DAY_TYPES[t].title.toLowerCase().includes(wish.toLowerCase()) || t === wish))
         s += 3;
@@ -213,12 +228,14 @@ export function doseFor(
   const relative = Math.max(0.55, 1 - (e.level - ctx.profile.level * 2) * 0.12);
   const inten = intensity === "leicht" ? 0.8 : intensity === "hart" ? 1.15 : 1;
   const blockScale = block === "warmup" || block === "cooldown" ? 0.75 : 1;
+  const programScale = block === "main" || block === "finisher" ? (ctx.program?.volume ?? 1) : 1;
   const raw =
     e.base *
     (block === "main" || block === "finisher" ? levelScale * relative : 1) *
     (st?.dose ?? 1) *
     inten *
-    blockScale;
+    blockScale *
+    programScale;
   return niceAmount(raw, e.unit);
 }
 
@@ -298,7 +315,7 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
   const energy = ctx.checkin?.energy ?? 3;
   // Zweites Training am selben Tag: eine Stufe ruhiger.
   const second = ctx.recent.some((r) => r.daysAgo === 0);
-  const intensity: SessionPlan["intensity"] =
+  let intensity: SessionPlan["intensity"] =
     dayType === "mobilitaet" || energy <= 2
       ? "leicht"
       : second
@@ -308,6 +325,9 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
         : energy >= 4
           ? "hart"
           : "mittel";
+  // Programm: Entlastungswoche immer leicht; sonst die Phasen-Intensität, wenn die Tagesform passt.
+  if (ctx.program?.deload && dayType !== "mobilitaet") intensity = "leicht";
+  else if (ctx.program && energy >= 3 && !second && dayType !== "mobilitaet") intensity = ctx.program.intensity;
   const minutes = ctx.checkin?.minutes ?? p.sessionMinutes;
   const all = ctx.catalog.exercises.filter((e) => usable(ctx, e));
   const used = new Set<string>();

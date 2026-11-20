@@ -8,6 +8,7 @@
  * geklemmt, und die Dauer muss zur gewünschten Zeit passen. Fällt die KI aus, gilt der Regelplan.
  */
 import { makeResolver } from "./progression.js";
+import { balance, getPrograms, mondayOf, phaseFor } from "./program.js";
 import type { FitnessAi } from "./ai.js";
 import type { Catalog, Exercise } from "./catalog.js";
 import { type FitDb, addDays, localDay } from "./db.js";
@@ -151,6 +152,7 @@ export function buildContext(
       };
     })
     .sort((a, b) => a.daysAgo - b.daysAgo);
+  const phase = phaseFor(db, getPrograms(), day);
   return {
     day,
     profile,
@@ -160,6 +162,8 @@ export function buildContext(
     painRegions: painRegions(db, day),
     checkin,
     forceType,
+    program: phase && !phase.done ? phase : null,
+    balance: balance(db, catalog, mondayOf(day), day),
   };
 }
 
@@ -174,6 +178,8 @@ Baue daraus den besten Trainingstag. Regeln:
 - Mengen orientieren sich an "regel" (das ist die vom Feedback gelernte Dosis). Weiche höchstens ±30 % ab, und nur mit Grund.
 - Wo das Feedback "zu schwer" oder "Technik unsicher" sagt: leichtere Variante oder weniger. "zu leicht": mehr oder schwerere Variante.
 - Abwechslung zu den letzten Tagen, Erholung der Muskelgruppen beachten.
+- Läuft ein "programm": halte dich an Phase, Intensität und Fokus. In einer Entlastungswoche bewusst leichter und weniger Umfang (das ist Absicht, sag es dem Nutzer). Erwähne die Programmwoche in der Nachricht.
+- "muskelbalance_diese_woche_saetze": vernachlässigte Gruppen (z. B. viel Drücken, wenig Ziehen) gezielt ausgleichen.
 - Steht im Verlauf schon eine Einheit von HEUTE, ist das ein zweites Training am selben Tag: andere Muskelgruppen, eher kürzer und moderater, und sag das in der Nachricht.
 - Sprich den Nutzer mit "du" an, Deutsch, motivierend aber sachlich, ohne Emojis.
 - Erwähne keine internen Werte (Level-Zahlen, Schwierigkeitsstufen, "Regel", Dosis, ids) — sprich über Übungen, Muskeln, Ziele und sein Feedback.
@@ -381,6 +387,10 @@ export async function aiPlan(
       trainingstage_pro_woche: p.trainingDays.length,
     },
     tagesform: ctx.checkin ?? null,
+    programm: ctx.program
+      ? (() => { const ph = phaseFor(db, getPrograms(), ctx.day); return ph ? { name: ph.name, woche: `${ph.week} von ${ph.weeks}`, phase: ph.phase, notiz: ph.note, intensitaet: ph.intensity, volumen: ph.volume, entlastungswoche: ph.deload, fokus: ph.focus } : null; })()
+      : null,
+    muskelbalance_diese_woche_saetze: ctx.balance ?? null,
     aktuelle_beschwerden: ctx.painRegions,
     verlauf: historyForAi(db, ctx.catalog, ctx.day),
     regel_vorschlag: {

@@ -53,6 +53,8 @@ import {
 import { DAY_TYPES, type DayType, blockSeconds, usable } from "../fitness/planner.js";
 import { checkProgression, progressionView } from "../fitness/progression.js";
 import { saveTest, testState } from "../fitness/assessment.js";
+import { loadPrograms, phaseFor, setPrograms, startProgram, stopProgram, getPrograms } from "../fitness/program.js";
+import { weekPreview, weekReview } from "../fitness/week.js";
 import {
   NUTRIENTS,
   type Nutrients,
@@ -315,6 +317,43 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     };
   });
   app.post<{ Body: { results?: Record<string, number> } }>("/fitness/test", async (req) => saveTest(db, req.body?.results ?? {}));
+
+  // ── Programme (mehrere Wochen) und Woche ──
+  setPrograms(loadPrograms(deps.dataDir));
+  app.get("/fitness/programs", async () => {
+    const p = getProfile(db);
+    return {
+      programs: getPrograms().map((x) => ({
+        ...x,
+        machbar: !x.braucht || x.braucht.some((q) => p.equipment.includes(q)),
+        exercise: exerciseView(x.bild),
+      })),
+      current: phaseFor(db, getPrograms(), localDay()),
+    };
+  });
+  app.post<{ Body: { id?: string | null } }>("/fitness/program", async (req, reply) => {
+    const id = req.body?.id;
+    if (!id) { stopProgram(db); return { ok: true, current: null }; }
+    if (!getPrograms().some((x) => x.id === id)) return reply.code(400).send({ error: "program" });
+    startProgram(db, id, localDay());
+    // Heutigen, noch nicht begonnenen Plan an die neue Phase anpassen.
+    const today = sessionsBetween(db, localDay(), localDay()).find((s) => s.status === "planned");
+    if (today) void todaySession(ai, db, catalog, { regenerate: true, log: deps.log }).catch(() => {});
+    return { ok: true, current: phaseFor(db, getPrograms(), localDay()) };
+  });
+  app.get("/fitness/week", async () => weekPreview(db, catalog));
+  app.get<{ Querystring: { monday?: string; force?: string } }>("/fitness/week/review", async (req, reply) => {
+    const monday = /^\d{4}-\d{2}-\d{2}$/.test(req.query.monday ?? "") ? (req.query.monday as string) : weekPreview(db, catalog).review.monday;
+    const c = db.prepare("SELECT data FROM coach_notes WHERE kind = 'woche' AND day = ? ORDER BY at DESC LIMIT 1").get(monday) as { data: string } | undefined;
+    if (c && !req.query.force) return { monday, review: JSON.parse(c.data) };
+    if (!ai.available()) return reply.code(503).send({ error: "no_key" });
+    try {
+      return { monday, review: await weekReview(ai, db, catalog, monday) };
+    } catch (e) {
+      deps.log(`[fitness] Wochenrückblick fehlgeschlagen: ${e instanceof Error ? e.message : e}`);
+      return reply.code(502).send({ error: "ai" });
+    }
+  });
 
   app.get<{ Params: { file: string } }>("/fitness/media/:file", async (req, reply) => {
     const m = /^([a-z0-9_]{1,60})\.(mp4|jpg)$/.exec(req.params.file);

@@ -6,6 +6,7 @@ import { Icon, Loop, Top, Columns, cls, Spinner, Empty } from '../ui.js';
 import { PATTERN } from './exercise.js';
 import { TrainingStats } from './stats.js';
 import { LevelCard, Families, ProgressEvents } from './progress.js';
+import { WeekPlan, BalanceCard } from './plan.js';
 
 const FREE = [
   ['ganzkoerper', 'Ganzkörper', 'burpee'],
@@ -54,6 +55,7 @@ function StartTraining({ state }) {
     setBusy(null);
   };
   return html`<div>
+    <div class="mt16"><${WeekPlan} /></div>
     <div class="durPick mt16">${[15, 20, 30, 45, 60].map((m) => html`<button class=${cls(mins === m && 'on')} onClick=${() => setMinutes(m)}><b class="num">${m}</b><span>min</span></button>`)}</div>
     <div class="typeGrid mt12">${FREE.map(([k, l, exId], i) => html`<button class=${cls('typeTile', i === 0 && 'wide')} disabled=${!!busy} onClick=${() => free(k)}>
       <div class="tt-img">${ex(exId) && html`<${Loop} media=${ex(exId).media} still />`}</div>
@@ -74,6 +76,7 @@ function Progress() {
   const cat = useCatalog();
   return html`<div>
     ${pg ? html`<div class="mt16"><${LevelCard} d=${pg} /></div><${Families} d=${pg} cat=${cat} /><${ProgressEvents} d=${pg} />` : html`<div class="skel mt16" style="height:150px" />`}
+    <${BalanceCard} />
     <div class="sec"><h2 class="h2">Verlauf</h2></div>
     <div><${TrainingStats} /></div>
     <div class="sec"><h2 class="h2">Zuletzt</h2>${hist?.sessions?.length > 3 && html`<button class="more" onClick=${() => nav('verlauf')}>Alle<${Icon} n="chevron_right" style="font-size:18px" /></button>`}</div>

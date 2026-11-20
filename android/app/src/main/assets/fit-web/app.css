@@ -1253,3 +1253,56 @@ html.area-mind .brLabel b{font-family:var(--serif);font-weight:560;font-size:30p
 .tr-v{font-size:20px;font-weight:800;font-family:var(--display)}
 .tr-d{display:block;font-size:12px;font-weight:700}.tr-d.up{color:rgb(var(--food))}.tr-d.down{color:#EE7B6F}
 .lc-badge{font-weight:800;padding:4px 9px;border-radius:8px;background:#fff;color:#000;font-size:13px}
+/* ── Programm, Woche, Balance, Rückblick (Paket 2) ── */
+.weekPlan{display:flex;flex-direction:column;gap:10px}
+.progCard{width:100%;text-align:left;border:0;border-radius:20px;padding:16px;background:#fff;color:#000;font:inherit;display:flex;flex-direction:column;gap:12px}
+.pc-k{display:block;font-size:12px;font-weight:600;opacity:.6}
+.pc-t{display:block;font-family:var(--display);font-size:26px;font-weight:800;line-height:1.05;margin-top:2px}
+.pc-n{display:block;font-size:13px;opacity:.7;margin-top:4px;line-height:1.35}
+.pc-tag{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:8px;background:#000;color:#fff;flex:none}
+.pc-weeks{display:flex;gap:4px}
+.pc-weeks i{flex:1;height:6px;border-radius:3px;background:rgba(0,0,0,.12)}
+.pc-weeks i.done{background:rgba(0,0,0,.45)}.pc-weeks i.cur{background:#000}
+.progInvite{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:18px;background:var(--surface);border:1px solid var(--border);color:var(--text);text-align:left;font:inherit}
+.progInvite>.ms:first-child{font-size:24px}.progInvite b{display:block}.progInvite span{font-size:12.5px;color:var(--muted)}
+.wkStrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.wkDay{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;border-radius:13px;background:var(--surface);border:1px solid var(--border);min-width:0}
+.wkDay .wd{font-size:11px;color:var(--muted);font-weight:600}
+.wkDay .wi{height:24px;display:flex;align-items:center;justify-content:center}.wkDay .wi .ms{font-size:20px}
+.wkDay .wt{font-size:9.5px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wkDay.done{background:#fff;color:#000;border-color:#fff}.wkDay.done .wd,.wkDay.done .wt{color:rgba(0,0,0,.6)}
+.wkDay.planned{border-color:rgba(255,255,255,.55)}
+.wkDay.pred .wi{opacity:.6}
+.wkDay.rest{opacity:.45}
+.wkDay.miss .wi{opacity:.4}
+.wkDay.today{box-shadow:0 0 0 2px #fff}
+.progGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.progTile{border:0;border-radius:18px;overflow:hidden;background:var(--surface);color:var(--text);text-align:left;padding:0;font:inherit;display:flex;flex-direction:column}
+.progTile.wide{grid-column:span 2}
+.pt-img{position:relative;height:120px;background:#fff}.progTile.wide .pt-img{height:160px}
+.pt-img img,.pt-img video{width:100%;height:100%;object-fit:contain}
+.pt-cur{position:absolute;left:8px;top:8px;font-size:11px;font-weight:700;padding:4px 8px;border-radius:7px;background:#000;color:#fff}
+.pt-tx{padding:11px 12px 13px}.pt-tx b{display:block;font-family:var(--display);font-size:18px;font-weight:800}.pt-tx span{font-size:12px;color:var(--muted)}
+.progTile.on{box-shadow:0 0 0 2px #fff}.progTile.off{opacity:.5}
+.pd-goal{font-size:15.5px;line-height:1.5;margin:0}
+.pd-time{display:flex;gap:4px;margin-top:16px}
+.pd-ph{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pd-ph i{height:8px;border-radius:4px;background:#fff}.pd-ph.deload i{background:rgba(255,255,255,.3)}
+.pd-ph b{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pd-ph span{font-size:10.5px;color:var(--muted)}
+.pd-list{display:flex;flex-direction:column;gap:8px}
+.pd-list div{background:var(--high);border-radius:12px;padding:10px 12px}.pd-list b{display:block;font-size:14px}.pd-list span{font-size:13px;color:var(--muted)}
+.balCard{display:flex;flex-direction:column;gap:9px}
+.balRow{display:flex;align-items:center;gap:10px}
+.balRow .bl{width:70px;font-size:13px}
+.balRow .bb{flex:1;position:relative;height:10px;border-radius:5px;background:rgba(255,255,255,.08)}
+.balRow .bb i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:#fff}
+.balRow .bb em{position:absolute;top:-3px;bottom:-3px;width:2px;background:#F2B847;border-radius:1px}
+.balRow .bn{width:26px;text-align:right;font-weight:700}
+.reviewCard{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border-radius:18px;background:var(--surface);border:1px solid rgba(255,255,255,.35);color:var(--text);text-align:left;font:inherit}
+.reviewCard>.ms:first-child{font-size:26px}.reviewCard b{display:block}.reviewCard span{font-size:12.5px;color:var(--muted)}
+.wrHero{background:#fff;color:#000;border-radius:20px;padding:18px}
+.wrHero b{display:block;font-family:var(--display);font-size:22px;font-weight:800;line-height:1.15}.wrHero span{display:block;margin-top:8px;font-size:14px;opacity:.7;line-height:1.45}
+.wrBlock{margin-top:12px;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--border)}
+.wrBlock p{margin:6px 0 0;line-height:1.5;font-size:14.5px}
+.wrBlock.good .eyebrow{color:rgb(var(--food))}.wrBlock.watch .eyebrow{color:#F2B847}.wrBlock.next .eyebrow{color:#fff}
+.wrFocus{display:flex;align-items:center;gap:10px;margin-top:12px;padding:14px;border-radius:16px;background:var(--high)}
