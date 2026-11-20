@@ -7,6 +7,8 @@
     → hört <id>_<k>.ogg ab und übernimmt je Ansage die beste Variante
 """
 import difflib, glob, hashlib, json, os, re, shutil, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from voices import clip_id as _cid  # noqa: E402
 
 os.environ.setdefault("HF_HUB_OFFLINE", "1")
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
@@ -14,8 +16,8 @@ OUT = os.path.join(ROOT, "android/app/src/main/assets/fit-web/voice")
 WHISPER = "mlx-community/whisper-large-v3-mlx"
 
 
-def clip_id(s):
-    return hashlib.sha1(s.encode("utf-8")).hexdigest()[:12]
+def clip_id(s, voice="rem"):
+    return _cid(s, voice)
 
 
 def norm(s):
@@ -68,7 +70,7 @@ def main():
         index_file = os.path.join(OUT, "index.json")
         index = json.load(open(index_file, encoding="utf-8"))
         for it in items:
-            cid = clip_id(it["spoken"])
+            cid = clip_id(it["spoken"], it.get("voice", "rem"))
             best, best_s = None, -1
             for f in sorted(glob.glob(os.path.join(cand, f"{cid}_*.ogg"))):
                 s = score(it, transcribe(f))
@@ -84,7 +86,7 @@ def main():
         return
     failed = []
     for it in items:
-        f = os.path.join(OUT, clip_id(it["spoken"]) + ".ogg")
+        f = os.path.join(OUT, clip_id(it["spoken"], it.get("voice", "rem")) + ".ogg")
         if not os.path.exists(f):
             failed.append(it); print(f"fehlt  {it['spoken']}"); continue
         heard = transcribe(f)

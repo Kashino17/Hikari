@@ -27,12 +27,12 @@ os.environ.setdefault("HF_HUB_OFFLINE", "1")
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 OUT = os.path.join(ROOT, "android/app/src/main/assets/fit-web/voice")
 MODEL = "mlx-community/Qwen3-TTS-12Hz-1.7B-Base-8bit"
-REF = os.path.expanduser("~/.tms-terminal/voice_24k_15s.wav")
-REF_TEXT = os.path.expanduser("~/.tms-terminal/voice_24k_15s.txt")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from voices import clip_id as _cid, ref as voice_ref  # noqa: E402
 
 
-def clip_id(spoken: str) -> str:
-    return hashlib.sha1(spoken.encode("utf-8")).hexdigest()[:12]
+def clip_id(spoken: str, voice: str = "rem") -> str:
+    return _cid(spoken, voice)
 
 
 def main():
@@ -45,23 +45,23 @@ def main():
     import numpy as np
     from mlx_audio.tts.utils import load_model
 
-    ref_text = open(REF_TEXT, encoding="utf-8").read().strip()
     model = load_model(MODEL)
 
     index_file = os.path.join(OUT, "index.json")
     index = json.load(open(index_file, encoding="utf-8")) if os.path.exists(index_file) else {}
-    todo = [x for x in items if not os.path.exists(os.path.join(OUT, clip_id(x["spoken"]) + ".ogg"))]
+    todo = [x for x in items if not os.path.exists(os.path.join(OUT, clip_id(x["spoken"], x.get("voice", "rem")) + ".ogg"))]
     if limit:
         todo = todo[:limit]
     print(f"{len(items)} Ansagen, {len(todo)} zu erzeugen", flush=True)
 
     t0 = time.time()
     for n, x in enumerate(todo, 1):
-        cid = clip_id(x["spoken"])
+        cid = clip_id(x["spoken"], x.get("voice", "rem"))
+        ref_wav, ref_text = voice_ref(x.get("voice", "rem"))
         try:
             parts = []
             rate = 24000
-            for r in model.generate(text=x["spoken"], ref_audio=REF, ref_text=ref_text, lang_code="german"):
+            for r in model.generate(text=x["spoken"], ref_audio=ref_wav, ref_text=ref_text, lang_code="german"):
                 parts.append(np.array(r.audio))
                 rate = int(getattr(r, "sample_rate", rate) or rate)
             audio = np.concatenate(parts)
@@ -96,17 +96,17 @@ def main():
 
     # Index auch für schon vorhandene Dateien vollständig halten.
     for x in items:
-        if os.path.exists(os.path.join(OUT, clip_id(x["spoken"]) + ".ogg")):
-            index[x["de"]] = clip_id(x["spoken"])
+        if os.path.exists(os.path.join(OUT, clip_id(x["spoken"], x.get("voice", "rem")) + ".ogg")):
+            index[x["de"]] = clip_id(x["spoken"], x.get("voice", "rem"))
     json.dump(index, open(index_file, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(f"fertig: {len(index)} im Index", flush=True)
 
 
-def synth(model, ref_text, text, out_path):
+def synth(model, ref_text, text, out_path, ref_wav=None):
     """Ein Text → Opus-Datei. Rückgabe: Dauer in Sekunden."""
     import numpy as np
     parts, rate = [], 24000
-    for r in model.generate(text=text, ref_audio=REF, ref_text=ref_text, lang_code="german"):
+    for r in model.generate(text=text, ref_audio=ref_wav or voice_ref("rem")[0], ref_text=ref_text, lang_code="german"):
         parts.append(np.array(r.audio))
         rate = int(getattr(r, "sample_rate", rate) or rate)
     audio = np.concatenate(parts)
@@ -135,14 +135,14 @@ def candidates(list_file, out_dir, n):
     from mlx_audio.tts.utils import load_model
     items = json.load(open(list_file, encoding="utf-8"))
     os.makedirs(out_dir, exist_ok=True)
-    ref_text = open(REF_TEXT, encoding="utf-8").read().strip()
     model = load_model(MODEL)
     for x in items:
-        cid = clip_id(x["spoken"])
+        cid = clip_id(x["spoken"], x.get("voice", "rem"))
+        ref_wav, ref_text = voice_ref(x.get("voice", "rem"))
         text = x["spoken"] if x["spoken"].rstrip()[-1:] in ".!?…," else x["spoken"].rstrip() + "."
         for k in range(n):
             try:
-                synth(model, ref_text, text, os.path.join(out_dir, f"{cid}_{k}.ogg"))
+                synth(model, ref_text, text, os.path.join(out_dir, f"{cid}_{k}.ogg"), ref_wav)
             except Exception as e:  # noqa: BLE001
                 print(f"  ! {x['spoken']}: {e}", flush=True)
         print(f"  {x['spoken']}", flush=True)

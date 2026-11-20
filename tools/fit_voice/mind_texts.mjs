@@ -25,7 +25,7 @@ const SAY = {
   'Bogen': 'Der Bogen', 'Pflug': 'Der Pflug', 'Rad': 'Das Rad', 'Baum': 'Der Baum', 'Stuhl': 'Der Stuhl', 'Adler': 'Der Adler',
   'Taube': 'Die Taube', 'Kamel': 'Das Kamel', 'Lotus': 'Der Lotus', 'Delfin': 'Der Delfin', 'Sphinx': 'Die Sphinx',
   'Krieger I': 'Krieger eins', 'Krieger II': 'Krieger zwei', 'Krieger III': 'Krieger drei', 'Wild Thing': 'Weild Sing',
-  'Spagat': 'Der Spagat', 'Girlande': 'Die Girlande', 'Halbmond': 'Der Halbmond', 'Pyramide': 'Die Pyramide',
+  'Spagat': 'Der Spagat', 'Girlande': 'Die Girlande', 'Brücke': 'Die Brücke', 'Halbmond': 'Der Halbmond', 'Pyramide': 'Die Pyramide',
 };
 for (const a of asanas) add(a.de, SAY[a.de] ?? a.de);
 for (const l of levels) for (const f of l.flow ?? []) { add(f.sage); for (const z of f.zwischen ?? []) add(z.sage); }
@@ -38,4 +38,5 @@ for (const t of [...Object.values(af.zuerst ?? {}), ...(af.zahlen ?? []), ...(af
 for (const a of content.affirmationen ?? []) add(a.text);
 for (const g of content.gefuehrt ?? []) for (const s of g.schritte ?? []) add(s.sage);
 
-console.log(JSON.stringify([...out].map(([de, spoken]) => ({ de, spoken })), null, 1));
+// Achtsamkeit spricht Samt (entworfene Meditationsstimme, tools/fit_voice/voices.py), nicht Rem.
+console.log(JSON.stringify([...out].map(([de, spoken]) => ({ de, spoken, voice: 'samt' })), null, 1));

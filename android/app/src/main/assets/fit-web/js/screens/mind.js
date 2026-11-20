@@ -506,7 +506,18 @@ function BreathRun({ a, rounds, bed, onEnd, onQuit }) {
     const n = secIn + 1;
     if (n > Math.floor(ph.sekunden + 0.001)) return;
     const word = f.zahlen?.[n - 2];
-    if (word && !voice.busy) voice.speak(word);
+    if (!word) return undefined;
+    // Spricht Samt noch das Stichwort (»Langsam ausatmen« ~1,5 s), kommt die Zahl kurz danach —
+    // höchstens 0,7 s später, damit sie nicht in die nächste Zahl rutscht.
+    let tries = 0;
+    let timer = null;
+    const go = () => {
+      if (!alive.current || keyRef.current !== key) return;
+      if (!voice.busy) { voice.speak(word); return; }
+      if (++tries <= 7) timer = setTimeout(go, 100);
+    };
+    go();
+    return () => clearTimeout(timer);
   }, [secIn, key]);
   const toggle = () => {
     if (intro) { voice.stop(); alive.current && setIntro(false); return; }
