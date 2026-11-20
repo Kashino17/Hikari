@@ -529,7 +529,7 @@ textarea.input{height:auto;min-height:84px;padding:12px 14px;resize:none}
 .fab2 .ms{font-size:26px}
 .prodImg{width:96px;height:96px;border-radius:14px;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;flex:none;color:#aaa}
 .prodImg img{width:100%;height:100%;object-fit:contain}
-.nutri{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;color:#fff}
+.nscore{display:inline-block;margin-top:8px;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;color:#fff}
 .ns-a{background:#038141}.ns-b{background:#85bb2f}.ns-c{background:#fecb02;color:#111}.ns-d{background:#ee8100}.ns-e{background:#e63e11}
 .pickGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
 .pick{display:flex;flex-direction:column;gap:6px;padding:18px 16px;border-radius:16px;background:var(--surface);border:1.5px solid var(--border);text-align:left;min-height:150px}
@@ -1399,3 +1399,9 @@ html.area-mind .brLabel b{font-family:var(--serif);font-weight:560;font-size:30p
 body:has(.sheet) .offPill{display:none}
 .bh-rate{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-top:10px;font-size:13.5px;color:#555}
 .bh-rate b{color:#111;font-weight:700;text-align:right}
+.dayDone{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center;padding:14px 16px;border-radius:18px;background:rgba(var(--food),.08);border:1px solid rgba(var(--food),.25)}
+.dayDone>.ms{color:rgb(var(--food));font-size:24px}
+.dayDone .grow{min-width:0}.dayDone b{display:block;font-size:14.5px}.dayDone span{display:block;font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+.dayDone.teilweise,.dayDone.offen{background:rgba(242,184,71,.07);border-color:rgba(242,184,71,.3)}
+.dayDone.teilweise>.ms,.dayDone.offen>.ms{color:#F2B847}
+.dayDone .dd-act{display:flex;gap:8px;flex-wrap:wrap;width:100%}

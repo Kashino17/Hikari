@@ -181,13 +181,14 @@ export function FoodStats() {
   const goal = d.targets.goals[metric] ?? {};
   const ref = goal.min ?? goal.max ?? null;
   const v = (day, k = metric) => days[day]?.totals?.[k];
-  const logged = (from, to) => Object.keys(days).filter((k) => k >= from && k <= to);
+  // Nur vollständig eingetragene Tage zählen für Schnitte (halbe Tage würden »zu wenig gegessen« vortäuschen).
+  const logged = (from, to) => Object.keys(days).filter((k) => k >= from && k <= to && (days[k].state ?? 'komplett') === 'komplett');
   const avg = (from, to, k = metric) => { const ds = logged(from, to); return ds.length ? ds.reduce((a, day) => a + (v(day, k) ?? 0), 0) / ds.length : null; };
   const avgScore = (ds) => { const s = ds.map((x) => scores[x]?.score).filter((x) => x != null); return s.length ? s.reduce((a, b) => a + b, 0) / s.length : null; };
   let items;
   let marks = null;
   if (mode === 'D') items = SLOT_ORDER.map(([s, l]) => ({ v: days[p.from]?.slots?.[s]?.[metric] ?? null, label: l, key: l }));
-  else if (mode === 'Y') { items = p.buckets.map((b) => { const ds = b.days.filter((x) => days[x]); return { v: ds.length ? ds.reduce((a, x) => a + (v(x) ?? 0), 0) / ds.length : null, label: b.label, key: b.key }; }); marks = p.buckets.map((b) => avgScore(b.days)); }
+  else if (mode === 'Y') { items = p.buckets.map((b) => { const ds = b.days.filter((x) => days[x] && (days[x].state ?? 'komplett') === 'komplett'); return { v: ds.length ? ds.reduce((a, x) => a + (v(x) ?? 0), 0) / ds.length : null, label: b.label, key: b.key }; }); marks = p.buckets.map((b) => avgScore(b.days)); }
   else { items = p.buckets.map((b) => ({ v: v(b.days[0]) ?? null, label: b.label, key: b.days[0] })); if (mode === 'W') marks = p.buckets.map((b) => scores[b.days[0]]?.score ?? null); }
   const now = mode === 'D' ? v(p.from) ?? null : avg(p.from, p.to);
   const before = mode === 'D' ? v(p.prevFrom) ?? null : avg(p.prevFrom, p.prevTo);
@@ -334,7 +335,7 @@ export function NutrientDetail({ k }) {
   const days = d.days ?? {};
   const unit = x.unit;
   const ref = x.target;
-  const ds = Object.keys(days).filter((dd) => dd >= p.from && dd <= p.to);
+  const ds = Object.keys(days).filter((dd) => dd >= p.from && dd <= p.to && (days[dd].state ?? 'komplett') === 'komplett');
   const avg = ds.length ? ds.reduce((a, dd) => a + (days[dd].totals?.[k] ?? 0), 0) / ds.length : null;
   const pc = avg != null && ref ? Math.round((avg / ref) * 100) : null;
   const tone = nutriTone(pc, x.isMax);

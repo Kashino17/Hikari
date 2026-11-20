@@ -642,7 +642,7 @@ describe("Kalorienziel folgt dem Gewichtsverlauf", () => {
     const w = db.prepare("INSERT INTO body_log(day, weight) VALUES(?, ?)");
     for (let i = 21; i >= 0; i -= 3) w.run(ad(today, -i), 63); // 3 Wochen flach
     // nichts gegessen eingetragen → nur Hinweis
-    expect(adaptCalories(db)!.note).toMatch(/Trag dein Essen ein/);
+    expect(adaptCalories(db)!.note).toMatch(/vollständig ein/);
     expect(getProfile(db).kcalAdjust).toBe(0);
     // 14 Tage Ziel gegessen → +100
     const kcal = computeTargets(getProfile(db)).kcal;
@@ -709,3 +709,48 @@ describe("Trainingsplan-Qualität (Coach 2)", () => {
 function doseForT(ctx: ReturnType<typeof buildContext>, id: string) {
   return doseFor(ctx, catalog.byId.get(id)!, "mittel", "main");
 }
+
+describe("Ernährung: vergessene und halbe Tage", () => {
+  it("leer zählt nicht, nur Frühstück = teilweise, selbst markiert hat Vorrang, heute = offen", async () => {
+    const { dayStates, setDayState } = await import("./food-days.js");
+    const { localDay: ld, addDays: ad } = await import("./db.js");
+    const db = freshDb();
+    const today = ld();
+    const f = db.prepare("INSERT INTO food_log(id, day, meal, title, source, items, totals, created_at) VALUES(?, ?, ?, 'x', 'frei', '[]', ?, 0)");
+    f.run("a", ad(today, -3), "fruehstueck", JSON.stringify({ kcal: 500 })); // nur Frühstück
+    f.run("b", ad(today, -2), "fruehstueck", JSON.stringify({ kcal: 600 }));
+    f.run("c", ad(today, -2), "mittag", JSON.stringify({ kcal: 800 }));
+    f.run("d", ad(today, -2), "abend", JSON.stringify({ kcal: 700 })); // alle Hauptmahlzeiten
+    f.run("e", ad(today, -1), "mittag", JSON.stringify({ kcal: 1800 })); // viel, aber eine Mahlzeit
+    f.run("g", today, "fruehstueck", JSON.stringify({ kcal: 400 }));
+    let st = dayStates(db, ad(today, -5), today, 2400, 3);
+    expect(st[ad(today, -4)]).toBeUndefined(); // nichts eingetragen → kommt gar nicht vor
+    expect(st[ad(today, -3)]!.state).toBe("teilweise");
+    expect(st[ad(today, -2)]!.state).toBe("komplett");
+    expect(st[ad(today, -1)]!.state).toBe("komplett"); // ≥ 60 % des Ziels
+    expect(st[today]!.state).toBe("offen");
+    setDayState(db, ad(today, -3), "komplett"); // »war wirklich alles« (z. B. Fastentag)
+    setDayState(db, ad(today, -1), "teilweise"); // »hab was vergessen«
+    st = dayStates(db, ad(today, -5), today, 2400, 3);
+    expect(st[ad(today, -3)]).toMatchObject({ state: "komplett", manual: true });
+    expect(st[ad(today, -1)]).toMatchObject({ state: "teilweise", manual: true });
+  });
+
+  it("Kalorien-Nachsteuerung: halbe Tage drücken den Schnitt nicht", async () => {
+    const { adaptCalories } = await import("./body.js");
+    const { localDay: ld, addDays: ad } = await import("./db.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, sex: "m", weightKg: 63, heightCm: 178, goal: "muskeln", trainingDays: [0, 2, 4], sessionMinutes: 15 });
+    const today = ld();
+    const w = db.prepare("INSERT INTO body_log(day, weight) VALUES(?, ?)");
+    for (let i = 21; i >= 0; i -= 3) w.run(ad(today, -i), 63);
+    const kcal = computeTargets(getProfile(db)).kcal;
+    const f = db.prepare("INSERT INTO food_log(id, day, meal, title, source, items, totals, created_at) VALUES(?, ?, ?, 'x', 'frei', '[]', ?, 0)");
+    for (let i = 1; i <= 14; i++) {
+      if (i % 3 === 0) f.run(`p${i}`, ad(today, -i), "fruehstueck", JSON.stringify({ kcal: 450 })); // vergessen
+      else f.run(`f${i}`, ad(today, -i), "mittag", JSON.stringify({ kcal }));
+    }
+    // 10 vollständige Tage im Ziel, 4 halbe → Erhöhung, nicht »du isst zu wenig«
+    expect(adaptCalories(db)!.adjust).toBe(100);
+  });
+});

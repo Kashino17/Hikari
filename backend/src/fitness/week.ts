@@ -8,6 +8,7 @@ import type { Catalog } from "./catalog.js";
 import { buildContext, sessionsBetween } from "./coach.js";
 import { type FitDb, addDays, localDay, weekday } from "./db.js";
 import { DAY_TYPES, type DayType, chooseDayType } from "./planner.js";
+import { dayStates } from "./food-days.js";
 import { computeTargets, getProfile } from "./profile.js";
 import { balance, getPrograms, mondayOf, phaseFor } from "./program.js";
 
@@ -81,8 +82,12 @@ export async function weekReview(ai: FitnessAi, db: FitDb, catalog: Catalog, mon
   const food = db.prepare("SELECT day, totals FROM food_log WHERE day >= ? AND day <= ?").all(monday, sunday) as { day: string; totals: string }[];
   const perDay: Record<string, { kcal: number; protein: number }> = {};
   for (const f of food) { const t = JSON.parse(f.totals); const d = (perDay[f.day] ??= { kcal: 0, protein: 0 }); d.kcal += t.kcal ?? 0; d.protein += t.protein ?? 0; }
-  const nDays = Object.keys(perDay).length;
   const tg = computeTargets(p);
+  // Nur vollständig eingetragene Tage gehen in die Schnitte (teilweise eingetragene würden »zu wenig gegessen« vortäuschen).
+  const states = dayStates(db, monday, sunday, tg.kcal, p.mealsPerDay);
+  for (const d of Object.keys(perDay)) if (states[d]?.state !== "komplett") delete perDay[d];
+  const nDays = Object.keys(perDay).length;
+  const partial = Object.values(states).filter((s) => s.state === "teilweise" || s.state === "offen").length;
   const weights = db.prepare("SELECT day, weight FROM body_log WHERE weight IS NOT NULL AND day >= ? AND day <= ? ORDER BY day").all(addDays(monday, -7), sunday) as { day: string; weight: number }[];
   const phase = phaseFor(db, getPrograms(), monday);
   const nextPhase = phaseFor(db, getPrograms(), addDays(monday, 7));
@@ -97,7 +102,9 @@ export async function weekReview(ai: FitnessAi, db: FitDb, catalog: Catalog, mon
     muskelbalance_saetze: { diese_woche: bal, schnitt_4_wochen_davor: prev },
     fortschritt: events.map((e) => ({ tag: e.day, art: e.kind, von: e.ex_from ? name(e.ex_from) : null, zu: e.ex_to ? name(e.ex_to) : null, level: e.level })),
     ernaehrung: {
-      tage_mit_eintraegen: Object.keys(perDay).length,
+      tage_vollstaendig_eingetragen: nDays,
+      tage_nur_teilweise_eingetragen: partial,
+      hinweis: "Schnitte nur über vollständig eingetragene Tage. Teilweise eingetragene Tage NICHT als »zu wenig gegessen« werten.",
       noten: scores,
       schnitt_kcal_prozent_vom_ziel: nDays ? Math.round((Object.values(perDay).reduce((a, d) => a + d.kcal, 0) / nDays / tg.kcal) * 100) : null,
       schnitt_eiweiss_prozent_vom_ziel: nDays ? Math.round((Object.values(perDay).reduce((a, d) => a + d.protein, 0) / nDays / tg.protein) * 100) : null,

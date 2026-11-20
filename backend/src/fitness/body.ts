@@ -3,6 +3,7 @@
  * Fotos liegen unter <dir>/body (nicht im Repo), ausgeliefert über /fitness/body/photo/:file.
  */
 import { type FitDb, addDays, localDay } from "./db.js";
+import { dayStates } from "./food-days.js";
 import { type Goal, computeTargets, getProfile, saveProfile } from "./profile.js";
 
 /** kg pro Woche aus den letzten 28 Tagen (lineare Regression), null bei zu wenigen Werten. */
@@ -51,15 +52,14 @@ export function adaptCalories(db: FitDb, now = Date.now()): { adjust: number; no
     saveProfile(db, { kcalAdjustAt: now, kcalAdjustNote: `Gewicht ${fmt(trend)} — im Zielbereich, Ziel bleibt` });
     return { adjust: p.kcalAdjust, note: "im Zielbereich" };
   }
-  // Wird das Ziel überhaupt gegessen? (nur für eine Erhöhung entscheidend)
-  const rows = db.prepare("SELECT day, totals FROM food_log WHERE day >= ? AND day < ?").all(addDays(today, -14), today) as { day: string; totals: string }[];
-  const perDay = new Map<string, number>();
-  for (const r of rows) perDay.set(r.day, (perDay.get(r.day) ?? 0) + (Number((JSON.parse(r.totals) as { kcal?: number }).kcal) || 0));
+  // Wird das Ziel überhaupt gegessen? (nur für eine Erhöhung entscheidend) — nur VOLLSTÄNDIG eingetragene
+  // Tage zählen: ein Tag mit nur dem Frühstück heißt nicht »500 kcal gegessen«.
   const target = computeTargets(p).kcal;
-  const avg = perDay.size ? [...perDay.values()].reduce((a, b) => a + b, 0) / perDay.size : 0;
-  if (dir > 0 && (perDay.size < 10 || avg < target * 0.9)) {
-    const note = perDay.size < 10
-      ? `Gewicht ${fmt(trend)} — zu langsam. Trag dein Essen ein, dann kann der Coach dein Ziel richtig nachstellen.`
+  const full = Object.values(dayStates(db, addDays(today, -14), addDays(today, -1), target, p.mealsPerDay)).filter((d) => d.state === "komplett");
+  const avg = full.length ? full.reduce((a, d) => a + d.kcal, 0) / full.length : 0;
+  if (dir > 0 && (full.length < 8 || avg < target * 0.9)) {
+    const note = full.length < 8
+      ? `Gewicht ${fmt(trend)} — zu langsam. Trag dein Essen an mindestens 8 von 14 Tagen vollständig ein, dann stellt der Coach dein Ziel richtig nach.`
       : `Gewicht ${fmt(trend)} — zu langsam. Du isst im Schnitt ${Math.round(avg)} kcal, Ziel ${target} — erst das Ziel erreichen.`;
     saveProfile(db, { kcalAdjustAt: now, kcalAdjustNote: note });
     return { adjust: p.kcalAdjust, note };

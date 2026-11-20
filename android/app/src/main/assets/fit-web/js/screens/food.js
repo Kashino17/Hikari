@@ -80,6 +80,7 @@ function Diary({ day }) {
         ${!es.length && html`<span class="mt-add"><${Icon} n="add" /></span>`}
       </button>`;
     })}</div>
+    ${d.entries.length > 0 && d.completeness && html`<${DayDone} day=${day} c=${d.completeness} />`}
 
     ${d.entries.length > 0 && html`<div class="sec"><h2 class="h2">Nährstoff-Check</h2><button class="more" onClick=${() => setAllN(!allN)}>${allN ? 'Weniger' : 'Alle'}<${Icon} n=${allN ? 'expand_less' : 'expand_more'} style="font-size:18px" /></button></div>
       <div class="card pad16">
@@ -93,6 +94,33 @@ function Diary({ day }) {
         <div class="grow"><div style="font-weight:500" class="ell">${e.title}</div><div class="small muted">${fmtNum(e.totals.kcal)} kcal · ${fmtNum(e.totals.protein)} g Eiweiß</div></div>
         <${Icon} n="chevron_right" cls="faint" /></button>`)}
       <button class="btn mt12" onClick=${() => { const sl = open; setOpen(null); setAdd(sl); }}><${Icon} n="add" />Noch etwas hinzufügen</button></div><//>`}
+  </div>`;
+}
+
+/**
+ * Ist der Tag vollständig eingetragen? Halbe Tage (nur Frühstück, Rest vergessen) zählen nicht für
+ * Schnitte, Wochenrückblick und Kalorien-Nachsteuerung — sonst sähe es nach »zu wenig gegessen« aus.
+ */
+function DayDone({ day, c }) {
+  const [busy, setBusy] = useState(false);
+  const set = async (status) => {
+    setBusy(true);
+    try {
+      const d = await api.post('/fitness/food/day-status', { day, status });
+      setData(`/fitness/food/day?day=${day}`, d);
+      if (day === todayStr()) setData('/fitness/food/day', d);
+    } catch { toast('Server nicht erreichbar'); }
+    setBusy(false);
+  };
+  const [ic, title, sub, actions] = c.state === 'komplett'
+    ? ['task_alt', 'Vollständig eingetragen', c.manual ? 'Von dir bestätigt — zählt für Schnitte und deinen Coach' : 'Zählt für Schnitte und deinen Coach', [['teilweise', 'Doch was vergessen']]]
+    : c.state === 'teilweise'
+      ? ['pending', 'Nur teilweise eingetragen', c.manual ? 'Von dir markiert — zählt nicht für Schnitte, dein Coach rechnet nichts hoch' : 'Sieht lückenhaft aus — zählt nicht für Schnitte', [['komplett', 'Das war alles']]]
+      : ['schedule', 'Fertig für heute?', 'Wenn alles drin ist, bestätigen — sonst zählt der Tag nicht für deine Schnitte', [['komplett', 'Alles eingetragen'], ['teilweise', 'Nicht alles']]];
+  return html`<div class=${cls('dayDone mt12', c.state)}>
+    <${Icon} n=${ic} /><div class="grow"><b>${title}</b><span>${sub}</span></div>
+    <div class="dd-act">${actions.map(([s, l]) => html`<button class="chip" disabled=${busy} onClick=${() => set(s)}>${l}</button>`)}
+      ${c.manual && html`<button class="chip ghost" disabled=${busy} onClick=${() => set(null)}>Automatisch</button>`}</div>
   </div>`;
 }
 
@@ -407,7 +435,7 @@ function ProductAdd({ p: p0, slot: slot0, onRescan }) {
       <div class="row gap12" style="align-items:flex-start">
         <div class="prodImg">${p.image ? html`<img src=${img(p.image)} alt="" />` : html`<${Icon} n="inventory_2" />`}</div>
         <div class="grow"><div class="h2" style="line-height:1.25">${p.name}</div><div class="small muted mt4">${[p.brand, p.quantity].filter(Boolean).join(' · ')}</div>
-          ${p.nutriscore && /^[a-e]$/.test(p.nutriscore) && html`<span class=${`nutri ns-${p.nutriscore}`}>Nutri-Score ${p.nutriscore.toUpperCase()}</span>`}</div>
+          ${p.nutriscore && /^[a-e]$/.test(p.nutriscore) && html`<span class=${`nscore ns-${p.nutriscore}`}>Nutri-Score ${p.nutriscore.toUpperCase()}</span>`}</div>
       </div>
       ${p.source === 'eigen' && html`<div class="tag mt12" style="display:inline-flex"><${Icon} n="verified" style="font-size:15px" />Von dir erfasst</div>`}
       ${missing ? html`<div class="mt16"><${LabelCapture} ean=${p.ean} name=${p.name} onDone=${(prod) => setP(prod)} compact /></div>` : html`

@@ -196,6 +196,7 @@ Gib eine präzise Einschätzung auf Deutsch, du-Form, ohne Emojis, ohne Moralpre
 - ob die Ernährung einseitig ist (Vielfalt, Gemüse/Obst, verarbeitete Lebensmittel),
 - 1–3 konkrete nächste Schritte für heute/morgen (z. B. ein Abendessen-Vorschlag mit Mengen).
 WICHTIG: Beachte "uhrzeit" und "tag_vorbei". Ist der Tag noch nicht vorbei, bewerte den bisherigen Verlauf fair (fehlende Mahlzeiten kommen noch) und formuliere Lücken als "bis heute Abend noch …" mit konkretem Vorschlag, wie der Rest des Tages die Ziele erreicht. Werte, die durch Brat-/Kochfett entstehen, nicht als Qualitätsmerkmal loben.
+WICHTIG: Beachte "eintrag". "teilweise" heißt: der Nutzer hat NICHT alles eingetragen (vergessen, unterwegs gegessen). Dann KEINE Kritik an zu wenig Kalorien/Eiweiß/Mengen und keine Hochrechnung — bewerte nur die Qualität dessen, was eingetragen ist (Auswahl, Vielfalt, Zubereitung), sag kurz, dass der Tag unvollständig ist, und gib die Note nur für die Qualität. In "letzte_7_tage" zählen für Trends nur Tage mit "vollstaendig": true.
 Bewertung 1–10 für den bisherigen Tag. Antworte NUR mit JSON:
 {"score":7,"headline":"eine Zeile","good":["…"],"bad":["…"],"gaps":[{"nutrient":"Vitamin D","why":"…","foods":["Lachs 150 g","…"]}],"variety":"ein Satz zur Vielfalt","next":["…"]}`;
 
@@ -238,6 +239,7 @@ export async function dayReport(
     totals: Nutrients;
     training: unknown;
     last7: unknown;
+    state?: string;
   },
 ): Promise<DayReport & { model: string }> {
   const status = nutrientStatus(input.totals, input.targets)
@@ -254,6 +256,7 @@ export async function dayReport(
         tag: input.day,
         uhrzeit: input.time,
         tag_vorbei: input.dayOver,
+        eintrag: input.state === "teilweise" ? "teilweise" : input.state === "komplett" ? "vollstaendig" : "laufend",
         profil: input.profile,
         mahlzeiten: input.meals,
         naehrstoffe: status,

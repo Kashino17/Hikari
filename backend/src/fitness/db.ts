@@ -5,7 +5,12 @@
 import Database from "better-sqlite3";
 import { ensureDir } from "./ai.js";
 
-const SCHEMA = `CREATE TABLE IF NOT EXISTS replay_seen (
+const SCHEMA = `CREATE TABLE IF NOT EXISTS food_day (
+  day TEXT PRIMARY KEY,          -- selbst markiert: komplett | teilweise (food-days.ts)
+  status TEXT NOT NULL,
+  at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS replay_seen (
   id TEXT PRIMARY KEY,           -- X-Hikari-Req: einmalige Kennung einer Anfrage vom Handy
   at INTEGER NOT NULL
 );

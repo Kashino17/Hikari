@@ -58,6 +58,7 @@ import { loadPrograms, phaseFor, setPrograms, startProgram, stopProgram, getProg
 import { weekPreview, weekReview } from "../fitness/week.js";
 import { best, history, loadBenchmarks, resolveItems as benchItems, saveRun, targets, tierFor } from "../fitness/benchmark.js";
 import { adaptCalories, bodyProgress } from "../fitness/body.js";
+import { dayState, dayStates, setDayState } from "../fitness/food-days.js";
 import { backupInfo, scheduleBackups } from "../fitness/backup.js";
 import {
   NUTRIENTS,
@@ -1006,6 +1007,10 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       d.meals += 1;
     }
     for (const d of Object.values(days)) d.totals = roundNutrients(d.totals);
+    // Vollständigkeit je Tag: die Oberfläche rechnet Schnitte nur über vollständige Tage.
+    const pf = getProfile(db);
+    const st = dayStates(db, from, to, computeTargets(pf).kcal, pf.mealsPerDay);
+    for (const [k, d] of Object.entries(days)) (d as typeof d & { state?: string }).state = st[k]?.state ?? "leer";
     const first = db.prepare("SELECT MIN(day) AS d FROM food_log").get() as { d: string | null };
     // Noten des Ernährungs-Coachs je Tag (die jüngste Bewertung zählt) — für Diagramm und Kalender.
     const scores: Record<string, { score: number; headline: string }> = {};
@@ -1143,8 +1148,19 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const entries = foodLogDay(db, day);
     const totals = roundNutrients(sumNutrients(entries.map((e) => e.totals)));
     const targets = dayTargets(day);
-    return { day, entries, totals, targets, status: nutrientStatus(totals, targets) };
+    const p = getProfile(db);
+    const completeness = dayState(db, day, computeTargets(p).kcal, p.mealsPerDay);
+    return { day, entries, totals, targets, status: nutrientStatus(totals, targets), completeness };
   };
+
+  /** Tag selbst als vollständig / nur teilweise eingetragen markieren (null = automatisch). */
+  app.post<{ Body: { day?: string; status?: "komplett" | "teilweise" | null } }>("/fitness/food/day-status", async (req, reply) => {
+    const day = /^\d{4}-\d{2}-\d{2}$/.test(req.body?.day ?? "") ? (req.body?.day as string) : null;
+    const st = req.body?.status ?? null;
+    if (!day || day > localDay() || (st !== null && st !== "komplett" && st !== "teilweise")) return reply.code(400).send({ error: "input" });
+    setDayState(db, day, st);
+    return dayData(day);
+  });
 
   app.get<{ Querystring: { day?: string } }>("/fitness/food/day", async (req) =>
     dayData(req.query.day ?? localDay()),
@@ -1400,7 +1416,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       const d = dayData(day);
       if (!d.entries.length) return { report: null, reason: "leer" };
       const hash = createHash("sha1")
-        .update(JSON.stringify(d.entries.map((e) => [e.id, e.items.map((i) => [i.name, i.grams])])))
+        .update(JSON.stringify([d.completeness.state, d.entries.map((e) => [e.id, e.items.map((i) => [i.name, i.grams])])]))
         .digest("hex")
         .slice(0, 12);
       const cached = db
@@ -1423,6 +1439,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
           const t = sumNutrients(e.map((x) => x.totals));
           return {
             tag: dd,
+            vollstaendig: dayState(db, dd, computeTargets(profile).kcal, profile.mealsPerDay).state === "komplett",
             kcal: Math.round(t.kcal ?? 0),
             eiweiss: Math.round(t.protein ?? 0),
             mahlzeiten: e.map((x) => x.title),
@@ -1450,6 +1467,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
           totals: d.totals,
           training: training ? { titel: training.plan.title, kcal: training.plan.kcal } : null,
           last7,
+          state: d.completeness.state,
         });
         const data = { ...r, hash, at: Date.now() };
         db.prepare(
