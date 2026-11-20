@@ -1,0 +1,350 @@
+{
+  "kcal": {
+    "kurz": "Die Energie aus deinem Essen, die deinen Körper und dein Training antreibt.",
+    "wofuer": [
+      "Hält Grundfunktionen wie Herz, Atmung, Gehirn und Körpertemperatur am Laufen",
+      "Liefert den Treibstoff für Alltag und Training",
+      "Ein Überschuss liefert das Baumaterial-Budget für neues Muskelgewebe"
+    ],
+    "warum": "Muskeln aufbauen kostet Energie: Ohne leichten Überschuss fehlt dem Körper der Spielraum, neues Gewebe anzulegen. Zu viel Überschuss bringt dagegen kaum mehr Muskeln, sondern vor allem mehr Fett.",
+    "menge": "Die App schätzt deinen Grundumsatz aus Gewicht, Größe, Alter und Geschlecht, multipliziert ihn mit deiner Alltagsaktivität und rechnet dein Training im Wochenschnitt dazu. Beim Ziel Muskelaufbau kommt ein kleiner Aufschlag von rund 7 % obendrauf.",
+    "quellen": ["Haferflocken", "Reis und Nudeln", "Nüsse und Nussmus", "Vollmilch und Joghurt", "Olivenöl und Rapsöl", "Bananen und Trockenobst"],
+    "zuwenig": "Dauerhaft zu wenig Energie bremst den Muskelaufbau, das Training fühlt sich zäh an und Erholung sowie Schlaf leiden. Auf Dauer baut der Körper sogar Muskeln ab.",
+    "zuviel": "Ein großer Überschuss beschleunigt den Muskelaufbau nicht, sondern lässt vor allem den Fettanteil steigen. Steigt dein Gewicht von Woche zu Woche schnell an und wächst vor allem der Bauch, ist der Überschuss meist zu groß.",
+    "tipp": "Wieg dich ein paarmal pro Woche morgens und schau auf den Wochenschnitt statt auf einzelne Tage."
+  },
+  "protein": {
+    "kurz": "Eiweiß liefert die Aminosäuren, aus denen dein Körper Muskeln und Gewebe baut.",
+    "wofuer": [
+      "Baut Muskelfasern nach dem Training wieder auf und verstärkt sie",
+      "Liefert Bausteine für Enzyme, Hormone und Abwehrstoffe",
+      "Hält Haut, Haare, Sehnen und Organe in Schuss",
+      "Sättigt stärker als Kohlenhydrate oder Fett"
+    ],
+    "warum": "Training setzt den Reiz, Eiweiß liefert das Material: Ohne genug Aminosäuren kann der Körper die Muskelfasern nicht stärker wiederaufbauen. Über den Tag verteilte Portionen mit jeweils einer ordentlichen Menge Eiweiß nutzt er dabei gut.",
+    "menge": "Die DGE empfiehlt Erwachsenen ohne Sport rund 0,8 g pro kg Körpergewicht. Für Muskelaufbau nennen Sportfachgesellschaften 1,6 bis 2,2 g pro kg; die App rechnet mit etwa 2 g pro kg und deckelt das Bezugsgewicht bei hohem Körpergewicht.",
+    "quellen": ["Magerquark und Skyr", "Hähnchen und Pute", "Eier", "Fisch wie Lachs oder Thunfisch", "Linsen und Kichererbsen", "Tofu und Tempeh", "Harzer Käse und Hüttenkäse"],
+    "zuwenig": "Fehlt Eiweiß über längere Zeit, stagniert der Muskelaufbau, die Erholung dauert länger und du hast häufiger Hunger. Ein echter Eiweißmangel ist in Deutschland aber selten.",
+    "zuviel": "Für Gesunde gelten Mengen um 2 g pro kg nach heutigem Stand als unbedenklich; wer eine Nierenerkrankung hat, sollte das ärztlich abklären. Deutlich mehr bringt keinen zusätzlichen Muskel, verdrängt aber Kohlenhydrate und Ballaststoffe.",
+    "tipp": "Plane zu jeder Hauptmahlzeit eine Eiweißquelle ein, statt alles am Abend aufzuholen."
+  },
+  "carbs": {
+    "kurz": "Kohlenhydrate sind die schnellste und wichtigste Energiequelle für intensives Training.",
+    "wofuer": [
+      "Füllen die Glykogenspeicher in Muskeln und Leber",
+      "Liefern dem Gehirn seinen bevorzugten Brennstoff",
+      "Sparen Eiweiß, damit es für den Muskelaufbau frei bleibt"
+    ],
+    "warum": "Krafttraining zieht vor allem Energie aus dem Muskelglykogen. Volle Speicher bedeuten mehr Wiederholungen und Sätze, und genau dieses Trainingsvolumen treibt das Wachstum an.",
+    "menge": "Die App setzt zuerst Eiweiß und Fett fest; die übrige Energie deines Tagesziels geht an die Kohlenhydrate. Sie sind damit der flexible Teil, der mit deinem Kalorienbedarf wächst.",
+    "quellen": ["Haferflocken", "Reis", "Kartoffeln", "Vollkornnudeln", "Vollkornbrot", "Bananen", "Linsen und Bohnen"],
+    "zuwenig": "Mit leeren Speichern wird das Training schnell schwer, die Leistung sinkt und du fühlst dich müde oder unkonzentriert.",
+    "zuviel": "Für sich genommen sind Kohlenhydrate kein Problem; entscheidend ist die Gesamtenergie. Kommen viele davon aus Zucker und Weißmehl, fehlen Ballaststoffe und Mikronährstoffe.",
+    "tipp": "Leg einen größeren Teil deiner Kohlenhydrate in die Mahlzeiten vor und nach dem Training."
+  },
+  "fat": {
+    "kurz": "Fett ist ein dichter Energiespeicher und Baustoff für Zellen und Hormone.",
+    "wofuer": [
+      "Baut Zellmembranen und Hormone wie Testosteron auf",
+      "Ermöglicht die Aufnahme der Vitamine A, D, E und K",
+      "Liefert lebenswichtige Fettsäuren, die der Körper nicht selbst herstellen kann"
+    ],
+    "warum": "Zu wenig Fett kann den Hormonhaushalt durcheinanderbringen, und der ist auch für den Muskelaufbau wichtig. Außerdem hilft Fett, einen Kalorienüberschuss ohne riesige Essensmengen zu erreichen.",
+    "menge": "Die App nimmt mindestens 0,8 g pro kg Körpergewicht oder rund 28 % deiner Tagesenergie, je nachdem, was höher ist. Das liegt nahe am Richtwert der DGE für den Fettanteil der Ernährung.",
+    "quellen": ["Rapsöl und Olivenöl", "Nüsse und Mandeln", "Avocado", "Lachs und Hering", "Eier", "Leinsamen und Chiasamen"],
+    "zuwenig": "Sehr fettarme Ernährung kann die Aufnahme fettlöslicher Vitamine stören und auf Dauer die Hormonproduktion drücken; oft fehlt dann auch Energie.",
+    "zuviel": "Fett hat mehr als doppelt so viele Kalorien pro Gramm wie Eiweiß oder Kohlenhydrate, deshalb schießt der Überschuss schnell zu hoch. Wichtig ist die Qualität: lieber Pflanzenöle, Nüsse und Fisch als Wurst und Frittiertes.",
+    "tipp": "Ein Esslöffel Rapsöl oder eine Handvoll Nüsse am Tag deckt schon einen guten Teil gesunder Fette ab."
+  },
+  "fiber": {
+    "kurz": "Ballaststoffe sind unverdauliche Pflanzenbestandteile, die deinen Darm in Bewegung halten.",
+    "wofuer": [
+      "Füttern die Darmbakterien und halten die Verdauung regelmäßig",
+      "Machen länger satt und dämpfen Blutzuckerspitzen",
+      "Senken erhöhtes LDL-Cholesterin"
+    ],
+    "warum": "Wer für Muskelaufbau viel isst, braucht eine Verdauung, die mitspielt. Ballaststoffe sind außerdem eng mit einem geringeren Risiko für Herz-Kreislauf-Erkrankungen und Darmkrebs verbunden.",
+    "menge": "Richtwert der DGE für Erwachsene. Die meisten Menschen in Deutschland erreichen ihn nicht.",
+    "quellen": ["Haferflocken", "Vollkornbrot", "Linsen, Bohnen und Kichererbsen", "Gemüse wie Brokkoli und Möhren", "Beeren und Äpfel", "Leinsamen", "Kartoffeln mit Schale"],
+    "zuwenig": "Typisch sind träge Verdauung und Verstopfung sowie schnell wiederkehrender Hunger.",
+    "zuviel": "Steigerst du die Menge plötzlich stark, drohen Blähungen und Bauchgrummeln. Direkt vor dem Training kann eine sehr ballaststoffreiche Mahlzeit schwer im Magen liegen.",
+    "tipp": "Steigere Ballaststoffe schrittweise und trink dazu ausreichend Wasser."
+  },
+  "sugar": {
+    "kurz": "Zucker sind schnell verfügbare Kohlenhydrate, die oft versteckt in Lebensmitteln stecken.",
+    "wofuer": [
+      "Liefert sehr schnell Energie fürs Blut und die Muskeln",
+      "Kann direkt nach dem Training die Glykogenspeicher rasch auffüllen"
+    ],
+    "warum": "Rund ums Training ist etwas Zucker kein Problem und kann sogar praktisch sein. Den Rest des Tages verdrängt er aber nährstoffreiche Lebensmittel und macht es leicht, ungewollt viel Energie aufzunehmen.",
+    "menge": "Die Obergrenze folgt der Empfehlung von WHO und DGE, höchstens 10 % der Tagesenergie aus freiem Zucker aufzunehmen. Nährwertangaben zählen meist den gesamten Zucker inklusive Obst- und Milchzucker, die Grenze ist hier also eher streng.",
+    "quellen": ["Softdrinks und Energydrinks", "Fruchtsäfte", "Süßigkeiten und Gebäck", "Fruchtjoghurt", "Müsliriegel und Frühstücksflocken", "Ketchup und Fertigsoßen"],
+    "zuwenig": "Einen Mangel an Zucker gibt es nicht: Der Körper gewinnt Glukose auch aus Stärke und kann sie notfalls selbst herstellen.",
+    "zuviel": "Viel freier Zucker erhöht das Risiko für Karies, Übergewicht und auf Dauer Typ-2-Diabetes. Besonders gesüßte Getränke liefern viel Energie, ohne satt zu machen.",
+    "tipp": "Trink Wasser statt Saft und Limo; das senkt den Zucker am stärksten."
+  },
+  "satfat": {
+    "kurz": "Gesättigte Fettsäuren stecken vor allem in tierischen Fetten und festen Pflanzenfetten.",
+    "wofuer": [
+      "Liefern Energie und sind Teil von Zellmembranen",
+      "Der Körper kann sie selbst herstellen, sie sind also nicht lebensnotwendig"
+    ],
+    "warum": "Für den Muskelaufbau brauchst du sie nicht gezielt. Wichtig ist, dass sie im Rahmen bleiben, weil viel davon das LDL-Cholesterin anhebt und damit das Herz-Kreislauf-Risiko.",
+    "menge": "Die Obergrenze entspricht der Empfehlung von DGE und WHO, höchstens 10 % der Tagesenergie aus gesättigten Fetten zu beziehen.",
+    "quellen": ["Butter und Sahne", "Käse", "Wurst und fettes Fleisch", "Kokos- und Palmfett", "Kuchen und Gebäck", "Fast Food und Frittiertes"],
+    "zuwenig": "Einen Mangel gibt es nicht, da der Körper sie selbst bilden kann.",
+    "zuviel": "Ein dauerhaft hoher Anteil erhöht das LDL-Cholesterin und damit das Risiko für Herz-Kreislauf-Erkrankungen. Am meisten bringt es, sie durch ungesättigte Fette aus Pflanzenölen, Nüssen und Fisch zu ersetzen.",
+    "tipp": "Brate mit Rapsöl statt Butter und greif öfter zu magerem Fleisch und Fisch."
+  },
+  "salt": {
+    "kurz": "Speisesalz liefert Natrium, das deinen Wasserhaushalt und deine Nerven steuert.",
+    "wofuer": [
+      "Regelt den Flüssigkeitshaushalt und das Blutvolumen",
+      "Ist nötig für Nervenimpulse und Muskelkontraktion",
+      "Gleicht Natriumverluste über den Schweiß aus"
+    ],
+    "warum": "Bei sehr langen, schweißtreibenden Einheiten verlierst du etwas Natrium. Im Alltag nehmen die meisten aber ohnehin deutlich mehr Salz auf als nötig, deshalb ist es hier eine Obergrenze.",
+    "menge": "Orientierungswert der DGE als Obergrenze für Erwachsene; die WHO empfiehlt sogar etwas weniger. Männer in Deutschland liegen im Schnitt klar darüber.",
+    "quellen": ["Brot und Brötchen", "Wurst und Schinken", "Käse", "Fertiggerichte und Pizza", "Chips und Salzgebäck", "Sojasauce und Brühe"],
+    "zuwenig": "Echter Natriummangel ist selten und tritt eher bei extremem Schwitzen mit sehr viel reinem Wasser auf; dann drohen Schwäche, Übelkeit und Verwirrtheit.",
+    "zuviel": "Dauerhaft viel Salz erhöht bei vielen Menschen den Blutdruck und damit das Risiko für Herzinfarkt und Schlaganfall. Etwa drei Viertel des Salzes stammen aus verarbeiteten Lebensmitteln, nicht aus dem Salzstreuer.",
+    "tipp": "Würz mit Kräutern und Gewürzen und nutz, wenn du salzt, jodiertes Speisesalz."
+  },
+  "omega3": {
+    "kurz": "Omega-3 sind lebenswichtige ungesättigte Fettsäuren, die dein Körper nicht selbst bildet.",
+    "wofuer": [
+      "Sind Bausteine von Zellmembranen, besonders in Gehirn und Augen",
+      "Unterstützen eine normale Herzfunktion und senken erhöhte Blutfette",
+      "Sind Ausgangsstoff für Botenstoffe, die Entzündungen regulieren"
+    ],
+    "warum": "Omega-3 hilft dem Herz-Kreislauf-System, das bei regelmäßigem Training gefordert ist. Ob es den Muskelaufbau direkt verbessert, ist bisher nicht eindeutig belegt; als Teil einer guten Fettqualität lohnt es sich aber.",
+    "menge": "Der Richtwert orientiert sich an der Empfehlung für die pflanzliche Omega-3-Fettsäure ALA. Für die langkettigen Formen EPA und DHA rät die DGE zusätzlich zu ein bis zwei Portionen Fisch pro Woche.",
+    "quellen": ["Lachs", "Hering und Makrele", "Leinöl und Leinsamen", "Walnüsse", "Rapsöl", "Chiasamen"],
+    "zuwenig": "Ein Mangel zeigt sich selten deutlich, etwa über trockene, schuppige Haut. Auf Dauer fehlt vor allem der schützende Effekt für Herz und Gefäße.",
+    "zuviel": "Aus Lebensmitteln unbedenklich. Hochdosierte Fischölkapseln können die Blutgerinnung beeinflussen; das ist vor allem wichtig, wenn du blutverdünnende Medikamente nimmst.",
+    "tipp": "EPA und DHA kommen vor allem aus Fisch; pflanzliches ALA aus Lein und Walnuss wandelt der Körper nur zu einem kleinen Teil um. Ohne Fisch kann Algenöl eine Alternative sein."
+  },
+  "calcium": {
+    "kurz": "Calcium ist der wichtigste Baustoff für Knochen und Zähne.",
+    "wofuer": [
+      "Gibt Knochen und Zähnen ihre Festigkeit",
+      "Löst die Kontraktion jeder Muskelfaser aus",
+      "Ist nötig für Nervenleitung und Blutgerinnung"
+    ],
+    "warum": "Jede Muskelkontraktion braucht Calcium, und schwere Gewichte belasten deine Knochen; zusammen mit Training stärkt eine gute Versorgung das Skelett. Bis etwa Anfang 30 baust du noch Knochenmasse auf, die dir später zugutekommt.",
+    "menge": "Empfehlung der DGE für Erwachsene, die den Bedarf von nahezu allen gesunden Menschen deckt. Für Männer und Frauen gilt derselbe Wert.",
+    "quellen": ["Milch und Joghurt", "Hartkäse wie Emmentaler oder Gouda", "Calciumreiches Mineralwasser", "Grünkohl und Brokkoli", "Tofu", "Mandeln", "Mit Calcium angereicherte Pflanzendrinks"],
+    "zuwenig": "Der Körper hält den Blutspiegel konstant und holt sich Calcium notfalls aus den Knochen. Ein Mangel bleibt daher lange unbemerkt und zeigt sich erst Jahre später als geringere Knochendichte.",
+    "zuviel": "Über normale Ernährung kaum möglich. Hochdosierte Präparate zusätzlich zu calciumreicher Kost können das Risiko für Nierensteine erhöhen.",
+    "tipp": "Wenn du wenig Milchprodukte isst, achte auf ein Mineralwasser mit viel Calcium; das zählt mit."
+  },
+  "magnesium": {
+    "kurz": "Magnesium ist ein Mineralstoff, den hunderte Enzyme in deinem Körper brauchen.",
+    "wofuer": [
+      "Aktiviert den Energieträger ATP, der jede Muskelarbeit antreibt",
+      "Hilft dem Muskel, sich nach der Kontraktion wieder zu entspannen",
+      "Ist an Eiweißaufbau, Nervenfunktion und Knochenbildung beteiligt"
+    ],
+    "warum": "Ohne Magnesium läuft die Energiegewinnung in der Muskelzelle nicht rund. Über den Schweiß verlierst du etwas davon, eine ausgewogene Ernährung gleicht das bei normalem Training aber in der Regel aus.",
+    "menge": "Schätzwert der DGE für Erwachsene; Männer bekommen einen höheren Wert, weil sie im Schnitt mehr Körper- und Muskelmasse haben.",
+    "quellen": ["Haferflocken", "Vollkornbrot und Naturreis", "Kürbiskerne und Sonnenblumenkerne", "Nüsse wie Cashews und Mandeln", "Linsen und Bohnen", "Magnesiumreiches Mineralwasser", "Zartbitterschokolade"],
+    "zuwenig": "Ein Mangel kann sich durch Muskelzucken, Krämpfe, Müdigkeit oder Herzklopfen zeigen. Wadenkrämpfe werden oft mit Magnesium verbunden, die Studienlage dazu ist aber dünn.",
+    "zuviel": "Aus Lebensmitteln unproblematisch. Höher dosierte Präparate führen häufig zu Durchfall.",
+    "tipp": "Haferflocken mit Nüssen oder Kernen zum Frühstück decken schon einen guten Teil deines Bedarfs."
+  },
+  "iron": {
+    "kurz": "Eisen transportiert Sauerstoff im Blut und in den Muskeln.",
+    "wofuer": [
+      "Ist Kern des Hämoglobins, das Sauerstoff im Blut transportiert",
+      "Speichert im Myoglobin Sauerstoff direkt im Muskel",
+      "Ist an der Energiegewinnung in den Mitochondrien beteiligt"
+    ],
+    "warum": "Ohne genug Eisen kommt weniger Sauerstoff im Muskel an, du ermüdest schneller und erholst dich langsamer zwischen den Sätzen. Männer sind selten unterversorgt, bei fleischarmer Ernährung lohnt sich aber ein Blick darauf.",
+    "menge": "Empfehlung der DGE, die den Bedarf nahezu aller gesunden Erwachsenen deckt. Frauen haben wegen der Monatsblutung einen höheren Wert als Männer.",
+    "quellen": ["Rindfleisch", "Linsen und Kichererbsen", "Haferflocken", "Kürbiskerne", "Hirse", "Vollkornbrot", "Tofu"],
+    "zuwenig": "Typisch sind Müdigkeit, Blässe, Leistungsabfall, Kurzatmigkeit bei Belastung und häufiges Frieren. Ob wirklich ein Mangel vorliegt, zeigt nur ein Bluttest beim Arzt.",
+    "zuviel": "Aus Lebensmitteln selten ein Problem. Eisenpräparate ohne nachgewiesenen Mangel können schaden, besonders bei der erblichen Eisenspeicherkrankheit, die bei Männern häufiger vorkommt.",
+    "tipp": "Vitamin C zur Mahlzeit, etwa Paprika oder ein Glas Orangensaft, verbessert die Eisenaufnahme aus Pflanzen; Kaffee und Tee direkt dazu bremsen sie."
+  },
+  "zinc": {
+    "kurz": "Zink ist ein Spurenelement, das Wachstum, Abwehr und Stoffwechsel steuert.",
+    "wofuer": [
+      "Ist Bestandteil von über hundert Enzymen, auch für den Eiweißaufbau",
+      "Unterstützt Immunsystem und Wundheilung",
+      "Wird für eine normale Testosteronbildung und Fruchtbarkeit gebraucht"
+    ],
+    "warum": "Zink ist an Zellteilung und Eiweißaufbau beteiligt, also genau an den Prozessen, die nach dem Training neues Gewebe bilden. Ein Mangel kann den Testosteronspiegel senken; zusätzliches Zink ohne Mangel erhöht ihn aber nicht.",
+    "menge": "Empfehlung der DGE, die auch berücksichtigt, wie viel Phytat aus Vollkorn und Hülsenfrüchten die Aufnahme bremst. Männer bekommen einen höheren Wert als Frauen.",
+    "quellen": ["Rind- und Schweinefleisch", "Käse", "Haferflocken", "Kürbiskerne", "Linsen", "Eier", "Cashewkerne"],
+    "zuwenig": "Ein Mangel kann sich durch häufige Infekte, schlechte Wundheilung, Haarausfall oder nachlassenden Geschmackssinn zeigen.",
+    "zuviel": "Aus Lebensmitteln unbedenklich. Hochdosierte Präparate über längere Zeit stören die Aufnahme von Kupfer und können zu Übelkeit führen.",
+    "tipp": "Eingeweichte Haferflocken oder Sauerteigbrot machen das Zink aus Getreide besser verfügbar."
+  },
+  "potassium": {
+    "kurz": "Kalium ist der wichtigste Mineralstoff im Inneren deiner Zellen.",
+    "wofuer": [
+      "Steuert zusammen mit Natrium Nervenimpulse und Muskelkontraktion",
+      "Hält den Wasserhaushalt in den Zellen im Gleichgewicht",
+      "Wirkt dem blutdrucksteigernden Effekt von Salz entgegen"
+    ],
+    "warum": "Jeder Muskelreiz läuft über den Austausch von Kalium und Natrium an der Zellwand. Kalium hilft außerdem, Blutdruck im Rahmen zu halten, und steckt vor allem in Gemüse, Obst und Kartoffeln, die ohnehin gut für dich sind.",
+    "menge": "Schätzwert der DGE für Erwachsene, der unter anderem den positiven Effekt auf den Blutdruck berücksichtigt.",
+    "quellen": ["Kartoffeln", "Bananen", "Linsen und Bohnen", "Spinat", "Tomaten", "Trockenobst wie Aprikosen", "Nüsse"],
+    "zuwenig": "Ein echter Mangel tritt meist nur bei Durchfall, Erbrechen oder bestimmten Medikamenten auf und zeigt sich durch Muskelschwäche, Krämpfe oder Herzrhythmusstörungen.",
+    "zuviel": "Bei gesunden Nieren aus Lebensmitteln unbedenklich. Präparate oder Kaliumsalz können bei Nierenerkrankungen oder bestimmten Blutdruckmitteln gefährlich werden.",
+    "tipp": "Eine Portion Kartoffeln oder Hülsenfrüchte plus Obst und Gemüse zu jeder Mahlzeit bringen dich nah ans Ziel."
+  },
+  "iodine": {
+    "kurz": "Jod ist das Spurenelement, aus dem deine Schilddrüse ihre Hormone baut.",
+    "wofuer": [
+      "Ist Baustein der Schilddrüsenhormone",
+      "Diese Hormone steuern Grundumsatz, Wärmebildung und Energiestoffwechsel",
+      "Beeinflusst Wachstum und Eiweißaufbau"
+    ],
+    "warum": "Die Schilddrüse stellt quasi die Drehzahl deines Stoffwechsels ein. Deutschland ist ein Jodmangelgebiet, und die Versorgung hat sich zuletzt verschlechtert, weil weniger Jodsalz in Fertigprodukten steckt.",
+    "menge": "Empfehlung der DGE für Erwachsene in Deutschland, die wegen der jodarmen Böden etwas höher liegt als der Wert der EFSA.",
+    "quellen": ["Jodsalz", "Seefisch wie Seelachs und Kabeljau", "Milch und Joghurt", "Käse", "Eier", "Brot, das mit Jodsalz gebacken ist"],
+    "zuwenig": "Ein dauerhafter Mangel kann zu einer vergrößerten Schilddrüse (Kropf) und Unterfunktion führen, mit Müdigkeit, Frieren und Gewichtszunahme.",
+    "zuviel": "Mit Jodsalz, Fisch und Milch kommt man in Deutschland kaum in einen kritischen Bereich. Vorsicht bei getrockneten Algen und Algenpräparaten, die extrem viel Jod enthalten können.",
+    "tipp": "Nimm zu Hause konsequent Jodsalz und iss ein- bis zweimal pro Woche Seefisch."
+  },
+  "vitA": {
+    "kurz": "Vitamin A ist ein fettlösliches Vitamin für Augen, Haut und Abwehr.",
+    "wofuer": [
+      "Ermöglicht das Sehen, besonders bei Dämmerung",
+      "Hält Haut und Schleimhäute intakt",
+      "Steuert Zellwachstum und Immunabwehr"
+    ],
+    "warum": "Intakte Schleimhäute und ein funktionierendes Immunsystem helfen, Trainingsausfälle durch Infekte zu vermeiden. Vitamin A ist außerdem an Wachstum und Erneuerung von Gewebe beteiligt.",
+    "menge": "Empfehlung der DGE als Retinol-Aktivitätsäquivalent, das tierisches Vitamin A und pflanzliches Beta-Carotin zusammenrechnet. Männer haben wegen ihrer größeren Körpermasse einen höheren Wert.",
+    "quellen": ["Möhren", "Süßkartoffeln", "Spinat und Grünkohl", "Kürbis", "Eier", "Käse und Butter"],
+    "zuwenig": "Ein Mangel ist in Deutschland selten; erste Zeichen sind schlechtes Sehen in der Dämmerung, trockene Haut und häufigere Infekte.",
+    "zuviel": "Fertiges Vitamin A wird im Körper gespeichert. Leber in großen Mengen oder hochdosierte Präparate können zu Kopfschmerzen und Leberschäden führen; Beta-Carotin aus Gemüse ist dagegen unbedenklich.",
+    "tipp": "Iss Möhren und anderes orangefarbenes Gemüse mit etwas Öl, damit das Beta-Carotin gut aufgenommen wird."
+  },
+  "vitC": {
+    "kurz": "Vitamin C ist ein wasserlösliches Vitamin für Bindegewebe, Abwehr und Eisenaufnahme.",
+    "wofuer": [
+      "Baut Kollagen für Sehnen, Bänder, Haut und Knorpel auf",
+      "Schützt Zellen als Antioxidans vor Schäden",
+      "Verbessert die Aufnahme von Eisen aus Pflanzen",
+      "Unterstützt das Immunsystem"
+    ],
+    "warum": "Schwere Gewichte belasten Sehnen und Bänder, und für deren Kollagen braucht der Körper Vitamin C. Hochdosierte Präparate rund ums Training bringen nach bisherigen Studien aber keinen Vorteil und können Trainingsanpassungen eher bremsen.",
+    "menge": "Empfehlung der DGE, die den Bedarf nahezu aller gesunden Erwachsenen deckt. Männer haben einen etwas höheren Wert, vor allem wegen der größeren Körpermasse.",
+    "quellen": ["Paprika", "Brokkoli und Rosenkohl", "Kiwi", "Orangen und andere Zitrusfrüchte", "Erdbeeren", "Schwarze Johannisbeeren", "Sauerkraut"],
+    "zuwenig": "Ein leichter Mangel kann sich durch Müdigkeit, Zahnfleischbluten und schlechte Wundheilung zeigen. Echter Skorbut ist heute sehr selten.",
+    "zuviel": "Überschüsse scheidet der Körper über die Nieren aus. Sehr hohe Dosen aus Präparaten können Durchfall verursachen und bei Veranlagung Nierensteine begünstigen.",
+    "tipp": "Vitamin C zur Mahlzeit verbessert die Eisenaufnahme aus Pflanzen; Paprika roh zum Essen ist dafür ideal."
+  },
+  "vitD": {
+    "kurz": "Vitamin D bildet dein Körper vor allem selbst, wenn Sonne auf die Haut fällt.",
+    "wofuer": [
+      "Sorgt dafür, dass Calcium aus dem Darm aufgenommen wird",
+      "Hält Knochen stabil und unterstützt ihren Umbau",
+      "Ist an normaler Muskelfunktion und Immunabwehr beteiligt"
+    ],
+    "warum": "Starke Knochen und gut funktionierende Muskeln sind die Basis für schwere Grundübungen. Ein niedriger Vitamin-D-Spiegel ist mit Muskelschwäche verbunden; ob zusätzliches Vitamin D bei guter Versorgung Kraft bringt, ist dagegen nicht belegt.",
+    "menge": "Schätzwert der DGE für den Fall, dass der Körper selbst kein Vitamin D bilden kann. Die Hauptquelle ist die Sonne: Über das Essen allein ist das Ziel kaum zu erreichen, ein niedriger Wert in der App ist daher normal.",
+    "quellen": ["Hering", "Lachs", "Makrele", "Eigelb", "Pilze, die UV-Licht bekommen haben", "Angereicherte Margarine"],
+    "zuwenig": "Ein Mangel macht sich lange kaum bemerkbar; möglich sind Müdigkeit, Muskelschwäche und auf Dauer brüchigere Knochen. Gerade im Winter sind in Deutschland viele schlecht versorgt, Klarheit bringt ein Bluttest.",
+    "zuviel": "Durch Sonne und Essen nicht möglich. Hochdosierte Präparate über längere Zeit können zu viel Calcium im Blut und Nierenschäden verursachen.",
+    "tipp": "Zwischen März und Oktober reicht es meist, Gesicht und Arme mehrmals pro Woche eine Weile in die Sonne zu halten; im Winter kann ein Präparat nach Rücksprache sinnvoll sein."
+  },
+  "vitE": {
+    "kurz": "Vitamin E ist ein fettlösliches Vitamin, das Zellen vor Oxidation schützt.",
+    "wofuer": [
+      "Schützt die Fette in Zellmembranen vor Schäden durch Sauerstoffradikale",
+      "Hält mehrfach ungesättigte Fettsäuren im Körper stabil",
+      "Unterstützt die Immunabwehr"
+    ],
+    "warum": "Training erhöht kurzfristig den oxidativen Stress, und Vitamin E gehört zum Schutzsystem der Zellen. Hochdosierte Präparate haben in Studien aber keinen Vorteil für Muskelaufbau gezeigt.",
+    "menge": "Schätzwert der DGE für Erwachsene; Männer bekommen wegen des höheren Energieumsatzes einen etwas höheren Wert.",
+    "quellen": ["Rapsöl und Sonnenblumenöl", "Weizenkeimöl", "Mandeln", "Haselnüsse", "Sonnenblumenkerne", "Avocado"],
+    "zuwenig": "Ein Mangel ist bei normaler Ernährung sehr selten und tritt eher bei gestörter Fettaufnahme auf; dann sind Nerven und Muskeln betroffen.",
+    "zuviel": "Aus Lebensmitteln unbedenklich. Sehr hohe Dosen aus Präparaten können die Blutgerinnung hemmen, vor allem zusammen mit blutverdünnenden Medikamenten.",
+    "tipp": "Eine Handvoll Mandeln oder Haselnüsse und Rapsöl in der Küche decken viel von deinem Bedarf."
+  },
+  "vitK": {
+    "kurz": "Vitamin K ist ein fettlösliches Vitamin für Blutgerinnung und Knochen.",
+    "wofuer": [
+      "Aktiviert Gerinnungsfaktoren, damit Wunden sich schließen",
+      "Aktiviert Eiweiße, die Calcium in die Knochen einbauen"
+    ],
+    "warum": "Kleine Verletzungen und blaue Flecke gehören beim Training dazu, und für die Gerinnung ist Vitamin K unverzichtbar. Zusammen mit Calcium und Vitamin D trägt es außerdem zu stabilen Knochen bei.",
+    "menge": "Schätzwert der DGE für Erwachsene; der Bedarf ist bei normaler Mischkost meist gedeckt.",
+    "quellen": ["Grünkohl", "Spinat", "Brokkoli", "Rosenkohl", "Kopfsalat und Feldsalat", "Petersilie", "Sauerkraut"],
+    "zuwenig": "Ein Mangel ist bei Gesunden selten und zeigt sich durch verstärkte Blutungsneigung, etwa häufiges Nasenbluten oder schnell blaue Flecke.",
+    "zuviel": "Aus Lebensmitteln unbedenklich. Wer gerinnungshemmende Medikamente vom Typ Vitamin-K-Antagonist nimmt, sollte die Menge möglichst gleichmäßig halten.",
+    "tipp": "Grünes Blattgemüse mit etwas Öl oder Butter zubereiten, dann nimmt der Körper das Vitamin K besser auf."
+  },
+  "vitB1": {
+    "kurz": "Vitamin B1 (Thiamin) hilft, aus Kohlenhydraten Energie zu gewinnen.",
+    "wofuer": [
+      "Ist nötig, um Kohlenhydrate in nutzbare Energie umzuwandeln",
+      "Unterstützt die Funktion von Nerven und Herzmuskel"
+    ],
+    "warum": "Wer viel trainiert und viele Kohlenhydrate isst, setzt auch mehr Energie um und braucht entsprechend mehr B1. Der Körper speichert es kaum, deshalb zählt eine regelmäßige Zufuhr.",
+    "menge": "Empfehlung der DGE, die sich nach dem Energieumsatz richtet; Männer haben deshalb einen etwas höheren Wert.",
+    "quellen": ["Schweinefleisch", "Haferflocken", "Vollkornbrot", "Erbsen", "Linsen und Bohnen", "Sonnenblumenkerne"],
+    "zuwenig": "Ein Mangel kann zu Müdigkeit, Reizbarkeit, Konzentrationsproblemen und Muskelschwäche führen. Er tritt vor allem bei einseitiger Ernährung oder viel Alkohol auf.",
+    "zuviel": null,
+    "tipp": "Vollkorn statt Weißmehl liefert deutlich mehr B1, weil es in den Randschichten des Korns steckt."
+  },
+  "vitB2": {
+    "kurz": "Vitamin B2 (Riboflavin) ist an fast allen Schritten der Energiegewinnung beteiligt.",
+    "wofuer": [
+      "Hilft, Energie aus Fetten, Kohlenhydraten und Eiweiß zu gewinnen",
+      "Unterstützt das körpereigene Schutzsystem gegen oxidativen Stress",
+      "Hält Haut und Schleimhäute gesund"
+    ],
+    "warum": "Mehr Training heißt mehr Energiestoffwechsel, und B2 ist dafür ein Schlüsselbaustein. Mit Milchprodukten, Eiern und Fleisch ist die Versorgung meist einfach.",
+    "menge": "Empfehlung der DGE, die sich am Energieumsatz orientiert; Männer haben deshalb einen höheren Wert.",
+    "quellen": ["Milch", "Joghurt und Quark", "Käse", "Eier", "Fleisch und Fisch", "Champignons", "Mandeln"],
+    "zuwenig": "Ein Mangel zeigt sich zum Beispiel durch eingerissene Mundwinkel, entzündete Schleimhäute oder schuppige Haut. Er ist in Deutschland selten.",
+    "zuviel": null,
+    "tipp": "B2 ist lichtempfindlich; Milch lieber in undurchsichtigen Verpackungen kaufen und dunkel lagern."
+  },
+  "vitB6": {
+    "kurz": "Vitamin B6 ist der Helfer im Eiweißstoffwechsel.",
+    "wofuer": [
+      "Verarbeitet Aminosäuren, damit der Körper daraus Gewebe bauen kann",
+      "Ist an der Bildung von Botenstoffen im Nervensystem beteiligt",
+      "Hilft beim Aufbau des roten Blutfarbstoffs"
+    ],
+    "warum": "Je mehr Eiweiß du isst, desto mehr B6 braucht dein Körper, um es zu verarbeiten. Bei einer eiweißreichen Ernährung für den Muskelaufbau ist B6 deshalb besonders relevant.",
+    "menge": "Empfehlung der DGE, die eine normale Eiweißzufuhr zugrunde legt; Männer haben wegen ihrer größeren Muskelmasse einen höheren Wert.",
+    "quellen": ["Hähnchen und Pute", "Lachs und Thunfisch", "Kartoffeln", "Bananen", "Kichererbsen", "Haferflocken", "Walnüsse"],
+    "zuwenig": "Ein Mangel ist selten und kann sich durch Hautentzündungen, rissige Mundwinkel, Müdigkeit oder Nervenbeschwerden zeigen.",
+    "zuviel": "Aus Lebensmitteln unbedenklich. Hochdosierte Präparate über längere Zeit können Nervenschäden mit Kribbeln und Taubheit in Händen und Füßen auslösen.",
+    "tipp": "Viele eiweißreiche Lebensmittel wie Geflügel und Fisch bringen B6 gleich mit; Kartoffeln und Bananen ergänzen das gut."
+  },
+  "vitB12": {
+    "kurz": "Vitamin B12 steckt fast nur in tierischen Lebensmitteln und schützt Blut und Nerven.",
+    "wofuer": [
+      "Ist nötig für die Bildung roter Blutkörperchen",
+      "Schützt Nerven und hält ihre Hüllen intakt",
+      "Unterstützt Zellteilung und Eiweißstoffwechsel"
+    ],
+    "warum": "Gesunde Blutbildung sorgt dafür, dass genug Sauerstoff im arbeitenden Muskel ankommt. Wer Fleisch, Fisch, Eier oder Milchprodukte isst, ist meist gut versorgt; bei veganer Ernährung führt kein Weg an einem Präparat vorbei.",
+    "menge": "Schätzwert der DGE für Erwachsene, der auf einen guten Blutspiegel und ausreichende Speicher zielt.",
+    "quellen": ["Rindfleisch", "Lachs und Hering", "Eier", "Milch und Käse", "Leber", "Mit B12 angereicherte Pflanzendrinks"],
+    "zuwenig": "Ein Mangel entwickelt sich oft über Jahre, weil die Leber Vorräte hat. Er zeigt sich durch Müdigkeit, Blutarmut, Konzentrationsprobleme und Kribbeln in Händen und Füßen; Nervenschäden können bleibend sein.",
+    "zuviel": null,
+    "tipp": "Wenn du vegan isst, nimm regelmäßig ein B12-Präparat und lass den Status ab und zu beim Arzt prüfen."
+  },
+  "folate": {
+    "kurz": "Folat ist ein B-Vitamin für Zellteilung und Blutbildung.",
+    "wofuer": [
+      "Ist nötig, um Erbgut zu bilden, wenn sich Zellen teilen",
+      "Hilft zusammen mit B12 bei der Bildung roter Blutkörperchen",
+      "Baut die Aminosäure Homocystein ab"
+    ],
+    "warum": "Muskelwachstum und Regeneration bedeuten viel Zellerneuerung, und dafür braucht der Körper Folat. Viele Menschen in Deutschland erreichen den Wert nicht, weil sie zu wenig grünes Gemüse und Hülsenfrüchte essen.",
+    "menge": "Empfehlung der DGE als Folat-Äquivalent, das natürliches Folat und die besser verfügbare Folsäure aus Präparaten zusammenrechnet. Für Männer und Frauen gilt derselbe Wert.",
+    "quellen": ["Spinat und Feldsalat", "Brokkoli und Rosenkohl", "Linsen und Kichererbsen", "Weizenkeime", "Vollkornbrot", "Eier", "Orangen"],
+    "zuwenig": "Ein Mangel kann zu Blutarmut mit Müdigkeit und Leistungsschwäche führen; außerdem steigt der Homocysteinspiegel.",
+    "zuviel": "Aus Lebensmitteln unbedenklich. Hochdosierte Folsäurepräparate können einen B12-Mangel verschleiern, weil sie die Blutarmut überdecken, während die Nervenschäden weiterlaufen.",
+    "tipp": "Folat ist hitzeempfindlich; Gemüse kurz dünsten statt lange kochen und öfter auch roh essen."
+  }
+}

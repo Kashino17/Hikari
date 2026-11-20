@@ -1104,3 +1104,89 @@ html.area-mind .brLabel b{font-family:var(--serif);font-weight:560;font-size:30p
 .scoreBadge.sc-mid{background:#F2B847;color:#1A1405}
 .scoreBadge.sc-fair{background:#C6DD69;color:#141A06}
 .scoreBadge.sc-good{background:rgb(var(--c));color:var(--ink)}
+/* ── Ernährung · Verlauf (Übersicht → Gruppe → Nährstoff) ── */
+.fstats,.nutriPage{--tone-good:rgb(var(--food));--tone-fair:#F2B847;--tone-low:#EE7B6F;--tone-none:rgba(255,255,255,.18)}
+.fstats .statsCard{background:var(--surface);border:1px solid var(--border)}
+.scoreLine{display:flex;align-items:center;gap:8px;background:none;border:0;color:inherit;padding:0}
+/* Notenmarke unter jedem Wochentag */
+.bmark{display:flex;align-items:center;justify-content:center;width:24px;height:20px;margin:5px auto 0;border-radius:6px;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.06);color:transparent}
+.bmark.sc-low{background:#EE7B6F;color:#1A0E0C}.bmark.sc-mid{background:#F2B847;color:#1A1405}.bmark.sc-fair{background:#C6DD69;color:#141A06}.bmark.sc-good{background:rgb(var(--food));color:var(--ink)}
+.fstats .bars{padding-bottom:26px}
+/* Notenkalender */
+.scoreCal{background:var(--surface);border:1px solid var(--border)}
+.calHead,.calGrid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.calHead span{text-align:center;font-size:11.5px;color:var(--muted)}
+.calGrid{margin-top:6px}
+.calDay{aspect-ratio:1;border-radius:11px;border:0;background:var(--high);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font:inherit;padding:0}
+.calDay .cd{font-size:12px;line-height:1}.calDay .cs{font-size:15px;font-weight:800;line-height:1}
+.calDay.logged{background:transparent;box-shadow:inset 0 0 0 1.5px rgba(var(--food),.6);color:var(--text)}
+.calDay.future,.calDay:disabled{opacity:.35}
+.calDay.sc-low{background:#EE7B6F;color:#1A0E0C}.calDay.sc-mid{background:#F2B847;color:#1A1405}.calDay.sc-fair{background:#C6DD69;color:#141A06}.calDay.sc-good{background:rgb(var(--food));color:var(--ink)}
+.calLegend{display:flex;flex-wrap:wrap;gap:10px;font-size:11.5px;color:var(--muted)}
+.calLegend span{display:flex;align-items:center;gap:5px}
+.calLegend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.calLegend i.sc-low{background:#EE7B6F}.calLegend i.sc-mid{background:#F2B847}.calLegend i.sc-fair{background:#C6DD69}.calLegend i.sc-good{background:rgb(var(--food))}.calLegend i.logged{box-shadow:inset 0 0 0 1.5px rgba(var(--food),.6)}
+/* Makros als Ringe */
+.macroGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.macroTile{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--text);font:inherit}
+.macroTile .ring b{font-size:15px}.macroTile .ring small{font-size:10px;opacity:.7}
+.mtName{font-size:11.5px;font-weight:600;text-align:center;line-height:1.15}
+.mtVal{font-size:10.5px;color:var(--muted)}
+@media (max-width:380px){.macroGrid{grid-template-columns:repeat(3,1fr)}}
+/* Gruppen als Kacheln */
+.groupGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.groupTile{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--border);color:var(--text);text-align:left;font:inherit}
+.groupTile .ms{color:rgb(var(--food));font-size:22px}
+.gtCount{font-size:24px;font-weight:800;font-family:var(--display)}.gtCount small{font-size:14px;color:var(--muted);font-weight:600}
+.gtName{font-size:16px;margin-top:6px}.gtSub{font-size:12.5px;color:var(--muted)}
+.gtDots{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap}
+.gtDots i{width:9px;height:9px;border-radius:50%;background:var(--tone-none)}
+.gtDots i.good{background:var(--tone-good)}.gtDots i.fair{background:var(--tone-fair)}.gtDots i.low{background:var(--tone-low)}
+/* Liste im Blatt */
+.nrow2{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.nrow2:last-child{border-bottom:0}
+.nrow2 .nr-main{flex:1;min-width:0;background:none;border:0;color:var(--text);text-align:left;font:inherit;padding:0}
+.nrow2 .bar i{background:var(--tone-none)}
+.nrow2.good .bar i{background:var(--tone-good)}.nrow2.fair .bar i{background:var(--tone-fair)}.nrow2.low .bar i{background:var(--tone-low)}
+.nrow2.good b{color:var(--tone-good)}.nrow2.fair b{color:var(--tone-fair)}.nrow2.low b{color:var(--tone-low)}
+.nrow2 .ib.on{background:rgb(var(--food));color:var(--ink)}
+.nrow2>.ms{color:var(--muted)}
+/* Tagesblatt */
+.dcStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.dcStats div{background:var(--high);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.dcStats .num{font-size:22px;font-weight:800;font-family:var(--display)}.dcStats small{font-size:11.5px;color:var(--muted)}
+.dcReport{background:var(--high);border-radius:18px;padding:16px}
+.dcList span{font-size:12px;font-weight:700;text-transform:none}
+.dcList.good span{color:rgb(var(--food))}.dcList.bad span{color:#EE7B6F}
+.dcList p{margin:4px 0 0;font-size:14px;line-height:1.45}
+.dcEmpty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:22px 12px;border-radius:18px;background:var(--high)}
+.dcEmpty>.ms{font-size:34px;color:rgb(var(--food))}
+.dcEmpty .btn{align-self:stretch}
+/* Nährstoff-Seite */
+.npHero{background:var(--surface);border:1px solid var(--border)}
+.npVerdict.good{color:var(--tone-good)}.npVerdict.fair{color:var(--tone-fair)}.npVerdict.low{color:var(--tone-low)}
+.npCalc{background:rgb(var(--food));color:var(--ink);border-radius:18px;padding:16px}
+.npCalc .eyebrow{color:var(--ink);opacity:.7}
+.npCalc .npFormula{margin:6px 0 0;font-size:16.5px;font-weight:600;line-height:1.4}
+.npCalc .small.muted{color:var(--ink);opacity:.72}
+.npFor{display:flex;flex-direction:column;gap:8px}
+.npFor div{display:flex;gap:10px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;line-height:1.45;font-size:14.5px}
+.npFor .ms{color:rgb(var(--food));font-size:20px;flex:none}
+.npTop{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:4px 14px}
+.npTop div{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.npTop div:last-child{border-bottom:0}
+.npShare{min-width:44px;text-align:right;font-weight:700;color:rgb(var(--food))}
+.npTwo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.npSide{border-radius:16px;padding:14px;background:var(--surface);border:1px solid var(--border)}
+.npSide.low{border-top:3px solid #F2B847}.npSide.high{border-top:3px solid #EE7B6F}
+.npSide p{margin:6px 0 0;font-size:13.5px;line-height:1.45}
+.npTip{display:flex;gap:10px;align-items:flex-start;background:var(--high);border-radius:14px;padding:12px 14px}
+.npTip .ms{color:#F2B847}.npTip p{margin:0;font-size:14px;line-height:1.45}
+@media (max-width:360px){.npTwo{grid-template-columns:1fr}}
+/* Spalten dürfen schrumpfen (sonst ragen Kachel 5 und Sonntag rechts heraus) */
+.macroGrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.macroTile{min-width:0;padding:10px 2px}
+.mtName{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px}
+.calHead,.calGrid{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.calDay{min-width:0;width:100%}
+@media (max-width:380px){.macroGrid{grid-template-columns:repeat(3,minmax(0,1fr))}}

@@ -154,7 +154,7 @@ export interface Targets {
   water: number;
   /** Ziel (min) bzw. Obergrenze (max) je Nährstoff */
   goals: Record<string, { min?: number; max?: number }>;
-  explain: { bmr: number; pal: number; training: number; delta: number };
+  explain: { bmr: number; pal: number; training: number; delta: number; proteinPerKg: number; refWeight: number };
 }
 
 export function age(p: Profile, now = new Date()): number {
@@ -221,7 +221,7 @@ export function computeTargets(p: Profile, now = new Date()): Targets {
       vitB12: { min: 4 },
       folate: { min: 300 },
     },
-    explain: { bmr, pal, training, delta },
+    explain: { bmr, pal, training, delta, proteinPerKg, refWeight: Math.round(refWeight) },
   };
 }
 

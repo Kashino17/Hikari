@@ -119,8 +119,9 @@ export function Columns({ items, height = 120, color = 'rgb(var(--c))' }) {
  * Note »x von 10« als kleine Kachel. Farbe folgt der Note: 1–3 gedämpftes Rot, 4–5 Gelb,
  * 6–7 Gelbgrün, 8–10 die Akzentfarbe des Bereichs (gesund, gut).
  */
+/** Farbklasse zu einer Note 1–10 (ScoreBadge, Notenmarken, Kalender). */
+export const scoreTone = (score) => { const n = Math.round(Number(score) || 0); return n <= 3 ? 'sc-low' : n <= 5 ? 'sc-mid' : n <= 7 ? 'sc-fair' : 'sc-good'; };
 export function ScoreBadge({ score, sm }) {
-  const n = Math.round(Number(score) || 0);
-  const tone = n <= 3 ? 'sc-low' : n <= 5 ? 'sc-mid' : n <= 7 ? 'sc-fair' : 'sc-good';
+  const tone = scoreTone(score);
   return html`<div class=${cls('scoreBadge', sm && 'sm', tone)}><b>${score}</b><span>von 10</span></div>`;
 }

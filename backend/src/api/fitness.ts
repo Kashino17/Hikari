@@ -779,8 +779,78 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     }
     for (const d of Object.values(days)) d.totals = roundNutrients(d.totals);
     const first = db.prepare("SELECT MIN(day) AS d FROM food_log").get() as { d: string | null };
-    return { from, to, days, first: first.d, targets: computeTargets(getProfile(db)), nutrients: NUTRIENTS };
+    // Noten des Ernährungs-Coachs je Tag (die jüngste Bewertung zählt) — für Diagramm und Kalender.
+    const scores: Record<string, { score: number; headline: string }> = {};
+    const notes = db
+      .prepare("SELECT day, data FROM coach_notes WHERE kind = 'ernaehrung' AND day >= ? AND day <= ? ORDER BY at")
+      .all(from, to) as { day: string; data: string }[];
+    for (const n of notes) {
+      try {
+        const r = JSON.parse(n.data);
+        if (typeof r.score === "number") scores[n.day] = { score: r.score, headline: r.headline ?? "" };
+      } catch {
+        /* kaputte Notiz überspringen */
+      }
+    }
+    return { from, to, days, scores, first: first.d, targets: computeTargets(getProfile(db)), nutrients: NUTRIENTS };
   });
+
+  /**
+   * Ein Nährstoff im Detail: Wissen (backend/fitness/naehrstoffe.json), persönliche Rechnung für dein Ziel
+   * und deine besten Quellen im Zeitraum (aus den Zutaten deines Tagebuchs).
+   */
+  const NUTRI_INFO = join(deps.dataDir, "naehrstoffe.json");
+  app.get<{ Params: { k: string }; Querystring: { from?: string; to?: string } }>(
+    "/fitness/food/nutrient/:k",
+    async (req, reply) => {
+      const meta = NUTRIENTS.find((n) => n.k === req.params.k);
+      if (!meta) return reply.code(404).send({ error: "not_found" });
+      const k = meta.k;
+      const to = dayParam(req.query.to, localDay());
+      const from = dayParam(req.query.from, addDays(to, -6));
+      const info = existsSync(NUTRI_INFO) ? (JSON.parse(readFileSync(NUTRI_INFO, "utf8"))[k] ?? null) : null;
+      const p = getProfile(db);
+      const t = computeTargets(p);
+      const g = t.goals[k] ?? {};
+      const x = t.explain;
+      const fmt = (v: number) => v.toLocaleString("de-DE", { maximumFractionDigits: 1 });
+      const GOAL: Record<string, string> = { abnehmen: "Abnehmen", muskeln: "Muskelaufbau", zunehmen: "Zunehmen", halten: "Gewicht halten", fitter: "Fitter werden" };
+      const rechnung: Record<string, string> = {
+        kcal: `Grundumsatz ${fmt(x.bmr)} kcal × Alltag ${fmt(x.pal)} + Training im Schnitt ${fmt(x.training)} kcal am Tag ${x.delta >= 0 ? "+" : "−"} ${fmt(Math.abs(x.delta))} kcal für »${GOAL[p.goal] ?? p.goal}« = ${fmt(t.kcal)} kcal`,
+        protein: `${fmt(x.proteinPerKg)} g je Kilo × ${fmt(x.refWeight)} kg Bezugsgewicht = ${fmt(t.protein)} g — für »${GOAL[p.goal] ?? p.goal}«`,
+        fat: `28 % deiner Energie, mindestens 0,8 g je Kilo Körpergewicht = ${fmt(t.fat)} g`,
+        carbs: `Was nach Eiweiß und Fett von deinen ${fmt(t.kcal)} kcal übrig bleibt = ${fmt(t.carbs)} g`,
+        sugar: `Höchstens 10 % deiner ${fmt(t.kcal)} kcal als freier Zucker (WHO, DGE) = ${fmt(g.max ?? 0)} g`,
+        satfat: `Höchstens 10 % deiner ${fmt(t.kcal)} kcal = ${fmt(g.max ?? 0)} g`,
+      };
+      const ref = g.min ?? g.max ?? null;
+      const who = p.sex === "m" ? "Männer" : "Frauen";
+      // Beste Quellen: Zutaten im Zeitraum, nach Beitrag zu diesem Nährstoff.
+      const rows = db.prepare("SELECT items FROM food_log WHERE day >= ? AND day <= ?").all(from, to) as { items: string }[];
+      const by = new Map<string, number>();
+      let total = 0;
+      for (const r of rows) {
+        for (const it of JSON.parse(r.items) as { name: string; n?: Nutrients }[]) {
+          const v = Number(it.n?.[k] ?? 0);
+          if (!v) continue;
+          by.set(it.name, (by.get(it.name) ?? 0) + v);
+          total += v;
+        }
+      }
+      const top = [...by.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
+        .map(([name, v]) => ({ name, value: Math.round(v * 10) / 10, share: total ? Math.round((v / total) * 100) : 0 }));
+      return {
+        ...meta,
+        target: ref,
+        isMax: g.max != null && g.min == null,
+        rechnung: rechnung[k] ?? (ref != null ? `DGE-Referenzwert für ${who}: ${fmt(ref)} ${meta.unit} am Tag` : null),
+        info,
+        top,
+        from,
+        to,
+      };
+    },
+  );
 
   app.post<{ Body: { weight?: number; waist?: number; day?: string } }>(
     "/fitness/body",
@@ -1071,10 +1141,17 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   });
 
   /** Ernährungs-Coach für einen Tag — zwischengespeichert, solange sich das Tagebuch nicht ändert. */
-  app.get<{ Querystring: { day?: string; force?: string } }>(
+  app.get<{ Querystring: { day?: string; force?: string; cached?: string } }>(
     "/fitness/food/report",
     async (req, reply) => {
       const day = req.query.day ?? localDay();
+      // Nur lesen (Verlauf): gespeicherte Bewertung zurückgeben, nie neu rechnen — das kostet Gemini-Anfragen.
+      if (req.query.cached) {
+        const c = db
+          .prepare("SELECT data FROM coach_notes WHERE kind = 'ernaehrung' AND day = ? ORDER BY at DESC LIMIT 1")
+          .get(day) as { data: string } | undefined;
+        return { report: c ? JSON.parse(c.data) : null };
+      }
       const d = dayData(day);
       if (!d.entries.length) return { report: null, reason: "leer" };
       const hash = createHash("sha1")

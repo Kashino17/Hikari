@@ -9,6 +9,7 @@ import { SessionPreview, Player } from './screens/session.js';
 import { Feedback, CoachWork } from './screens/feedback.js';
 import { ExerciseDetail } from './screens/exercise.js';
 import { Skills, SkillDetail, SkillPractice } from './screens/skills.js';
+import { NutrientDetail } from './screens/stats.js';
 import { Food, PhotoFlow, AddMeal, EntryDetail, DayReport, Shopping, BarcodeFlow } from './screens/food.js';
 import { RecipeDetail, RecipeList } from './screens/recipes.js';
 import { Me, ProfileEdit, Onboarding } from './screens/me.js';
@@ -41,6 +42,7 @@ const ROUTES = [
   [/^mahlzeit\/neu(?:\/(\w+))?$/, (m) => html`<${AddMeal} slot=${m[1]} />`],
   [/^eintrag\/(.+)$/, (m) => html`<${EntryDetail} id=${m[1]} />`],
   [/^ernaehrung\/coach(?:\/(.+))?$/, (m) => html`<${DayReport} day=${m[1]} />`],
+  [/^ernaehrung\/naehrstoff\/(\w+)$/, (m) => html`<${NutrientDetail} k=${m[1]} />`],
   [/^einkauf$/, () => html`<${Shopping} />`],
   [/^rezepte(?:\/(\w+))?$/, (m) => html`<${RecipeList} filter=${m[1]} />`],
   [/^rezept\/(.+)$/, (m) => html`<${RecipeDetail} id=${m[1]} />`],
