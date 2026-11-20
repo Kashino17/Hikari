@@ -21,7 +21,9 @@ export const DAY_TYPES: Record<DayType, { title: string; groups: string[]; patte
     ganzkoerper: {
       title: "Ganzkörper",
       groups: ["druck", "zug", "beine", "core"],
-      patterns: ["push", "squat", "pull", "core", "lunge", "hinge"],
+      // Reihenfolge = Wichtigkeit (bei wenig Zeit fallen die hinteren weg): je ein Drücken, Ziehen, Beine,
+      // Rumpf; bei mehr Zeit ein zweites Drücken/Ziehen, dann Hüfte und Ausfallschritt.
+      patterns: ["push", "pull", "squat", "core", "hinge", "pull", "lunge", "push"],
     },
     druck: {
       title: "Oberkörper · Drücken",
@@ -90,6 +92,8 @@ export interface SessionPlan {
 
 export interface ExerciseState {
   dose: number;
+  /** Startmenge-Faktor beim ersten Mal (Level zu dem Zeitpunkt) — danach zählt nur noch das Feedback. */
+  seed?: number | null;
   avoidUntil?: string | null;
   disliked?: boolean;
   technique?: number | null;
@@ -101,8 +105,14 @@ export interface PlanContext {
   profile: Profile;
   catalog: Catalog;
   state: Map<string, ExerciseState>;
+  /** Höchste schon überholte Schwierigkeit je Muster (progression.masteredLevels) */
+  mastered?: Record<string, number> | undefined;
+  /** Kürzlich abgestiegene Übungen (nicht direkt einplanen) */
+  demoted?: Set<string> | undefined;
+  /** Tage seit dem letzten erledigten Training (null = noch nie) */
+  daysOff?: number | null | undefined;
   /** Belastete Gruppen der letzten Tage: [Tage her, Gruppen] */
-  recent: { daysAgo: number; groups: string[]; dayType: DayType; hard: boolean }[];
+  recent: { daysAgo: number; groups: string[]; dayType: DayType; hard: boolean; overall?: number }[];
   /** Regionen mit aktuellen Beschwerden (letzte 7 Tage) */
   painRegions: string[];
   checkin?: { energy?: number; minutes?: number; sore?: string[]; wish?: string; sleep?: number } | undefined;
@@ -187,14 +197,26 @@ export function chooseDayType(ctx: PlanContext): DayType {
   const canPull = p.equipment.some((q) => ["klimmzugstange", "ringe", "band"].includes(q));
   const last = ctx.recent[0]?.dayType;
   const trainedLast3 = ctx.recent.filter((r) => r.daysAgo <= 3).length;
+  // Tage am Stück trainiert (Beweglichkeit zählt als Erholung) — ab 3 kommt ein Erholungstag.
+  let streak = 0;
+  for (let d = 1; d <= 6; d++) {
+    if (ctx.recent.some((r) => r.daysAgo === d && r.dayType !== "mobilitaet")) streak++;
+    else break;
+  }
+  // Wie oft jede Hauptgruppe in den letzten 6 Tagen dran war — Ziel: jede mindestens 2× pro Woche.
+  const hits: Record<string, number> = {};
+  for (const r of ctx.recent) if (r.daysAgo >= 1) for (const g of HITS[r.dayType] ?? []) hits[g] = (hits[g] ?? 0) + 1;
+  // Auch die Satzbilanz der Woche zählt (rund 4 Sätze ≈ eine Einheit für die Gruppe).
+  for (const g of ["druck", "zug", "beine"]) hits[g] = Math.max(hits[g] ?? 0, Math.floor((ctx.balance?.[g] ?? 0) / 4));
   // Nur Tagestypen, für die es mit Ausrüstung und Beschwerden auch Hauptübungen gibt
   // (sonst bestünde z. B. ein »Drücken«-Tag nur aus einem Seitstütz).
   const doable = (t: DayType) => {
+    if (t === "mobilitaet") return ctx.catalog.exercises.some((e) => MOBILITY.includes(e.pattern) && usable(ctx, e));
     const pats: string[] = DAY_TYPES[t].patterns.filter((x) => x !== "core");
     return !pats.length || ctx.catalog.exercises.some((e) => pats.includes(e.pattern) && e.use.includes("main") && usable(ctx, e));
   };
   const scores: [DayType, number][] = (Object.keys(DAY_TYPES) as DayType[])
-    .filter((t) => t !== "mobilitaet" || trainedLast3 >= 3 || energy <= 2)
+    .filter((t) => t !== "mobilitaet" || trainedLast3 >= 3 || energy <= 2 || streak >= 4)
     .filter(doable)
     .map((t) => {
       const groups = DAY_TYPES[t].groups;
@@ -202,7 +224,9 @@ export function chooseDayType(ctx: PlanContext): DayType {
         ? -groups.reduce((a, g) => a + (fatigue[g] ?? 0), 0) / groups.length
         : -0.4;
       if (t === last) s -= 1;
-      if (t === "ganzkoerper") s += p.trainingDays.length <= 3 ? 0.9 : 0.25;
+      // Wenige Tage: Ganzkörper (die Häufigkeit oben zieht ohnehin in diese Richtung).
+      // Bis 4 Trainingstage: Krafttage als Ganzkörper (jede Gruppe 2× pro Woche, wie Freeletics Mo/Mi/Fr).
+      if (t === "ganzkoerper" && p.trainingDays.length <= 4) s += 0.8;
       if (t === "ausdauer") s += p.focus.includes("ausdauer") || p.goal === "abnehmen" ? 0.5 : -0.3;
       if (
         (t === "druck" || t === "zug" || t === "beine") &&
@@ -211,9 +235,21 @@ export function chooseDayType(ctx: PlanContext): DayType {
         s += 0.35;
       if (t === "core") s -= 0.35;
       if (t === "mobilitaet") s += p.focus.includes("beweglichkeit") ? 0.2 : -0.6;
+      // Erholung nach mehreren Trainingstagen am Stück (aktive Regeneration wie bei Freeletics).
+      // (4 Tage am Stück, dann Erholung: so bleibt für Drücken/Ziehen/Beine je 2× pro Woche Platz.)
+      if (t === "mobilitaet" && streak >= 4) s += streak >= 6 ? 4 : 2.2;
+      // Abnehmen: Ausdauer zweimal pro Woche, mit Ausdauer-Schwerpunkt einmal.
+      const cardioWant = p.goal === "abnehmen" ? 2 : p.focus.includes("ausdauer") && p.goal !== "muskeln" ? 1 : 0;
+      if (t === "ausdauer" && cardioWant) s += 0.6 * Math.max(0, cardioWant - (hits.ausdauer ?? 0));
+      // Frequenz: jede Hauptgruppe (Drücken, Ziehen, Beine) mindestens 2× pro Woche.
+      const tr = TRAINS[t];
+      // Summe statt Schnitt: ein Ganzkörpertag holt drei fehlende Gruppen auf einmal nach.
+      // Beine wiegen mehr: sie fallen bei Push/Pull-Rhythmen sonst als erstes hinten runter.
+      if (tr.length) s += tr.reduce((a, g) => a + (g === "beine" ? 0.45 : 0.3) * Math.max(0, 2 - (hits[g] ?? 0)), 0);
       if (energy === 2 && (t === "ausdauer" || t === "beine")) s -= 0.4;
       // Programm-Fokus (z. B. »Erster Klimmzug« → Ziehen)
-      s += ctx.program?.focus?.[t] ?? 0;
+      // (doppelt gewichtet: ein gewähltes Programm ist ein klarer Wunsch und schlägt die Grundregeln)
+      s += 2.5 * (ctx.program?.focus?.[t] ?? 0);
       // Muskelbalance der Woche: vernachlässigte Gruppen nachziehen
       const bal = ctx.balance;
       if (bal) {
@@ -245,20 +281,45 @@ export function doseFor(
   block: PlanBlock["kind"],
 ): number {
   const st = ctx.state.get(e.id);
-  const levelScale = [0.6, 1, 1.3, 1.6, 1.9][ctx.profile.level - 1] ?? 1;
-  // Schwere Übungen skalieren schwächer mit dem Level (ein Level-5-Athlet macht nicht 3× so viele Muscle-ups).
-  const relative = Math.max(0.55, 1 - (e.level - ctx.profile.level * 2) * 0.12);
+  // Startmenge nach Level nur beim ersten Mal; danach trägt die gelernte Dosis. (Sonst verdoppelte ein
+  // Level-Aufstieg die Wiederholungen bekannter Übungen → Scheitern → Level wieder runter.)
+  // Nie gemachte Übung: 15 % vorsichtiger einsteigen (das Feedback holt den Rest schnell auf).
+  const seed = st?.seed ?? seedFor(ctx.profile.level, e) * (st ? 1 : 0.85);
   const inten = intensity === "leicht" ? 0.8 : intensity === "hart" ? 1.15 : 1;
   const blockScale = block === "warmup" || block === "cooldown" ? 0.75 : 1;
   const programScale = block === "main" || block === "finisher" ? (ctx.program?.volume ?? 1) : 1;
   const raw =
     e.base *
-    (block === "main" || block === "finisher" ? levelScale * relative : 1) *
+    (block === "main" || block === "finisher" ? seed : 1) *
     (st?.dose ?? 1) *
     inten *
     blockScale *
     programScale;
-  return niceAmount(raw, e.unit);
+  // Obergrenze: darüber steht ohnehin der Aufstieg zur schwereren Variante an.
+  return Math.min(niceAmount(raw, e.unit), e.unit === "sec" ? 90 : e.perSide ? 20 : 30);
+}
+
+/** Startfaktor einer Übung für ein Level (schwere Übungen skalieren schwächer). */
+export function seedFor(level: number, e: Exercise): number {
+  const levelScale = [0.6, 1, 1.3, 1.6, 1.9][level - 1] ?? 1;
+  const relative = Math.max(0.55, 1 - (e.level - level * 2) * 0.12);
+  return Math.round(levelScale * relative * 1000) / 1000;
+}
+
+/** Bewegungsmuster für Erholungstage. */
+export const MOBILITY = ["mobility", "stretch"];
+/** Welche Hauptgruppen ein Tagestyp wirklich trainiert (für die Frequenz). */
+const TRAINS: Record<DayType, string[]> = {
+  ganzkoerper: ["druck", "zug", "beine"], druck: ["druck"], zug: ["zug"], beine: ["beine"], core: [], ausdauer: [], mobilitaet: [],
+};
+/** Für die Zählung »wie oft diese Woche«: Ausdauertage zählen als Ausdauer. */
+const HITS: Record<DayType, string[]> = {
+  ...TRAINS, ausdauer: ["ausdauer"],
+};
+
+/** Zeitrahmen: kurze Einheiten bekommen kurzes Auf- und Abwärmen — der Rest ist Arbeit. */
+export function frameFor(minutes: number) {
+  return minutes <= 15 ? { warm: 3, cool: 2, coolSec: 30 } : minutes <= 25 ? { warm: 4, cool: 3, coolSec: 35 } : { warm: 5, cool: 4, coolSec: 40 };
 }
 
 function pickFrom(
@@ -267,10 +328,11 @@ function pickFrom(
   rand: () => number,
   target: number,
   avoid = new Set<string>(),
+  noise = 1.8,
 ): Exercise[] {
   const scored = pool
     .filter((e) => !avoid.has(e.id))
-    .map((e) => ({ e, s: -Math.abs(e.level - target) + rand() * 1.8 }))
+    .map((e) => ({ e, s: -Math.abs(e.level - target) + rand() * noise }))
     .sort((a, b) => b.s - a.s);
   const out: Exercise[] = [];
   for (const { e } of scored) {
@@ -348,13 +410,19 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
           ? "hart"
           : "mittel";
   // Programm: Entlastungswoche immer leicht; sonst die Phasen-Intensität, wenn die Tagesform passt.
+  // Zweimal hintereinander »zu leicht« (Gesamtgefühl) → heute fordernder.
+  const lastTwo = ctx.recent.filter((r) => r.daysAgo >= 1 && r.dayType !== "mobilitaet").slice(0, 2);
+  if (intensity === "mittel" && energy >= 3 && lastTwo.length === 2 && lastTwo.every((r) => (r.overall ?? 3) <= 2)) intensity = "hart";
+  // Wiedereinstieg nach über einer Woche Pause: erst einmal leichter (Muskeln, Sehnen, Muskelkater).
+  if ((ctx.daysOff ?? 0) >= 8 && intensity !== "leicht") intensity = "leicht";
   if (ctx.program?.deload && dayType !== "mobilitaet") intensity = "leicht";
   else if (ctx.program && energy >= 3 && !second && dayType !== "mobilitaet") intensity = ctx.program.intensity;
   const minutes = ctx.checkin?.minutes ?? p.sessionMinutes;
   const all = ctx.catalog.exercises.filter((e) => usable(ctx, e));
   const used = new Set<string>();
+  const frame = frameFor(minutes);
 
-  // Aufwärmen: 5 Übungen à 30 s, passend zum Tag.
+  // Aufwärmen: 3–5 Übungen à 30 s (je nach Länge der Einheit), passend zum Tag.
   const warmPool = all.filter((e) => e.use.includes("warmup"));
   const warm: Exercise[] = [];
   for (const focus of WARMUP_FOR[dayType]) {
@@ -370,21 +438,51 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
       used.add(e.id);
     }
   }
-  for (const e of pickFrom(warmPool, Math.max(0, 5 - warm.length), rand, 2, used)) {
+  for (const e of pickFrom(warmPool, Math.max(0, frame.warm - warm.length), rand, 2, used)) {
     warm.push(e);
     used.add(e.id);
   }
+  warm.splice(frame.warm);
 
   // Hauptteil
-  const target = targetDifficulty(p.level, intensity);
-  const mainPool = all.filter((e) => e.use.includes("main"));
+  const levelTarget = targetDifficulty(p.level, intensity);
+  // Ziel-Schwierigkeit je Muster am echten Stand: was schon sicher sitzt (Dosis ≥ 1,3, mind. 2×),
+  // hebt das Ziel eine Stufe darüber — das Profil-Level hinkt Wochen hinterher.
+  const patTarget = (pat: string) => {
+    const mastered = Math.max(
+      ctx.mastered?.[pat] ?? 0,
+      ctx.catalog.exercises
+        .filter((e) => e.pattern === pat && (ctx.state.get(e.id)?.times ?? 0) >= 2 && (ctx.state.get(e.id)?.dose ?? 0) >= 1.3)
+        .reduce((m, e) => Math.max(m, e.level), 0),
+    );
+    const t = Math.max(levelTarget, mastered ? mastered + 1 : 0);
+    return intensity === "leicht" ? t - 1 : t;
+  };
+  const target = levelTarget;
+  const mobil = dayType === "mobilitaet";
+  // Erholungstag: Beweglichkeit und Dehnen als Hauptteil (diese Übungen sind sonst nur fürs Auf-/Abwärmen).
+  const mainPool = mobil ? all.filter((e) => MOBILITY.includes(e.pattern)) : all.filter((e) => e.use.includes("main"));
   const main: Exercise[] = [];
+  const seenPat = new Set<string>();
   for (const pat of DAY_TYPES[dayType].patterns) {
-    const cand = mainPool.filter((e) => e.pattern === pat);
-    const [e] = pickFrom(cand, 1, rand, target, used);
+    let cand = mainPool.filter((e) => e.pattern === pat && !ctx.demoted?.has(e.id));
+    const tp = mobil ? target : patTarget(pat);
+    // Nur Übungen nah am eigenen Niveau — sonst entstehen »Ramsch-Sätze« (Wand-Liegestütz für jemanden,
+    // der 25 Liegestütze schafft). Gleiches Muster ein zweites Mal nur, wenn eine solche frei ist.
+    if (!mobil) {
+      // Nach oben höchstens eine Stufe über dem Ziel (sonst Varianten, von denen keine 3 Wiederholungen gehen),
+      // nach unten bis 2,5 Stufen.
+      const near = cand.filter((e) => e.level - tp <= 1 && tp - e.level <= 2.5);
+      cand = near.length || seenPat.has(pat) ? near : cand;
+      // Keine Variante, von der nur die Mindestmenge (3 Wiederholungen) übrig bliebe — lieber eine passendere.
+      const doable = cand.filter((e) => e.unit === "sec" || doseFor(ctx, e, intensity, "main") > 3);
+      if (doable.length) cand = doable;
+    }
+    const [e] = pickFrom(cand, 1, rand, tp, used, mobil ? 1.8 : 0.8);
     if (e) {
       main.push(e);
       used.add(e.id);
+      seenPat.add(pat);
     }
   }
   const strengthy = p.goal === "muskeln" || p.focus.includes("kraft");
@@ -393,7 +491,9 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
       ? "flow"
       : dayType === "ausdauer"
         ? "intervals"
-        : strengthy && intensity !== "leicht"
+        : // Lange Krafteinheiten: klassische Sätze. Kurze: Zirkel (Supersatz) — die Muskeln erholen sich,
+          // während die anderen arbeiten, so passen mehrere Sätze je Übung in 15 Minuten.
+          strengthy && intensity !== "leicht" && minutes > 30
           ? "sets"
           : "rounds";
   const mainBlock: PlanBlock = {
@@ -408,7 +508,7 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
             : "Zirkel",
     format,
     rounds: format === "flow" ? 1 : 3,
-    restBetweenRounds: format === "rounds" ? 90 : format === "intervals" ? 60 : 0,
+    restBetweenRounds: format === "rounds" ? 60 : format === "intervals" ? 45 : 0,
     items: main.map((e) => {
       if (format === "intervals")
         return { ex: e.id, amount: 40, unit: "sec" as const, perSide: false, rest: 20 };
@@ -418,14 +518,16 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
         amount,
         unit: dayType === "mobilitaet" ? ("sec" as const) : e.unit,
         ...(e.perSide ? { perSide: true } : {}),
-        rest: format === "sets" ? (e.level >= 6 ? 120 : 75) : format === "flow" ? 10 : 15,
+        rest: format === "sets" ? (e.level >= 6 ? 90 : 60) : format === "flow" ? 10 : 20,
       };
     }),
   };
 
   // Abkühlen: 4 Dehnungen à 40 s
-  const coolPool = all.filter((e) => e.use.includes("cooldown"));
-  const cool = pickFrom(coolPool, 4, rand, 2, used);
+  // Kurze Einheiten: lieber beidseitige Dehnungen (einseitige dauern doppelt).
+  const coolAll = all.filter((e) => e.use.includes("cooldown"));
+  const coolPool = minutes <= 20 && coolAll.filter((e) => !e.perSide).length >= frame.cool ? coolAll.filter((e) => !e.perSide) : coolAll;
+  const cool = pickFrom(coolPool, frame.cool, rand, 2, used);
 
   const plan: SessionPlan = {
     title: DAY_TYPES[dayType].title,
@@ -458,7 +560,7 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
         restBetweenRounds: 0,
         items: cool.map((e) => ({
           ex: e.id,
-          amount: 40,
+          amount: frame.coolSec,
           unit: "sec" as const,
           ...(e.perSide ? { perSide: true } : {}),
           rest: 5,
@@ -488,11 +590,30 @@ export function fitToTime(
     .filter((b) => b !== main)
     .reduce((a, b) => a + blockSeconds(b, catalog), 0);
   const budget = (minutes * 60 - others) * mainScale;
-  let best = 1;
-  for (let r = 1; r <= 6; r++) {
+  const fit = () => {
+    let best = 1;
+    for (let r = 1; r <= 6; r++) {
+      main.rounds = r;
+      if (blockSeconds(main, catalog) <= budget * 1.08) best = r;
+    }
+    return best;
+  };
+  // Beste Aufteilung der Zeit: mindestens 2 Runden je Übung (ein Satz bringt kaum Reiz), sonst so viel
+  // Arbeit wie in die Zeit passt — lieber 3 Runden à 4 Übungen als 2 à 5, wenn das die Zeit besser füllt.
+  const all = [...main.items];
+  let pick = { k: all.length, r: 0, sec: -1 };
+  for (let k = all.length; k >= Math.min(2, all.length); k--) {
+    main.items = all.slice(0, k);
+    const r = fit();
     main.rounds = r;
-    if (blockSeconds(main, catalog) <= budget * 1.08) best = r;
+    const sec = blockSeconds(main, catalog);
+    // Zirkel: lieber eine Übung mehr als die 5. und 6. Runde (Abwechslung), solange ≥ 2 Runden passen.
+    const okR = (r >= 2 || k <= 2) && (main.format !== "rounds" || r <= 4 || k === all.length);
+    if (okR && sec <= budget * 1.08 && sec > pick.sec + 20) pick = { k, r, sec };
   }
+  if (pick.sec < 0) pick = { k: Math.min(2, all.length), r: 1, sec: 0 };
+  main.items = all.slice(0, pick.k);
+  let best = pick.r || fit();
   main.rounds = best;
   // Viel Restzeit übrig? Ein Finisher (kurzes Intervall) füllt sie sinnvoll.
   const left = budget - blockSeconds(main, catalog);
@@ -536,6 +657,7 @@ function rulesCoachText(plan: SessionPlan, ctx: PlanContext): SessionPlan["coach
     why.push(
       `Wegen Beschwerden (${ctx.painRegions.join(", ")}) ohne Übungen, die diese Stellen belasten.`,
     );
+  if ((ctx.daysOff ?? 0) >= 8) why.push(`Wiedereinstieg nach ${ctx.daysOff} Tagen Pause — heute bewusst leichter, ab der nächsten Einheit wieder normal.`);
   if (ctx.profile.noJumps) why.push("Ohne Sprünge, wie eingestellt.");
   if (ctx.checkin?.energy && ctx.checkin.energy <= 2)
     why.push("Wenig Energie heute — leichter dosiert.");

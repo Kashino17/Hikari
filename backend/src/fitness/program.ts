@@ -96,10 +96,11 @@ export function balance(db: FitDb, catalog: Catalog, from: string, to: string): 
   const rows = db.prepare("SELECT plan, result FROM sessions WHERE status = 'done' AND day >= ? AND day <= ?").all(from, to) as { plan: string; result: string | null }[];
   const out: Record<string, number> = { druck: 0, zug: 0, beine: 0, core: 0, ausdauer: 0 };
   for (const r of rows) {
-    const plan = JSON.parse(r.plan) as { blocks: { kind: string; rounds?: number; items: { ex: string }[] }[] };
+    const plan = JSON.parse(r.plan) as { blocks: { kind: string; format?: string; rounds?: number; items: { ex: string }[] }[] };
     const res = r.result ? (JSON.parse(r.result) as { done?: Record<string, number[]> }) : {};
     plan.blocks.forEach((b, bi) => {
-      if (b.kind !== "main" && b.kind !== "finisher") return;
+      // Nur Kraftsätze: 40-s-Intervalle (Knie-Liegestütz im Ausdauerzirkel) sind kein Kraftreiz für die Gruppe.
+      if ((b.kind !== "main" && b.kind !== "finisher") || b.format === "intervals") return;
       b.items.forEach((it, ii) => {
         const g = GROUP_OF[catalog.byId.get(it.ex)?.pattern ?? ""];
         if (!g) return;

@@ -7,7 +7,7 @@
  * sind dort schon herausgefiltert), Mengen werden auf ein sinnvolles Band um die Regel-Dosis
  * geklemmt, und die Dauer muss zur gewünschten Zeit passen. Fällt die KI aus, gilt der Regelplan.
  */
-import { makeResolver } from "./progression.js";
+import { makeResolver, masteredLevels } from "./progression.js";
 import { balance, getPrograms, mondayOf, phaseFor } from "./program.js";
 import type { FitnessAi } from "./ai.js";
 import type { Catalog, Exercise } from "./catalog.js";
@@ -19,9 +19,13 @@ import {
   type PlanBlock,
   type PlanContext,
   type SessionPlan,
+  MOBILITY,
+  blockSeconds,
   buildRulesPlan,
   doseFor,
   estimateKcal,
+  fitToTime,
+  frameFor,
   planSeconds,
   usable,
 } from "./planner.js";
@@ -110,6 +114,7 @@ export function exerciseStates(db: FitDb): Map<string, ExerciseState> {
         disliked: !!r.disliked,
         technique: (r.technique as number) ?? null,
         times: Number(r.times) || 0,
+        seed: r.seed == null ? null : Number(r.seed),
       },
     ]),
   );
@@ -149,6 +154,7 @@ export function buildContext(
         groups: DAY_TYPES[s.plan.dayType]?.groups ?? [],
         dayType: s.plan.dayType,
         hard: (s.feedback?.overall ?? 3) >= 4,
+        overall: s.feedback?.overall ?? 3,
       };
     })
     .sort((a, b) => a.daysAgo - b.daysAgo);
@@ -160,6 +166,13 @@ export function buildContext(
     profile,
     catalog,
     state: exerciseStates(db),
+    mastered: masteredLevels(db, catalog),
+    daysOff: (() => {
+      const r = db.prepare("SELECT MAX(day) AS d FROM sessions WHERE status = 'done' AND day < ?").get(day) as { d: string | null };
+      return r.d ? Math.round((Date.parse(`${day}T12:00:00`) - Date.parse(`${r.d}T12:00:00`)) / 86_400_000) : null;
+    })(),
+    // In den letzten 21 Tagen abgestiegen: diese Übung nicht gleich wieder direkt einplanen (sonst Pendeln).
+    demoted: new Set((db.prepare("SELECT DISTINCT ex_from FROM progress_events WHERE kind = 'ab' AND day >= ?").all(addDays(day, -21)) as { ex_from: string }[]).map((r) => r.ex_from)),
     recent,
     painRegions: painRegions(db, day),
     checkin,
@@ -176,13 +189,17 @@ const COACH_SYSTEM = `Du bist ein erstklassiger Personal Trainer für Körpergew
 Du bekommst: Profil, Tagesform, die letzten Einheiten mit Feedback, Beschwerden, den Regel-Vorschlag für heute und die Liste ERLAUBTER Übungen (id, Name, Muster, Schwierigkeit 1–10, Einheit, Regel-Menge).
 Baue daraus den besten Trainingstag. Regeln:
 - Nimm NUR ids aus "erlaubt". Erfinde keine Übungen.
-- Blöcke: warmup (format flow), main (format sets | rounds | intervals | flow), optional finisher, cooldown (flow). Aufwärmen ~4–6 min, Abkühlen ~3–5 min.
+- Blöcke: warmup (format flow), main (format sets | rounds | intervals | flow), optional finisher, cooldown (flow).
+- Zeit gehört der Arbeit: Aufwärmen + Abkühlen zusammen höchstens ~25 % von "minuten" (bei 15 min: 3 Aufwärmübungen à 30 s, 2 Dehnungen à 30 s). Übernimm die Anzahl aus dem Regel-Vorschlag.
+- Hauptteil: mindestens 2 Runden bzw. Sätze je Übung — lieber 2–4 Übungen mit 2–4 Sätzen als viele Übungen mit je einem Satz. Bei kurzen Einheiten Zirkel (rounds) mit kurzer Pause zwischen den Übungen.
+- Schlägt die Regel den Typ "mobilitaet" vor, ist das ein geplanter Erholungstag nach mehreren Trainingstagen: behalte ihn bei (Beweglichkeit, Dehnen, ruhiger Fluss).
 - Die Gesamtdauer soll ungefähr "minuten" treffen.
 - Mengen orientieren sich an "regel" (das ist die vom Feedback gelernte Dosis). Weiche höchstens ±30 % ab, und nur mit Grund.
 - Wo das Feedback "zu schwer" oder "Technik unsicher" sagt: leichtere Variante oder weniger. "zu leicht": mehr oder schwerere Variante.
 - Abwechslung zu den letzten Tagen, Erholung der Muskelgruppen beachten.
 - Läuft ein "programm": halte dich an Phase, Intensität und Fokus. In einer Entlastungswoche bewusst leichter und weniger Umfang (das ist Absicht, sag es dem Nutzer). Erwähne die Programmwoche in der Nachricht.
 - "muskelbalance_diese_woche_saetze": vernachlässigte Gruppen (z. B. viel Drücken, wenig Ziehen) gezielt ausgleichen.
+- "tage_seit_letztem_training" ≥ 8: Wiedereinstieg — bewusst leichter, sag es kurz.
 - "gesundheit_heute": kurze Nacht (< 6 h) oder deutlich erhöhter Ruhepuls → moderater planen und das kurz begründen.
 - Steht im Verlauf schon eine Einheit von HEUTE, ist das ein zweites Training am selben Tag: andere Muskelgruppen, eher kürzer und moderater, und sag das in der Nachricht.
 - Sprich den Nutzer mit "du" an, Deutsch, motivierend aber sachlich, ohne Emojis.
@@ -227,7 +244,9 @@ export function settleAiPlan(raw: AiPlanRaw, ctx: PlanContext, rules: SessionPla
         const e = it?.ex ? allowed.get(it.ex) : undefined;
         if (!e) return null;
         const blockKind = kind === "finisher" ? "main" : kind;
-        if (!e.use.includes(blockKind as "warmup" | "main" | "cooldown")) return null;
+        // Erholungstag: Beweglichkeit/Dehnen darf in den Hauptteil.
+        const mobilMain = kind === "main" && rules.dayType === "mobilitaet" && MOBILITY.includes(e.pattern);
+        if (!mobilMain && !e.use.includes(blockKind as "warmup" | "main" | "cooldown")) return null;
         const unit =
           format === "intervals"
             ? "sec"
@@ -304,15 +323,31 @@ export function settleAiPlan(raw: AiPlanRaw, ctx: PlanContext, rules: SessionPla
     },
     blocks,
   };
-  // Dauer: zu lang → Runden kürzen, zu kurz → Runden ergänzen.
-  const want = (ctx.checkin?.minutes ?? ctx.profile.sessionMinutes) * 60;
+  // Geplanter Erholungstag bleibt Erholungstag (sonst gilt der Regelplan).
+  if (rules.dayType === "mobilitaet" && plan.dayType !== "mobilitaet") throw new Error("ruhetag_ignoriert");
+  // Rahmen wie im Regelplan: kurzes Auf- und Abwärmen, der Rest ist Arbeit.
+  const wantMin = ctx.checkin?.minutes ?? ctx.profile.sessionMinutes;
+  const frame = frameFor(wantMin);
+  for (const b of plan.blocks) {
+    if (b.kind === "warmup") b.items.splice(frame.warm);
+    if (b.kind === "cooldown") {
+      b.items.splice(frame.cool);
+      for (const it of b.items) if (it.unit === "sec") it.amount = Math.min(it.amount, frame.coolSec);
+    }
+  }
+  // Dauer: zu lang → Runden kürzen (nie unter 2), dann Übungen; zu kurz → Runden ergänzen.
+  const want = wantMin * 60;
   const main = plan.blocks.find((b) => b.kind === "main") as PlanBlock;
-  for (let i = 0; i < 6 && planSeconds(plan, ctx.catalog) > want * 1.25 && main.rounds > 1; i++)
+  if (main.format !== "flow") main.rounds = Math.max(2, main.rounds);
+  for (let i = 0; i < 6 && planSeconds(plan, ctx.catalog) > want * 1.25 && main.rounds > 2; i++)
     main.rounds--;
+  for (let i = 0; i < 4 && planSeconds(plan, ctx.catalog) > want * 1.25 && main.items.length > 2; i++)
+    main.items.pop();
   for (
     let i = 0;
     i < 6 &&
-    planSeconds(plan, ctx.catalog) < want * 0.7 &&
+    // Runde ergänzen, solange sie in die Zeit passt (vorher erst unter 70 % — 15-min-Einheiten blieben bei 12).
+    planSeconds(plan, ctx.catalog) + blockSeconds({ ...main, rounds: 1, restBetweenRounds: 0 }, ctx.catalog) + main.restBetweenRounds <= want * 1.08 &&
     main.rounds < 6 &&
     main.format !== "flow";
     i++
@@ -391,6 +426,7 @@ export async function aiPlan(
       trainingstage_pro_woche: p.trainingDays.length,
     },
     tagesform: ctx.checkin ?? null,
+    tage_seit_letztem_training: ctx.daysOff ?? null,
     gesundheit_heute: ctx.health ? { schlaf_letzte_nacht_min: ctx.health.sleepMin, ruhepuls: ctx.health.restingHr, ruhepuls_schnitt_7_tage: ctx.health.restingHrAvg ? Math.round(ctx.health.restingHrAvg) : null } : null,
     programm: ctx.program
       ? (() => { const ph = phaseFor(db, getPrograms(), ctx.day); return ph ? { name: ph.name, woche: `${ph.week} von ${ph.weeks}`, phase: ph.phase, notiz: ph.note, intensitaet: ph.intensity, volumen: ph.volume, entlastungswoche: ph.deload, fokus: ph.focus } : null; })()
@@ -441,6 +477,8 @@ export function withSkillBlock(
   catalog: Catalog,
   day: string,
   plan: SessionPlan,
+  /** Übung machbar (Beschwerden, Ausrüstung)? Skills, deren Stufe das nicht ist, fallen heute weg. */
+  ok: (e: Exercise) => boolean = () => true,
 ): SessionPlan {
   if (plan.blocks.some((b) => b.kind === "skill") || plan.dayType === "mobilitaet") return plan;
   const active = db
@@ -448,7 +486,8 @@ export function withSkillBlock(
     .all() as { skill_id: string; step: number }[];
   const open = active.filter((a) => {
     const sk = catalog.skillById.get(a.skill_id);
-    return sk && a.step < sk.steps.length;
+    const ex = sk?.steps[a.step]?.exercise ? catalog.byId.get(sk.steps[a.step]!.exercise as string) : undefined;
+    return sk && a.step < sk.steps.length && (!ex || ok(ex));
   });
   if (!open.length) return plan;
   const pick = open[Number(day.replace(/-/g, "")) % open.length] as {
@@ -504,11 +543,17 @@ export function withSkillBlock(
 export function applyVariants(db: FitDb, ctx: PlanContext, plan: SessionPlan): SessionPlan {
   const resolve = makeResolver(db, ctx.catalog, (e) => usable(ctx, e));
   let changed = false;
+  let dropped = false;
   const blocks = plan.blocks.map((b) => {
     if (b.kind !== "main" && b.kind !== "finisher") return b;
     const used = new Set<string>(b.items.map((it) => it.ex).filter((x) => resolve(x) === x));
     const items = b.items.map((it) => {
-      const id = resolve(it.ex);
+      let id = resolve(it.ex);
+      // Kürzlich abgestiegen (auch über einen Umweg in der Zuordnung erreicht): heute nicht diese Stufe.
+      if (ctx.demoted?.has(id)) {
+        const easier = ctx.catalog.exercises.find((x) => x.progress === id && usable(ctx, x) && !ctx.demoted?.has(x.id));
+        id = it.ex !== id && !ctx.demoted.has(it.ex) ? it.ex : (easier?.id ?? id);
+      }
       if (id === it.ex) return it;
       let e = ctx.catalog.byId.get(id);
       // Zeigen mehrere Übungen auf dieselbe neue Variante (ganze Kette beherrscht): statt die
@@ -518,7 +563,12 @@ export function applyVariants(db: FitDb, ctx: PlanContext, plan: SessionPlan): S
         e = ctx.catalog.exercises
           .filter((x) => x.pattern === orig?.pattern && x.use.includes("main") && usable(ctx, x) && resolve(x.id) === x.id && !used.has(x.id))
           .sort((a, c) => Math.abs(a.level - (orig?.level ?? 3)) - Math.abs(c.level - (orig?.level ?? 3)))[0];
-        if (!e) return it;
+        // Keine andere Variante frei: die beherrschte Übung fällt weg (ihre nächste Stufe ist schon
+        // im Plan) — statt sie stehen zu lassen und immer wieder »aufzusteigen«.
+        if (!e) {
+          dropped = true;
+          return null;
+        }
       }
       used.add(e.id);
       changed = true;
@@ -534,10 +584,12 @@ export function applyVariants(db: FitDb, ctx: PlanContext, plan: SessionPlan): S
         ...(e.perSide ? { perSide: true } : {}),
       };
     });
-    return { ...b, items };
+    const kept = items.filter((x): x is NonNullable<typeof x> => !!x);
+    return { ...b, items: kept.length ? kept : b.items };
   });
-  if (!changed) return plan;
+  if (!changed && !dropped) return plan;
   const out = { ...plan, blocks };
+  if (dropped) fitToTime(out, ctx.catalog, ctx.checkin?.minutes ?? ctx.profile.sessionMinutes, (e) => usable(ctx, e), ctx.program?.deload ? ctx.program.volume : 1);
   out.kcal = estimateKcal(out, ctx.catalog, ctx.profile.weightKg);
   out.minutes = Math.round(planSeconds(out, ctx.catalog) / 60);
   return out;
@@ -577,7 +629,7 @@ async function upgrade(
     const ctx = buildContext(db, catalog, s.day, checkin, forceType);
     const rulesOnly = { ...s.plan, blocks: s.plan.blocks.filter((b) => b.kind !== "skill") };
     const r = await aiPlan(ai, db, ctx, rulesOnly);
-    const plan = withSkillBlock(db, catalog, s.day, applyVariants(db, ctx, r.plan));
+    const plan = withSkillBlock(db, catalog, s.day, applyVariants(db, ctx, r.plan), (e) => usable(ctx, e));
     const res = db
       .prepare("UPDATE sessions SET plan = ?, source = ? WHERE id = ? AND status = 'planned'")
       .run(JSON.stringify(plan), r.model, s.id);
@@ -631,7 +683,7 @@ export async function todaySession(
     return existing;
   }
   const ctx = buildContext(db, catalog, day, opts.checkin, opts.forceType);
-  const rules = withSkillBlock(db, catalog, day, applyVariants(db, ctx, buildRulesPlan(ctx)));
+  const rules = withSkillBlock(db, catalog, day, applyVariants(db, ctx, buildRulesPlan(ctx)), (e) => usable(ctx, e));
   const row = insertSession(db, day, rules, "regeln", existing?.id);
   if (ai?.available()) {
     const job = upgrade(ai, db, catalog, row, opts.checkin, opts.forceType, opts.log);
@@ -665,7 +717,7 @@ export async function extraSession(
     day,
   );
   const ctx = buildContext(db, catalog, day, opts.checkin, opts.forceType);
-  const rules = withSkillBlock(db, catalog, day, applyVariants(db, ctx, buildRulesPlan(ctx)));
+  const rules = withSkillBlock(db, catalog, day, applyVariants(db, ctx, buildRulesPlan(ctx)), (e) => usable(ctx, e));
   const row = insertSession(db, day, rules, "regeln");
   if (ai?.available()) {
     // Regelplan sofort; der Coach verfeinert im Hintergrund (freie Modelle brauchen teils Minuten).
@@ -717,21 +769,22 @@ function weekdayOf(day: string): number {
 
 /** Feste Lernregeln je Übung — die KI liest das Ergebnis beim nächsten Plan mit. */
 /** Signal je Hauptübung für Auf-/Abstieg (progression.checkProgression). */
-export interface ExerciseSignal { ex: string; dose: number; times: number; difficulty?: number | undefined; technique?: number | undefined; reached: number; pain?: boolean | undefined }
+export interface ExerciseSignal { ex: string; dose: number; times: number; difficulty?: number | undefined; technique?: number | undefined; reached: number; first?: number | undefined; pain?: boolean | undefined; deload?: boolean | undefined }
 
 export function applyFeedback(
   db: FitDb,
   session: SessionRow,
   fb: SessionFeedback,
   result: SessionResult,
+  opts: { seedOf?: (exId: string) => number; deload?: boolean } = {},
 ): ExerciseSignal[] {
   const signals: ExerciseSignal[] = [];
   const now = Date.now();
   const day = session.day;
   const upsert =
-    db.prepare(`INSERT INTO exercise_state(exercise_id, dose, best, last, times, technique, avoid_until, disliked, updated_at)
-    VALUES(@id, @dose, @best, @last, 1, @technique, @avoid, @disliked, @now)
-    ON CONFLICT(exercise_id) DO UPDATE SET dose = @dose, best = MAX(COALESCE(best, 0), COALESCE(@best, 0)), last = COALESCE(@last, last),
+    db.prepare(`INSERT INTO exercise_state(exercise_id, dose, best, last, times, technique, avoid_until, disliked, updated_at, seed)
+    VALUES(@id, @dose, @best, @last, 1, @technique, @avoid, @disliked, @now, @seed)
+    ON CONFLICT(exercise_id) DO UPDATE SET dose = @dose, seed = COALESCE(seed, @seed), best = MAX(COALESCE(best, 0), COALESCE(@best, 0)), last = COALESCE(@last, last),
       times = times + 1, technique = COALESCE(@technique, technique), avoid_until = COALESCE(@avoid, avoid_until), disliked = MAX(disliked, @disliked), updated_at = @now`);
   const states = exerciseStates(db);
   // Gesamtgefühl wirkt leicht auf alle Übungen der Einheit.
@@ -750,16 +803,25 @@ export function applyFeedback(
         const done = result.done[`${bi}:${ii}`] ?? [];
         const skipped = result.skipped.includes(`${bi}:${ii}`);
         // Nicht geschafft (unter 80 % der Vorgabe) zählt wie »zu schwer«.
-        const reached = done.length ? Math.min(...done) / it.amount : 1;
+        // Erreicht: Schnitt aller Runden. Ob die Vorgabe zu hoch war, zeigt der ERSTE Satz — dass der
+        // letzte Satz mit Ermüdung kürzer ausfällt, ist normal und kein Grund, die Menge zu senken.
+        const nums = done.filter((v) => typeof v === "number");
+        const reached = nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length / it.amount : 1;
+        const first = nums.length ? (nums[0] as number) / it.amount : 1;
         let shift = overallShift;
         if (f?.difficulty === -1) shift += 0.12;
         if (f?.difficulty === 1) shift -= 0.12;
-        if (reached < 0.8) shift -= 0.1;
-        else if (reached > 1.15) shift += 0.08;
+        if (reached > 1.15) shift += 0.08;
         if (f?.technique === 1) shift -= 0.05;
-        dose = Math.min(2.2, Math.max(0.45, dose * (1 + shift)));
-        if (!skipped && done.length)
-          signals.push({ ex: it.ex, dose, times: (st?.times ?? 0) + 1, difficulty: f?.difficulty, technique: f?.technique, reached, pain: f?.pain });
+        // Entlastungswoche: leicht ist Absicht — kein Hochstufen der Menge.
+        if (opts.deload) shift = Math.min(0, shift);
+        let next = dose * (1 + shift);
+        // Nicht geschafft: nächste Menge an dem ausrichten, was wirklich ging (statt nur −10 % je Einheit).
+        if (first < 0.8) next = Math.min(next, dose * Math.max(0.6, Math.min(0.95, first * 1.05)));
+        else if (reached < 0.7) next = Math.min(next, dose * 0.95);
+        dose = Math.min(2.2, Math.max(0.45, next));
+        if (!skipped && nums.length)
+          signals.push({ ex: it.ex, dose, times: (st?.times ?? 0) + 1, difficulty: f?.difficulty, technique: f?.technique, reached, first, pain: f?.pain, deload: opts.deload });
         upsert.run({
           id: it.ex,
           dose: skipped ? (st?.dose ?? 1) : dose,
@@ -769,6 +831,7 @@ export function applyFeedback(
           avoid: f?.pain ? addDays(day, 7) : null,
           disliked: f?.dislike ? 1 : 0,
           now,
+          seed: opts.seedOf ? opts.seedOf(it.ex) : null,
         });
       });
     });
@@ -784,6 +847,7 @@ export function applyFeedback(
           avoid: null,
           disliked: 1,
           now,
+          seed: null,
         });
     for (const p of fb.pain)
       db.prepare(

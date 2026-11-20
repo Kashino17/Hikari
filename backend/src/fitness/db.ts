@@ -200,6 +200,8 @@ export function openFitnessDb(file: string): FitDb {
   db.pragma("journal_mode = WAL");
   db.pragma("busy_timeout = 4000");
   db.exec(SCHEMA);
+  // Nachgerüstete Spalten (ältere Datenbanken)
+  try { db.exec("ALTER TABLE exercise_state ADD COLUMN seed REAL"); } catch { /* schon da */ }
   return db;
 }
 

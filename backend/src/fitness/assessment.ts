@@ -107,6 +107,7 @@ export function saveTest(
   const before = p.level;
   saveProfile(db, { level });
   kvSet(db, "level_changed_at", now);
+  kvSet(db, "level_changed_day", day);
   db.prepare("INSERT INTO progress_events(day, kind, ex_from, ex_to, level, at) VALUES(?, 'test', NULL, NULL, ?, ?)").run(day, level, now);
   return { level, before, tiers, results: clean, prev };
 }

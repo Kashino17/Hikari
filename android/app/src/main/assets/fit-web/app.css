@@ -1397,3 +1397,5 @@ html.area-mind .brLabel b{font-family:var(--serif);font-weight:560;font-size:30p
 .progDone>.row>.ms{font-size:30px}.progDone b{display:block;font-family:var(--display);font-size:20px;font-weight:800}.progDone span{font-size:13px;opacity:.65}
 .progDone .btn{background:#000;color:#fff;flex:1}.progDone .btn.ghost{background:rgba(0,0,0,.08);color:#000}
 body:has(.sheet) .offPill{display:none}
+.bh-rate{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-top:10px;font-size:13.5px;color:#555}
+.bh-rate b{color:#111;font-weight:700;text-align:right}

@@ -43,6 +43,8 @@ function WeightTab({ d, onAdd }) {
         ${d.trend != null && html`<div class="bh-trend ${cls(onTrack ? 'good' : dir ? 'bad' : '')}"><b class="num">${d.trend > 0 ? '+' : ''}${fmtNum(d.trend, 2)}</b><span>kg pro Woche</span></div>`}
       </div>
       ${pts.length > 1 && html`<div class="mt12"><${Spark} points=${pts} goal=${d.target} color="rgb(17,17,17)" goalStroke="rgba(0,0,0,.3)" /></div>`}
+      ${d.band && html`<div class="bh-rate"><span>Gesundes Tempo für dein Ziel</span><b class="num">${d.band.map((v) => `${v > 0 ? '+' : ''}${fmtNum(v, 2)}`).join(' bis ')} kg/Woche</b></div>`}
+      ${d.adjustNote && html`<div class="bh-rate"><span>Dein Coach</span><b>${d.adjustNote}</b></div>`}
       ${d.target && html`<div class="bh-goal"><${Icon} n="flag" /><span>${d.eta ? `Ziel ${fmtNum(d.target, 1)} kg voraussichtlich ${longDate(d.eta)}` : d.trend == null ? `Ziel ${fmtNum(d.target, 1)} kg — für eine Prognose mindestens dreimal in vier Wochen wiegen` : `Ziel ${fmtNum(d.target, 1)} kg — der Trend zeigt gerade in die andere Richtung`}</span></div>`}
     </div>
     <button class="btn mt16" onClick=${onAdd}><${Icon} n="monitor_weight" />Gewicht eintragen</button>

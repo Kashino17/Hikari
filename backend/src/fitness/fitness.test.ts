@@ -12,7 +12,7 @@ import {
 } from "./coach.js";
 import { openFitnessDb } from "./db.js";
 import { BlsDb } from "./foods.js";
-import { buildRulesPlan, planSeconds, usable } from "./planner.js";
+import { buildRulesPlan, doseFor, planSeconds, usable } from "./planner.js";
 import { computeTargets, getProfile, normalizeProfile, saveProfile } from "./profile.js";
 import { recipeTags, youtubeId } from "./recipes.js";
 import { goalMet, logSkill, setSkill, skillStates } from "./skills.js";
@@ -631,3 +631,81 @@ describe("Prüfung 20.11.: gefundene Fehler bleiben behoben", () => {
     await app.close();
   });
 });
+
+describe("Kalorienziel folgt dem Gewichtsverlauf", () => {
+  it("zu langsam + Ziel gegessen → +100; nicht gegessen → nur Hinweis; im Band → bleibt", async () => {
+    const { adaptCalories } = await import("./body.js");
+    const { localDay: ld, addDays: ad } = await import("./db.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, sex: "m", weightKg: 63, heightCm: 178, goal: "muskeln", trainingDays: [0, 2, 4], sessionMinutes: 15 });
+    const today = ld();
+    const w = db.prepare("INSERT INTO body_log(day, weight) VALUES(?, ?)");
+    for (let i = 21; i >= 0; i -= 3) w.run(ad(today, -i), 63); // 3 Wochen flach
+    // nichts gegessen eingetragen → nur Hinweis
+    expect(adaptCalories(db)!.note).toMatch(/Trag dein Essen ein/);
+    expect(getProfile(db).kcalAdjust).toBe(0);
+    // 14 Tage Ziel gegessen → +100
+    const kcal = computeTargets(getProfile(db)).kcal;
+    const f = db.prepare("INSERT INTO food_log(id, day, meal, title, source, items, totals, created_at) VALUES(?, ?, 'mittag', 'x', 'frei', '[]', ?, 0)");
+    for (let i = 1; i <= 14; i++) f.run(`f${i}`, ad(today, -i), JSON.stringify({ kcal }));
+    saveProfile(db, { kcalAdjustAt: 0 });
+    expect(adaptCalories(db)!.adjust).toBe(100);
+    expect(computeTargets(getProfile(db)).kcal).toBe(kcal + 100);
+    expect(adaptCalories(db)).toBeNull(); // höchstens alle 14 Tage
+    // Gewicht steigt gesund (+0,25 kg/Woche) → bleibt
+    db.prepare("DELETE FROM body_log").run();
+    for (let i = 21; i >= 0; i -= 3) w.run(ad(today, -i), 63 + ((21 - i) / 7) * 0.25);
+    saveProfile(db, { kcalAdjustAt: 0 });
+    expect(adaptCalories(db)!.adjust).toBe(100);
+    // neues Ziel setzt zurück
+    saveProfile(db, { goal: "halten" });
+    expect(getProfile(db).kcalAdjust).toBe(0);
+  });
+});
+
+describe("Trainingsplan-Qualität (Coach 2)", () => {
+  it("15 min täglich mit Handgelenk: kurzer Rahmen, ≥2 Runden, Erholungstag, Beine ≥2× pro Woche", async () => {
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, sex: "m", weightKg: 63, goal: "muskeln", level: 1, equipment: ["boden"], limitations: ["handgelenk"], noJumps: true, trainingDays: [0, 1, 2, 3, 4, 5, 6], sessionMinutes: 15 });
+    const types: string[] = [];
+    for (let i = 0; i < 14; i++) {
+      const day = addDaysT("2026-11-23", i);
+      const s = await todaySession(null, db, catalog, { day });
+      const p = s.plan;
+      types.push(p.dayType);
+      const warm = p.blocks.find((b) => b.kind === "warmup")!;
+      const cool = p.blocks.find((b) => b.kind === "cooldown")!;
+      const main = p.blocks.find((b) => b.kind === "main")!;
+      expect(warm.items.length).toBeLessThanOrEqual(3);
+      expect(cool.items.length).toBeLessThanOrEqual(2);
+      if (main.format !== "flow") expect(main.rounds, `${day} ${p.dayType}`).toBeGreaterThanOrEqual(2);
+      if (main.format !== "flow") expect(Math.abs(p.minutes - 15), `${day} ${p.minutes} min`).toBeLessThanOrEqual(3); // Erholungstag darf kürzer sein
+      // erledigen (mittleres Feedback), damit der Wochenrhythmus entsteht
+      const done: Record<string, number[]> = {};
+      p.blocks.forEach((b, bi) => b.items.forEach((it, ii) => { done[`${bi}:${ii}`] = Array.from({ length: b.rounds ?? 1 }, () => it.amount); }));
+      applyFeedback(db, s, { overall: 3, pain: [], exercises: [] }, { seconds: p.minutes * 60, done, skipped: [] });
+    }
+    expect(types.filter((t) => t === "mobilitaet").length).toBeGreaterThanOrEqual(2);
+    const legs = (w: string[]) => w.filter((t) => t === "beine" || t === "ganzkoerper").length;
+    expect(legs(types.slice(0, 7)) + legs(types.slice(7))).toBeGreaterThanOrEqual(3);
+  });
+
+  it("Aufstieg: neue Stufe beginnt mit deutlich weniger Wiederholungen als die alte", async () => {
+    const { checkProgression } = await import("./progression.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, level: 2, equipment: ["boden"], limitations: [] });
+    const ctx0 = buildContext(db, catalog, "2026-11-20");
+    const before = doseForT(ctx0, "pushup");
+    db.prepare("INSERT INTO exercise_state(exercise_id, dose, times, updated_at) VALUES('pushup', 1.5, 3, 0)").run();
+    const beforeUp = doseForT(buildContext(db, catalog, "2026-11-20"), "pushup");
+    const ev = checkProgression(db, catalog, "2026-11-20", [{ ex: "pushup", dose: 1.5, times: 3, reached: 1, first: 1 }], () => true);
+    const next = ev.find((e) => e.kind === "auf")!.to!;
+    const after = doseForT(buildContext(db, catalog, "2026-11-21"), next);
+    expect(beforeUp).toBeGreaterThan(before);
+    expect(after).toBeLessThan(beforeUp * 0.85);
+    expect(after).toBeGreaterThanOrEqual(3);
+  });
+});
+function doseForT(ctx: ReturnType<typeof buildContext>, id: string) {
+  return doseFor(ctx, catalog.byId.get(id)!, "mittel", "main");
+}

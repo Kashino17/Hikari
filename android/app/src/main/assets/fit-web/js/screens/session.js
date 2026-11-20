@@ -219,7 +219,9 @@ function Run({ s }) {
     result.current.done[k] = arr;
   }
   function finishStep() {
-    if (step?.t === 'work') { record(step.unit === 'reps' ? reps : step.amount); beep('end'); }
+    // Halten: die wirklich gehaltene Zeit zählt (früher aufgehört → weniger), damit der Coach merkt,
+    // wenn eine Vorgabe zu viel war.
+    if (step?.t === 'work') { record(step.unit === 'reps' ? reps : Math.max(0, step.amount - Math.max(0, left ?? 0))); beep('end'); }
     next();
   }
   function next() {

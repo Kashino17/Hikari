@@ -51,13 +51,13 @@ import {
   nutrientStatus,
   resolveItems,
 } from "../fitness/meal-ai.js";
-import { DAY_TYPES, type DayType, blockSeconds, usable } from "../fitness/planner.js";
+import { DAY_TYPES, type DayType, blockSeconds, seedFor, usable } from "../fitness/planner.js";
 import { checkProgression, progressionView } from "../fitness/progression.js";
 import { saveTest, testState } from "../fitness/assessment.js";
 import { loadPrograms, phaseFor, setPrograms, startProgram, stopProgram, getPrograms } from "../fitness/program.js";
 import { weekPreview, weekReview } from "../fitness/week.js";
 import { best, history, loadBenchmarks, resolveItems as benchItems, saveRun, targets, tierFor } from "../fitness/benchmark.js";
-import { bodyProgress } from "../fitness/body.js";
+import { adaptCalories, bodyProgress } from "../fitness/body.js";
 import { backupInfo, scheduleBackups } from "../fitness/backup.js";
 import {
   NUTRIENTS,
@@ -525,6 +525,8 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   });
 
   app.get("/fitness/state", async () => {
+    // Kalorienziel alle 14 Tage am Gewichtsverlauf nachstellen (tut sonst nichts).
+    try { adaptCalories(db); } catch (e) { deps.log(`[fitness] Kalorien-Nachsteuerung: ${e instanceof Error ? e.message : e}`); }
     const profile = getProfile(db);
     const day = localDay();
     const weekStart = addDays(day, -weekday(day));
@@ -751,7 +753,12 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         exercises: rb.feedback?.exercises ?? [],
         ...(rb.feedback?.note ? { note: String(rb.feedback.note).slice(0, 600) } : {}),
       };
-      const signals = applyFeedback(db, s, fb, result);
+      // Startmenge je Übung merken (Level von heute), Entlastungswoche: kein Hochstufen.
+      const lvlNow = getProfile(db).level;
+      const signals = applyFeedback(db, s, fb, result, {
+        seedOf: (id) => { const e = catalog.byId.get(id); return e ? seedFor(lvlNow, e) : 1; },
+        deload: !!phaseFor(db, getPrograms(), s.day)?.deload,
+      });
       // Auf-/Abstiege und Level (progression.ts) — gleich zurückgeben, die App zeigt sie im Abschluss.
       const pctx = buildContext(db, catalog, s.day);
       const progress = checkProgression(db, catalog, s.day, signals, (e) => usable(pctx, e));
@@ -1093,13 +1100,23 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   );
 
   // ── Skills ──────────────────────────────────────────────────────────────
-  app.get("/fitness/skills", async () => ({ skills: skillStates(db, catalog) }));
+  // Skills mit Hinweis, ob die aktuelle Stufe zu Beschwerden/Ausrüstung passt (sonst plant der Coach sie nicht ein).
+  const skillsView = () => {
+    const ctx = buildContext(db, catalog, localDay());
+    return skillStates(db, catalog).map((st) => {
+      const sk = catalog.skillById.get(st.id);
+      const ex = sk?.steps[Math.min(st.step, (sk?.steps.length ?? 1) - 1)]?.exercise;
+      const e = ex ? catalog.byId.get(ex) : undefined;
+      return { ...st, blocked: !!e && !usable(ctx, e), blockedWhy: e && !usable(ctx, e) ? (e.stress.filter((r) => ctx.profile.limitations.includes(r) || ctx.painRegions.includes(r)).join(", ") || "Ausrüstung") : null };
+    });
+  };
+  app.get("/fitness/skills", async () => ({ skills: skillsView() }));
   app.post<{ Params: { id: string }; Body: { active?: boolean; step?: number } }>(
     "/fitness/skills/:id",
     async (req, reply) => {
       if (!catalog.skillById.has(req.params.id)) return reply.code(404).send({ error: "skill" });
       setSkill(db, req.params.id, req.body);
-      return { skills: skillStates(db, catalog) };
+      return { skills: skillsView() };
     },
   );
   app.post<{ Params: { id: string }; Body: { step: number; sets: number[]; feel?: number } }>(

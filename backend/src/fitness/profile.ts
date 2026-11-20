@@ -37,6 +37,10 @@ export interface Profile {
   dislikes: string[];
   mealsPerDay: number;
   cookingMinutes: number;
+  /** Nachsteuerung des Kalorienziels nach dem Gewichtsverlauf (adaptCalories), kcal/Tag */
+  kcalAdjust: number;
+  kcalAdjustAt: number;
+  kcalAdjustNote: string | null;
   onboarded: boolean;
   updatedAt: number;
 }
@@ -62,6 +66,9 @@ export const DEFAULT_PROFILE: Profile = {
   dislikes: [],
   mealsPerDay: 3,
   cookingMinutes: 30,
+  kcalAdjust: 0,
+  kcalAdjustAt: 0,
+  kcalAdjustNote: null,
   onboarded: false,
   updatedAt: 0,
 };
@@ -97,6 +104,9 @@ export function normalizeProfile(raw: Partial<Profile> | null | undefined): Prof
     dislikes: (p.dislikes ?? []).map(String).slice(0, 40),
     mealsPerDay: clamp(Math.round(Number(p.mealsPerDay) || 3), 2, 6),
     cookingMinutes: clamp(Math.round(Number(p.cookingMinutes) || 30), 10, 120),
+    kcalAdjust: clamp(Math.round(Number(p.kcalAdjust) || 0), -600, 600),
+    kcalAdjustAt: Number(p.kcalAdjustAt) || 0,
+    kcalAdjustNote: p.kcalAdjustNote ? String(p.kcalAdjustNote).slice(0, 200) : null,
     onboarded: !!p.onboarded,
   };
 }
@@ -106,7 +116,10 @@ export function getProfile(db: FitDb): Profile {
 }
 
 export function saveProfile(db: FitDb, patch: Partial<Profile>): Profile {
-  const next = normalizeProfile({ ...getProfile(db), ...patch, updatedAt: Date.now() });
+  const prev = getProfile(db);
+  // Neues Ziel → die Nachsteuerung des alten Ziels gilt nicht mehr.
+  const reset = patch.goal && patch.goal !== prev.goal ? { kcalAdjust: 0, kcalAdjustAt: 0, kcalAdjustNote: null } : {};
+  const next = normalizeProfile({ ...prev, ...patch, ...reset, updatedAt: Date.now() });
   next.updatedAt = Date.now();
   kvSet(db, "profile", next);
   return next;
@@ -154,7 +167,7 @@ export interface Targets {
   water: number;
   /** Ziel (min) bzw. Obergrenze (max) je Nährstoff */
   goals: Record<string, { min?: number; max?: number }>;
-  explain: { bmr: number; pal: number; training: number; delta: number; proteinPerKg: number; refWeight: number };
+  explain: { bmr: number; pal: number; training: number; delta: number; proteinPerKg: number; refWeight: number; adjust: number; adjustNote: string | null };
 }
 
 export function age(p: Profile, now = new Date()): number {
@@ -174,11 +187,13 @@ export function computeTargets(p: Profile, now = new Date()): Targets {
     p.goal === "abnehmen"
       ? -Math.min(550, Math.round(tdee * 0.2))
       : p.goal === "zunehmen"
-        ? Math.round(tdee * 0.12)
+        ? Math.round(tdee * 0.15)
         : p.goal === "muskeln"
-          ? Math.round(tdee * 0.07)
+          ? // Muskelaufbau: 10 % Überschuss (Studienlage 10–20 %, Ziel +0,25–0,5 % Körpergewicht/Woche)
+            Math.round(tdee * 0.1)
           : 0;
-  const kcal = Math.round((tdee + delta) / 10) * 10;
+  // Nachsteuerung aus dem echten Gewichtsverlauf (adaptCalories in body.ts)
+  const kcal = Math.round((tdee + delta + p.kcalAdjust) / 10) * 10;
   const proteinPerKg = { abnehmen: 2.0, muskeln: 2.0, zunehmen: 1.8, halten: 1.6, fitter: 1.6 }[
     p.goal
   ];
@@ -221,7 +236,7 @@ export function computeTargets(p: Profile, now = new Date()): Targets {
       vitB12: { min: 4 },
       folate: { min: 300 },
     },
-    explain: { bmr, pal, training, delta, proteinPerKg, refWeight: Math.round(refWeight) },
+    explain: { bmr, pal, training, delta, proteinPerKg, refWeight: Math.round(refWeight), adjust: p.kcalAdjust, adjustNote: p.kcalAdjustNote },
   };
 }
 

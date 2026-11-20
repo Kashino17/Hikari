@@ -7,6 +7,9 @@ import { Icon, Loop, Sheet, Top, cls, Spinner } from '../ui.js';
 const GROUP = { balance: 'Balance', druck: 'Drücken', zug: 'Ziehen', core: 'Rumpf', beine: 'Beine' };
 const goalText = (g) => `${g.sets > 1 ? `${g.sets} × ` : ''}${g.value}${g.type === 'hold' ? ' s' : ' Wdh.'}`;
 
+// Körperstellen im Satz (»belastet die Handgelenke«)
+const REGION = { handgelenk: 'die Handgelenke', schulter: 'die Schultern', ellbogen: 'die Ellbogen', knie: 'die Knie', ruecken: 'den Rücken', huefte: 'die Hüfte', sprunggelenk: 'die Sprunggelenke', nacken: 'den Nacken' };
+
 export function Skills() {
   const catalog = useCatalog();
   const [data] = useData('/fitness/skills');
@@ -21,7 +24,7 @@ export function Skills() {
     const ex = exById(catalog, s.steps[step]?.exercise);
     return html`<button class=${cls('skill', st?.active && 'active')} style=${{ '--sc': s.color }} onClick=${() => nav(`skill/${s.id}`)}>
       <div class="sv"><${Loop} media=${ex?.media} still=${!st?.active} />${locked(s) && html`<span class="lock"><${Icon} n="lock" style="font-size:14px" />Später</span>`}</div>
-      <div class="sb"><div class="sn">${s.name}</div><div class="ss">${st?.mastered ? 'Gemeistert' : st?.active ? s.steps[step].name : GROUP[s.group]}</div>
+      <div class="sb"><div class="sn">${s.name}</div><div class="ss">${st?.blocked ? (st.blockedWhy === 'Ausrüstung' ? 'Braucht Ausrüstung' : 'Belastet ' + st.blockedWhy.split(', ').map((r) => REGION[r] ?? r).join(' und ')) : st?.mastered ? 'Gemeistert' : st?.active ? s.steps[step].name : GROUP[s.group]}</div>
         <div class="lvl">${s.steps.map((_, i) => html`<i class=${cls(i < (st?.step ?? 0) && 'on')} />`)}</div></div>
     </button>`;
   };
@@ -63,6 +66,9 @@ export function SkillDetail({ id }) {
         <div class="eyebrow mt20" style="color:var(--sc)">${GROUP[s.group]} · ${s.steps.length} Stufen</div>
         <h1 style="font-size:28px;font-weight:700;letter-spacing:-.4px;margin-top:4px">${s.name}</h1>
         <p class="muted mt8" style="line-height:1.5">${s.summary}</p>
+        ${st.blocked && (st.blockedWhy === 'Ausrüstung'
+          ? html`<div class="card pad16 mt12 small" style="border:1px solid rgba(242,184,71,.45);line-height:1.5"><b style="color:#F2B847">Dafür fehlt dir Ausrüstung</b><br />Diese Stufe braucht ein Gerät, das du in »Ich« nicht eingetragen hast (z. B. eine Klimmzugstange). Dein Coach plant sie deshalb nicht ein.</div>`
+          : html`<div class="card pad16 mt12 small" style="border:1px solid rgba(242,184,71,.45);line-height:1.5"><b style="color:#F2B847">Passt gerade nicht zu deinen Beschwerden</b><br />Diese Stufe belastet ${st.blockedWhy.split(', ').map((r) => REGION[r] ?? r).join(' und ')}. Dein Coach plant sie deshalb nicht ins Training ein — such dir lieber einen Skill ohne diese Belastung oder nimm die Beschwerde in »Ich« raus, wenn sie vorbei ist.</div>`)}
 
         ${st.mastered ? html`<div class="celebrate card mt16"><${Icon} n="workspace_premium" fill /><div class="h2">Gemeistert</div><div class="small muted">Alle Stufen geschafft.</div></div>` : html`
         <div class="curStep mt20">
