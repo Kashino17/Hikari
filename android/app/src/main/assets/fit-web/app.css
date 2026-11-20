@@ -1405,3 +1405,6 @@ body:has(.sheet) .offPill{display:none}
 .dayDone.teilweise,.dayDone.offen{background:rgba(242,184,71,.07);border-color:rgba(242,184,71,.3)}
 .dayDone.teilweise>.ms,.dayDone.offen>.ms{color:#F2B847}
 .dayDone .dd-act{display:flex;gap:8px;flex-wrap:wrap;width:100%}
+.amrap{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(var(--train),.12);border:1px solid rgba(var(--train),.3);font-size:13.5px;line-height:1.4;font-weight:600}
+.amrap.soft{background:none;border-color:rgba(255,255,255,.12);font-weight:500;color:var(--muted)}
+.supp p{font-size:13.5px;line-height:1.5;margin-top:8px}

@@ -325,6 +325,16 @@ export function settleAiPlan(raw: AiPlanRaw, ctx: PlanContext, rules: SessionPla
   };
   // Geplanter Erholungstag bleibt Erholungstag (sonst gilt der Regelplan).
   if (rules.dayType === "mobilitaet" && plan.dayType !== "mobilitaet") throw new Error("ruhetag_ignoriert");
+  // Krafttag bleibt Krafttag: die Hauptmuster des Regelplans (Drücken, Ziehen, Beine …) müssen im Hauptteil
+  // vorkommen — sonst macht die KI aus einem Muskeltag einen Ausdauerzirkel.
+  const STRENGTH = ["push", "pull", "squat", "lunge", "hinge"];
+  const pats = (pl: SessionPlan) =>
+    new Set(pl.blocks.filter((b) => b.kind === "main").flatMap((b) => b.items.map((i) => ctx.catalog.byId.get(i.ex)?.pattern ?? "")));
+  const wantPats = [...pats(rules)].filter((x) => STRENGTH.includes(x));
+  const have = pats(plan);
+  const legs = (x: string) => ["squat", "lunge", "hinge"].includes(x);
+  const missing = wantPats.filter((x) => !have.has(x) && !(legs(x) && [...have].some(legs)));
+  if (rules.dayType !== "ausdauer" && rules.dayType !== "mobilitaet" && missing.length) throw new Error(`muster_fehlen:${missing.join(",")}`);
   // Rahmen wie im Regelplan: kurzes Auf- und Abwärmen, der Rest ist Arbeit.
   const wantMin = ctx.checkin?.minutes ?? ctx.profile.sessionMinutes;
   const frame = frameFor(wantMin);
@@ -812,12 +822,19 @@ export function applyFeedback(
         if (f?.difficulty === -1) shift += 0.12;
         if (f?.difficulty === 1) shift -= 0.12;
         if (reached > 1.15) shift += 0.08;
+        // Kein Feedback, aber alles wie vorgegeben geschafft: kleine Steigerung (progressive Überlastung —
+        // wer nie »zu leicht« antippt, soll trotzdem vorankommen).
+        else if (!f?.difficulty && first >= 1 && reached >= 1) shift += 0.04;
         if (f?.technique === 1) shift -= 0.05;
         // Entlastungswoche: leicht ist Absicht — kein Hochstufen der Menge.
         if (opts.deload) shift = Math.min(0, shift);
         let next = dose * (1 + shift);
         // Nicht geschafft: nächste Menge an dem ausrichten, was wirklich ging (statt nur −10 % je Einheit).
         if (first < 0.8) next = Math.min(next, dose * Math.max(0.6, Math.min(0.95, first * 1.05)));
+        // Deutlich mehr geschafft als vorgegeben (z. B. letzte Runde »so viele wie möglich«): neue Menge
+        // ≈ 80 % des Besten — das liegt nah am Muskelversagen, wo Körpergewichtstraining wirkt.
+        const best = nums.length ? Math.max(...nums) / it.amount : 0;
+        if (!opts.deload && best >= 1.25) next = Math.max(next, Math.min(dose * best * 0.8, 2.2));
         else if (reached < 0.7) next = Math.min(next, dose * 0.95);
         dose = Math.min(2.2, Math.max(0.45, next));
         if (!skipped && nums.length)
@@ -831,7 +848,9 @@ export function applyFeedback(
           avoid: f?.pain ? addDays(day, 7) : null,
           disliked: f?.dislike ? 1 : 0,
           now,
-          seed: opts.seedOf ? opts.seedOf(it.ex) : null,
+          // Neue Übung: der Planer gab 15 % weniger (vorsichtiger Einstieg) — so auch speichern, sonst
+          // springt die nächste Menge ohne jedes Feedback um 18 % hoch.
+          seed: opts.seedOf ? opts.seedOf(it.ex) * (st ? 1 : 0.85) : null,
         });
       });
     });

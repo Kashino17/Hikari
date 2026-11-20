@@ -1736,9 +1736,7 @@
     "Rumpf",
     "Adduktoren"
    ],
-   "equipment": [
-    "bank"
-   ],
+   "equipment": [],
    "level": 5,
    "unit": "reps",
    "perSide": true,
@@ -1753,6 +1751,7 @@
    "regress": "split_squat",
    "progress": "assisted_pistol",
    "steps": [
+    "Hinteren Fuß auf Sofa, Bett oder einen stabilen Stuhl legen (Fußrücken auf der Kante).",
     "Hinteren Fußrücken auf eine Bank legen.",
     "Vorderer Fuß weit genug vorn, damit das Knie über dem Fuß bleibt.",
     "Senkrecht absinken, bis der vordere Oberschenkel waagerecht ist.",
@@ -2325,9 +2324,7 @@
    "secondary": [
     "Oberschenkel hinten"
    ],
-   "equipment": [
-    "bank"
-   ],
+   "equipment": [],
    "level": 3,
    "unit": "reps",
    "stress": [
@@ -2340,6 +2337,7 @@
    "secPerRep": 2.8,
    "regress": "glute_bridge",
    "steps": [
+    "Schulterblätter an die Kante von Sofa oder Bett lehnen, Füße hüftbreit am Boden.",
     "Schulterblätter an die Bankkante lehnen, Füße hüftbreit aufgestellt.",
     "Kinn leicht zur Brust.",
     "Hüfte hoch drücken, bis der Oberkörper waagerecht ist.",
@@ -2719,7 +2717,9 @@
    "level": 1,
    "unit": "reps",
    "perSide": true,
-   "stress": [],
+   "stress": [
+    "handgelenk"
+   ],
    "use": [
     "warmup",
     "main"
@@ -4288,7 +4288,8 @@
    "level": 1,
    "unit": "sec",
    "stress": [
-    "ruecken"
+    "ruecken",
+    "handgelenk"
    ],
    "use": [
     "warmup",
@@ -4328,7 +4329,8 @@
    "unit": "reps",
    "perSide": true,
    "stress": [
-    "huefte"
+    "huefte",
+    "handgelenk"
    ],
    "use": [
     "warmup"
@@ -4677,7 +4679,8 @@
    "level": 1,
    "unit": "sec",
    "stress": [
-    "ruecken"
+    "ruecken",
+    "handgelenk"
    ],
    "use": [
     "cooldown"
@@ -5169,7 +5172,8 @@
    "unit": "sec",
    "perSide": true,
    "stress": [
-    "schulter"
+    "schulter",
+    "handgelenk"
    ],
    "use": [
     "cooldown"
@@ -6389,10 +6393,10 @@
    "progress": "single_arm_towel_row",
    "regress": "door_frame_row",
    "steps": [
-    "Tür schließen und abschließen. Du stehst auf der Seite, auf der die Tür von dir weg aufgeht — so drückt dein Zug sie in den Rahmen.",
-    "Ein festes Handtuch um beide Türklinken legen, je ein Ende in eine Hand, Handgelenke gerade.",
-    "Füße nah an die Tür, Arme gestreckt, Körper gerade nach hinten lehnen.",
-    "Brust zu den Händen ziehen, Schulterblätter zusammen — langsam zurück."
+    "Tür schließen und abschließen. Stell dich auf die Seite, auf der die Tür von dir weg aufgeht — dein Zug drückt sie dann fest in den Rahmen. Vorher einmal kräftig testen.",
+    "Ein festes Handtuch um den Hals der Türklinke schlingen, direkt an der Rosette (nicht vorne am Griff, dort rutscht es ab). Je ein Ende in eine Hand, Handgelenke gerade.",
+    "Füße nah an die Tür, Arme gestreckt, Körper als gerade Linie nach hinten lehnen. Anfangs eher steil stehen — je weiter die Füße zur Tür rücken, desto schwerer.",
+    "Brust zu den Händen ziehen, Schulterblätter zusammen, oben kurz halten, langsam zurück."
    ],
    "mistakes": [
     "Auf der falschen Türseite stehen — dann zieht man die Tür auf.",
@@ -6400,7 +6404,8 @@
    ],
    "tips": [
     "Vorher einmal kräftig ziehen und prüfen, ob Klinke und Handtuch halten.",
-    "Je steiler du stehst, desto leichter; je flacher, desto schwerer."
+    "Je steiler du stehst, desto leichter; je flacher, desto schwerer.",
+    "Sicherer und bequemer: ein Türanker-Gurt (ca. 10 €) auf der Scharnierseite oder Rudern unter einem stabilen Tisch."
    ],
    "breathing": "Beim Heranziehen ausatmen, beim Zurücklehnen einatmen.",
    "media": {

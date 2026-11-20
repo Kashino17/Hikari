@@ -52,6 +52,7 @@ export function weekPreview(db: FitDb, catalog: Catalog, today = localDay()) {
   const lastWeekDone = sessionsBetween(db, lastMonday, addDays(lastMonday, 6)).filter((s) => s.status === "done").length;
   const rev = db.prepare("SELECT data FROM coach_notes WHERE kind = 'woche' AND day = ? ORDER BY at DESC LIMIT 1").get(lastMonday) as { data: string } | undefined;
   return {
+    goal: p.goal,
     monday,
     days,
     program: phaseFor(db, getPrograms(), today),

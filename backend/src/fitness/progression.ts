@@ -9,6 +9,7 @@
 import type { Catalog, Exercise } from "./catalog.js";
 import { type FitDb, kvGet, kvSet } from "./db.js";
 import { seedFor } from "./planner.js";
+import { getPrograms, phaseFor } from "./program.js";
 import { getProfile, saveProfile } from "./profile.js";
 
 
@@ -55,7 +56,9 @@ export function makeResolver(db: FitDb, catalog: Catalog, ok: (e: Exercise) => b
     if (e?.id === cur) for (const id of path.slice(1)) if (!map.has(id)) passed.set(id, cur);
   }
   return (id: string): string => {
-    let cur = map.has(id) ? id : (passed.get(id) ?? id);
+    const via = passed.get(id);
+    const viaOk = via ? catalog.byId.get(via) : undefined;
+    let cur = map.has(id) ? id : via && viaOk && ok(viaOk) ? via : id;
     const seen = new Set([cur]);
     for (let i = 0; i < 8; i++) {
       const next = map.get(cur);
@@ -78,11 +81,13 @@ export function masteredLevels(db: FitDb, catalog: Catalog): Record<string, numb
   const out: Record<string, number> = {};
   for (const [root, cur] of variantMap(db)) {
     let e = catalog.byId.get(root);
+    const path: Exercise[] = [];
     for (let i = 0; e && e.id !== cur && i < 8; i++) {
-      out[e.pattern] = Math.max(out[e.pattern] ?? 0, e.level);
+      path.push(e);
       e = e.progress ? catalog.byId.get(e.progress) : undefined;
     }
-    if (e?.id !== cur) delete out[catalog.byId.get(root)?.pattern ?? ""]; // Abstieg: kein Weg nach oben
+    // Nur ein echter Aufstiegsweg zählt (Abstieg: kein Weg nach oben) — andere Ketten bleiben unberührt.
+    if (e?.id === cur) for (const x of path) out[x.pattern] = Math.max(out[x.pattern] ?? 0, x.level);
   }
   return out;
 }
@@ -162,11 +167,12 @@ export function checkProgression(
     if (!to.perSide && from.perSide) f /= 0.7;
     return to.level >= from.level ? f : 1 / f;
   };
+  const capOf = (x: Exercise) => (x.unit === "sec" ? 90 : x.perSide ? 20 : 30);
   const handoff = (from: Exercise, fromDose: number, to: Exercise, factor = gapFactor(from, to)) => {
     const sdTo = seedOf(to);
     const dose =
       from.unit === to.unit
-        ? Math.min(2, Math.max(0.45, (from.base * seedOf(from) * fromDose * factor) / (to.base * sdTo)))
+        ? Math.min(2, Math.max(0.45, (Math.min(capOf(from), from.base * seedOf(from) * fromDose) * factor) / (to.base * sdTo)))
         : factor < 1 ? 0.85 : 1.1;
     handState.run(to.id, Math.round(dose * 1000) / 1000, now, sdTo);
   };
@@ -225,7 +231,8 @@ export function checkProgression(
       events.push({ kind: "ab", from: e.id, to: easier.id, fromName: name(e.id), toName: easier.name });
     }
   }
-  const lvl = signals.some((s) => s.deload) ? null : adjustLevel(db, day);
+  const deloadNow = signals.some((s) => s.deload) || !!phaseFor(db, getPrograms(), day)?.deload;
+  const lvl = deloadNow ? null : adjustLevel(db, day);
   if (lvl) events.push(lvl);
   return events;
 }
@@ -243,7 +250,7 @@ export function adjustLevel(db: FitDb, day: string): ProgressEvent | null {
   let next = p.level;
   // Nicht zappeln: frühestens 21 Tage nach der letzten Änderung hoch, 14 Tage runter.
   const sinceDay = kvGet<string>(db, "level_changed_day");
-  const days = sinceDay ? (Date.parse(`${day}T12:00:00`) - Date.parse(`${sinceDay}T12:00:00`)) / 86_400_000 : Infinity;
+  const days = sinceDay ? Math.round((Date.parse(`${day}T12:00:00`) - Date.parse(`${sinceDay}T12:00:00`)) / 86_400_000) : Infinity;
   if (ups - downs >= 4 && p.level < 5 && days >= 21) next = p.level + 1;
   else if (downs - ups >= 3 && p.level > 1 && days >= 14) next = p.level - 1;
   if (next === p.level) return null;

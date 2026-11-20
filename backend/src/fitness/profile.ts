@@ -101,7 +101,8 @@ export function normalizeProfile(raw: Partial<Profile> | null | undefined): Prof
       ? p.diet
       : "alles",
     allergies: (p.allergies ?? []).map(String).slice(0, 20),
-    dislikes: (p.dislikes ?? []).map(String).slice(0, 40),
+    // »Bananen.Äpfel, Mandeln« → einzelne Einträge (sonst greift der Filter nie)
+    dislikes: [...new Set((p.dislikes ?? []).flatMap((d) => String(d).split(/[.,;\/|\n]+|\s+und\s+/i)).map((d) => d.trim()).filter((d) => d.length >= 2))].slice(0, 40),
     mealsPerDay: clamp(Math.round(Number(p.mealsPerDay) || 3), 2, 6),
     cookingMinutes: clamp(Math.round(Number(p.cookingMinutes) || 30), 10, 120),
     kcalAdjust: clamp(Math.round(Number(p.kcalAdjust) || 0), -600, 600),

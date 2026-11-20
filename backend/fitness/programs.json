@@ -23,8 +23,7 @@
     "fuer": "Muskeln und Kraft",
     "phasen": [
       { "wochen": [1], "name": "Aufbau", "volumen": 1.0, "intensitaet": "mittel", "fokus": { "druck": 0.4, "zug": 0.4, "beine": 0.4 }, "notiz": "Grundvolumen setzen, Varianten finden" },
-      { "wochen": [2, 3], "name": "Steigerung", "volumen": 1.12, "intensitaet": "hart", "fokus": { "druck": 0.45, "zug": 0.45, "beine": 0.45 }, "notiz": "Jede Woche ein bisschen mehr — nah ans Muskelversagen" },
-      { "wochen": [4], "name": "Entlastung", "volumen": 0.6, "intensitaet": "leicht", "fokus": { "ganzkoerper": 0.4, "mobilitaet": 0.3 }, "notiz": "Weniger Umfang, damit der Körper aufholt — hier wächst der Muskel" },
+      { "wochen": [2, 3, 4], "name": "Steigerung", "volumen": 1.12, "intensitaet": "hart", "fokus": { "druck": 0.45, "zug": 0.45, "beine": 0.45 }, "notiz": "Jede Woche ein bisschen mehr — nah ans Muskelversagen" },
       { "wochen": [5, 6, 7], "name": "Höhepunkt", "volumen": 1.22, "intensitaet": "hart", "fokus": { "druck": 0.5, "zug": 0.5, "beine": 0.45 }, "notiz": "Höchster Umfang, schwerste Varianten" },
       { "wochen": [8], "name": "Entlastung & Test", "volumen": 0.6, "intensitaet": "leicht", "fokus": { "ganzkoerper": 0.4 }, "notiz": "Erholen, dann der Fitness-Test" }
     ]

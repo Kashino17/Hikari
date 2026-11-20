@@ -268,6 +268,10 @@ function Run({ s }) {
       <div class="info">
         <button class="exname" style="display:inline-flex;align-items:center;gap:6px" onClick=${() => setInfo(true)}>${ex?.name}<${Icon} n="info" style="font-size:19px;color:var(--muted)" /></button>
         <div class="cue">${step.note ?? ex?.steps?.[2] ?? ''}</div>
+        ${step.unit === 'reps' && step.block.kind === 'main' && step.rounds > 1 && step.round === step.rounds - 1 && step.block.format !== 'intervals'
+          ? html`<div class="amrap">Letzte Runde: so viele saubere Wiederholungen wie möglich — und dann hier eintragen. Daraus plant dein Coach die nächste Menge.</div>`
+          : step.unit === 'reps' && step.block.kind === 'main' && step.round === 0 && step.ii === 0
+            ? html`<div class="amrap soft">Hör 1–3 Wiederholungen vor dem Punkt auf, an dem die Form bricht.</div>` : ''}
         ${step.unit === 'reps' ? html`
           <div class="amount">${reps}<small>${step.perSide ? 'je Seite' : 'Wdh.'}</small></div>
           <div class="adj"><button class="ib sm ring" onClick=${() => setReps(Math.max(0, reps - 1))} aria-label="weniger"><${Icon} n="remove" /></button><span class="small muted" style="align-self:center">geschafft?</span><button class="ib sm ring" onClick=${() => setReps(reps + 1)} aria-label="mehr"><${Icon} n="add" /></button></div>`

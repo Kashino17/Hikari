@@ -6,6 +6,8 @@ import { back, nav, useData, refresh, relDay, today, parseDay, toast } from '../
 import { Icon, Top, Sheet, cls, Loop, Spinner } from '../ui.js';
 
 const WD = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+// Passendes Programm je Ziel (Programme-Seite hebt es hervor)
+const REC = { muskeln: 'Muskelaufbau', zunehmen: 'Muskelaufbau', abnehmen: 'Fettverbrennung', fitter: 'Grundlagen', halten: 'Grundlagen' };
 const TYPE_ICON = { ganzkoerper: 'accessibility_new', druck: 'front_hand', zug: 'rowing', beine: 'directions_walk', core: 'center_focus_strong', ausdauer: 'bolt', mobilitaet: 'self_improvement' };
 const GROUPS = [['druck', 'Drücken'], ['zug', 'Ziehen'], ['beine', 'Beine'], ['core', 'Rumpf'], ['ausdauer', 'Ausdauer']];
 
@@ -26,7 +28,7 @@ export function WeekPlan() {
       : w.program?.done ? html`<div class="progDone">
           <div class="row" style="gap:12px"><${Icon} n="emoji_events" /><div class="grow"><b>${w.program.name} geschafft</b><span>${w.program.weeks} Wochen durchgezogen — stark.</span></div></div>
           <div class="row mt12" style="gap:8px"><button class="btn sm" onClick=${() => nav('test')}>Fitness-Test</button><button class="btn sm ghost" onClick=${() => nav('programme')}>Nächstes Programm</button></div></div>`
-      : html`<button class="progInvite" onClick=${() => nav('programme')}><${Icon} n="flag" /><div class="grow"><b>Programm wählen</b><span>Mehrere Wochen mit Ziel, Steigerung und Entlastungswoche</span></div><${Icon} n="chevron_right" /></button>`}
+      : html`<button class="progInvite" onClick=${() => nav('programme')}><${Icon} n="flag" /><div class="grow"><b>${REC[w.goal] ? `Empfohlen: ${REC[w.goal]}` : 'Programm wählen'}</b><span>${REC[w.goal] ? 'Ein Plan über Wochen mit klarer Steigerung bringt mehr als einzelne Tage' : 'Mehrere Wochen mit Ziel, Steigerung und Entlastungswoche'}</span></div><${Icon} n="chevron_right" /></button>`}
     <div class="wkStrip">${w.days.map((d, i) => {
       const s = d.session;
       const type = s?.dayType ?? d.predicted?.dayType;

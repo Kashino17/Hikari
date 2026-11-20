@@ -87,7 +87,11 @@ export function Me() {
     ${info === 'health' && html`<${HealthSheet} status=${hs} onStatus=${setHs} onClose=${() => setInfo(null)} />`}
     ${info === 'ziele' && html`<${Sheet} title="Deine Tagesziele" onClose=${() => setInfo(null)}><div class="c-food">
       <div class="row"><div class="grow"><div style="font-size:30px;font-weight:800;font-family:var(--display)" class="num">${fmtNum(t.kcal)} kcal</div></div><div class="small muted" style="text-align:right">Grundumsatz ${fmtNum(t.explain.bmr)}<br />Alltag ×${t.explain.pal} · Training +${t.explain.training}<br />Ziel ${t.explain.delta >= 0 ? '+' : ''}${t.explain.delta}${t.explain.adjust ? html`<br />nachgestellt ${t.explain.adjust > 0 ? '+' : '−'}${Math.abs(t.explain.adjust)}` : ''}${t.day?.delta ? html`<br />heute ${t.day.delta > 0 ? '+' : '−'}${Math.abs(t.day.delta)} (${{ done: 'Training erledigt', planned: 'Trainingstag', missed: 'ausgelassen', rest: 'Ruhetag' }[t.day.kind] ?? 'Tag'})` : ''}</div></div>
-      <div class="macroBand mt16"><div><b>${t.protein}</b><span>Eiweiß g</span></div><div><b>${t.carbs}</b><span>KH g</span></div><div><b>${t.fat}</b><span>Fett g</span></div><div><b>${fmtNum(t.water, 1)}</b><span>Wasser l</span></div></div></div><//>`}
+      <div class="macroBand mt16"><div><b>${t.protein}</b><span>Eiweiß g</span></div><div><b>${t.carbs}</b><span>KH g</span></div><div><b>${t.fat}</b><span>Fett g</span></div><div><b>${fmtNum(t.water, 1)}</b><span>Wasser l</span></div></div>
+      <div class="supp mt16"><div class="eyebrow">Sinnvoll ergänzen (freiwillig)</div>
+        ${(p.goal === 'muskeln' || p.goal === 'zunehmen') && html`<p><b>Kreatin-Monohydrat 3–5 g täglich</b> — gut untersucht, mehr Kraft und Muskelzuwachs beim Training. Zeitpunkt egal, jeden Tag.</p>`}
+        <p><b>Vitamin D 20 µg (800 IE) von Oktober bis März</b> — in Deutschland bildet die Haut im Winter kaum welches, über Essen kommt wenig.</p>
+        <p class="tiny muted">Bei Vorerkrankungen oder Medikamenten vorher ärztlich abklären.</p></div></div><//>`}
     ${info === 'ueber' && html`<${Sheet} title="Daten und Quellen" onClose=${() => setInfo(null)}><p class="small muted" style="line-height:1.6">
       <b style="color:var(--text)">KI</b> · ${state.ai.hasKey ? `Gemini (kostenlos) · heute ${Object.values(state.ai.used ?? {}).reduce((x, y) => x + y, 0)} Anfragen` : 'kein Schlüssel'}<br />
       <b style="color:var(--text)">Rezepte</b> · ${state.recipes.have} von ${state.recipes.total || 790} aufbereitet${state.recipes.running ? ' (läuft)' : ''}<br />

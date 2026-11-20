@@ -69,6 +69,7 @@ export function Today() {
         ${state && !other && !isTrainingDay && !done && isNative && html`<button class="restCard mt12" onClick=${() => openArea('mind')}>
           <span class="rc-moon" /><div class="grow"><b>Ruhetag — gönn dir 15 Minuten</b><span>Sanftes Yoga oder eine Atemübung lösen Muskelkater und helfen der Erholung.</span></div><${Icon} n="arrow_forward" /></button>`}
         <${WeekReviewCard} />
+        ${!other && html`<${WeighCard} today=${day} />`}
         ${prog && !prog.test.last && html`<button class="assessCard mt12" onClick=${() => nav('test')}>
           <${Icon} n="assignment_turned_in" /><div class="grow"><b>Einstufung: 5 Minuten</b><span>${['', 'Ein kurzer Test', 'Zwei kurze Tests', 'Drei kurze Tests', 'Vier kurze Tests'][prog?.test?.tests?.length ?? 4] ?? 'Kurze Tests'} — danach plant dein Coach genau auf deinem Level.</span></div><${Icon} n="chevron_right" /></button>`}
         <div class="sec"><h2 class="h2">Dein Tag</h2></div>
@@ -240,6 +241,17 @@ function Hero({ s, restDay, second, onAdapt }) {
   </div>`;
 }
 
+/** Erinnerung ans Wiegen: ohne 2–3 Messungen pro Woche kann der Coach Kalorien nicht nachstellen. */
+function WeighCard({ today }) {
+  const [b] = useData('/fitness/body/progress');
+  if (!b) return null;
+  const last = b.weights?.[b.weights.length - 1]?.day;
+  const days = last ? Math.round((parseDay(today) - parseDay(last)) / 86400000) : 99;
+  if (days < 4) return null;
+  return html`<button class="reviewCard mt12" onClick=${() => nav('koerper')}>
+    <${Icon} n="monitor_weight" /><div class="grow"><b>Kurz wiegen</b><span>${last ? `Zuletzt vor ${days} Tagen.` : 'Noch kein Gewicht eingetragen.'} 2–3× pro Woche morgens reicht — dann passt dein Coach die Kalorien an.</span></div><${Icon} n="chevron_right" /></button>`;
+}
+
 function DoneCard({ s }) {
   const [hist] = useData('/fitness/history?days=7');
   const [extra, setExtra] = useState(false);
@@ -298,14 +310,16 @@ function FoodTile({ food }) {
 }
 
 function SkillTile({ skills, catalog }) {
-  const st = skills?.skills?.find((s) => s.active && !s.mastered);
+  // Nur Skills, die zu deinen Beschwerden und deiner Ausrüstung passen (gesperrte bietet die Kachel nicht an).
+  const st = skills?.skills?.find((s) => s.active && !s.mastered && !s.blocked);
   const sk = st && catalog?.skills?.find((s) => s.id === st.id);
   const step = sk?.steps?.[st.step];
   if (!sk) {
+    const blockedActive = skills?.skills?.some((s) => s.active && s.blocked);
     return html`<button class="tile c-skill" onClick=${() => nav('skills', { replace: true })}>
       <div class="tt"><${Icon} n="sports_gymnastics" style="font-size:17px;color:rgb(var(--skill))" />Skills</div>
-      <div class="h3" style="line-height:1.3">Handstand, Muscle-up, Front Lever …</div>
-      <div class="small muted" style="margin-top:auto">Wähle einen Skill — er wird Teil deines Trainings.</div>
+      <div class="h3" style="line-height:1.3">${blockedActive ? 'Dein Skill passt gerade nicht' : 'Handstand, Muscle-up, Front Lever …'}</div>
+      <div class="small muted" style="margin-top:auto">${blockedActive ? 'Er belastet deine Beschwerden — wähle einen, der passt (z. B. Pistol Squat).' : 'Wähle einen Skill — er wird Teil deines Trainings.'}</div>
     </button>`;
   }
   return html`<button class="tile c-skill" style=${{ '--sc': sk.color }} onClick=${() => nav(`skill/${sk.id}`)}>

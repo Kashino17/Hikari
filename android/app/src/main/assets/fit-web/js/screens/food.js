@@ -355,6 +355,9 @@ function DayPlan({ day }) {
         <div class="small muted mt4">${fmtNum(s.recipe.kcal * s.recipe.factor)} kcal · ${fmtNum(s.recipe.protein * s.recipe.factor)} g Eiweiß · ${s.recipe.minutes} min</div></button>
       <button class="ib sm" onClick=${() => setAlt(s)} aria-label="Tauschen"><${Icon} n="swap_horiz" /></button>
     </div>`)}</div>
+    ${p.extras?.length > 0 && html`<div class="card pad16 mt12"><div class="eyebrow">Damit du dein Ziel erreichst</div>
+      <p class="small muted mt4">Die Rezepte allein kommen auf ${fmtNum(p.planned.kcal)} von ${fmtNum(p.targets.kcal)} kcal. Ohne Kochen dazu:</p>
+      ${p.extras.map((x) => html`<div class="row mt8" style="justify-content:space-between;gap:12px"><span>${x.name}</span><span class="small muted num" style="white-space:nowrap">${x.kcal} kcal · ${x.protein} g</span></div>`)}</div>`}
     <button class="btn ghost mt16" onClick=${() => nav('einkauf')}><${Icon} n="shopping_cart" />Einkaufsliste</button>
     ${alt && html`<${Sheet} title=${`${alt.name} tauschen`} onClose=${() => setAlt(null)}>
       ${alt.alternatives.map((r) => html`<button class="planSlot" onClick=${() => choose(alt.slot, r.id)}><div class="pi" style="width:64px;height:64px"><img src=${recipeImg(r.image, 'small')} alt="" /></div>

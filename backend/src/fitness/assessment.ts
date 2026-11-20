@@ -5,6 +5,7 @@
  */
 import type { Catalog } from "./catalog.js";
 import { type FitDb, addDays, kvSet, localDay } from "./db.js";
+import { seedFor } from "./planner.js";
 import { getProfile, saveProfile } from "./profile.js";
 
 export interface TestDef {
@@ -27,6 +28,8 @@ const BASE: TestDef[] = [
   { id: "plank", ex: "plank", name: "Unterarmstütz", unit: "sec", mode: "max", how: "So lange halten, wie der Körper eine gerade Linie bleibt. Hüfte sinkt oder Po geht hoch → Stopp.", norms: [30, 60, 120, 180], femaleFactor: 1 },
 ];
 const PULL: TestDef = { id: "klimmzug", ex: "pullup", name: "Klimmzüge", unit: "reps", mode: "max", how: "Aus dem ganz gestreckten Hang, Kinn über die Stange, ohne Schwung. So viele wie möglich.", norms: [1, 4, 9, 15], femaleFactor: 0.4 };
+// Ohne Stange: Rudern an der Tür, Füße an einer festen Markierung (eine Fußlänge vor der Tür).
+const ROW: TestDef = { id: "rudern", ex: "towel_door_row", name: "Handtuch-Rudern", unit: "reps", mode: "max", how: "Füße eine Fußlänge vor der Tür (merk dir die Stelle für den nächsten Test), Körper gerade. So viele saubere Züge wie möglich, Brust bis zu den Händen.", norms: [5, 10, 15, 20], femaleFactor: 0.6 };
 const BURPEE: TestDef = { id: "burpees", ex: "burpee", name: "Burpees in 60 s", unit: "reps", mode: "timed", seconds: 60, how: "Eine Minute Burpees: Brust zum Boden, oben ein kleiner Sprung mit gestreckter Hüfte.", norms: [10, 15, 20, 25], femaleFactor: 0.85 };
 
 const FIST: Partial<TestDef> = {
@@ -44,7 +47,8 @@ export function testsFor(db: FitDb, ok: (exId: string) => boolean = () => true):
     if (ok(t.ex)) out.push(t);
     else if (t.id === "liegestuetz" && FIST.ex && ok(FIST.ex)) out.push({ ...t, ...FIST } as TestDef);
   }
-  const extra = canPull && ok(PULL.ex) ? PULL : ok(BURPEE.ex) ? BURPEE : null;
+  // Ziehen zählt mehr als ein weiterer Ausdauertest: Stange → Klimmzüge, sonst Rudern an der Tür, sonst Burpees.
+  const extra = canPull && ok(PULL.ex) ? PULL : ok(ROW.ex) ? ROW : ok(BURPEE.ex) ? BURPEE : null;
   if (extra) out.push(extra);
   return out;
 }
@@ -84,6 +88,7 @@ export function saveTest(
   results: Record<string, unknown>,
   ok?: (exId: string) => boolean,
   day = localDay(),
+  catalog?: Catalog,
 ) {
   const p = getProfile(db);
   const female = p.sex !== "m";
@@ -106,6 +111,18 @@ export function saveTest(
   db.prepare("INSERT INTO test_log(day, results, tiers, level, at) VALUES(?, ?, ?, ?, ?)").run(day, JSON.stringify(clean), JSON.stringify(tiers), level, now);
   const before = p.level;
   saveProfile(db, { level });
+  // Startmengen aus dem Test: getestete Übung ≈ 70 % des Maximums (2–4 Wiederholungen vor dem Versagen).
+  // Sonst bliebe die erste Woche oft weit unter dem, was du kannst.
+  const st = db.prepare(
+    "INSERT INTO exercise_state(exercise_id, dose, times, updated_at, seed) VALUES(?, ?, 0, ?, ?) ON CONFLICT(exercise_id) DO UPDATE SET dose = excluded.dose, seed = excluded.seed, updated_at = excluded.updated_at",
+  );
+  for (const t of defs) {
+    const v = clean[t.id];
+    const e = catalog?.byId.get(t.ex);
+    if (v == null || !e || t.mode !== "max" || v < 3) continue;
+    const seed = seedFor(level, e);
+    st.run(t.ex, Math.round(Math.min(2.2, Math.max(0.45, (v * 0.7) / (e.base * seed))) * 1000) / 1000, now, seed);
+  }
   kvSet(db, "level_changed_at", now);
   kvSet(db, "level_changed_day", day);
   db.prepare("INSERT INTO progress_events(day, kind, ex_from, ex_to, level, at) VALUES(?, 'test', NULL, NULL, ?, ?)").run(day, level, now);

@@ -241,6 +241,35 @@ export function recipeStates(db: FitDb) {
   );
 }
 
+/** Wortstamm für den Abneigungs-Abgleich: klein, ohne Umlaute, ohne Plural-/Beugungsendung. */
+function stem(w: string): string {
+  let s = w.toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss").replace(/[^a-z]/g, "");
+  for (const suf of ["en", "n", "e", "s"]) if (s.length > 4 && s.endsWith(suf)) { s = s.slice(0, -suf.length); break; }
+  return s;
+}
+function lev1(a: string, b: string): boolean {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0, j = 0, d = 0;
+  while (i < a.length && j < b.length) {
+    if (a[i] === b[j]) { i++; j++; continue; }
+    if (++d > 1) return false;
+    if (a.length > b.length) i++; else if (b.length > a.length) j++; else { i++; j++; }
+  }
+  return d + (a.length - i) + (b.length - j) <= 1;
+}
+/**
+ * Trifft eine Abneigung eine Zutat? Wortstamm im Text (Orange → Orangensaft) oder bis auf einen
+ * Tippfehler gleich (Bannanen → Banane). Äpfel/Apfel über die Umlaut-Faltung.
+ */
+export function dislikeHit(dislike: string, text: string): boolean {
+  const d = stem(dislike);
+  if (d.length < 3) return false;
+  const words = text.split(/[^\p{L}]+/u).filter(Boolean);
+  const flat = words.map((w) => w.toLowerCase().replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss")).join(" ");
+  if (flat.includes(d)) return true;
+  return d.length >= 5 && words.some((w) => lev1(stem(w), d));
+}
+
 /** Passt das Rezept zur Ernährungsform und zu Allergien/Abneigungen? */
 export function fitsProfile(r: Recipe, p: Profile): boolean {
   const order = { vegan: 0, vegetarisch: 1, pescetarisch: 2, alles: 3 } as const;
@@ -250,14 +279,8 @@ export function fitsProfile(r: Recipe, p: Profile): boolean {
   const lower = (s: string) => s.toLowerCase();
   for (const a of p.allergies)
     if (r.allergens.some((x) => lower(x).includes(lower(a)))) return false;
-  for (const d of p.dislikes) {
-    const w = lower(d).trim();
-    if (
-      w.length >= 3 &&
-      r.ingredients.some((i) => lower(i.name).includes(w) || lower(i.en).includes(w))
-    )
-      return false;
-  }
+  for (const d of p.dislikes)
+    if (r.ingredients.some((i) => dislikeHit(d, i.name) || dislikeHit(d, i.en)) || dislikeHit(d, r.title)) return false;
   return true;
 }
 
@@ -265,6 +288,12 @@ export function fitsProfile(r: Recipe, p: Profile): boolean {
  * Wie gut passt ein Rezept als [slot] zu den Zielen? Energieanteil der Mahlzeit am Tagesziel,
  * Eiweißdichte je nach Ziel, Ballaststoffe, Vorlieben (Favorit, Bewertung), Kochzeit.
  */
+/** Energieanteil je Mahlzeit — ohne Snack-Mahlzeit auf die drei Hauptmahlzeiten verteilt (zusammen 100 %). */
+export function mealShare(slot: MealSlot, p?: Pick<Profile, "mealsPerDay">): number {
+  const withSnack = (p?.mealsPerDay ?? 4) > 3;
+  return (withSnack ? { fruehstueck: 0.25, mittag: 0.33, abend: 0.32, snack: 0.1 } : { fruehstueck: 0.28, mittag: 0.37, abend: 0.35, snack: 0.1 })[slot];
+}
+
 export function scoreRecipe(
   r: Recipe,
   slot: MealSlot,
@@ -272,7 +301,7 @@ export function scoreRecipe(
   p: Profile,
   state?: { favorite: boolean; rating: number | null; cooked: number },
 ): number {
-  const share = { fruehstueck: 0.25, mittag: 0.33, abend: 0.32, snack: 0.1 }[slot];
+  const share = mealShare(slot, p);
   const want = targets.kcal * share;
   const kcal = r.n.kcal ?? 0;
   if (!kcal) return -99;
@@ -283,8 +312,12 @@ export function scoreRecipe(
   const pShare = ((r.n.protein ?? 0) * 4) / kcal;
   const wantP = (targets.protein * 4) / targets.kcal;
   s += Math.min(2, (pShare / wantP) * 1.5) - (pShare < wantP * 0.5 ? 1 : 0);
+  // Makro-Verteilung: Fett- und Kohlenhydratanteil nah am Tagesziel (sonst z. B. 4 g KH / 59 g Fett).
+  const fShare = ((r.n.fat ?? 0) * 9) / kcal;
+  const cShare = ((r.n.carbs ?? 0) * 4) / kcal;
+  s -= Math.abs(fShare - (targets.fat * 9) / targets.kcal) * 5 + Math.abs(cShare - (targets.carbs * 4) / targets.kcal) * 4;
   if (p.goal === "abnehmen") s += (r.n.fiber ?? 0) / 8 - ((r.n.sugar ?? 0) > 25 ? 1 : 0);
-  if (r.minutes > p.cookingMinutes * 1.5) s -= 1.5;
+  if (r.minutes > p.cookingMinutes + 5) s -= 1.5;
   if (state?.favorite) s += 1.2;
   if (state?.rating) s += (state.rating - 3) * 0.6;
   if (r.meals.includes(slot)) s += 1.5;
@@ -293,8 +326,8 @@ export function scoreRecipe(
   return s;
 }
 
-export function portionFactor(r: Recipe, slot: MealSlot, targets: Targets): number {
-  const share = { fruehstueck: 0.25, mittag: 0.33, abend: 0.32, snack: 0.1 }[slot];
+export function portionFactor(r: Recipe, slot: MealSlot, targets: Targets, p?: Pick<Profile, "mealsPerDay">): number {
+  const share = mealShare(slot, p);
   const kcal = r.n.kcal ?? 0;
   if (!kcal) return 1;
   return Math.round(Math.min(1.6, Math.max(0.6, (targets.kcal * share) / kcal)) * 4) / 4;
@@ -432,4 +465,45 @@ export function leckerToMeal(entry: {
     });
   meal.strCategory = `${meal.strCategory} · ${String(ld.recipeYield ?? "")}`;
   return meal;
+}
+
+/** Einfache Ergänzungen, um eine Kalorien-/Eiweißlücke im Tagesplan zu schließen (ohne Kochen). */
+const EXTRAS: { name: string; kcal: number; protein: number; diet: "vegan" | "vegetarisch" | "pescetarisch" | "alles"; allergens: string[] }[] = [
+  { name: "Magerquark 250 g mit 1 TL Honig", kcal: 200, protein: 30, diet: "vegetarisch", allergens: ["milch"] },
+  { name: "Skyr 250 g", kcal: 160, protein: 27, diet: "vegetarisch", allergens: ["milch"] },
+  { name: "Milch 400 ml", kcal: 260, protein: 14, diet: "vegetarisch", allergens: ["milch"] },
+  { name: "Sojadrink 400 ml", kcal: 170, protein: 13, diet: "vegan", allergens: ["soja"] },
+  { name: "Haferflocken 60 g (mit Milch oder Sojadrink)", kcal: 220, protein: 8, diet: "vegan", allergens: ["gluten"] },
+  { name: "2 Scheiben Vollkornbrot mit Käse", kcal: 330, protein: 17, diet: "vegetarisch", allergens: ["gluten", "milch"] },
+  { name: "2 gekochte Eier", kcal: 160, protein: 13, diet: "vegetarisch", allergens: ["ei"] },
+  { name: "Reis 75 g (roh) als Beilage", kcal: 270, protein: 6, diet: "vegan", allergens: [] },
+  { name: "Erdnussbutter 30 g aufs Brot", kcal: 185, protein: 8, diet: "vegan", allergens: ["erdnuss"] },
+  { name: "Hummus 100 g mit 1 Scheibe Brot", kcal: 300, protein: 11, diet: "vegan", allergens: ["sesam", "gluten"] },
+  { name: "Thunfisch (1 Dose, im eigenen Saft)", kcal: 120, protein: 26, diet: "pescetarisch", allergens: ["fisch"] },
+];
+export function fillGap(gapKcal: number, gapProtein: number, p: Profile, rotate = 0) {
+  const order = { vegan: 0, vegetarisch: 1, pescetarisch: 2, alles: 3 } as const;
+  const ok = (x: (typeof EXTRAS)[number]) =>
+    (p.diet === "alles" || order[x.diet] <= order[p.diet] && !(p.diet === "vegetarisch" && x.diet === "pescetarisch")) &&
+    !x.allergens.some((a) => p.allergies.some((al) => al.toLowerCase().includes(a))) &&
+    !p.dislikes.some((d) => dislikeHit(d, x.name));
+  // Fehlt noch Eiweiß: eiweißreiche zuerst, sonst kalorienreiche.
+  const pool = EXTRAS.filter(ok).sort((a, b) => (gapProtein > 15 ? b.protein / b.kcal - a.protein / a.kcal : b.kcal - a.kcal));
+  // Abwechslung: die drei Besten wechseln sich je Tag ab.
+  const head = pool.splice(0, Math.min(3, pool.length));
+  for (let i = 0; i < head.length; i++) pool.splice(i, 0, head[(i + rotate) % head.length] as (typeof EXTRAS)[number]);
+  const out: { name: string; kcal: number; protein: number }[] = [];
+  let k = gapKcal;
+  let pr = gapProtein;
+  for (const x of pool) {
+    // fertig, wenn Kalorien und Eiweiß (bis auf 10 g) gedeckt sind
+    if ((k < 100 && pr <= 10) || out.length >= 3) break;
+    // etwas über das Kalorienziel ist ok, wenn sonst Eiweiß fehlt
+    if (x.kcal > k + (pr > 15 ? 250 : 120)) continue;
+    out.push({ name: x.name, kcal: x.kcal, protein: x.protein });
+    k -= x.kcal;
+    pr -= x.protein;
+    if (pr <= 0 && gapProtein > 15) pool.sort((a, b) => b.kcal - a.kcal);
+  }
+  return out;
 }

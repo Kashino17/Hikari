@@ -26,15 +26,16 @@ export const RATE_BAND: Record<Goal, [number, number]> = {
   muskeln: [0.0025, 0.005],
   zunehmen: [0.004, 0.0075],
   abnehmen: [-0.01, -0.005],
-  halten: [-0.0015, 0.0015],
-  fitter: [-0.0015, 0.0015],
+  // Halten: etwas breiter — Wiege-Schwankungen von ±1 kg sollen das Ziel nicht verstellen.
+  halten: [-0.0025, 0.0025],
+  fitter: [-0.0025, 0.0025],
 };
 
 /**
  * Kalorienziel nachsteuern wie gute Ernährungs-Coaches: alle 14 Tage den Gewichtstrend gegen das
- * Zielband prüfen und um 100 kcal anpassen. Nur wenn das Tagebuch zeigt, dass das Ziel auch gegessen
- * wird (≥ 10 Tage von 14 eingetragen, im Schnitt ≥ 90 % des Ziels) — sonst ist das Problem die Menge,
- * nicht das Ziel, und es gibt nur einen Hinweis.
+ * Zielband prüfen und um 100 kcal anpassen. Nur wenn das Tagebuch zeigt, was wirklich gegessen wird
+ * (≥ 8 von 14 Tagen vollständig eingetragen). Fürs Erhöhen zusätzlich: im Schnitt ≥ 90 % des Ziels —
+ * sonst ist das Problem die Menge, nicht das Ziel, und es gibt nur einen Hinweis.
  */
 export function adaptCalories(db: FitDb, now = Date.now()): { adjust: number; note: string } | null {
   const p = getProfile(db);
@@ -57,9 +58,10 @@ export function adaptCalories(db: FitDb, now = Date.now()): { adjust: number; no
   const target = computeTargets(p).kcal;
   const full = Object.values(dayStates(db, addDays(today, -14), addDays(today, -1), target, p.mealsPerDay)).filter((d) => d.state === "komplett");
   const avg = full.length ? full.reduce((a, d) => a + d.kcal, 0) / full.length : 0;
-  if (dir > 0 && (full.length < 8 || avg < target * 0.9)) {
+  // Ohne Tagebuch weder rauf noch runter (Gewichtsschwankungen allein sind zu unsicher).
+  if (full.length < 8 || (dir > 0 && avg < target * 0.9)) {
     const note = full.length < 8
-      ? `Gewicht ${fmt(trend)} — zu langsam. Trag dein Essen an mindestens 8 von 14 Tagen vollständig ein, dann stellt der Coach dein Ziel richtig nach.`
+      ? `Gewicht ${fmt(trend)} — ${dir > 0 ? "zu langsam" : "zu schnell"}. Trag dein Essen an mindestens 8 von 14 Tagen vollständig ein, dann stellt der Coach dein Ziel richtig nach.`
       : `Gewicht ${fmt(trend)} — zu langsam. Du isst im Schnitt ${Math.round(avg)} kcal, Ziel ${target} — erst das Ziel erreichen.`;
     saveProfile(db, { kcalAdjustAt: now, kcalAdjustNote: note });
     return { adjust: p.kcalAdjust, note };

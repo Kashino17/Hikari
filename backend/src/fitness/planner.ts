@@ -219,7 +219,9 @@ export function chooseDayType(ctx: PlanContext): DayType {
     .filter((t) => t !== "mobilitaet" || trainedLast3 >= 3 || energy <= 2 || streak >= 4)
     .filter(doable)
     .map((t) => {
-      const groups = DAY_TYPES[t].groups;
+      // Rumpf ist an fast jedem Tag dabei — seine Ermüdung unterscheidet die Tagestypen nicht und zählt
+      // nur beim reinen Rumpftag (sonst verliert z. B. »Beine & Rumpf« gegen Ausdauer).
+      const groups = DAY_TYPES[t].groups.filter((g) => g !== "core" || DAY_TYPES[t].groups.length === 1);
       let s = groups.length
         ? -groups.reduce((a, g) => a + (fatigue[g] ?? 0), 0) / groups.length
         : -0.4;
@@ -227,7 +229,9 @@ export function chooseDayType(ctx: PlanContext): DayType {
       // Wenige Tage: Ganzkörper (die Häufigkeit oben zieht ohnehin in diese Richtung).
       // Bis 4 Trainingstage: Krafttage als Ganzkörper (jede Gruppe 2× pro Woche, wie Freeletics Mo/Mi/Fr).
       if (t === "ganzkoerper" && p.trainingDays.length <= 4) s += 0.8;
-      if (t === "ausdauer") s += p.focus.includes("ausdauer") || p.goal === "abnehmen" ? 0.5 : -0.3;
+      if (t === "ausdauer") s += p.goal === "abnehmen" || (p.focus.includes("ausdauer") && p.goal !== "muskeln") ? 0.5 : -0.3;
+      // Muskelaufbau: Ausdauer höchstens einmal pro Woche — Kraftsätze haben Vorrang.
+      if (t === "ausdauer" && (p.goal === "muskeln" || p.goal === "zunehmen") && (hits.ausdauer ?? 0) >= 1) s -= 2;
       if (
         (t === "druck" || t === "zug" || t === "beine") &&
         (p.goal === "muskeln" || p.focus.includes("kraft"))
@@ -319,7 +323,7 @@ const HITS: Record<DayType, string[]> = {
 
 /** Zeitrahmen: kurze Einheiten bekommen kurzes Auf- und Abwärmen — der Rest ist Arbeit. */
 export function frameFor(minutes: number) {
-  return minutes <= 15 ? { warm: 3, cool: 2, coolSec: 30 } : minutes <= 25 ? { warm: 4, cool: 3, coolSec: 35 } : { warm: 5, cool: 4, coolSec: 40 };
+  return minutes <= 15 ? { warm: 3, cool: 1, coolSec: 30 } : minutes <= 25 ? { warm: 4, cool: 3, coolSec: 35 } : { warm: 5, cool: 4, coolSec: 40 };
 }
 
 function pickFrom(
@@ -409,14 +413,13 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
         : energy >= 4
           ? "hart"
           : "mittel";
-  // Programm: Entlastungswoche immer leicht; sonst die Phasen-Intensität, wenn die Tagesform passt.
-  // Zweimal hintereinander »zu leicht« (Gesamtgefühl) → heute fordernder.
+  // Reihenfolge zählt: erst die Programmphase, dann »zweimal zu leicht → fordernder«, zuletzt die
+  // Schutzregeln (Wiedereinstieg nach Pause, Entlastungswoche) — die gewinnen immer.
+  if (ctx.program && energy >= 3 && !second && dayType !== "mobilitaet") intensity = ctx.program.intensity;
   const lastTwo = ctx.recent.filter((r) => r.daysAgo >= 1 && r.dayType !== "mobilitaet").slice(0, 2);
   if (intensity === "mittel" && energy >= 3 && lastTwo.length === 2 && lastTwo.every((r) => (r.overall ?? 3) <= 2)) intensity = "hart";
-  // Wiedereinstieg nach über einer Woche Pause: erst einmal leichter (Muskeln, Sehnen, Muskelkater).
-  if ((ctx.daysOff ?? 0) >= 8 && intensity !== "leicht") intensity = "leicht";
+  if ((ctx.daysOff ?? 0) >= 8 && dayType !== "mobilitaet") intensity = "leicht";
   if (ctx.program?.deload && dayType !== "mobilitaet") intensity = "leicht";
-  else if (ctx.program && energy >= 3 && !second && dayType !== "mobilitaet") intensity = ctx.program.intensity;
   const minutes = ctx.checkin?.minutes ?? p.sessionMinutes;
   const all = ctx.catalog.exercises.filter((e) => usable(ctx, e));
   const used = new Set<string>();
@@ -469,7 +472,7 @@ export function buildRulesPlan(ctx: PlanContext): SessionPlan {
     const tp = mobil ? target : patTarget(pat);
     // Nur Übungen nah am eigenen Niveau — sonst entstehen »Ramsch-Sätze« (Wand-Liegestütz für jemanden,
     // der 25 Liegestütze schafft). Gleiches Muster ein zweites Mal nur, wenn eine solche frei ist.
-    if (!mobil) {
+    if (!mobil && dayType !== "ausdauer") {
       // Nach oben höchstens eine Stufe über dem Ziel (sonst Varianten, von denen keine 3 Wiederholungen gehen),
       // nach unten bis 2,5 Stufen.
       const near = cand.filter((e) => e.level - tp <= 1 && tp - e.level <= 2.5);
@@ -585,14 +588,22 @@ export function fitToTime(
   mainScale = 1,
 ) {
   const main = plan.blocks.find((b) => b.kind === "main");
-  if (!main || main.format === "flow") return;
+  if (!main) return;
+  if (main.format === "flow") {
+    // Erholungstag: so viele ruhige Durchgänge, wie in die Zeit passen (1–3).
+    const rest = plan.blocks.filter((b) => b !== main).reduce((a, b) => a + blockSeconds(b, catalog), 0);
+    main.rounds = 1;
+    const one = blockSeconds(main, catalog);
+    main.rounds = Math.max(1, Math.min(3, Math.floor((minutes * 60 - rest) / Math.max(1, one))));
+    return;
+  }
   const others = plan.blocks
     .filter((b) => b !== main)
     .reduce((a, b) => a + blockSeconds(b, catalog), 0);
   const budget = (minutes * 60 - others) * mainScale;
   const fit = () => {
     let best = 1;
-    for (let r = 1; r <= 6; r++) {
+    for (let r = 1; r <= (minutes >= 60 ? 8 : 6); r++) {
       main.rounds = r;
       if (blockSeconds(main, catalog) <= budget * 1.08) best = r;
     }

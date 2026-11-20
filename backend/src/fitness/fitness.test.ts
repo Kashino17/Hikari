@@ -70,7 +70,7 @@ describe("KI-Plan absichern", () => {
   it("verwirft erfundene Übungen und klemmt Mengen auf ±30 % der Regel-Dosis", () => {
     const db = freshDb();
     saveProfile(db, { equipment: ["klimmzugstange"], level: 3 });
-    const ctx = buildContext(db, catalog, "2026-11-19");
+    const ctx = buildContext(db, catalog, "2026-11-19", undefined, "druck");
     const rules = buildRulesPlan(ctx);
     const plan = settleAiPlan(
       {
@@ -97,6 +97,15 @@ describe("KI-Plan absichern", () => {
     expect(main?.items[1]?.amount).toBeGreaterThanOrEqual(2);
     expect(plan.blocks[0]?.kind).toBe("warmup");
     expect(plan.blocks.at(-1)?.kind).toBe("cooldown");
+  });
+
+  it("Krafttag bleibt Krafttag: KI ohne Beine an einem Beintag wird verworfen", () => {
+    const db = freshDb();
+    const ctx = buildContext(db, catalog, "2026-11-19", undefined, "beine");
+    const rules = buildRulesPlan(ctx);
+    expect(() =>
+      settleAiPlan({ dayType: "ausdauer", blocks: [{ kind: "main", format: "intervals", rounds: 3, items: [{ ex: "jumping_jack" }, { ex: "plank" }] }] }, ctx, rules),
+    ).toThrow(/muster_fehlen/);
   });
 
   it("wirft, wenn kein Hauptteil übrig bleibt", () => {
@@ -359,9 +368,9 @@ describe("Progression: Aufstieg, Abstieg, Level, Test", () => {
     expect(checkProgression(db, catalog, "d", [{ ex: "pushup", dose: 1.6, times: 3, reached: 1, pain: true }], ok)).toEqual([]);
     // Dip braucht Barren → kein Aufstieg von bench_dip ohne Ausrüstung
     expect(checkProgression(db, catalog, "d", [{ ex: "bench_dip", dose: 1.6, times: 3, reached: 1 }], ok)).toEqual([]);
-    // Bulgarische Kniebeuge braucht eine Bank → übersprungen, weiter zur assistierten Pistol
-    const skip = checkProgression(db, catalog, "d", [{ ex: "split_squat", dose: 1.6, times: 3, reached: 1 }], ok);
-    expect(skip[0]).toMatchObject({ kind: "auf", from: "split_squat", to: "assisted_pistol" });
+    // Bulgarische Kniebeuge geht mit Sofa/Bett (keine Bank nötig) → direkt die nächste Stufe
+    const next = checkProgression(db, catalog, "d", [{ ex: "split_squat", dose: 1.6, times: 3, reached: 1, first: 1 }], ok);
+    expect(next[0]).toMatchObject({ kind: "auf", from: "split_squat", to: "bulgarian_split_squat" });
   });
 
   it("vier Aufstiege heben das Level, der Test setzt es direkt", async () => {
@@ -386,9 +395,9 @@ describe("Programme, Woche, Balance", () => {
     setPrograms(loadPrograms(DATA));
     const db = freshDb();
     saveProfile(db, { onboarded: true, equipment: ["boden", "klimmzugstange"], trainingDays: [0, 2, 4] });
-    startProgram(db, "muskelaufbau", "2026-11-02"); // Montag → Woche 4 = 23.–29.11. Entlastung
+    startProgram(db, "muskelaufbau", "2026-10-05"); // Montag → Woche 8 = 23.–29.11. Entlastung & Test
     const ph = phaseFor(db, (await import("./program.js")).getPrograms(), "2026-11-24");
-    expect(ph).toMatchObject({ week: 4, phase: "Entlastung", deload: true });
+    expect(ph).toMatchObject({ week: 8, deload: true });
     const ctx = buildContext(db, catalog, "2026-11-24", { energy: 4 });
     const plan = buildRulesPlan(ctx);
     expect(plan.intensity).toBe("leicht");
@@ -574,7 +583,7 @@ describe("Prüfung 20.11.: gefundene Fehler bleiben behoben", () => {
     const ctx = buildContext(db, catalog, "2026-11-20");
     const ok = (id: string) => { const e = catalog.byId.get(id); return !!e && usable(ctx, e); };
     const tests = testsFor(db, ok);
-    expect(tests.map((t) => t.ex)).toEqual(["fist_pushup", "squat", "plank"]);
+    expect(tests.map((t) => t.ex)).toEqual(["fist_pushup", "squat", "plank", "towel_door_row"]);
     const r = saveTest(db, { liegestuetz: 30, kniebeuge: 45, plank: "" as unknown as number }, ok, "2026-11-18");
     expect(Object.keys(r!.tiers)).toEqual(["liegestuetz", "kniebeuge"]);
     expect(r!.level).toBeGreaterThanOrEqual(3);
@@ -752,5 +761,96 @@ describe("Ernährung: vergessene und halbe Tage", () => {
     }
     // 10 vollständige Tage im Ziel, 4 halbe → Erhöhung, nicht »du isst zu wenig«
     expect(adaptCalories(db)!.adjust).toBe(100);
+  });
+});
+
+describe("Prüfung 21.11.: Fach- und Code-Prüfung", () => {
+  it("Abneigungen: ein String mit Punkten, Tippfehler, Plural und Komposita werden erkannt", async () => {
+    const { dislikeHit } = await import("./recipes.js");
+    const p = normalizeProfile({ dislikes: ["Bannanen.apfel.mandeln.orangen"] });
+    expect(p.dislikes).toEqual(["Bannanen", "apfel", "mandeln", "orangen"]);
+    expect(dislikeHit("orangen", "Orangensaft")).toBe(true);
+    expect(dislikeHit("Bannanen", "Banane")).toBe(true);
+    expect(dislikeHit("apfel", "Äpfel")).toBe(true);
+    expect(dislikeHit("mandeln", "Mandelmus")).toBe(true);
+    expect(dislikeHit("apfel", "Ananas")).toBe(false);
+    expect(dislikeHit("mandeln", "Mango")).toBe(false);
+  });
+
+  it("Resolver: verbotene Stufe kommt auch über einen Umweg nicht in den Plan", async () => {
+    const { makeResolver } = await import("./progression.js");
+    const db = freshDb();
+    const chain = catalog.exercises.find((e) => e.progress && catalog.byId.get(e.progress)?.progress)!;
+    const mid = catalog.byId.get(chain.progress!)!;
+    const top = catalog.byId.get(mid.progress!)!;
+    db.prepare("INSERT INTO variant_map(base, current, since) VALUES(?, ?, 'x')").run(chain.id, top.id);
+    const ok = (e: { id: string }) => e.id !== top.id; // oberste Stufe jetzt verboten (z. B. neue Beschwerde)
+    expect(makeResolver(db, catalog, ok)(mid.id)).toBe(mid.id);
+  });
+
+  it("Beherrschte Stufen: Reihenfolge der Zuordnungen egal, Abstieg löscht keine andere Kette", async () => {
+    const { masteredLevels } = await import("./progression.js");
+    const a = freshDb();
+    a.prepare("INSERT INTO variant_map(base, current, since) VALUES('incline_pushup', 'pushup', 'x')").run();
+    a.prepare("INSERT INTO variant_map(base, current, since) VALUES('pike_pushup', 'decline_pushup', 'x')").run();
+    const b = freshDb();
+    b.prepare("INSERT INTO variant_map(base, current, since) VALUES('pike_pushup', 'decline_pushup', 'x')").run();
+    b.prepare("INSERT INTO variant_map(base, current, since) VALUES('incline_pushup', 'pushup', 'x')").run();
+    expect(masteredLevels(a, catalog)).toEqual(masteredLevels(b, catalog));
+    expect(masteredLevels(a, catalog).push).toBeGreaterThan(0);
+  });
+
+  it("Wiedereinstieg gewinnt auch im Programm", async () => {
+    const { startProgram, setPrograms, loadPrograms } = await import("./program.js");
+    setPrograms(loadPrograms(DATA));
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, trainingDays: [0, 2, 4] });
+    startProgram(db, "muskelaufbau", "2026-11-16");
+    const ctx = buildContext(db, catalog, "2026-11-25", { energy: 4 });
+    ctx.daysOff = 13;
+    expect(buildRulesPlan(ctx).intensity).toBe("leicht");
+  });
+
+  it("Tagesplan: ohne Snack trifft er das Kalorienziel (Anteile 100 %), Kochzeit eingehalten", async () => {
+    const { mealShare } = await import("./recipes.js");
+    const p = { mealsPerDay: 3 };
+    expect(mealShare("fruehstueck", p) + mealShare("mittag", p) + mealShare("abend", p)).toBeCloseTo(1, 5);
+    const p4 = { mealsPerDay: 4 };
+    expect(mealShare("fruehstueck", p4) + mealShare("mittag", p4) + mealShare("abend", p4) + mealShare("snack", p4)).toBeCloseTo(1, 5);
+  });
+
+  it("Lücke füllen: passt zu Ernährungsform, Allergien und Abneigungen", async () => {
+    const { fillGap } = await import("./recipes.js");
+    const vegan = normalizeProfile({ diet: "vegan", allergies: ["erdnuss"], dislikes: ["Hummus"] });
+    const x = fillGap(500, 30, vegan);
+    expect(x.length).toBeGreaterThan(0);
+    expect(x.some((i) => /Quark|Skyr|Milch 400|Eier|Thunfisch|Erdnuss|Hummus/.test(i.name))).toBe(false);
+    const omni = normalizeProfile({ diet: "alles" });
+    const y = fillGap(300, 0, omni);
+    expect(y.reduce((a, i) => a + i.kcal, 0)).toBeGreaterThanOrEqual(200);
+  });
+
+  it("Fitness-Test setzt die Startmenge der getesteten Übung (≈ 70 % vom Maximum)", async () => {
+    const { saveTest } = await import("./assessment.js");
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, sex: "m", equipment: ["boden"], limitations: ["handgelenk"], noJumps: true });
+    const ctx = buildContext(db, catalog, "2026-11-20");
+    const ok = (id: string) => { const e = catalog.byId.get(id); return !!e && usable(ctx, e); };
+    saveTest(db, { liegestuetz: 20, kniebeuge: 40, plank: 60, rudern: 12 }, ok, "2026-11-20", catalog);
+    const after = buildContext(db, catalog, "2026-11-21");
+    expect(doseFor(after, catalog.byId.get("fist_pushup")!, "mittel", "main")).toBe(14);
+    expect(doseFor(after, catalog.byId.get("towel_door_row")!, "mittel", "main")).toBeGreaterThanOrEqual(8);
+  });
+
+  it("Kein Feedback, alles geschafft: die Menge steigt trotzdem langsam", async () => {
+    const db = freshDb();
+    saveProfile(db, { onboarded: true, equipment: ["boden"], trainingDays: [0, 1, 2, 3, 4, 5, 6] });
+    const s = await todaySession(null, db, catalog, { day: "2026-11-23" });
+    const main = s.plan.blocks.findIndex((b) => b.kind === "main");
+    const it0 = s.plan.blocks[main]!.items[0]!;
+    const done: Record<string, number[]> = { [`${main}:0`]: Array.from({ length: s.plan.blocks[main]!.rounds }, () => it0.amount) };
+    applyFeedback(db, s, { overall: 3, pain: [], exercises: [] }, { seconds: 600, done, skipped: [] }, { seedOf: () => 1 });
+    const st = db.prepare("SELECT dose FROM exercise_state WHERE exercise_id = ?").get(it0.ex) as { dose: number };
+    expect(st.dose).toBeGreaterThan(1);
   });
 });

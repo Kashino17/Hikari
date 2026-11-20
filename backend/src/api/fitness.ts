@@ -16,7 +16,7 @@ import { dirname, join } from "node:path";
 import type { FastifyInstance, FastifyReply } from "fastify";
 import { FitnessAi } from "../fitness/ai.js";
 import { BarcodeLookup } from "../fitness/barcode.js";
-import { EQUIPMENT, loadCatalog } from "../fitness/catalog.js";
+import { EQUIPMENT, hasEquipment, loadCatalog } from "../fitness/catalog.js";
 import {
   type SessionFeedback,
   type SessionResult,
@@ -75,6 +75,7 @@ import {
   type MealSlot,
   RecipeImporter,
   allRecipes,
+  fillGap,
   fitsProfile,
   getRecipe,
   leckerToMeal,
@@ -382,7 +383,7 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   });
   app.post<{ Body: { results?: Record<string, number>; day?: string } }>("/fitness/test", async (req, reply) => {
     const day = dayOf(req, req.body?.day);
-    const r = saveTest(db, req.body?.results ?? {}, exOk(buildContext(db, catalog, day)), day);
+    const r = saveTest(db, req.body?.results ?? {}, exOk(buildContext(db, catalog, day)), day, catalog);
     return r ?? reply.code(400).send({ error: "leer" });
   });
 
@@ -632,8 +633,13 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   });
 
   app.post<{ Body: Record<string, unknown> }>("/fitness/profile", async (req) => {
-    const p = saveProfile(db, req.body as never);
-    if (typeof req.body.weightKg === "number")
+    // Vom Server verwaltete Felder kommen nie aus der Oberfläche (ein alter Stand würde sie zurücksetzen).
+    const { kcalAdjust: _a, kcalAdjustAt: _b, kcalAdjustNote: _c, updatedAt: _d, ...body } = req.body ?? {};
+    const before = getProfile(db).weightKg;
+    const p = saveProfile(db, body as never);
+    // Gewicht nur ins Protokoll, wenn es wirklich geändert wurde (sonst überschreibt ein Profil-Speichern
+    // das heute gewogene Gewicht mit dem alten Profilwert).
+    if (typeof body.weightKg === "number" && Math.abs(body.weightKg - before) >= 0.05)
       db.prepare(
         "INSERT INTO body_log(day, weight) VALUES(?, ?) ON CONFLICT(day) DO UPDATE SET weight = excluded.weight",
       ).run(localDay(), p.weightKg);
@@ -1112,7 +1118,10 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
       const sk = catalog.skillById.get(st.id);
       const ex = sk?.steps[Math.min(st.step, (sk?.steps.length ?? 1) - 1)]?.exercise;
       const e = ex ? catalog.byId.get(ex) : undefined;
-      return { ...st, blocked: !!e && !usable(ctx, e), blockedWhy: e && !usable(ctx, e) ? (e.stress.filter((r) => ctx.profile.limitations.includes(r) || ctx.painRegions.includes(r)).join(", ") || "Ausrüstung") : null };
+      const blocked = !st.mastered && !!e && !usable(ctx, e);
+      const regions = e ? e.stress.filter((r) => ctx.profile.limitations.includes(r) || ctx.painRegions.includes(r)) : [];
+      const why = !blocked || !e ? null : regions.length ? regions.join(", ") : !hasEquipment(e, ctx.profile.equipment) ? "Ausrüstung" : ctx.profile.noJumps && e.jump ? "Sprünge" : "Pause";
+      return { ...st, blocked, blockedWhy: why };
     });
   };
   app.get("/fitness/skills", async () => ({ skills: skillsView() }));
@@ -1559,12 +1568,13 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
   app.get<{ Params: { id: string } }>("/fitness/recipes/:id", async (req, reply) => {
     const r = getRecipe(db, req.params.id);
     if (!r) return reply.code(404).send({ error: "not_found" });
-    const targets = computeTargets(getProfile(db));
+    const prof = getProfile(db);
+    const targets = computeTargets(prof);
     const slot = (r.meals.find((m) => m !== "dessert") ?? "abend") as MealSlot;
     return {
       recipe: withImages(r),
       state: recipeStates(db).get(r.id) ?? null,
-      suggestedFactor: portionFactor(r, slot, targets),
+      suggestedFactor: portionFactor(r, slot, targets, prof),
       targets,
     };
   });
@@ -1602,8 +1612,8 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
    * Tagesplan: je Mahlzeit der beste Vorschlag (passend zu Zielen, Vorlieben, Restbedarf) plus zwei
    * Alternativen. Getauschte Vorschläge merken wir uns pro Tag.
    */
-  app.get<{ Querystring: { day?: string } }>("/fitness/mealplan", async (req) => {
-    const day = req.query.day ?? localDay();
+  /** Tagesvorschlag (Rezepte je Mahlzeit, auf das Ziel skaliert) — für den Plan und die Einkaufsliste. */
+  const planDay = (day: string) => {
     const p = getProfile(db);
     const targets = computeTargets(p);
     const states = recipeStates(db);
@@ -1635,20 +1645,27 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
         .sort((a, b) => b.s - a.s)
         .filter((x) => !used.has(x.r.id))
         .slice(0, 12);
-      const pick = (chosen[slot] && pool.find((r) => r.id === chosen[slot])) || ranked[0]?.r;
+      // Vorschlag nur aus Rezepten im Kochzeit-Rahmen (+5 min); längere bleiben als Alternativen.
+      // Abwechslung: alle, die fast so gut passen wie das beste (≤ 1,5 Punkte dahinter), wechseln sich
+      // Tag für Tag ab — sonst stünde jeden Tag dasselbe auf dem Plan.
+      const quickAll = ranked.filter((x) => x.r.minutes <= p.cookingMinutes + 5);
+      const top = quickAll.filter((x) => x.s >= (quickAll[0]?.s ?? 0) - 1.5).slice(0, 6);
+      const dayNo = Math.round(Date.parse(`${day}T12:00:00`) / 86_400_000);
+      const quick = top.length ? top[(dayNo + SLOTS.indexOf(slot) * 2) % top.length]?.r : undefined;
+      const pick = (chosen[slot] && pool.find((r) => r.id === chosen[slot])) || quick || ranked[0]?.r;
       if (pick) used.add(pick.id);
       return {
         slot,
         name: SLOT_NAMES[slot],
         recipe: pick
-          ? { ...recipeCard(pick, states.get(pick.id)), factor: portionFactor(pick, slot, targets) }
+          ? { ...recipeCard(pick, states.get(pick.id)), factor: portionFactor(pick, slot, targets, p) }
           : null,
         alternatives: ranked
           .filter((x) => x.r.id !== pick?.id)
           .slice(0, 6)
           .map((x) => ({
             ...recipeCard(x.r, states.get(x.r.id)),
-            factor: portionFactor(x.r, slot, targets),
+            factor: portionFactor(x.r, slot, targets, p),
           })),
       };
     });
@@ -1660,7 +1677,16 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
           protein: (s.recipe?.protein ?? 0) * (s.recipe?.factor ?? 1),
         })),
     );
-    return { day, targets, slots, planned: roundNutrients(sum), status: importer.status() };
+    // Lücke zum Ziel (Portionen sind auf 0,6–1,6 begrenzt): einfache Ergänzungen vorschlagen, damit der
+    // Überschuss für den Muskelaufbau auch wirklich ankommt.
+    const gap = targets.kcal - (sum.kcal ?? 0);
+    const protGap = targets.protein - (sum.protein ?? 0);
+    const extras = gap > 150 || protGap > 15 ? fillGap(gap, protGap, p, Math.round(Date.parse(`${day}T12:00:00`) / 86_400_000)) : [];
+    return { day, targets, slots, planned: roundNutrients(sum), extras, chosen };
+  };
+  app.get<{ Querystring: { day?: string } }>("/fitness/mealplan", async (req) => {
+    const r = planDay(req.query.day ?? localDay());
+    return { day: r.day, targets: r.targets, slots: r.slots, planned: r.planned, extras: r.extras, status: importer.status() };
   });
 
   app.post<{ Body: { day?: string; slot: string; recipeId: string } }>(
@@ -1686,11 +1712,13 @@ export function registerFitnessRoutes(app: FastifyInstance, deps: FitnessDeps) {
     const checked = kvGet<string[]>(db, "shopping:checked") ?? [];
     for (let i = 0; i < days; i++) {
       const day = addDays(localDay(), i);
-      const chosen = kvGet<Record<string, string>>(db, `mealplan:${day}`) ?? {};
+      // Gewählte Gerichte, sonst der Tagesvorschlag (vorher blieb die Liste leer, solange nichts gewählt war).
+      const plan = planDay(day);
+      const chosen: Record<string, string> = Object.fromEntries(plan.slots.filter((x) => x.recipe).map((x) => [x.slot, x.recipe?.id as string]));
       for (const [slot, id] of Object.entries(chosen)) {
         const r = getRecipe(db, id);
         if (!r) continue;
-        const f = portionFactor(r, slot as MealSlot, targets) / r.servings;
+        const f = portionFactor(r, slot as MealSlot, targets, p) / r.servings;
         for (const ing of r.ingredients) {
           const k = ing.name.toLowerCase();
           const cur = items.get(k) ?? {
